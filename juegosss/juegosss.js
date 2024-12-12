@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginScreen = document.querySelector("#login-screen");
   const gameContainer = document.querySelector("#game-container");
   const playerForm = document.querySelector("#playerForm");
-  const rankingButton = document.querySelector("#rankingButton");
 
   // Game Configuration
   const gameConfig = {
@@ -25,11 +24,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // Player Registration
   playerForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const playerName = document.querySelector("#playerName").value;
-    const playerAvatar = document.querySelector("#playerAvatar").value;
-    const characterEmoji = document.querySelector("#characterEmoji").value;
+    const playerName = document.querySelector("#playerName").value.trim();
+    const playerAvatar = document.querySelector("#playerAvatar").value.trim();
+    const characterEmoji = document
+      .querySelector("#characterEmoji")
+      .value.trim();
 
     // Validate input
+    if (!playerName) {
+      alert("Por favor, ingresa un nombre de jugador");
+      return;
+    }
+
     if (playerAvatar && characterEmoji) {
       alert("Elige solo avatar o emoji, no ambos");
       return;
@@ -52,16 +58,32 @@ document.addEventListener("DOMContentLoaded", () => {
   let enemies = [];
 
   function startGame() {
+    // Reset game variables
+    currentLevel = 1;
+    enemiesKilled = 0;
+    gameTime = 0;
+    enemies = [];
+
+    // Clear any existing game elements
+    const gameArea = document.querySelector("#game-area");
+    const playerContainer = document.querySelector("#player");
+    gameArea.innerHTML = "";
+    playerContainer.innerHTML = "";
+
     loginScreen.style.display = "none";
     gameContainer.style.display = "block";
 
     const playerName = localStorage.getItem("playerName");
     const characterEmoji = localStorage.getItem("characterEmoji") || "💀";
-    const gameArea = document.querySelector("#game-area");
     const playerInfo = document.querySelector("#player-info");
     const enemyCount = document.querySelector("#enemy-count");
     const timeCount = document.querySelector("#time-count");
     const levelCount = document.querySelector("#level-count");
+
+    // Reset displays
+    enemyCount.textContent = "Enemigos: 0";
+    timeCount.textContent = "Tiempo: 0s";
+    levelCount.textContent = "Nivel: 1";
 
     // Setup player
     const player = document.createElement("div");
@@ -135,12 +157,12 @@ document.addEventListener("DOMContentLoaded", () => {
       // Create game over screen
       const gameOverScreen = document.createElement("div");
       gameOverScreen.innerHTML = `
-              <h2>Game Over</h2>
-              <p>Jugador: ${playerName}</p>
-              <p>Enemigos eliminados: ${enemiesKilled}</p>
-              <p>Tiempo: ${gameTime} segundos</p>
-              <button id="return-btn">Regresar</button>
-          `;
+        <h2>Game Over</h2>
+        <p>Jugador: ${playerName}</p>
+        <p>Enemigos eliminados: ${enemiesKilled}</p>
+        <p>Tiempo: ${gameTime} segundos</p>
+        <button id="return-btn">Regresar</button>
+      `;
       gameOverScreen.id = "game-over-screen";
       gameContainer.appendChild(gameOverScreen);
 
@@ -151,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("return-btn").addEventListener("click", () => {
         gameContainer.style.display = "none";
         loginScreen.style.display = "block";
-        gameContainer.innerHTML = ""; // Reset game
+        gameContainer.removeChild(gameOverScreen);
       });
     }
 
@@ -184,9 +206,4 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch((error) => console.error("Error:", error));
     }
   }
-
-  // Ranking button
-  rankingButton.addEventListener("click", () => {
-    window.location.href = "rankingsss.html";
-  });
 });
