@@ -60,8 +60,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const playerName = localStorage.getItem("playerName");
     const characterEmoji = localStorage.getItem("characterEmoji") || "💀";
     const gameArea = document.querySelector("#game-area");
-    const gameAreaWidth = gameArea.clientWidth;
-    const gameAreaHeight = gameArea.clientHeight;
     const playerInfo = document.querySelector("#player-info");
     const enemyCount = document.querySelector("#enemy-count");
     const timeCount = document.querySelector("#time-count");
@@ -91,16 +89,16 @@ document.addEventListener("DOMContentLoaded", () => {
     gameArea.style.backgroundImage = `url('${gameConfig.levels[0].background}')`;
     gameArea.style.backgroundSize = "cover";
 
-    let playerX = 125;
+    let playerX = gameArea.clientWidth / 2 - 25;
     player.style.left = `${playerX}px`;
 
     document.addEventListener("keydown", function (event) {
       switch (event.key) {
         case "ArrowLeft":
-          skullPositionX = Math.max(0, skullPositionX - 10);
+          playerX = Math.max(0, playerX - 10);
           break;
         case "ArrowRight":
-          skullPositionX = Math.min(250, skullPositionX + 10);
+          playerX = Math.min(gameArea.clientWidth - 50, playerX + 10);
           break;
         case " ":
           if (canShoot) {
@@ -109,7 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
           break;
       }
-      skull.style.left = skullPositionX + "px";
+      player.style.left = `${playerX}px`;
     });
 
     document.addEventListener("keyup", function (event) {
@@ -118,65 +116,45 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    function checkLevelProgression() {
-      if (
-        enemiesKilled >= gameConfig.levels[currentLevel - 1].enemiesForNextLevel
-      ) {
-        currentLevel++;
-
-        // Actualizar fondo
-        if (gameConfig.levels[currentLevel - 1]) {
-          gameArea.style.backgroundImage = `url('${
-            gameConfig.levels[currentLevel - 1].background
-          }')`;
-
-          // Actualizar sprite de enemigos
-          const newEnemySprite =
-            gameConfig.levels[currentLevel - 1].enemySprite;
-          // Lógica para cambiar sprite de enemigos
-        }
-
-        // Aumentar dificultad
-        clearInterval(spawnInterval);
-        const newSpawnRate = 2000 - currentLevel * 100;
-        spawnInterval = setInterval(spawnEnemy, Math.max(500, newSpawnRate));
-
-        // Actualizar contador de nivel
-        levelCount.textContent = `Nivel: ${currentLevel}`;
-      }
-    }
-
     function createBullet() {
-      // Modificar para que las balas salgan desde la posición actual del jugador
       const bullet = document.createElement("div");
       bullet.classList.add("bullet");
-      bullet.innerHTML = "🦴";
-      bullet.style.left = `${playerX + player.offsetWidth / 2}px`;
+      bullet.innerHTML = "\uD83E\uDDB4"; // Bone emoji
+      bullet.style.left = `${playerX + 25}px`;
       bullet.style.bottom = "60px";
       gameArea.appendChild(bullet);
       bullets.push(bullet);
-
-      // Llamar a checkLevelProgression después de matar un enemigo
-      enemies.forEach((enemy, index) => {
-        if (isColliding(bullet, enemy)) {
-          // ... código anterior de colisión ...
-          checkLevelProgression(); // Añadir esta línea
-        }
-      });
+      moveBullet(bullet);
     }
 
     function moveBullet(bullet) {
-      let bulletPosition = parseInt(bullet.style.bottom);
-      const bulletInterval = setInterval(function () {
-        if (bulletPosition < 600) {
-          bulletPosition += 10;
-          bullet.style.bottom = bulletPosition + "px";
+      const bulletInterval = setInterval(() => {
+        let bulletPosition = parseInt(bullet.style.bottom);
+        if (bulletPosition < gameArea.clientHeight) {
+          bullet.style.bottom = `${bulletPosition + 10}px`;
           checkCollisions(bullet);
         } else {
           clearInterval(bulletInterval);
           bullet.remove();
+          bullets = bullets.filter((b) => b !== bullet);
         }
       }, 20);
+    }
+
+    function checkCollisions(bullet) {
+      enemies.forEach((enemy, index) => {
+        if (isColliding(bullet, enemy)) {
+          bullet.remove();
+          bullets = bullets.filter((b) => b !== bullet);
+
+          enemy.remove();
+          enemies.splice(index, 1);
+          enemiesKilled++;
+
+          enemyCount.textContent = `Enemigos: ${enemiesKilled}`;
+          checkLevelProgression();
+        }
+      });
     }
 
     function isColliding(a, b) {
@@ -190,18 +168,30 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
 
-    gameTimer = setInterval(() => {
-      gameTime++;
-      timeCount.textContent = `Tiempo: ${gameTime}s`;
-    }, 1000);
+    function checkLevelProgression() {
+      if (
+        enemiesKilled >= gameConfig.levels[currentLevel - 1].enemiesForNextLevel
+      ) {
+        currentLevel++;
+        if (gameConfig.levels[currentLevel - 1]) {
+          gameArea.style.backgroundImage = `url('${
+            gameConfig.levels[currentLevel - 1].background
+          }')`;
+        }
+        clearInterval(spawnInterval);
+        spawnInterval = setInterval(
+          spawnEnemy,
+          Math.max(500, 2000 - currentLevel * 100)
+        );
+        levelCount.textContent = `Nivel: ${currentLevel}`;
+      }
+    }
 
     function spawnEnemy() {
       const enemy = document.createElement("div");
       enemy.classList.add("enemy");
 
-      const currentLevelConfig = gameConfig.levels.find(
-        (l) => l.level === currentLevel
-      );
+      const currentLevelConfig = gameConfig.levels[currentLevel - 1];
       if (currentLevelConfig.enemySprite) {
         const enemyImg = document.createElement("img");
         enemyImg.src = currentLevelConfig.enemySprite;
@@ -209,29 +199,33 @@ document.addEventListener("DOMContentLoaded", () => {
         enemyImg.style.height = "40px";
         enemy.appendChild(enemyImg);
       } else {
-        enemy.innerHTML = "👾";
+        enemy.innerHTML = "\uD83D\uDC7E"; // Alien emoji
       }
 
-      enemy.style.left = `${Math.random() * 250}px`;
+      enemy.style.left = `${Math.random() * (gameArea.clientWidth - 50)}px`;
+      enemy.style.top = "0px";
       gameArea.appendChild(enemy);
       enemies.push(enemy);
 
-      function moveEnemy() {
-        const currentTop = parseInt(enemy.style.top || "0");
-        enemy.style.top = `${currentTop + currentLevel}px`;
-
-        const gameAreaRect = gameArea.getBoundingClientRect();
-        const enemyRect = enemy.getBoundingClientRect();
-        if (enemyRect.bottom >= gameAreaRect.bottom) {
-          gameOver();
+      const enemyInterval = setInterval(() => {
+        const currentTop = parseInt(enemy.style.top);
+        if (currentTop < gameArea.clientHeight - 50) {
+          enemy.style.top = `${currentTop + currentLevel}px`;
+        } else {
           clearInterval(enemyInterval);
+          enemy.remove();
+          enemies = enemies.filter((e) => e !== enemy);
+          gameOver();
         }
-      }
-
-      const enemyInterval = setInterval(moveEnemy, 50);
+      }, 50);
     }
 
-    const spawnInterval = setInterval(spawnEnemy, 2000 - currentLevel * 100);
+    const spawnInterval = setInterval(spawnEnemy, 2000);
+
+    gameTimer = setInterval(() => {
+      gameTime++;
+      timeCount.textContent = `Tiempo: ${gameTime}s`;
+    }, 1000);
 
     function gameOver() {
       clearInterval(gameTimer);
@@ -253,30 +247,27 @@ document.addEventListener("DOMContentLoaded", () => {
         }),
       })
         .then((response) => {
-          console.log("Server response status:", response.status);
           if (!response.ok) {
             throw new Error("Network response was not ok");
           }
           return response.json();
         })
-        .then((data) => {
-          console.log("Ranking saved:", data);
+        .then(() => {
           alert("Puntuación guardada exitosamente");
         })
-        .catch((error) => {
-          console.error("Error saving ranking:", error);
+        .catch(() => {
           alert("No se pudo guardar la puntuación. Revisa tu conexión.");
         });
 
       const gameOverScreen = document.createElement("div");
       gameOverScreen.id = "game-over-screen";
       gameOverScreen.innerHTML = `
-          <h2 style="color: white;">Game Over</h2>
-          <p style="color: white;">Jugador: ${playerName}</p>
-          <p style="color: white;">Enemigos eliminados: ${enemiesKilled}</p>
-          <p style="color: white;">Tiempo: ${gameTime} segundos</p>
-          <p style="color: white;">Puntuación: ${score}</p>
-          <button id="return-btn" onclick="window.location.href='rankingsss.html'">Ver Rankings</button>
+        <h2 style="color: white;">Game Over</h2>
+        <p style="color: white;">Jugador: ${playerName}</p>
+        <p style="color: white;">Enemigos eliminados: ${enemiesKilled}</p>
+        <p style="color: white;">Tiempo: ${gameTime} segundos</p>
+        <p style="color: white;">Puntuación: ${score}</p>
+        <button id="return-btn" onclick="window.location.href='rankingsss.html'">Ver Rankings</button>
       `;
       gameContainer.appendChild(gameOverScreen);
     }
