@@ -94,40 +94,27 @@ document.addEventListener("DOMContentLoaded", () => {
     let playerX = 125;
     player.style.left = `${playerX}px`;
 
-    const keys = {};
-    document.addEventListener("keydown", (e) => {
-      keys[e.key] = true;
-      handleKeyPress(e);
-    });
-
-    document.addEventListener("keyup", (e) => {
-      keys[e.key] = false;
-    });
-
-    function handleKeyPress(e) {
-      switch (e.key) {
+    document.addEventListener("keydown", function (event) {
+      switch (event.key) {
         case "ArrowLeft":
-          playerX = Math.max(0, playerX - 10);
-          player.style.left = `${playerX}px`;
-          // Opcional: Rotar ligeramente el personaje hacia la izquierda
-          player.style.transform = "rotate(-10deg)";
+          skullPositionX = Math.max(0, skullPositionX - 10);
           break;
         case "ArrowRight":
-          playerX = Math.min(
-            gameArea.clientWidth - player.offsetWidth,
-            playerX + 10
-          );
-          player.style.left = `${playerX}px`;
-          // Opcional: Rotar ligeramente el personaje hacia la derecha
-          player.style.transform = "rotate(10deg)";
+          skullPositionX = Math.min(250, skullPositionX + 10);
+          break;
+        case " ":
+          if (canShoot) {
+            createBullet();
+            canShoot = false;
+          }
           break;
       }
-    }
+      skull.style.left = skullPositionX + "px";
+    });
 
-    // Restaurar posición original cuando se suelta la tecla
-    document.addEventListener("keyup", (e) => {
-      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-        player.style.transform = "rotate(0deg)";
+    document.addEventListener("keyup", function (event) {
+      if (event.key === " ") {
+        canShoot = true;
       }
     });
 
@@ -159,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    function shoot() {
+    function createBullet() {
       // Modificar para que las balas salgan desde la posición actual del jugador
       const bullet = document.createElement("div");
       bullet.classList.add("bullet");
@@ -176,6 +163,20 @@ document.addEventListener("DOMContentLoaded", () => {
           checkLevelProgression(); // Añadir esta línea
         }
       });
+    }
+
+    function moveBullet(bullet) {
+      let bulletPosition = parseInt(bullet.style.bottom);
+      const bulletInterval = setInterval(function () {
+        if (bulletPosition < 600) {
+          bulletPosition += 10;
+          bullet.style.bottom = bulletPosition + "px";
+          checkCollisions(bullet);
+        } else {
+          clearInterval(bulletInterval);
+          bullet.remove();
+        }
+      }, 20);
     }
 
     function isColliding(a, b) {
