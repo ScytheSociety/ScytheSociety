@@ -220,8 +220,18 @@ body {
 }
 
 #game-area {
+  width: 100%;
+  max-width: 500px; /* o el ancho máximo que prefieras */
+  height: 70vh; /* altura relativa a la ventana */
+  margin: 0 auto;
   position: relative;
-  height: 500px;
+  overflow: hidden;
+}
+
+#player-character {
+  position: absolute;
+  bottom: 10px;
+  transition: left 0.1s ease; /* Suavizar movimiento */
 }
 
 #player {
@@ -232,8 +242,7 @@ body {
 
 .enemy {
   position: absolute;
-  top: 0;
-  font-size: 30px;
+  transition: top 0.05s linear; /* Suavizar movimiento de enemigos */
 }
 
 #game-over-screen {
