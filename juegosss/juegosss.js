@@ -1,173 +1,192 @@
-document.addEventListener("DOMContentLoaded", function () {
-  // Recuperar datos del jugador
-  const playerName = localStorage.getItem("playerName") || "Jugador";
-  const playerAvatar = localStorage.getItem("playerAvatar");
-  const characterEmoji = localStorage.getItem("characterEmoji") || "💀";
+document.addEventListener("DOMContentLoaded", () => {
+  const loginScreen = document.querySelector("#login-screen");
+  const gameContainer = document.querySelector("#game-container");
+  const playerForm = document.querySelector("#playerForm");
+  const rankingButton = document.querySelector("#rankingButton");
 
-  const gameContainer = document.getElementById("game-container");
-  const startButton = document.getElementById("play-button");
-  const gameBoard = document.getElementById("game-board");
-  const winMessage = document.getElementById("win-message");
-  const loseMessage = document.getElementById("lose-message");
+  // Game Configuration
+  const gameConfig = {
+    backgroundImage: "https://example.com/space-background.jpg",
+    enemyImage: "https://example.com/enemy.png",
+    levels: [
+      { level: 1, speed: 1, spawnRate: 2000, enemiesForNextLevel: 5 },
+      { level: 2, speed: 2, spawnRate: 1800, enemiesForNextLevel: 10 },
+      { level: 3, speed: 3, spawnRate: 1600, enemiesForNextLevel: 15 },
+      { level: 4, speed: 4, spawnRate: 1400, enemiesForNextLevel: 20 },
+      { level: 5, speed: 5, spawnRate: 1200, enemiesForNextLevel: 25 },
+      { level: 6, speed: 6, spawnRate: 1000, enemiesForNextLevel: 30 },
+      { level: 7, speed: 7, spawnRate: 800, enemiesForNextLevel: 35 },
+      { level: 8, speed: 8, spawnRate: 600, enemiesForNextLevel: 40 },
+      { level: 9, speed: 9, spawnRate: 400, enemiesForNextLevel: 45 },
+      { level: 10, speed: 10, spawnRate: 200, enemiesForNextLevel: 50 },
+    ],
+  };
 
-  // Mostrar nombre del jugador
-  const playerNameDisplay = document.createElement("div");
-  playerNameDisplay.id = "player-name-display";
-  playerNameDisplay.textContent = playerName;
-  gameBoard.appendChild(playerNameDisplay);
+  // Player Registration
+  playerForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const playerName = document.querySelector("#playerName").value;
+    const playerAvatar = document.querySelector("#playerAvatar").value;
+    const characterEmoji = document.querySelector("#characterEmoji").value;
 
-  // Crear elementos de UI
-  const enemyCountDisplay = document.createElement("div");
-  enemyCountDisplay.id = "enemy-count-display";
-  enemyCountDisplay.textContent = "Enemigos: 0";
-  gameBoard.appendChild(enemyCountDisplay);
+    // Validate input
+    if (playerAvatar && characterEmoji) {
+      alert("Elige solo avatar o emoji, no ambos");
+      return;
+    }
 
-  const timeDisplay = document.createElement("div");
-  timeDisplay.id = "time-display";
-  timeDisplay.textContent = "Tiempo: 0s";
-  gameBoard.appendChild(timeDisplay);
+    // Store player data
+    localStorage.setItem("playerName", playerName);
+    localStorage.setItem("playerAvatar", playerAvatar || "");
+    localStorage.setItem("characterEmoji", characterEmoji || "💀");
 
-  const levelDisplay = document.createElement("div");
-  levelDisplay.id = "level-display";
-  levelDisplay.textContent = "Nivel: 1";
-  gameBoard.appendChild(levelDisplay);
+    // Start game
+    startGame();
+  });
 
-  // Crear calavera/personaje
-  const skull = document.createElement("div");
-  skull.id = "skull";
-  skull.innerHTML = characterEmoji || "💀";
-  gameBoard.appendChild(skull);
-
-  let skullPositionX = 125;
+  // Game Variables
   let currentLevel = 1;
-  let canShoot = true;
-  let enemySpeed = 1;
   let enemiesKilled = 0;
   let gameTime = 0;
   let gameTimer;
-  let canStartGame = true;
+  let enemies = [];
 
-  // Configuraciones de niveles
-  const levelConfig = {
-    1: { enemySpeed: 1, spawnRate: 2000, enemiesForNextLevel: 5 },
-    2: { enemySpeed: 2, spawnRate: 1800, enemiesForNextLevel: 10 },
-    3: { enemySpeed: 3, spawnRate: 1600, enemiesForNextLevel: 15 },
-    4: { enemySpeed: 4, spawnRate: 1400, enemiesForNextLevel: 20 },
-    5: { enemySpeed: 5, spawnRate: 1200, enemiesForNextLevel: 25 },
-    6: { enemySpeed: 6, spawnRate: 1000, enemiesForNextLevel: 30 },
-    7: { enemySpeed: 7, spawnRate: 800, enemiesForNextLevel: 35 },
-    8: { enemySpeed: 8, spawnRate: 600, enemiesForNextLevel: 40 },
-    9: { enemySpeed: 9, spawnRate: 400, enemiesForNextLevel: 45 },
-    10: { enemySpeed: 10, spawnRate: 200, enemiesForNextLevel: 50 },
-  };
+  function startGame() {
+    loginScreen.style.display = "none";
+    gameContainer.style.display = "block";
 
-  // Iniciar temporizador de juego
-  function startGameTimer() {
+    const playerName = localStorage.getItem("playerName");
+    const characterEmoji = localStorage.getItem("characterEmoji") || "💀";
+    const gameArea = document.querySelector("#game-area");
+    const playerInfo = document.querySelector("#player-info");
+    const enemyCount = document.querySelector("#enemy-count");
+    const timeCount = document.querySelector("#time-count");
+    const levelCount = document.querySelector("#level-count");
+
+    // Setup player
+    const player = document.createElement("div");
+    player.id = "player-character";
+    player.innerHTML = characterEmoji;
+    document.querySelector("#player").appendChild(player);
+
+    // Player info
+    playerInfo.innerHTML = `<h2>${playerName}</h2>`;
+
+    // Start game timer
     gameTimer = setInterval(() => {
       gameTime++;
-      timeDisplay.textContent = `Tiempo: ${gameTime}s`;
+      timeCount.textContent = `Tiempo: ${gameTime}s`;
     }, 1000);
-  }
 
-  // Mostrar pantalla de game over
-  function showGameOverScreen() {
-    clearInterval(gameTimer);
-    canStartGame = false;
+    // Enemy spawning
+    function spawnEnemy() {
+      const enemy = document.createElement("div");
+      enemy.classList.add("enemy");
+      enemy.innerHTML = "👾"; // Customizable enemy
+      enemy.style.left = `${Math.random() * 250}px`;
+      gameArea.appendChild(enemy);
+      enemies.push(enemy);
 
-    // Crear pantalla de game over
-    const gameOverScreen = document.createElement("div");
-    gameOverScreen.id = "game-over-screen";
-    gameOverScreen.innerHTML = `
-          <div class="game-over-content">
-              <h2>¡PERDISTE!</h2>
+      // Move enemy down
+      function moveEnemy() {
+        const currentTop = parseInt(enemy.style.top || "0");
+        enemy.style.top = `${currentTop + currentLevel}px`;
+
+        // Check game over
+        if (currentTop > 500) {
+          gameOver();
+        }
+      }
+
+      const enemyInterval = setInterval(moveEnemy, 50);
+    }
+
+    // Start spawning enemies
+    const spawnInterval = setInterval(spawnEnemy, 2000 - currentLevel * 100);
+
+    // Level progression
+    function checkLevelUp() {
+      const currentConfig = gameConfig.levels.find(
+        (l) => l.level === currentLevel
+      );
+      if (
+        enemiesKilled >= currentConfig.enemiesForNextLevel &&
+        currentLevel < 10
+      ) {
+        currentLevel++;
+        levelCount.textContent = `Nivel: ${currentLevel}`;
+
+        // Level transition effect
+        const levelTransition = document.createElement("div");
+        levelTransition.textContent = `¡Pasaste al Nivel ${currentLevel}!`;
+        gameArea.appendChild(levelTransition);
+
+        setTimeout(() => {
+          gameArea.removeChild(levelTransition);
+        }, 2000);
+      }
+    }
+
+    // Game over function
+    function gameOver() {
+      clearInterval(gameTimer);
+      clearInterval(spawnInterval);
+
+      // Create game over screen
+      const gameOverScreen = document.createElement("div");
+      gameOverScreen.innerHTML = `
+              <h2>Game Over</h2>
               <p>Jugador: ${playerName}</p>
               <p>Enemigos eliminados: ${enemiesKilled}</p>
-              <p>Tiempo de juego: ${gameTime} segundos</p>
-              <button id="retry-button">Intentar de nuevo</button>
-          </div>
-      `;
-    gameBoard.appendChild(gameOverScreen);
+              <p>Tiempo: ${gameTime} segundos</p>
+              <button id="return-btn">Regresar</button>
+          `;
+      gameOverScreen.id = "game-over-screen";
+      gameContainer.appendChild(gameOverScreen);
 
-    // Guardar puntuación en ranking
-    saveToRanking(playerName, enemiesKilled, gameTime);
+      // Save to rankings
+      saveToRankings(playerName, enemiesKilled, gameTime);
 
-    // Botón de reintentar
-    document
-      .getElementById("retry-button")
-      .addEventListener("click", resetGame);
-  }
+      // Return button
+      document.getElementById("return-btn").addEventListener("click", () => {
+        gameContainer.style.display = "none";
+        loginScreen.style.display = "block";
+        gameContainer.innerHTML = ""; // Reset game
+      });
+    }
 
-  // Guardar puntuación en ranking
-  function saveToRanking(name, enemiesKilled, time) {
-    const score = enemiesKilled * 10 + (100 - time);
+    // Ranking save function
+    function saveToRankings(name, kills, time) {
+      const score = kills * 10 + (100 - time);
 
-    fetch("juegosss.json")
-      .then((response) => response.json())
-      .then((data) => {
-        data.rankings.push({
-          name: name,
-          enemiesKilled: enemiesKilled,
-          time: time,
-          score: score,
-        });
+      fetch("juegosss.json")
+        .then((response) => response.json())
+        .then((data) => {
+          data.rankings.push({
+            name: name,
+            enemiesKilled: kills,
+            time: time,
+            score: score,
+          });
 
-        // Ordenar y mantener solo los 10 mejores
-        data.rankings.sort((a, b) => b.score - a.score);
-        data.rankings = data.rankings.slice(0, 10);
+          // Sort and keep top 10
+          data.rankings.sort((a, b) => b.score - a.score);
+          data.rankings = data.rankings.slice(0, 10);
 
-        // Guardar de vuelta
-        return fetch("juegosss.json", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        });
-      })
-      .catch((error) => console.error("Error al guardar ranking:", error));
-  }
-
-  // Resetear juego
-  function resetGame() {
-    // Limpiar todo lo existente
-    const gameOverScreen = document.getElementById("game-over-screen");
-    if (gameOverScreen) gameOverScreen.remove();
-
-    // Reiniciar variables
-    skullPositionX = 125;
-    currentLevel = 1;
-    enemiesKilled = 0;
-    gameTime = 0;
-    canStartGame = true;
-
-    // Limpiar enemigos y balas existentes
-    document.querySelectorAll(".enemy, .bullet").forEach((el) => el.remove());
-
-    // Actualizar displays
-    enemyCountDisplay.textContent = "Enemigos: 0";
-    timeDisplay.textContent = "Tiempo: 0s";
-    levelDisplay.textContent = "Nivel: 1";
-
-    // Reiniciar posición de calavera
-    skull.style.left = skullPositionX + "px";
-
-    // Reiniciar spawner y temporizador
-    startGameTimer();
-    startEnemySpawner();
-  }
-
-  // [El resto del código de juego permanece similar al anterior,
-  //  con pequeñas modificaciones para manejar los nuevos elementos]
-
-  // Implementar lógica de subida de nivel
-  function checkLevelUp() {
-    const config = levelConfig[currentLevel];
-    if (enemiesKilled >= config.enemiesForNextLevel && currentLevel < 10) {
-      currentLevel++;
-      levelDisplay.textContent = `Nivel: ${currentLevel}`;
-      // Aquí podrías añadir una transición visual de nivel
+          return fetch("juegosss.json", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+        })
+        .catch((error) => console.error("Error:", error));
     }
   }
 
-  // Código similar al anterior, con adiciones para nuevas mecánicas
+  // Ranking button
+  rankingButton.addEventListener("click", () => {
+    window.location.href = "rankingsss.html";
+  });
 });

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juegos de Scythe Society</title>
+    <title>Hell Shooter - Scythe Society</title>
     <link rel="stylesheet" href="juegosss.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
@@ -16,22 +16,40 @@
     </div>
 
     <div class="container text-center">
-        <!-- Aquí se carga el menú -->
         <div id="navbar-placeholder"></div>
 
-        <h1>Bienvenido a la Página del Juego</h1>
-        <p class="description">¡Disfruta de la experiencia de juego en Scythe Society!</p>
-        <div id="game-container">
-            <!-- Pantalla de bienvenida -->
-            <div id="welcome-screen" class="screen">
-                <img id="welcome-image" src="https://i.imgur.com/znFfGmV.png" alt="Welcome Image">
-                <div class="button" id="play-button">Jugar</div>
+        <div id="login-screen" class="screen">
+            <div class="login-container text-center">
+                <h2 class="mb-4">Hell Shooter</h2>
+                <form id="playerForm">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="playerName" placeholder="Ingresa tu nombre" required
+                            maxlength="15">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="playerAvatar"
+                            placeholder="URL de Avatar (opcional)">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="characterEmoji"
+                            placeholder="Emoji para personaje (opcional)" maxlength="2">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-custom">Jugar</button>
+                    <button type="button" class="btn btn-secondary btn-custom" id="rankingButton">Ranking</button>
+                </form>
             </div>
+        </div>
 
-            <!-- Tablero del juego (inicialmente oculto) -->
-            <div id="game-board" class="screen" style="display: none;">
-                <div class="message" id="win-message">¡GANASTE, ERES EL MEJOR!</div>
-                <div class="message" id="lose-message">¡PERDISTE, NO TE RINDAS!</div>
+        <div id="game-container" class="screen" style="display:none;">
+            <div id="game-board">
+                <div id="player-info"></div>
+                <div id="game-stats">
+                    <div id="enemy-count">Enemigos: 0</div>
+                    <div id="time-count">Tiempo: 0s</div>
+                    <div id="level-count">Nivel: 1</div>
+                </div>
+                <div id="game-area"></div>
+                <div id="player"></div>
             </div>
         </div>
     </div>
@@ -40,22 +58,6 @@
         <p>Creado por Scythe Society © 2024</p>
     </footer>
 
-    <!-- Script para cargar el menú -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            fetch("../codigos/navbar.html")
-                .then(response => {
-                    if (!response.ok) throw new Error("Error al cargar navbar");
-                    return response.text();
-                })
-                .then(data => {
-                    document.getElementById("navbar-placeholder").innerHTML = data;
-                })
-                .catch(error => console.error('Error:', error));
-        });
-    </script>
-
-    <!-- Script para el juego -->
     <script src="juegosss.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
