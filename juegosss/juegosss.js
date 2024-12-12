@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const gameContainer = document.querySelector("#game-container");
   const playerForm = document.querySelector("#playerForm");
 
-  // Configuración de niveles con fondos y enemigos personalizables
+  // Configuration for levels with customizable backgrounds and enemies
   const gameConfig = {
     levels: [
       {
@@ -12,8 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
         spawnRate: 2000,
         enemiesForNextLevel: 20,
         background:
-          "https://images.nightcafe.studio/jobs/vpbclnBxKsCSwkqT7DSx/vpbclnBxKsCSwkqT7DSx--1--7f3mk.jpg", // Fondo del nivel
-        enemySprite: "https://file5s.ratemyserver.net/mobs/1904.gif", // Sprite de enemigo
+          "https://images.nightcafe.studio/jobs/vpbclnBxKsCSwkqT7DSx/vpbclnBxKsCSwkqT7DSx--1--7f3mk.jpg",
+        enemySprite: "https://file5s.ratemyserver.net/mobs/1904.gif",
       },
       {
         level: 2,
@@ -24,7 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
           "https://images.nightcafe.studio/jobs/lcHVhwRpZB2usrCuJHVL/lcHVhwRpZB2usrCuJHVL--1--bvupt.jpg",
         enemySprite: "https://file5s.ratemyserver.net/mobs/1726.gif",
       },
-      // Puedes añadir más niveles con sus configuraciones
     ],
   };
 
@@ -85,16 +84,28 @@ document.addEventListener("DOMContentLoaded", () => {
     let gameTimer;
     let enemies = [];
     let bullets = [];
+    let canShoot = true;
 
-    // Establecer fondo inicial
+    // Set initial background
     gameArea.style.backgroundImage = `url('${gameConfig.levels[0].background}')`;
     gameArea.style.backgroundSize = "cover";
 
-    // Movimiento del jugador
-    let playerX = 125; // Posición inicial
+    // Player movement
+    let playerX = 125; // Initial position
     player.style.left = `${playerX}px`;
 
+    // Prevent continuous movement and shooting
+    const keys = {};
     document.addEventListener("keydown", (e) => {
+      keys[e.key] = true;
+      handleKeyPress(e);
+    });
+
+    document.addEventListener("keyup", (e) => {
+      keys[e.key] = false;
+    });
+
+    function handleKeyPress(e) {
       switch (e.key) {
         case "ArrowLeft":
           playerX = Math.max(0, playerX - 10);
@@ -102,14 +113,24 @@ document.addEventListener("DOMContentLoaded", () => {
         case "ArrowRight":
           playerX = Math.min(250, playerX + 10);
           break;
-        case " ": // Espacio para disparar
-          shoot();
+        case " ": // Space to shoot
+          if (canShoot) {
+            shoot();
+            canShoot = false;
+          }
           break;
       }
       player.style.left = `${playerX}px`;
+    }
+
+    // Reset shoot ability when key is released
+    document.addEventListener("keyup", (e) => {
+      if (e.key === " ") {
+        canShoot = true;
+      }
     });
 
-    // Disparar
+    // Shoot function
     function shoot() {
       const bullet = document.createElement("div");
       bullet.classList.add("bullet");
@@ -123,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentBottom = parseInt(bullet.style.bottom || "60");
         bullet.style.bottom = `${currentBottom + 10}px`;
 
-        // Colisión con enemigos
+        // Collision with enemies
         enemies.forEach((enemy, index) => {
           if (isColliding(bullet, enemy)) {
             gameArea.removeChild(bullet);
@@ -135,8 +156,10 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
 
-        // Remover bala si sale de pantalla
-        if (currentBottom > 600) {
+        // Remove bullet if it goes out of game area
+        const gameAreaRect = gameArea.getBoundingClientRect();
+        const bulletRect = bullet.getBoundingClientRect();
+        if (bulletRect.bottom < gameAreaRect.top) {
           clearInterval(bulletInterval);
           gameArea.removeChild(bullet);
           bullets.splice(bullets.indexOf(bullet), 1);
@@ -144,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 50);
     }
 
-    // Detectar colisiones
+    // Collision detection
     function isColliding(a, b) {
       const aRect = a.getBoundingClientRect();
       const bRect = b.getBoundingClientRect();
@@ -165,7 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const enemy = document.createElement("div");
       enemy.classList.add("enemy");
 
-      // Usar sprite de enemigo personalizado o emoji
+      // Use custom enemy sprite or emoji
       const currentLevelConfig = gameConfig.levels.find(
         (l) => l.level === currentLevel
       );
@@ -187,7 +210,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentTop = parseInt(enemy.style.top || "0");
         enemy.style.top = `${currentTop + currentLevel}px`;
 
-        if (currentTop > 500) {
+        // Game over only if enemy reaches player's level
+        const gameAreaRect = gameArea.getBoundingClientRect();
+        const playerRect = player.getBoundingClientRect();
+        if (currentTop + 40 >= playerRect.top) {
           gameOver();
         }
       }
@@ -201,6 +227,22 @@ document.addEventListener("DOMContentLoaded", () => {
       clearInterval(gameTimer);
       clearInterval(spawnInterval);
 
+      // Save ranking to localStorage
+      const rankings = JSON.parse(localStorage.getItem("gameRankings") || "[]");
+      rankings.push({
+        playerName: playerName,
+        enemiesKilled: enemiesKilled,
+        time: gameTime,
+        date: new Date().toISOString(),
+      });
+
+      // Sort rankings by enemies killed (descending)
+      rankings.sort((a, b) => b.enemiesKilled - a.enemiesKilled);
+
+      // Keep only top 10 rankings
+      const topRankings = rankings.slice(0, 10);
+      localStorage.setItem("gameRankings", JSON.stringify(topRankings));
+
       const gameOverScreen = document.createElement("div");
       gameOverScreen.id = "game-over-screen";
       gameOverScreen.innerHTML = `
@@ -208,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <p style="color: white;">Jugador: ${playerName}</p>
         <p style="color: white;">Enemigos eliminados: ${enemiesKilled}</p>
         <p style="color: white;">Tiempo: ${gameTime} segundos</p>
-        <button id="return-btn" onclick="window.location.href='juegosss.html'">Regresar</button>
+        <button id="return-btn" onclick="window.location.href='index.html'">Regresar</button>
       `;
       gameContainer.appendChild(gameOverScreen);
     }
