@@ -229,46 +229,39 @@ document.addEventListener("DOMContentLoaded", () => {
       clearInterval(gameTimer);
       clearInterval(spawnInterval);
 
-      // Calculate score
+      // Calcular puntuación
       const score = Math.round(enemiesKilled * 10 - gameTime);
 
-      // Read existing rankings
-      fetch("juegosss.json")
+      // Enviar ranking al servidor
+      fetch("https://51.195.219.193/rankinghellshooter.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: playerName,
+          enemiesKilled: enemiesKilled,
+          time: gameTime,
+          score: score,
+        }),
+      })
         .then((response) => response.json())
         .then((data) => {
-          // Add new ranking
-          data.rankings.push({
-            name: playerName,
-            enemiesKilled: enemiesKilled,
-            time: gameTime,
-            score: score,
-            date: new Date().toISOString(),
-          });
-
-          // Sort rankings and keep top 10
-          data.rankings.sort((a, b) => b.score - a.score);
-          data.rankings = data.rankings.slice(0, 10);
-
-          // Write back to JSON
-          return fetch("juegosss.json", {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-          });
+          console.log("Ranking guardado:", data);
         })
-        .catch((error) => console.error("Error updating rankings:", error));
+        .catch((error) => {
+          console.error("Error guardando ranking:", error);
+        });
 
       const gameOverScreen = document.createElement("div");
       gameOverScreen.id = "game-over-screen";
       gameOverScreen.innerHTML = `
-        <h2 style="color: white;">Game Over</h2>
-        <p style="color: white;">Jugador: ${playerName}</p>
-        <p style="color: white;">Enemigos eliminados: ${enemiesKilled}</p>
-        <p style="color: white;">Tiempo: ${gameTime} segundos</p>
-        <p style="color: white;">Puntuación: ${score}</p>
-        <button id="return-btn" onclick="window.location.href='juegosss.html'">Regresar</button>
+          <h2 style="color: white;">Game Over</h2>
+          <p style="color: white;">Jugador: ${playerName}</p>
+          <p style="color: white;">Enemigos eliminados: ${enemiesKilled}</p>
+          <p style="color: white;">Tiempo: ${gameTime} segundos</p>
+          <p style="color: white;">Puntuación: ${score}</p>
+          <button id="return-btn" onclick="window.location.href='rankingsss.html'">Ver Rankings</button>
       `;
       gameContainer.appendChild(gameOverScreen);
     }

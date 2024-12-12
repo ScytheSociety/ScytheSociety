@@ -38,25 +38,34 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            fetch('juegosss.json')
-                .then(response => response.json())
-                .then(data => {
-                    const rankingBody = document.getElementById('ranking-body');
-                    data.rankings
-                        .sort((a, b) => b.score - a.score)
-                        .slice(0, 10)
-                        .forEach((entry, index) => {
-                            const row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td>${index + 1}</td>
-                                <td>${entry.name}</td>
-                                <td>${entry.enemiesKilled}</td>
-                                <td>${entry.time}s</td>
-                                <td>${entry.score}</td>
-                            `;
-                            rankingBody.appendChild(row);
-                        });
-                });
+            function cargarRankings() {
+                fetch('https://51.195.219.193/rankinghellshooter.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        const rankingBody = document.getElementById('ranking-body');
+                        rankingBody.innerHTML = ''; // Limpiar contenido anterior
+                        data.rankings
+                            .sort((a, b) => b.score - a.score)
+                            .slice(0, 10)
+                            .forEach((entry, index) => {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td>${index + 1}</td>
+                                    <td>${entry.name}</td>
+                                    <td>${entry.enemiesKilled}</td>
+                                    <td>${entry.time}s</td>
+                                    <td>${entry.score}</td>
+                                `;
+                                rankingBody.appendChild(row);
+                            });
+                    })
+                    .catch(error => {
+                        console.error('Error cargando rankings:', error);
+                    });
+            }
+
+            // Llamar a la función para cargar rankings
+            cargarRankings();
         });
     </script>
 </body>
