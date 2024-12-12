@@ -24,7 +24,7 @@ $(".dropdown-submenu .dropdown-toggle").on("click", function (e) {
   e.preventDefault();
 });
 
-/*navi copiable*/
+//INICIO *navi copiable*/
 function copyToClipboard(text) {
   // Crea un elemento de texto oculto para copiar el texto
   const tempInput = document.createElement("input");
@@ -41,4 +41,36 @@ function copyToClipboard(text) {
     document.querySelector(".copiable").innerText = originalText;
   }, 2000); // Vuelve al texto original después de 2 segundos
 }
-/*fin de navi copiab le*/
+/*FIN de navi copiab le*/
+
+// INICIO Ruta al archivo JSON que genera las imagenes de las misiones
+const jsonFile = "romisiones.json";
+
+// Contenedor donde se agregarán las misiones
+const container = document.getElementById("misiones-container");
+
+fetch(jsonFile)
+  .then((response) => response.json())
+  .then((data) => {
+    data.forEach((mision) => {
+      // Crear el elemento HTML para cada misión
+      const misionElement = document.createElement("div");
+      misionElement.className = "col-lg-2 col-md-3 col-sm-4 col-12 mb-4";
+
+      misionElement.innerHTML = `
+        <a href="${mision.link}">
+          <div class="image-container">
+            <img src="${mision.imagen}" class="img-fluid" alt="${mision.descripcion}">
+          </div>
+        </a>
+        <h5 class="text-center">
+          <a href="${mision.link}">${mision.titulo}</a>
+        </h5>
+      `;
+
+      // Agregar el elemento al contenedor
+      container.appendChild(misionElement);
+    });
+  })
+  .catch((error) => console.error("Error cargando el archivo JSON:", error));
+//FIN
