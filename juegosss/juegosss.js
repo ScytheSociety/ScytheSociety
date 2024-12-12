@@ -109,9 +109,11 @@ document.addEventListener("DOMContentLoaded", () => {
       switch (e.key) {
         case "ArrowLeft":
           playerX = Math.max(0, playerX - 10);
+          player.style.left = `${playerX}px`;
           break;
         case "ArrowRight":
           playerX = Math.min(250, playerX + 10);
+          player.style.left = `${playerX}px`;
           break;
         case " ": // Space to shoot
           if (canShoot) {
@@ -120,7 +122,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
           break;
       }
-      player.style.left = `${playerX}px`;
     }
 
     // Reset shoot ability when key is released
@@ -210,11 +211,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentTop = parseInt(enemy.style.top || "0");
         enemy.style.top = `${currentTop + currentLevel}px`;
 
-        // Game over only if enemy reaches player's level
+        // Game over only if enemy reaches bottom of game area
         const gameAreaRect = gameArea.getBoundingClientRect();
-        const playerRect = player.getBoundingClientRect();
-        if (currentTop + 40 >= playerRect.top) {
+        const enemyRect = enemy.getBoundingClientRect();
+        if (enemyRect.bottom >= gameAreaRect.bottom) {
           gameOver();
+          clearInterval(enemyInterval);
         }
       }
 
@@ -227,21 +229,36 @@ document.addEventListener("DOMContentLoaded", () => {
       clearInterval(gameTimer);
       clearInterval(spawnInterval);
 
-      // Save ranking to localStorage
-      const rankings = JSON.parse(localStorage.getItem("gameRankings") || "[]");
-      rankings.push({
-        playerName: playerName,
-        enemiesKilled: enemiesKilled,
-        time: gameTime,
-        date: new Date().toISOString(),
-      });
+      // Calculate score
+      const score = Math.round(enemiesKilled * 10 - gameTime);
 
-      // Sort rankings by enemies killed (descending)
-      rankings.sort((a, b) => b.enemiesKilled - a.enemiesKilled);
+      // Read existing rankings
+      fetch("juegosss.json")
+        .then((response) => response.json())
+        .then((data) => {
+          // Add new ranking
+          data.rankings.push({
+            name: playerName,
+            enemiesKilled: enemiesKilled,
+            time: gameTime,
+            score: score,
+            date: new Date().toISOString(),
+          });
 
-      // Keep only top 10 rankings
-      const topRankings = rankings.slice(0, 10);
-      localStorage.setItem("gameRankings", JSON.stringify(topRankings));
+          // Sort rankings and keep top 10
+          data.rankings.sort((a, b) => b.score - a.score);
+          data.rankings = data.rankings.slice(0, 10);
+
+          // Write back to JSON
+          return fetch("juegosss.json", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+        })
+        .catch((error) => console.error("Error updating rankings:", error));
 
       const gameOverScreen = document.createElement("div");
       gameOverScreen.id = "game-over-screen";
@@ -250,7 +267,8 @@ document.addEventListener("DOMContentLoaded", () => {
         <p style="color: white;">Jugador: ${playerName}</p>
         <p style="color: white;">Enemigos eliminados: ${enemiesKilled}</p>
         <p style="color: white;">Tiempo: ${gameTime} segundos</p>
-        <button id="return-btn" onclick="window.location.href='index.html'">Regresar</button>
+        <p style="color: white;">Puntuación: ${score}</p>
+        <button id="return-btn" onclick="window.location.href='juegosss.html'">Regresar</button>
       `;
       gameContainer.appendChild(gameOverScreen);
     }
