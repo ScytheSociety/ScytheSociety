@@ -84,42 +84,75 @@ document.addEventListener("DOMContentLoaded", () => {
     let gameTimer;
     let enemies = [];
     let bullets = [];
-    let canShoot = true;
 
-    gameArea.style.backgroundImage = `url('${gameConfig.levels[0].background}')`;
-    gameArea.style.backgroundSize = "cover";
-
+    // Player movement variables
     let playerX = gameArea.clientWidth / 2 - 25;
+    let keys = {
+      a: false,
+      d: false,
+    };
+    let shootCooldown = false;
+
+    // Set initial player position
+    player.style.position = "absolute";
+    player.style.bottom = "20px";
     player.style.left = `${playerX}px`;
 
+    // Smooth movement function
+    function updatePlayerMovement() {
+      const moveSpeed = 5;
+      const gameAreaWidth = gameArea.clientWidth - 50;
+
+      if (keys.a && playerX > 0) {
+        playerX -= moveSpeed;
+      }
+      if (keys.d && playerX < gameAreaWidth) {
+        playerX += moveSpeed;
+      }
+
+      player.style.left = `${playerX}px`;
+    }
+
+    // Key event listeners for smooth movement
     document.addEventListener("keydown", function (event) {
-      switch (event.key) {
-        case "ArrowLeft":
-          playerX = Math.max(0, playerX - 10);
+      switch (event.key.toLowerCase()) {
+        case "a":
+          keys.a = true;
           break;
-        case "ArrowRight":
-          playerX = Math.min(gameArea.clientWidth - 50, playerX + 10);
+        case "d":
+          keys.d = true;
           break;
         case " ":
-          if (canShoot) {
+          if (!shootCooldown) {
             createBullet();
-            canShoot = false;
+            shootCooldown = true;
           }
           break;
       }
-      player.style.left = `${playerX}px`;
     });
 
     document.addEventListener("keyup", function (event) {
-      if (event.key === " ") {
-        canShoot = true;
+      switch (event.key.toLowerCase()) {
+        case "a":
+          keys.a = false;
+          break;
+        case "d":
+          keys.d = false;
+          break;
+        case " ":
+          shootCooldown = false;
+          break;
       }
     });
+
+    // Continuous movement loop
+    const movementInterval = setInterval(updatePlayerMovement, 16); // ~60 fps
 
     function createBullet() {
       const bullet = document.createElement("div");
       bullet.classList.add("bullet");
       bullet.innerHTML = "\uD83E\uDDB4"; // Bone emoji
+      bullet.style.position = "absolute";
       bullet.style.left = `${playerX + 25}px`;
       bullet.style.bottom = "60px";
       gameArea.appendChild(bullet);
@@ -129,9 +162,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function moveBullet(bullet) {
       const bulletInterval = setInterval(() => {
-        let bulletPosition = parseInt(bullet.style.bottom);
-        if (bulletPosition < gameArea.clientHeight) {
-          bullet.style.bottom = `${bulletPosition + 10}px`;
+        let bulletBottom = parseInt(bullet.style.bottom);
+        if (bulletBottom < gameArea.clientHeight) {
+          bullet.style.bottom = `${bulletBottom + 10}px`;
           checkCollisions(bullet);
         } else {
           clearInterval(bulletInterval);
@@ -228,6 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 1000);
 
     function gameOver() {
+      clearInterval(movementInterval);
       clearInterval(gameTimer);
       clearInterval(spawnInterval);
 
