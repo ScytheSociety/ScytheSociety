@@ -90,24 +90,24 @@ const container = document.getElementById("index-container");
 fetch(jsonFile)
   .then((response) => response.json())
   .then((data) => {
-    data.forEach((mision) => {
+    data.forEach((index) => {
       // Crear el elemento HTML para cada misión
       const misionElement = document.createElement("div");
       misionElement.className = "col-lg-2 col-md-3 col-sm-4 col-12 mb-4";
 
       misionElement.innerHTML = `
-        <a href="${mision.link}">
+        <a href="${index.link}">
           <div class="image-container">
-            <img src="${mision.imagen}" class="img-fluid" alt="${mision.descripcion}">
+            <img src="${index.imagen}" class="img-fluid" alt="${index.descripcion}">
           </div>
         </a>
         <h5 class="text-center">
-          <a href="${mision.link}">${mision.titulo}</a>
+          <a href="${index.link}">${index.titulo}</a>
         </h5>
       `;
 
       // Agregar el elemento al contenedor
-      container.appendChild(misionElement);
+      container.appendChild(indexElement);
     });
   })
   .catch((error) => console.error("Error cargando el archivo JSON:", error));
