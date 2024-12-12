@@ -68,7 +68,7 @@ body {
   color: #ffffff;
 }
 
-/* Estilos para el tablero de juego */
+/* Tablero de juego */
 .screen {
   position: relative;
   width: 300px;
@@ -77,42 +77,40 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  touch-action: manipulation;
+  overflow: hidden;
 }
 
-/* Estilos de la calavera (player) */
+/* Calavera */
 #skull {
   position: absolute;
-  width: 30px; /* Icono más pequeño */
-  height: 30px; /* Icono más pequeño */
-  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  font-size: 28px;
   bottom: 20px;
   left: 125px;
-  color: white;
+  text-align: center;
 }
 
-/* Estilo de los huesos (bullets) */
+/* Balas/Huesos */
 .bullet {
   position: absolute;
-  width: 15px; /* Disminuye el tamaño */
-  height: 40px; /* Disminuye el tamaño */
-  font-size: 20px;
-  line-height: 40px;
-  color: white;
-}
-
-/* Estilo de los enemigos */
-.enemy {
-  position: absolute;
-  width: 30px;
+  width: 20px;
   height: 30px;
-  background-color: red; /* Color del enemigo */
-  font-size: 20px;
+  font-size: 18px;
   line-height: 30px;
   text-align: center;
 }
 
-/* Mensajes de victoria o derrota */
+/* Enemigos */
+.enemy {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  font-size: 28px;
+  text-align: center;
+}
+
+/* Mensajes */
 .message {
   position: absolute;
   top: 50%;
@@ -146,7 +144,7 @@ body {
   object-fit: contain;
 }
 
-/* Media query para dispositivos móviles */
+/* Responsive */
 @media (max-width: 768px) {
   .btn-dark {
     width: 100%;
