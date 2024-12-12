@@ -5,19 +5,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rankings - Scythe Society</title>
-    <link rel="stylesheet" href="juegosss.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #121212;
+            color: white;
+        }
+
+        .ranking-container {
+            margin-top: 50px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .table-dark {
+            color: #ffffff;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="banner">
-        <h1 class="main-title">Scythe Society</h1>
-        <h2 class="sub-title">Comunidad Gamer</h2>
-    </div>
-
     <div class="container text-center">
-        <div id="navbar-placeholder"></div>
-
         <div class="ranking-container">
             <h2>Top 10 Players</h2>
             <div id="error-message" class="alert alert-danger" style="display:none;"></div>
@@ -41,14 +50,16 @@
         document.addEventListener('DOMContentLoaded', () => {
             const rankingBody = document.getElementById('ranking-body');
             const errorMessage = document.getElementById('error-message');
+            const API_URL = 'http://51.195.219.193:5000/ranking';
 
             function mostrarError(mensaje) {
+                console.error('Error:', mensaje);
                 errorMessage.textContent = mensaje;
                 errorMessage.style.display = 'block';
             }
 
             function cargarRankings() {
-                fetch('http://51.195.219.193:5000/ranking', {
+                fetch(API_URL, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -56,7 +67,7 @@
                         }
                     })
                     .then(response => {
-                        console.log("Estado de la respuesta:", response.status);
+                        console.log("Response status:", response.status);
                         if (!response.ok) {
                             throw new Error('No se pudo cargar los rankings');
                         }
@@ -76,19 +87,19 @@
                             .forEach((entry, index) => {
                                 const row = document.createElement('tr');
                                 row.innerHTML = `
-                            <td>${index + 1}</td>
-                            <td>${entry.name}</td>
-                            <td>${entry.enemiesKilled}</td>
-                            <td>${entry.time}s</td>
-                            <td>${entry.score}</td>
-                        `;
+                                <td>${index + 1}</td>
+                                <td>${entry.name}</td>
+                                <td>${entry.enemiesKilled}</td>
+                                <td>${entry.time}s</td>
+                                <td>${entry.score}</td>
+                            `;
                                 rankingBody.appendChild(row);
                             });
 
                         errorMessage.style.display = 'none';
                     })
                     .catch(error => {
-                        console.error('Error:', error);
+                        console.error('Fetch error:', error);
                         mostrarError('Error al cargar rankings: ' + error.message);
                     });
             }

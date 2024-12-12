@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const playerForm = document.querySelector("#playerForm");
   const API_URL = "http://51.195.219.193:5000/submit_ranking";
 
-  // Configuration for levels with customizable backgrounds and enemies
   const gameConfig = {
     levels: [
       {
@@ -87,15 +86,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let bullets = [];
     let canShoot = true;
 
-    // Set initial background
     gameArea.style.backgroundImage = `url('${gameConfig.levels[0].background}')`;
     gameArea.style.backgroundSize = "cover";
 
-    // Player movement
-    let playerX = 125; // Initial position
+    let playerX = 125;
     player.style.left = `${playerX}px`;
 
-    // Prevent continuous movement and shooting
     const keys = {};
     document.addEventListener("keydown", (e) => {
       keys[e.key] = true;
@@ -116,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
           playerX = Math.min(250, playerX + 10);
           player.style.left = `${playerX}px`;
           break;
-        case " ": // Space to shoot
+        case " ":
           if (canShoot) {
             shoot();
             canShoot = false;
@@ -125,14 +121,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Reset shoot ability when key is released
     document.addEventListener("keyup", (e) => {
       if (e.key === " ") {
         canShoot = true;
       }
     });
 
-    // Shoot function
     function shoot() {
       const bullet = document.createElement("div");
       bullet.classList.add("bullet");
@@ -146,7 +140,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentBottom = parseInt(bullet.style.bottom || "60");
         bullet.style.bottom = `${currentBottom + 10}px`;
 
-        // Collision with enemies
         enemies.forEach((enemy, index) => {
           if (isColliding(bullet, enemy)) {
             gameArea.removeChild(bullet);
@@ -158,7 +151,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
 
-        // Remove bullet if it goes out of game area
         const gameAreaRect = gameArea.getBoundingClientRect();
         const bulletRect = bullet.getBoundingClientRect();
         if (bulletRect.bottom < gameAreaRect.top) {
@@ -169,7 +161,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 50);
     }
 
-    // Collision detection
     function isColliding(a, b) {
       const aRect = a.getBoundingClientRect();
       const bRect = b.getBoundingClientRect();
@@ -190,7 +181,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const enemy = document.createElement("div");
       enemy.classList.add("enemy");
 
-      // Use custom enemy sprite or emoji
       const currentLevelConfig = gameConfig.levels.find(
         (l) => l.level === currentLevel
       );
@@ -212,7 +202,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentTop = parseInt(enemy.style.top || "0");
         enemy.style.top = `${currentTop + currentLevel}px`;
 
-        // Game over only if enemy reaches bottom of game area
         const gameAreaRect = gameArea.getBoundingClientRect();
         const enemyRect = enemy.getBoundingClientRect();
         if (enemyRect.bottom >= gameAreaRect.bottom) {
@@ -232,7 +221,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const score = Math.round(enemiesKilled * 10 - gameTime);
 
-      // Improved ranking submission with better error handling
       fetch(API_URL, {
         method: "POST",
         headers: {
