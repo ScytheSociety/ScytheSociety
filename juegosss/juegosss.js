@@ -60,6 +60,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const playerName = localStorage.getItem("playerName");
     const characterEmoji = localStorage.getItem("characterEmoji") || "💀";
     const gameArea = document.querySelector("#game-area");
+    const gameAreaWidth = gameArea.clientWidth;
+    const gameAreaHeight = gameArea.clientHeight;
     const playerInfo = document.querySelector("#player-info");
     const enemyCount = document.querySelector("#enemy-count");
     const timeCount = document.querySelector("#time-count");
@@ -107,58 +109,73 @@ document.addEventListener("DOMContentLoaded", () => {
         case "ArrowLeft":
           playerX = Math.max(0, playerX - 10);
           player.style.left = `${playerX}px`;
+          // Opcional: Rotar ligeramente el personaje hacia la izquierda
+          player.style.transform = "rotate(-10deg)";
           break;
         case "ArrowRight":
-          playerX = Math.min(250, playerX + 10);
+          playerX = Math.min(
+            gameArea.clientWidth - player.offsetWidth,
+            playerX + 10
+          );
           player.style.left = `${playerX}px`;
-          break;
-        case " ":
-          if (canShoot) {
-            shoot();
-            canShoot = false;
-          }
+          // Opcional: Rotar ligeramente el personaje hacia la derecha
+          player.style.transform = "rotate(10deg)";
           break;
       }
     }
 
+    // Restaurar posición original cuando se suelta la tecla
     document.addEventListener("keyup", (e) => {
-      if (e.key === " ") {
-        canShoot = true;
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        player.style.transform = "rotate(0deg)";
       }
     });
 
+    function checkLevelProgression() {
+      if (
+        enemiesKilled >= gameConfig.levels[currentLevel - 1].enemiesForNextLevel
+      ) {
+        currentLevel++;
+
+        // Actualizar fondo
+        if (gameConfig.levels[currentLevel - 1]) {
+          gameArea.style.backgroundImage = `url('${
+            gameConfig.levels[currentLevel - 1].background
+          }')`;
+
+          // Actualizar sprite de enemigos
+          const newEnemySprite =
+            gameConfig.levels[currentLevel - 1].enemySprite;
+          // Lógica para cambiar sprite de enemigos
+        }
+
+        // Aumentar dificultad
+        clearInterval(spawnInterval);
+        const newSpawnRate = 2000 - currentLevel * 100;
+        spawnInterval = setInterval(spawnEnemy, Math.max(500, newSpawnRate));
+
+        // Actualizar contador de nivel
+        levelCount.textContent = `Nivel: ${currentLevel}`;
+      }
+    }
+
     function shoot() {
+      // Modificar para que las balas salgan desde la posición actual del jugador
       const bullet = document.createElement("div");
       bullet.classList.add("bullet");
       bullet.innerHTML = "🦴";
-      bullet.style.left = `${playerX + 15}px`;
+      bullet.style.left = `${playerX + player.offsetWidth / 2}px`;
       bullet.style.bottom = "60px";
       gameArea.appendChild(bullet);
       bullets.push(bullet);
 
-      const bulletInterval = setInterval(() => {
-        const currentBottom = parseInt(bullet.style.bottom || "60");
-        bullet.style.bottom = `${currentBottom + 10}px`;
-
-        enemies.forEach((enemy, index) => {
-          if (isColliding(bullet, enemy)) {
-            gameArea.removeChild(bullet);
-            gameArea.removeChild(enemy);
-            bullets.splice(bullets.indexOf(bullet), 1);
-            enemies.splice(index, 1);
-            enemiesKilled++;
-            enemyCount.textContent = `Enemigos: ${enemiesKilled}`;
-          }
-        });
-
-        const gameAreaRect = gameArea.getBoundingClientRect();
-        const bulletRect = bullet.getBoundingClientRect();
-        if (bulletRect.bottom < gameAreaRect.top) {
-          clearInterval(bulletInterval);
-          gameArea.removeChild(bullet);
-          bullets.splice(bullets.indexOf(bullet), 1);
+      // Llamar a checkLevelProgression después de matar un enemigo
+      enemies.forEach((enemy, index) => {
+        if (isColliding(bullet, enemy)) {
+          // ... código anterior de colisión ...
+          checkLevelProgression(); // Añadir esta línea
         }
-      }, 50);
+      });
     }
 
     function isColliding(a, b) {
