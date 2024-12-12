@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginScreen = document.querySelector("#login-screen");
   const gameContainer = document.querySelector("#game-container");
   const playerForm = document.querySelector("#playerForm");
+  const API_URL = "http://51.195.219.193:5000/submit_ranking";
 
   // Configuration for levels with customizable backgrounds and enemies
   const gameConfig = {
@@ -231,8 +232,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const score = Math.round(enemiesKilled * 10 - gameTime);
 
-      // Mejora en el envío de datos al servidor
-      fetch("http://51.195.219.193:5000/submit_ranking", {
+      // Improved ranking submission with better error handling
+      fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -246,28 +247,30 @@ document.addEventListener("DOMContentLoaded", () => {
         }),
       })
         .then((response) => {
-          console.log("Respuesta del servidor:", response.status);
+          console.log("Server response status:", response.status);
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
           return response.json();
         })
         .then((data) => {
-          console.log("Ranking guardado:", data);
-          // Opcional: Mostrar un mensaje de éxito
+          console.log("Ranking saved:", data);
           alert("Puntuación guardada exitosamente");
         })
         .catch((error) => {
-          console.error("Error guardando ranking:", error);
+          console.error("Error saving ranking:", error);
           alert("No se pudo guardar la puntuación. Revisa tu conexión.");
         });
 
       const gameOverScreen = document.createElement("div");
       gameOverScreen.id = "game-over-screen";
       gameOverScreen.innerHTML = `
-        <h2 style="color: white;">Game Over</h2>
-        <p style="color: white;">Jugador: ${playerName}</p>
-        <p style="color: white;">Enemigos eliminados: ${enemiesKilled}</p>
-        <p style="color: white;">Tiempo: ${gameTime} segundos</p>
-        <p style="color: white;">Puntuación: ${score}</p>
-        <button id="return-btn" onclick="window.location.href='rankingsss.html'">Ver Rankings</button>
+          <h2 style="color: white;">Game Over</h2>
+          <p style="color: white;">Jugador: ${playerName}</p>
+          <p style="color: white;">Enemigos eliminados: ${enemiesKilled}</p>
+          <p style="color: white;">Tiempo: ${gameTime} segundos</p>
+          <p style="color: white;">Puntuación: ${score}</p>
+          <button id="return-btn" onclick="window.location.href='rankingsss.html'">Ver Rankings</button>
       `;
       gameContainer.appendChild(gameOverScreen);
     }
