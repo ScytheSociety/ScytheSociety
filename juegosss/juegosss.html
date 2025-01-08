@@ -15,17 +15,52 @@
         <h2 class="sub-title">Comunidad Gamer</h2>
     </div>
 
-    <div id="gameContainer">
-        <button id="startButton" class="btn btn-primary">Jugar</button>
-        <div id="gameArea"></div>
+    <div class="container text-center">
+
+        <!-- Aquí se carga el menú -->
+        <div id="navbar-placeholder"></div>
+
+        <div id="gameContainer">
+            <div id="stats" class="stats-container">
+                <div id="levelText">Nivel: 1</div>
+                <div id="scoreText">Puntuación: 0</div>
+                <div id="enemiesKilledText">Enemigos eliminados: 0</div>
+            </div>
+            <button id="startButton" class="btn btn-primary">Jugar</button>
+            <div id="gameArea"></div>
+        </div>
+
+        <div id="gameOver" class="modal">
+            <div class="modal-content">
+                <h2 id="gameOverTitle"></h2>
+                <p id="gameOverStats"></p>
+                <input type="text" id="playerName" placeholder="Tu nombre (3-4 caracteres)" maxlength="4">
+                <button id="saveScore" class="btn btn-primary">Guardar Puntuación</button>
+            </div>
+        </div>
     </div>
 
     <footer class="footer">
         <p>Creado por Scythe Society © 2024</p>
     </footer>
 
-    <script src="config.json"></script>
-    <script src="juegosss.js"></script>
+    <!-- Script para cargar el menú -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch("../codigos/navbar.html")
+                .then(response => {
+                    if (!response.ok) throw new Error("Error al cargar navbar");
+                    return response.text();
+                })
+                .then(data => {
+                    document.getElementById("navbar-placeholder").innerHTML = data;
+                })
+                .catch(error => console.error('Error:', error));
+        });
+    </script>
+
+    <script src="config.js"></script>
+    <script src="game.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

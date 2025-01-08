@@ -1,0 +1,57 @@
+{
+    "player": {
+        "image": "../imagenes/imagenesjuegosss/player.png",
+        "speed": 20,
+        "width": 50,
+        "height": 50
+    },
+    "bone": {
+        "image": "../imagenes/imagenesjuegosss/bone.png",
+        "speed": 15,
+        "width": 10,
+        "height": 20
+    },
+    "enemies": {
+        "1": "../imagenes/imagenesjuegosss/enemy1.png",
+        "2": "../imagenes/imagenesjuegosss/enemy2.png",
+        "3": "../imagenes/imagenesjuegosss/enemy3.png",
+        "4": "../imagenes/imagenesjuegosss/enemy4.png",
+        "5": "../imagenes/imagenesjuegosss/enemy5.png",
+        "6": "../imagenes/imagenesjuegosss/enemy6.png",
+        "7": "../imagenes/imagenesjuegosss/enemy7.png",
+        "8": "../imagenes/imagenesjuegosss/enemy8.png",
+        "9": "../imagenes/imagenesjuegosss/enemy9.png",
+        "10": "../imagenes/imagenesjuegosss/enemy10.png"
+    },
+    "game": {
+        "width": 800,
+        "height": 600,
+        "initialEnemyCount": 5,
+        "enemiesToAdvance": [20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240],
+        "powerUpFrequency": 0.05
+    },
+    "powerUps": {
+        "speedBoost": {
+            "image": "../imagenes/imagenesjuegosss/speed.png",
+            "duration": 5000,
+            "multiplier": 2
+        },
+        "rapidFire": {
+            "image": "../imagenes/imagenesjuegosss/rapid.png",
+            "duration": 3000,
+            "cooldown": 250
+        }
+    },
+    "difficulty": {
+        "1": { "enemySpeed": 1, "enemyDropSpeed": 2, "boneCooldown": 1000 },
+        "2": { "enemySpeed": 1.5, "enemyDropSpeed": 2.5, "boneCooldown": 950 },
+        "3": { "enemySpeed": 2, "enemyDropSpeed": 3, "boneCooldown": 900 },
+        "4": { "enemySpeed": 2.5, "enemyDropSpeed": 3.5, "boneCooldown": 850 },
+        "5": { "enemySpeed": 3, "enemyDropSpeed": 4, "boneCooldown": 800 },
+        "6": { "enemySpeed": 3.5, "enemyDropSpeed": 4.5, "boneCooldown": 750 },
+        "7": { "enemySpeed": 4, "enemyDropSpeed": 5, "boneCooldown": 700 },
+        "8": { "enemySpeed": 4.5, "enemyDropSpeed": 5.5, "boneCooldown": 650 },
+        "9": { "enemySpeed": 5, "enemyDropSpeed": 6, "boneCooldown": 600 },
+        "10": { "enemySpeed": 5.5, "enemyDropSpeed": 6.5, "boneCooldown": 550 }
+    }
+}

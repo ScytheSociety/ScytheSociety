@@ -56,28 +56,12 @@ body {
   margin-bottom: 20px;
 }
 
-#game-container {
-  max-width: 300px;
-  margin: 0 auto;
-  position: relative;
-}
-
-/* Estilo del pie de página */
-.footer {
-  text-align: center;
-  padding: 10px;
-  background-color: #222;
-  width: 100%;
-  color: #ffffff;
-}
-
 #gameContainer {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 100vh;
-  position: relative;
+  padding: 20px;
 }
 
 #gameArea {
@@ -89,12 +73,19 @@ body {
   border: 2px solid white;
 }
 
-#startButton {
-  margin-bottom: 20px;
+.stats-container {
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  width: 800px;
+  display: flex;
+  justify-content: space-around;
 }
 
-.player, .enemy, .bone {
+.player, .enemy, .bone, .power-up {
   position: absolute;
+  pointer-events: none;
 }
 
 .player {
@@ -113,9 +104,73 @@ body {
   height: auto;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .btn-dark {
-    width: 100%;
+.power-up {
+  width: 30px;
+  height: auto;
+}
+
+.level-up-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  color: #fff;
+  text-shadow: 0 0 10px #ff0;
+  transition: opacity 1s;
+  z-index: 1000;
+}
+
+.explosion {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  animation: explode 0.5s forwards;
+}
+
+@keyframes explode {
+  0% {
+      transform: scale(1);
+      opacity: 1;
+  }
+  100% {
+      transform: scale(2);
+      opacity: 0;
+  }
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 2000;
+}
+
+.modal-content {
+  background-color: #222;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 500px;
+  text-align: center;
+}
+
+.footer {
+  text-align: center;
+  padding: 10px;
+  background-color: #222; /* Color de fondo del pie de página */
+  width: 100%;
+  color: #ffffff; /* Color del texto del pie de página */
+}
+
+@media (max-width: 850px) {
+  #gameArea, .stats-container {
+      width: 100%;
+      max-width: 800px;
   }
 }
