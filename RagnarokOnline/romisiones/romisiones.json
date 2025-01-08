@@ -2,7 +2,7 @@
   {
     "titulo": "Izlude para Novatos",
     "link": "https://xredragonx.github.io/ScytheSociety/ragnarokonline/romisiones/izludeparanovatos.html",
-    "imagen": "../imagenes/imagenesromisiones/romisiones001.webp",
+    "imagen": "../../imagenes/imagenesromisiones/romisiones001.webp",
     "descripcion": "Descripción de la imagen 1"
   },
   {
@@ -14,13 +14,13 @@
   {
     "titulo": "Título de la Misión 3",
     "link": "pagina3.html",
-    "imagen": "imagen3.jpg",
+    "imagen": "../../imagenes/imagenesromisiones/romisiones001.webp",
     "descripcion": "Descripción de la imagen 3"
   },
   {
     "titulo": "Título de la Misión 4",
     "link": "pagina4.html",
-    "imagen": "imagen4.jpg",
+    "imagen": "../../imagenes/imagenesromisiones/romisiones001.webp",
     "descripcion": "Descripción de la imagen 4"
   }
 ]
