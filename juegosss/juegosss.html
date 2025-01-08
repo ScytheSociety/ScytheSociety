@@ -15,64 +15,16 @@
         <h2 class="sub-title">Comunidad Gamer</h2>
     </div>
 
-    <div class="container text-center">
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-            <a class="navbar-brand" href="juegosss.html">Hell Shooter</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="juegosss.html">Inicio</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="rankingsss.html">Ranking</a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-
-        <div id="login-screen" class="screen">
-            <div class="login-container text-center">
-                <h2 class="mb-4">Hell Shooter</h2>
-                <form id="playerForm">
-                    <div class="form-group">
-                        <input type="text" class="form-control" id="playerName" placeholder="Ingresa tu nombre" required
-                            maxlength="15">
-                    </div>
-                    <div class="form-group">
-                        <input type="text" class="form-control" id="playerAvatar"
-                            placeholder="URL de Avatar (opcional)">
-                    </div>
-                    <div class="form-group">
-                        <input type="text" class="form-control" id="characterEmoji"
-                            placeholder="Emoji para personaje (opcional)" maxlength="2">
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-custom">Jugar</button>
-                    <a href="rankingsss.html" class="btn btn-secondary btn-custom">Ranking</a>
-                </form>
-            </div>
-        </div>
-
-        <div id="game-container" class="screen" style="display:none;">
-            <div id="game-board">
-                <div id="player-info"></div>
-                <div id="game-stats">
-                    <div id="enemy-count">Enemigos: 0</div>
-                    <div id="time-count">Tiempo: 0s</div>
-                    <div id="level-count">Nivel: 1</div>
-                </div>
-                <div id="game-area"></div>
-                <div id="player"></div>
-            </div>
-        </div>
+    <div id="gameContainer">
+        <button id="startButton" class="btn btn-primary">Jugar</button>
+        <div id="gameArea"></div>
     </div>
 
     <footer class="footer">
         <p>Creado por Scythe Society © 2024</p>
     </footer>
 
+    <script src="config.json"></script>
     <script src="juegosss.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
