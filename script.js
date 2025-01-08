@@ -10,9 +10,9 @@ function showContent(channel) {
   switch (channel) {
     case "twitch1":
       displayDiv.innerHTML =
-        '<iframe src="https://player.twitch.tv/?channel=scythesocietygg&parent=scythesociety.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
+        '<iframe src="https://player.twitch.tv/?channel=pandarina&parent=scythesociety.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
       chatDiv.innerHTML =
-        '<iframe src="https://www.twitch.tv/scythesocietygg/chat" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
+        '<iframe src="https://www.twitch.tv/pandarina/chat" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
       break;
     case "twitch2":
       displayDiv.innerHTML =
@@ -22,9 +22,9 @@ function showContent(channel) {
       break;
     case "twitch3":
       displayDiv.innerHTML =
-        '<iframe src="https://player.twitch.tv/?channel=rubius&parent=scythesociety.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
+        '<iframe src="https://player.twitch.tv/?channel=spursito&parent=scythesociety.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
       chatDiv.innerHTML =
-        '<iframe src="https://www.twitch.tv/yumehimesan/chat" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
+        '<iframe src="https://www.twitch.tv/spursito/chat" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
       break;
     case "twitch4":
       displayDiv.innerHTML =
