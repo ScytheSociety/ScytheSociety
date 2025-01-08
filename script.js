@@ -10,7 +10,7 @@ function showContent(channel) {
   switch (channel) {
     case "twitch1":
       displayDiv.innerHTML =
-        '<iframe src="https://player.twitch.tv/?channel=scythesocietygg&parent=xredragonx.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
+        '<iframe src="https://player.twitch.tv/?channel=scythesocietygg&parent=scythesociety.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
       chatDiv.innerHTML =
         '<iframe src="https://www.twitch.tv/scythesocietygg/chat" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
       break;
@@ -22,19 +22,19 @@ function showContent(channel) {
       break;
     case "twitch3":
       displayDiv.innerHTML =
-        '<iframe src="https://player.twitch.tv/?channel=rubius&parent=xredragonx.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
+        '<iframe src="https://player.twitch.tv/?channel=rubius&parent=scythesociety.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
       chatDiv.innerHTML =
         '<iframe src="https://www.twitch.tv/yumehimesan/chat" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
       break;
     case "twitch4":
       displayDiv.innerHTML =
-        '<iframe src="https://player.twitch.tv/?channel=auronplay&parent=xredragonx.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
+        '<iframe src="https://player.twitch.tv/?channel=auronplay&parent=scythesociety.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
       chatDiv.innerHTML =
         '<iframe src="https://www.twitch.tv/auronplay/chat" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
       break;
     case "twitch5":
       displayDiv.innerHTML =
-        '<iframe src="https://player.twitch.tv/?channel=ibai&parent=xredragonx.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
+        '<iframe src="https://player.twitch.tv/?channel=ibai&parent=scythesociety.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
       chatDiv.innerHTML =
         '<iframe src="https://www.twitch.tv/ibai/chat" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
       break;
