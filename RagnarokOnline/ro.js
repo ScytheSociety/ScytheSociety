@@ -44,7 +44,7 @@ function copyToClipboard(text) {
 /*FIN de navi copiab le*/
 
 // INICIO Ruta al archivo JSON que genera las imagenes de las misiones
-const jsonFile = "romisiones.json";
+const jsonFile = "./romisiones/romisiones.json";
 
 // Contenedor donde se agregarán las misiones
 const container = document.getElementById("misiones-container");
