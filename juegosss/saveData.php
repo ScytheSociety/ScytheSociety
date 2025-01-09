@@ -13,21 +13,34 @@ if ($data &&
     
     $file = "game_data.json";
     
+    // Sanitizar nombre
+    $data['name'] = substr(preg_replace("/[^A-Za-z0-9]/", "", $data['name']), 0, 4);
+    
+    // Validar datos
+    $data['score'] = intval($data['score']);
+    $data['level'] = min(max(intval($data['level']), 1), 10);
+    $data['enemiesKilled'] = intval($data['enemiesKilled']);
+    $data['timePlayed'] = intval($data['timePlayed']);
+    
     // Leer datos existentes
     $currentData = file_exists($file) ? json_decode(file_get_contents($file), true) : [];
     if (!is_array($currentData)) {
         $currentData = [];
     }
     
-    // Añadir timestamp
+    // Añadir timestamp e IP hash
     $data['timestamp'] = date('Y-m-d H:i:s');
+    $data['session_id'] = hash('sha256', $_SERVER['REMOTE_ADDR'] . date('Y-m-d'));
     
     // Añadir nuevo registro
     $currentData[] = $data;
     
     // Ordenar por puntuación
     usort($currentData, function($a, $b) {
-        return $b['score'] - $a['score'];
+        if ($b['score'] !== $a['score']) {
+            return $b['score'] - $a['score'];
+        }
+        return $b['level'] - $a['level'];
     });
     
     // Mantener solo los mejores 100 puntajes

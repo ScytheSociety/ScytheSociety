@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,8 +15,6 @@
     </div>
 
     <div class="container text-center">
-
-        <!-- Aquí se carga el menú -->
         <div id="navbar-placeholder"></div>
 
         <div id="gameContainer">
@@ -26,8 +23,10 @@
                 <div id="scoreText">Puntuación: 0</div>
                 <div id="enemiesKilledText">Enemigos eliminados: 0</div>
             </div>            
-            <div id="gameArea"></div>
-            <button id="startButton" class="btn btn-primary">Jugar</button>
+            <div id="gameArea">
+                <button id="startButton" class="btn btn-primary game-button">Jugar</button>
+            </div>
+            <button id="rankingButton" class="btn btn-secondary mt-3" style="display: none;">Ver Ranking</button>
         </div>
 
         <div id="gameOver" class="modal">
@@ -38,13 +37,20 @@
                 <button id="saveScore" class="btn btn-primary">Guardar Puntuación</button>
             </div>
         </div>
+
+        <div id="rankingModal" class="modal">
+            <div class="modal-content">
+                <h2>Ranking Top 50</h2>
+                <div id="rankingList" class="ranking-list"></div>
+                <button class="btn btn-secondary mt-3" onclick="closeRanking()">Cerrar</button>
+            </div>
+        </div>
     </div>
 
     <footer class="footer">
         <p>Creado por Scythe Society © 2024</p>
     </footer>
 
-    <!-- Script para cargar el menú -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             fetch("../codigos/navbar.html")
@@ -65,5 +71,4 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
-
 </html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking - Hell Shooter</title>
+    <link rel="stylesheet" href="juegosss.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .ranking-container {
+            background-color: #222;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        
+        .ranking-header {
+            display: grid;
+            grid-template-columns: 50px repeat(5, 1fr);
+            padding: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .ranking-row {
+            display: grid;
+            grid-template-columns: 50px repeat(5, 1fr);
+            padding: 10px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .ranking-row:nth-child(odd) {
+            background-color: #2a2a2a;
+        }
+        
+        .top-3 {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .position-1 { color: gold; }
+        .position-2 { color: silver; }
+        .position-3 { color: #cd7f32; }
+    </style>
+</head>
+<body>
+    <div class="banner">
+        <h1 class="main-title">Scythe Society</h1>
+        <h2 class="sub-title">Ranking - Hell Shooter</h2>
+    </div>
+
+    <div class="container">
+        <div id="navbar-placeholder"></div>
+
+        <div class="ranking-container">
+            <h2 class="text-center mb-4">Top 50 Jugadores</h2>
+            <div class="ranking-header">
+                <div>#</div>
+                <div>Nombre</div>
+                <div>Puntuación</div>
+                <div>Nivel</div>
+                <div>Enemigos</div>
+                <div>Fecha</div>
+            </div>
+            <div id="rankingList"></div>
+        </div>
+
+        <button onclick="location.href='juegosss.html'" class="btn btn-primary mb-4">Volver al Juego</button>
+    </div>
+
+    <footer class="footer">
+        <p>Creado por Scythe Society © 2024</p>
+    </footer>
+
+    <script>
+        // Cargar navbar
+        fetch("../codigos/navbar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("navbar-placeholder").innerHTML = data;
+            });
+
+        // Cargar ranking
+        fetch("getRanking.php")
+            .then(response => response.json())
+            .then(data => {
+                const rankingList = document.getElementById("rankingList");
+                data.slice(0, 50).forEach((item, index) => {
+                    const row = document.createElement("div");
+                    row.className = `ranking-row ${index < 3 ? 'top-3 position-' + (index + 1) : ''}`;
+                    row.innerHTML = `
+                        <div>${index + 1}</div>
+                        <div>${item.name}</div>
+                        <div>${item.score.toLocaleString()} pts</div>
+                        <div>${item.level}</div>
+                        <div>${item.enemiesKilled.toLocaleString()}</div>
+                        <div>${new Date(item.timestamp).toLocaleDateString()}</div>
+                    `;
+                    rankingList.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    </script>
+</body>
+</html>

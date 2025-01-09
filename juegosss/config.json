@@ -27,31 +27,31 @@
         "width": 800,
         "height": 600,
         "initialEnemyCount": 5,
-        "enemiesToAdvance": [20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240],
-        "powerUpFrequency": 0.05
+        "enemiesToAdvance": [15, 30, 60, 120, 240, 480, 960, 1920, 3840, 7680],
+        "powerUpFrequency": 0.08
     },
     "powerUps": {
         "speedBoost": {
             "image": "../imagenes/imagenesjuegosss/speed.png",
-            "duration": 5000,
+            "duration": 8000,
             "multiplier": 2
         },
         "rapidFire": {
             "image": "../imagenes/imagenesjuegosss/rapid.png",
-            "duration": 3000,
-            "cooldown": 250
+            "duration": 5000,
+            "cooldown": 200
         }
     },
     "difficulty": {
-        "1": { "enemySpeed": 1, "enemyDropSpeed": 2, "boneCooldown": 1000 },
-        "2": { "enemySpeed": 1.5, "enemyDropSpeed": 2.5, "boneCooldown": 950 },
-        "3": { "enemySpeed": 2, "enemyDropSpeed": 3, "boneCooldown": 900 },
-        "4": { "enemySpeed": 2.5, "enemyDropSpeed": 3.5, "boneCooldown": 850 },
-        "5": { "enemySpeed": 3, "enemyDropSpeed": 4, "boneCooldown": 800 },
-        "6": { "enemySpeed": 3.5, "enemyDropSpeed": 4.5, "boneCooldown": 750 },
-        "7": { "enemySpeed": 4, "enemyDropSpeed": 5, "boneCooldown": 700 },
-        "8": { "enemySpeed": 4.5, "enemyDropSpeed": 5.5, "boneCooldown": 650 },
-        "9": { "enemySpeed": 5, "enemyDropSpeed": 6, "boneCooldown": 600 },
-        "10": { "enemySpeed": 5.5, "enemyDropSpeed": 6.5, "boneCooldown": 550 }
+        "1": { "enemySpeed": 1, "enemyDropSpeed": 2, "boneCooldown": 900 },
+        "2": { "enemySpeed": 1.5, "enemyDropSpeed": 2.5, "boneCooldown": 850 },
+        "3": { "enemySpeed": 2, "enemyDropSpeed": 3, "boneCooldown": 800 },
+        "4": { "enemySpeed": 2.5, "enemyDropSpeed": 3.5, "boneCooldown": 750 },
+        "5": { "enemySpeed": 3, "enemyDropSpeed": 4, "boneCooldown": 700 },
+        "6": { "enemySpeed": 3.5, "enemyDropSpeed": 4.5, "boneCooldown": 650 },
+        "7": { "enemySpeed": 4, "enemyDropSpeed": 5, "boneCooldown": 600 },
+        "8": { "enemySpeed": 4.5, "enemyDropSpeed": 5.5, "boneCooldown": 550 },
+        "9": { "enemySpeed": 5, "enemyDropSpeed": 6, "boneCooldown": 500 },
+        "10": { "enemySpeed": 5.5, "enemyDropSpeed": 6.5, "boneCooldown": 450 }
     }
 }
