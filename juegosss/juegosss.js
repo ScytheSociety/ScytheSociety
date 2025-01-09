@@ -114,7 +114,7 @@ function startLevel() {
       y: margin + Math.random() * (canvas.height / 3), // Solo en el tercio superior
       width: 50,
       height: 50,
-      speed: 0.5 + level * 0.2, // Velocidad base más baja con incremento gradual
+      speed: 0.2 + level * 0.2, // Velocidad base más baja con incremento gradual
       image: enemyImages[level - 1],
     });
   }
