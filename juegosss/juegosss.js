@@ -11,6 +11,7 @@ let backgroundImages = [];
 let enemyImages = [];
 let playerImage, bulletImage;
 let lastShootTime = 0;
+let playerDirection = 0;
 
 window.onload = function () {
   loadGameAssets();
@@ -20,11 +21,26 @@ function loadGameAssets() {
   fetch("assets.json")
     .then((response) => response.json())
     .then((data) => {
-      backgroundImages = data.backgrounds.map((src) => createImage(src));
-      enemyImages = data.enemies.map((src) => createImage(src));
-      playerImage = createImage(data.player);
-      bulletImage = createImage(data.bullet);
-    });
+      // Cargar backgrounds
+      data.backgrounds.forEach((src, index) => {
+        backgroundImages[index] = new Image();
+        backgroundImages[index].src = src;
+      });
+
+      // Cargar enemigos
+      data.enemies.forEach((src, index) => {
+        enemyImages[index] = new Image();
+        enemyImages[index].src = src;
+      });
+
+      // Cargar jugador y bala
+      playerImage = new Image();
+      playerImage.src = data.player;
+
+      bulletImage = new Image();
+      bulletImage.src = data.bullet;
+    })
+    .catch((error) => console.error("Error cargando assets:", error));
 }
 
 function createImage(src) {
@@ -32,6 +48,11 @@ function createImage(src) {
   img.src = src;
   img.onerror = () => console.error(`Error al cargar la imagen: ${src}`);
   return img;
+}
+
+function updatePlayerInfo() {
+  document.getElementById("player-name").textContent = `Jugador: ${playerName}`;
+  document.getElementById("player-avatar").textContent = `${playerAvatar}`;
 }
 
 function startGame() {
@@ -43,9 +64,11 @@ function startGame() {
     return;
   }
 
-  // Mostrar el área de juego y ocultar el menú principal
   document.getElementById("main-menu").style.display = "none";
   document.getElementById("game-area").style.display = "block";
+
+  // Actualizar información del jugador
+  updatePlayerInfo();
 
   // Inicializar canvas
   canvas = document.getElementById("game-canvas");
@@ -83,20 +106,20 @@ function startLevel() {
   cooldown = 0;
 
   let enemyCount = levelUpEnemies[level - 1];
+  const margin = 50; // margen para que no aparezcan muy cerca de los bordes
 
   for (let i = 0; i < enemyCount; i++) {
     enemies.push({
-      x: Math.random() * canvas.width,
-      y: (Math.random() * canvas.height) / 2,
+      x: margin + Math.random() * (canvas.width - 2 * margin),
+      y: margin + Math.random() * (canvas.height / 3), // Solo en el tercio superior
       width: 50,
       height: 50,
-      speed: level * 0.5,
+      speed: 0.5 + level * 0.2, // Velocidad base más baja con incremento gradual
       image: enemyImages[level - 1],
     });
   }
 
   document.getElementById("level").textContent = `Nivel ${level}`;
-  document.body.style.backgroundImage = `url('${backgroundImages[level - 1]}')`;
 }
 
 function gameLoop() {
@@ -105,6 +128,23 @@ function gameLoop() {
   document.getElementById("score").textContent = `Puntuación: ${score}`;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Actualizar posición del jugador
+  player.x += playerDirection * player.speed;
+
+  // Mantener al jugador dentro del canvas
+  player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+
+  // 4. Dibujar background
+  if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
+    ctx.drawImage(
+      backgroundImages[level - 1],
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+  }
 
   drawPlayer();
   moveEnemies();
@@ -221,23 +261,34 @@ function viewRanking() {
 }
 
 function allowEmoji(event) {
+  event.preventDefault();
   const pastedText = event.clipboardData.getData("text");
-  if (pastedText.length === 1) {
-    event.preventDefault(); // Prevenimos el comportamiento por defecto
-    event.target.value = pastedText; // Asignamos el emoji al campo de texto
+  // Verificar si es un emoji usando una expresión regular
+  const emojiRegex = /(\p{Emoji})/u;
+  if (emojiRegex.test(pastedText)) {
+    document.getElementById("avatar").value = pastedText;
   } else {
-    alert("Solo puedes pegar un emoji.");
+    alert("Solo puedes pegar emojis.");
   }
 }
 
 window.addEventListener("keydown", (e) => {
   if (e.key === "a" || e.key === "ArrowLeft") {
-    player.x -= player.speed;
+    playerDirection = -1;
   }
   if (e.key === "d" || e.key === "ArrowRight") {
-    player.x += player.speed;
+    playerDirection = 1;
   }
   if (e.key === " ") {
     shootBullet();
+  }
+});
+
+window.addEventListener("keyup", (e) => {
+  if ((e.key === "a" || e.key === "ArrowLeft") && playerDirection === -1) {
+    playerDirection = 0;
+  }
+  if ((e.key === "d" || e.key === "ArrowRight") && playerDirection === 1) {
+    playerDirection = 0;
   }
 });
