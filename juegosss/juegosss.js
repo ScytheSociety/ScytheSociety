@@ -442,3 +442,20 @@ function saveScore() {
         console.error(error);
     });
 }
+
+function logErrorToServer(message, stack) {
+    fetch("logError.php", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message, stack })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Error registrado en el servidor:", data);
+    })
+    .catch(error => {
+        console.error("Error al enviar el log al servidor:", error);
+    });
+}
