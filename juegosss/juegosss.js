@@ -10,6 +10,7 @@ let levelUpEnemies = [20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240];
 let backgroundImages = [];
 let enemyImages = [];
 let playerImage, bulletImage;
+let lastShootTime = 0;
 
 window.onload = function () {
   loadGameAssets();
@@ -60,8 +61,8 @@ function startGame() {
   player = {
     x: canvas.width / 2 - 25,
     y: canvas.height - 50,
-    width: 150,
-    height: 150,
+    width: 50,
+    height: 50,
     speed: 5,
     image: playerImage,
   };
@@ -172,14 +173,18 @@ function checkGameOver() {
 }
 
 function shootBullet() {
-  if (cooldown <= 0) {
+  const currentTime = Date.now();
+  const cooldownTime = 1000 - level * 100; // Reduce el tiempo de cooldown con cada nivel (máximo 0.1s a nivel 10)
+
+  // Si ha pasado el tiempo suficiente según el cooldown
+  if (currentTime - lastShootTime > cooldownTime) {
     bullets.push({
       x: player.x + player.width / 2 - 5,
       y: player.y,
       width: 10,
       height: 20,
     });
-    cooldown = 30 - level;
+    lastShootTime = currentTime; // Actualizar el tiempo del último disparo
   }
 }
 
