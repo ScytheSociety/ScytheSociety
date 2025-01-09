@@ -19,46 +19,62 @@ function loadGameAssets() {
     fetch('assets.json')
         .then(response => response.json())
         .then(data => {
-            backgroundImages = data.backgrounds;
-            enemyImages = data.enemies;
-            playerImage = data.player;
-            bulletImage = data.bullet;
+            backgroundImages = data.backgrounds.map(src => createImage(src));
+            enemyImages = data.enemies.map(src => createImage(src));
+            playerImage = createImage(data.player);
+            bulletImage = createImage(data.bullet);
         });
+}
+
+function createImage(src) {
+    const img = new Image();
+    img.src = src;
+    img.onerror = () => console.error(`Error al cargar la imagen: ${src}`);
+    return img;
 }
 
 function startGame() {
     playerName = document.getElementById('name').value;
     playerAvatar = document.getElementById('avatar').value;
-    
-    if (playerName && playerAvatar) {
-        document.getElementById('main-menu').style.display = 'none';
-        document.getElementById('game-area').style.display = 'block';
-        document.getElementById('player-name').textContent = playerName;
-        document.getElementById('player-avatar').textContent = playerAvatar;
-        
-        canvas = document.getElementById('game-canvas');
-        ctx = canvas.getContext('2d');
-        canvas.width = 800;
-        canvas.height = 600;
-        
-        player = {
-            x: canvas.width / 2 - 25,
-            y: canvas.height - 50,
-            width: 50,
-            height: 50,
-            speed: 5,
-            image: playerImage
-        };
-        
-        bullets = [];
-        enemies = [];
-        score = 0;
-        enemiesKilled = 0;
-        gameTime = 0;
-        
-        startLevel();
-        gameInterval = setInterval(gameLoop, 1000 / 60);
+
+    if (!playerName || !playerAvatar) {
+        alert('Por favor, ingresa un nombre y un avatar válidos.');
+        return;
     }
+
+    // Mostrar el área de juego y ocultar el menú principal
+    document.getElementById('main-menu').style.display = 'none';
+    document.getElementById('game-area').style.display = 'block';
+
+    // Inicializar canvas
+    canvas = document.getElementById('game-canvas');
+    if (!canvas) {
+        console.error('No se encontró el canvas.');
+        return;
+    }
+    ctx = canvas.getContext('2d');
+    canvas.width = 800;
+    canvas.height = 600;
+
+    // Inicializar jugador
+    player = {
+        x: canvas.width / 2 - 25,
+        y: canvas.height - 50,
+        width: 50,
+        height: 50,
+        speed: 5,
+        image: playerImage
+    };
+
+    // Inicializar variables del juego
+    bullets = [];
+    enemies = [];
+    score = 0;
+    enemiesKilled = 0;
+    gameTime = 0;
+
+    startLevel();
+    gameInterval = setInterval(gameLoop, 1000 / 60);
 }
 
 function startLevel() {
@@ -97,6 +113,10 @@ function gameLoop() {
 }
 
 function drawPlayer() {
+    if (!player.image.complete || player.image.naturalWidth === 0) {
+        console.warn('La imagen del jugador no está lista.');
+        return;
+    }
     ctx.drawImage(player.image, player.x, player.y, player.width, player.height);
 }
 
@@ -182,14 +202,10 @@ function saveScore() {
         time: gameTime,
         score: score
     };
-    
-    fetch('ranking.json', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(playerData)
-    });
+
+    const ranking = JSON.parse(localStorage.getItem('ranking')) || [];
+    ranking.push(playerData);
+    localStorage.setItem('ranking', JSON.stringify(ranking));
 }
 
 function viewRanking() {
