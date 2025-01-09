@@ -4,21 +4,35 @@ let lastBoneTime = 0;
 let intervalId, startTime, isGameRunning = false;
 let playerSpeed = 20;
 
-document.getElementById("startButton").addEventListener("click", startGame);
-document.getElementById("saveScore").addEventListener("click", saveScore);
-document.getElementById("rankingButton").addEventListener("click", showRanking);
+// Asegurarse de que el DOM está cargado
+document.addEventListener('DOMContentLoaded', () => {
+    gameArea = document.getElementById("gameArea");
+    document.getElementById("startButton").addEventListener("click", startGame);
+    document.getElementById("saveScore").addEventListener("click", saveScore);
+    document.getElementById("rankingButton").addEventListener("click", showRanking);
+});
 
 function startGame() {
     if (isGameRunning) return;
     
+    // Limpiar área de juego
+    gameArea.innerHTML = '';
+    
     document.getElementById("startButton").style.display = "none";
     document.getElementById("rankingButton").style.display = "block";
-    gameArea = document.getElementById("gameArea");
     startTime = Date.now();
     isGameRunning = true;
     
     resetGameStats();
-    initGame();
+    createPlayer();
+    spawnEnemies();
+    
+    intervalId = setInterval(() => {
+        moveEnemies();
+        if (Math.random() < config.game.powerUpFrequency) {
+            spawnPowerUp();
+        }
+    }, 50);
 }
 
 function resetGameStats() {
