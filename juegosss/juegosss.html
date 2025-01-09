@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hell Shooter - Scythe Society</title>
-    <link rel="stylesheet" href="juegosss.css">
+    <!-- Primero cargar los estilos -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="juegosss.css">
 </head>
 
 <body>
@@ -15,8 +16,10 @@
     </div>
 
     <div class="container text-center">
-        <div id="navbar-placeholder"></div>
+        <!-- Navbar -->
+        <nav id="navbar-placeholder"></nav>
 
+        <!-- Contenedor del juego -->
         <div id="gameContainer">
             <div id="stats" class="stats-container">
                 <div id="levelText">Nivel: 1</div>
@@ -29,6 +32,7 @@
             <button id="rankingButton" class="btn btn-secondary mt-3" style="display: none;">Ver Ranking</button>
         </div>
 
+        <!-- Modal Game Over -->
         <div id="gameOver" class="modal">
             <div class="modal-content">
                 <h2 id="gameOverTitle"></h2>
@@ -38,6 +42,7 @@
             </div>
         </div>
 
+        <!-- Modal Ranking -->
         <div id="rankingModal" class="modal">
             <div class="modal-content">
                 <h2>Ranking Top 50</h2>
@@ -51,23 +56,32 @@
         <p>Creado por Scythe Society © 2024</p>
     </footer>
 
+    <!-- Scripts en orden correcto -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <!-- Script para cargar el navbar -->
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             fetch("../codigos/navbar.html")
                 .then(response => {
-                    if (!response.ok) throw new Error("Error al cargar navbar");
+                    if (!response.ok) {
+                        throw new Error("Error al cargar navbar");
+                    }
                     return response.text();
                 })
                 .then(data => {
-                    document.getElementById("navbar-placeholder").innerHTML = data;
+                    const navbarPlaceholder = document.getElementById("navbar-placeholder");
+                    if (navbarPlaceholder) {
+                        navbarPlaceholder.innerHTML = data;
+                    }
                 })
                 .catch(error => console.error('Error:', error));
         });
     </script>
 
-    <script src="juegosss.js"></script>    
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Script del juego al final y con defer -->
+    <script src="juegosss.js" defer></script>
 </body>
 </html>

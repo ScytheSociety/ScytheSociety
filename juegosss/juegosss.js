@@ -1,14 +1,47 @@
+let config; // Para almacenar la configuración
 let gameArea, player, level = 1, score = 0, enemiesKilled = 0, boneCooldown = 1000;
 let enemySpeed = 1, enemyDropSpeed = 2;
 let lastBoneTime = 0;
-let intervalId, startTime, isGameRunning = false;
+let animationId, startTime, isGameRunning = false;
 let playerSpeed = 20;
+let activePowerUps = {
+    speedBoost: false,
+    rapidFire: false
+};
 
-document.addEventListener('DOMContentLoaded', () => {
-    gameArea = document.getElementById("gameArea");
-    document.getElementById("startButton").addEventListener("click", startGame);
-    document.getElementById("saveScore").addEventListener("click", saveScore);
-    document.getElementById("rankingButton").addEventListener("click", showRanking);
+// Cargar la configuración antes de iniciar el juego
+async function loadConfig() {
+    try {
+        const response = await fetch('../codigos/config.json');
+        if (!response.ok) throw new Error('Error al cargar la configuración');
+        config = await response.json();
+        return true;
+    } catch (error) {
+        console.error("Error cargando config.json:", error);
+        logErrorToServer(error.message, error.stack);
+        return false;
+    }
+}
+
+// Inicialización del juego
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Cargar configuración primero
+        if (!await loadConfig()) {
+            alert("Error al cargar la configuración del juego");
+            return;
+        }
+
+        gameArea = document.getElementById("gameArea");
+        if (!gameArea) throw new Error("No se encontró el área del juego.");
+
+        document.getElementById("startButton").addEventListener("click", startGame);
+        document.getElementById("saveScore").addEventListener("click", saveScore);
+        document.getElementById("rankingButton").addEventListener("click", showRanking);
+    } catch (error) {
+        console.error("Error en la inicialización del juego: ", error);
+        logErrorToServer(error.message, error.stack);
+    }
 });
 
 function startGame() {
@@ -25,12 +58,19 @@ function startGame() {
     createPlayer();
     spawnEnemies();
     
-    intervalId = setInterval(() => {
-        moveEnemies();
-        if (Math.random() < config.game.powerUpFrequency) {
-            spawnPowerUp();
-        }
-    }, 50);
+    // Iniciar el bucle del juego usando requestAnimationFrame
+    gameLoop();
+}
+
+function gameLoop() {
+    if (!isGameRunning) return;
+    
+    moveEnemies();
+    if (Math.random() < config.game.powerUpFrequency) {
+        spawnPowerUp();
+    }
+    
+    animationId = requestAnimationFrame(gameLoop);
 }
 
 function resetGameStats() {
@@ -55,8 +95,10 @@ function createPlayer() {
     player = document.createElement("img");
     player.src = config.player.image;
     player.classList.add("player");
-    player.style.left = "375px";
+    player.style.left = `${config.game.width / 2 - config.player.width / 2}px`;
     player.style.bottom = "10px";
+    player.style.width = `${config.player.width}px`;
+    player.style.height = `${config.player.height}px`;
     gameArea.appendChild(player);
 
     document.addEventListener("keydown", handlePlayerMovement);
@@ -69,7 +111,7 @@ function handlePlayerMovement(event) {
     const left = parseInt(player.style.left);
     if ((event.key === "a" || event.key === "ArrowLeft") && left > 0) {
         player.style.left = `${left - playerSpeed}px`;
-    } else if ((event.key === "d" || event.key === "ArrowRight") && left < config.game.width - 50) {
+    } else if ((event.key === "d" || event.key === "ArrowRight") && left < config.game.width - config.player.width) {
         player.style.left = `${left + playerSpeed}px`;
     }
 }
@@ -88,8 +130,10 @@ function createBone() {
     const bone = document.createElement("img");
     bone.src = config.bone.image;
     bone.classList.add("bone");
-    bone.style.left = `${parseInt(player.style.left) + 20}px`;
+    bone.style.left = `${parseInt(player.style.left) + (config.player.width / 2) - (config.bone.width / 2)}px`;
     bone.style.bottom = "60px";
+    bone.style.width = `${config.bone.width}px`;
+    bone.style.height = `${config.bone.height}px`;
     gameArea.appendChild(bone);
 
     moveBone(bone);
@@ -97,6 +141,11 @@ function createBone() {
 
 function moveBone(bone) {
     const interval = setInterval(() => {
+        if (!isGameRunning) {
+            clearInterval(interval);
+            return;
+        }
+        
         const bottom = parseInt(bone.style.bottom);
         if (bottom > config.game.height) {
             bone.remove();
@@ -105,6 +154,85 @@ function moveBone(bone) {
             bone.style.bottom = `${bottom + config.bone.speed}px`;
         }
     }, 20);
+}
+
+// Función para los power-ups
+function spawnPowerUp() {
+    const powerUpTypes = ['speedBoost', 'rapidFire'];
+    const type = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+    
+    const powerUp = document.createElement("img");
+    powerUp.src = config.powerUps[type].image;
+    powerUp.classList.add("power-up");
+    powerUp.dataset.type = type;
+    powerUp.style.left = `${Math.random() * (config.game.width - 30)}px`;
+    powerUp.style.top = "0px";
+    gameArea.appendChild(powerUp);
+
+    movePowerUp(powerUp);
+}
+
+function movePowerUp(powerUp) {
+    const interval = setInterval(() => {
+        if (!isGameRunning) {
+            clearInterval(interval);
+            powerUp.remove();
+            return;
+        }
+
+        const top = parseInt(powerUp.style.top);
+        if (top > config.game.height) {
+            powerUp.remove();
+            clearInterval(interval);
+        } else {
+            powerUp.style.top = `${top + 2}px`;
+        }
+    }, 20);
+}
+
+function handlePowerUpCollection(powerUp) {
+    const type = powerUp.dataset.type;
+    powerUp.remove();
+
+    // Mostrar mensaje de power-up
+    const message = document.createElement("div");
+    message.classList.add("power-up-message");
+    message.textContent = type === 'speedBoost' ? '¡Velocidad aumentada!' : '¡Disparo rápido!';
+    gameArea.appendChild(message);
+    
+    setTimeout(() => {
+        message.style.opacity = "0";
+        setTimeout(() => message.remove(), 1000);
+    }, 2000);
+
+    if (type === 'speedBoost') {
+        activatePowerUp('speedBoost');
+    } else if (type === 'rapidFire') {
+        activatePowerUp('rapidFire');
+    }
+}
+
+function activatePowerUp(type) {
+    if (type === 'speedBoost') {
+        activePowerUps.speedBoost = true;
+        playerSpeed = config.player.speed * config.powerUps.speedBoost.multiplier;
+        setTimeout(() => {
+            if (isGameRunning) {
+                activePowerUps.speedBoost = false;
+                playerSpeed = config.player.speed;
+            }
+        }, config.powerUps.speedBoost.duration);
+    } else if (type === 'rapidFire') {
+        activePowerUps.rapidFire = true;
+        const originalCooldown = boneCooldown;
+        boneCooldown = config.powerUps.rapidFire.cooldown;
+        setTimeout(() => {
+            if (isGameRunning) {
+                activePowerUps.rapidFire = false;
+                boneCooldown = originalCooldown;
+            }
+        }, config.powerUps.rapidFire.duration);
+    }
 }
 
 function spawnEnemies() {
@@ -120,6 +248,8 @@ function createEnemy() {
     enemy.classList.add("enemy");
     enemy.style.left = `${Math.random() * (config.game.width - 50)}px`;
     enemy.style.top = `${Math.random() * -600}px`;
+    enemy.style.width = "50px";
+    enemy.style.height = "50px";
     gameArea.appendChild(enemy);
 }
 
@@ -151,6 +281,16 @@ function checkCollisions() {
     const bones = document.querySelectorAll(".bone");
     const enemies = document.querySelectorAll(".enemy");
     const powerUps = document.querySelectorAll(".power-up");
+    const playerRect = player.getBoundingClientRect();
+    
+    // Verificar colisión jugador-enemigo
+    enemies.forEach(enemy => {
+        const enemyRect = enemy.getBoundingClientRect();
+        if (isColliding(playerRect, enemyRect)) {
+            endGame("¡Perdiste! Un enemigo te alcanzó.");
+            return;
+        }
+    });
     
     bones.forEach(bone => {
         const boneRect = bone.getBoundingClientRect();
@@ -167,7 +307,6 @@ function checkCollisions() {
     
     powerUps.forEach(powerUp => {
         const powerUpRect = powerUp.getBoundingClientRect();
-        const playerRect = player.getBoundingClientRect();
         
         if (isColliding(powerUpRect, playerRect)) {
             handlePowerUpCollection(powerUp);
@@ -242,7 +381,13 @@ function showLevelUpMessage() {
 
 function endGame(message) {
     isGameRunning = false;
-    clearInterval(intervalId);
+    cancelAnimationFrame(animationId);
+    
+    // Limpiar power-ups activos
+    activePowerUps.speedBoost = false;
+    activePowerUps.rapidFire = false;
+    playerSpeed = config.player.speed;
+    boneCooldown = config.difficulty[level].boneCooldown;
     
     const timePlayed = Math.floor((Date.now() - startTime) / 1000);
     const gameOverModal = document.getElementById("gameOver");
