@@ -1,6 +1,6 @@
 {
     "player": {
-        "image": "../imagenes/imagenesjuegosss/player.png",
+        "image": "../imagenes/imagenesjuegosss/player.gif",
         "speed": 20,
         "width": 50,
         "height": 50
@@ -12,16 +12,16 @@
         "height": 20
     },
     "enemies": {
-        "1": "../imagenes/imagenesjuegosss/enemy1.png",
-        "2": "../imagenes/imagenesjuegosss/enemy2.png",
-        "3": "../imagenes/imagenesjuegosss/enemy3.png",
-        "4": "../imagenes/imagenesjuegosss/enemy4.png",
-        "5": "../imagenes/imagenesjuegosss/enemy5.png",
-        "6": "../imagenes/imagenesjuegosss/enemy6.png",
-        "7": "../imagenes/imagenesjuegosss/enemy7.png",
-        "8": "../imagenes/imagenesjuegosss/enemy8.png",
-        "9": "../imagenes/imagenesjuegosss/enemy9.png",
-        "10": "../imagenes/imagenesjuegosss/enemy10.png"
+        "1": "../imagenes/imagenesjuegosss/enemy1.gif",
+        "2": "../imagenes/imagenesjuegosss/enemy2.gif",
+        "3": "../imagenes/imagenesjuegosss/enemy3.gif",
+        "4": "../imagenes/imagenesjuegosss/enemy4.gif",
+        "5": "../imagenes/imagenesjuegosss/enemy5.gif",
+        "6": "../imagenes/imagenesjuegosss/enemy6.gif",
+        "7": "../imagenes/imagenesjuegosss/enemy7.gif",
+        "8": "../imagenes/imagenesjuegosss/enemy8.gif",
+        "9": "../imagenes/imagenesjuegosss/enemy9.gif",
+        "10": "../imagenes/imagenesjuegosss/enemy10.gif"
     },
     "game": {
         "width": 800,
