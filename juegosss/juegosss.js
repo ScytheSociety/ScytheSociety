@@ -60,8 +60,8 @@ function startGame() {
   player = {
     x: canvas.width / 2 - 25,
     y: canvas.height - 50,
-    width: 50,
-    height: 50,
+    width: 150,
+    height: 150,
     speed: 5,
     image: playerImage,
   };
