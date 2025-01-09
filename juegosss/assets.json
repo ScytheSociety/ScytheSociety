@@ -1,0 +1,28 @@
+{
+    "backgrounds": [
+        "../imagenes/imagenesjuegosss/levelbg1.jpg",
+        "../imagenes/imagenesjuegosss/levelbg2.jpg",
+        "../imagenes/imagenesjuegosss/levelbg3.jpg",
+        "../imagenes/imagenesjuegosss/levelbg4.jpg",
+        "../imagenes/imagenesjuegosss/levelbg5.jpg",
+        "../imagenes/imagenesjuegosss/levelbg6.jpg",
+        "../imagenes/imagenesjuegosss/levelbg7.jpg",
+        "../imagenes/imagenesjuegosss/levelbg8.jpg",
+        "../imagenes/imagenesjuegosss/levelbg9.jpg",
+        "../imagenes/imagenesjuegosss/levelbg10.jpg"
+    ],
+    "enemies": [
+        "../imagenes/imagenesjuegosss/enemy1.gif",
+        "../imagenes/imagenesjuegosss/enemy1.gif",
+        "../imagenes/imagenesjuegosss/enemy1.gif",
+        "../imagenes/imagenesjuegosss/enemy1.gif",
+        "../imagenes/imagenesjuegosss/enemy1.gif",
+        "../imagenes/imagenesjuegosss/enemy1.gif",
+        "../imagenes/imagenesjuegosss/enemy1.gif",
+        "../imagenes/imagenesjuegosss/enemy1.gif",
+        "../imagenes/imagenesjuegosss/enemy1.gif",
+        "../imagenes/imagenesjuegosss/enemy1.gif"
+    ],
+    "player": "../imagenes/imagenesjuegosss/player.gif",
+    "bullet": "../imagenes/imagenesjuegosss/bone.png"
+}

@@ -3,85 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hell Shooter - Scythe Society</title>
-    <!-- Primero cargar los estilos -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Space Invaders</title>
     <link rel="stylesheet" href="juegosss.css">
 </head>
-
 <body>
-    <div class="banner">
-        <h1 class="main-title">Scythe Society</h1>
-        <h2 class="sub-title">Comunidad Gamer</h2>
+    <div id="main-menu">
+        <h1>Space Invaders</h1>
+        <div>
+            <label for="name">Nombre:</label>
+            <input type="text" id="name" maxlength="4" minlength="3">
+        </div>
+        <div>
+            <label for="avatar">Avatar (Emoji):</label>
+            <input type="text" id="avatar" maxlength="1" minlength="1">
+        </div>
+        <button onclick="startGame()">Jugar</button>
+        <button onclick="viewRanking()">Ranking</button>
     </div>
 
-    <div class="container text-center">
-        <!-- Navbar -->
-        <nav id="navbar-placeholder"></nav>
-
-        <!-- Contenedor del juego -->
-        <div id="gameContainer">
-            <div id="stats" class="stats-container">
-                <div id="levelText">Nivel: 1</div>
-                <div id="scoreText">Puntuación: 0</div>
-                <div id="enemiesKilledText">Enemigos eliminados: 0</div>
-            </div>            
-            <div id="gameArea">
-                <button id="startButton" class="btn btn-primary game-button">Jugar</button>
-            </div>
-            <button id="rankingButton" class="btn btn-secondary mt-3" style="display: none;">Ver Ranking</button>
+    <div id="game-area" style="display: none;">
+        <div id="game-info">
+            <span id="player-name"></span> - <span id="player-avatar"></span>
+            <span id="level">Nivel 1</span>
+            <span id="enemies-killed">Enemigos: 0</span>
+            <span id="time">Tiempo: 0s</span>
+            <span id="score">Puntuación: 0</span>
         </div>
-
-        <!-- Modal Game Over -->
-        <div id="gameOver" class="modal">
-            <div class="modal-content">
-                <h2 id="gameOverTitle"></h2>
-                <p id="gameOverStats"></p>
-                <input type="text" id="playerName" placeholder="Tu nombre (3-4 caracteres)" maxlength="4">
-                <button id="saveScore" class="btn btn-primary">Guardar Puntuación</button>
-            </div>
-        </div>
-
-        <!-- Modal Ranking -->
-        <div id="rankingModal" class="modal">
-            <div class="modal-content">
-                <h2>Ranking Top 50</h2>
-                <div id="rankingList" class="ranking-list"></div>
-                <button class="btn btn-secondary mt-3" onclick="closeRanking()">Cerrar</button>
-            </div>
+        <canvas id="game-canvas"></canvas>
+        <div id="game-over" style="display: none;">
+            <h2 id="game-over-text"></h2>
+            <button onclick="restartGame()">Jugar otra vez</button>
         </div>
     </div>
 
-    <footer class="footer">
-        <p>Creado por Scythe Society © 2024</p>
-    </footer>
-
-    <!-- Scripts en orden correcto -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    
-    <!-- Script para cargar el navbar -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            fetch("../codigos/navbar.html")
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Error al cargar navbar");
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                    const navbarPlaceholder = document.getElementById("navbar-placeholder");
-                    if (navbarPlaceholder) {
-                        navbarPlaceholder.innerHTML = data;
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        });
-    </script>
-
-    <!-- Script del juego al final y con defer -->
-    <script src="juegosss.js" defer></script>
+    <script src="juegosss.js"></script>
 </body>
 </html>
