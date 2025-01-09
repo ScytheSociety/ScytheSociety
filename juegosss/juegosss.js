@@ -12,6 +12,9 @@ let enemyImages = [];
 let playerImage, bulletImage;
 let lastShootTime = 0;
 let playerDirection = 0;
+let enemiesRemaining = 0; // Enemigos que faltan por aparecer
+let spawnTimer = 0; // Contador para el spawn de enemigos
+const SPAWN_RATE = 60; // Frames entre cada spawn de enemigo (60 frames = 1 segundo aprox)
 
 window.onload = function () {
   loadGameAssets();
@@ -104,22 +107,23 @@ function startGame() {
 function startLevel() {
   enemies = [];
   cooldown = 0;
-
-  let enemyCount = levelUpEnemies[level - 1];
-  const margin = 50; // margen para que no aparezcan muy cerca de los bordes
-
-  for (let i = 0; i < enemyCount; i++) {
-    enemies.push({
-      x: margin + Math.random() * (canvas.width - 2 * margin),
-      y: margin + Math.random() * (canvas.height / 3), // Solo en el tercio superior
-      width: 50,
-      height: 50,
-      speed: 0.2 + level * 0.2, // Velocidad base más baja con incremento gradual
-      image: enemyImages[level - 1],
-    });
-  }
+  enemiesRemaining = levelUpEnemies[level - 1]; // Establecer cuántos enemigos faltan por aparecer
+  spawnTimer = 0;
 
   document.getElementById("level").textContent = `Nivel ${level}`;
+}
+
+function spawnEnemy() {
+  const margin = 50;
+  enemies.push({
+    x: margin + Math.random() * (canvas.width - 2 * margin),
+    y: -50, // Comenzar arriba del canvas
+    width: 50,
+    height: 50,
+    speed: 0.2 + level * 0.1, // Reducido el multiplicador para que sea más lento
+    image: enemyImages[level - 1],
+  });
+  enemiesRemaining--;
 }
 
 function gameLoop() {
@@ -129,13 +133,7 @@ function gameLoop() {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Actualizar posición del jugador
-  player.x += playerDirection * player.speed;
-
-  // Mantener al jugador dentro del canvas
-  player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-
-  // 4. Dibujar background
+  // Dibujar background
   if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
     ctx.drawImage(
       backgroundImages[level - 1],
@@ -145,6 +143,22 @@ function gameLoop() {
       canvas.height
     );
   }
+
+  // Sistema de spawn de enemigos
+  if (enemiesRemaining > 0) {
+    spawnTimer++;
+    // Ajustar la tasa de spawn según el nivel
+    const spawnDelay = Math.max(SPAWN_RATE - level * 5, 20); // Mínimo 20 frames de delay
+
+    if (spawnTimer >= spawnDelay) {
+      spawnEnemy();
+      spawnTimer = 0;
+    }
+  }
+
+  // Actualizar posición del jugador
+  player.x += playerDirection * player.speed;
+  player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
 
   drawPlayer();
   moveEnemies();
@@ -194,7 +208,11 @@ function checkCollisions() {
           "enemies-killed"
         ).textContent = `Enemigos: ${enemiesKilled}`;
 
-        if (enemiesKilled >= levelUpEnemies[level - 1]) {
+        // Cambiar al siguiente nivel solo si no quedan enemigos por spawner y todos han sido eliminados
+        if (
+          enemiesKilled >= levelUpEnemies[level - 1] &&
+          enemiesRemaining === 0
+        ) {
           level++;
           startLevel();
         }
