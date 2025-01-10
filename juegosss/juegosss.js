@@ -466,29 +466,6 @@ function backToMenu() {
   document.getElementById("main-menu").style.display = "block";
 }
 
-function allowEmoji(event) {
-  event.preventDefault();
-  const pastedText = event.clipboardData.getData("text");
-  const emojiRegex = /\p{Emoji}/u;
-  if (emojiRegex.test(pastedText)) {
-    document.getElementById("avatar").value = pastedText;
-  } else {
-    alert("Solo puedes pegar emojis.");
-  }
-}
-
-// Validar emojis durante la entrada desde teclado o móvil
-document.getElementById("avatar").addEventListener("input", function (event) {
-  const inputField = event.target;
-  const emojiRegex = /\p{Emoji}/u;
-  const value = inputField.value;
-
-  if (!emojiRegex.test(value)) {
-    inputField.value = ""; // Eliminar el texto no válido
-    alert("Solo puedes ingresar emojis.");
-  }
-});
-
 window.addEventListener("keydown", (e) => {
   if (e.key === "a" || e.key === "ArrowLeft") {
     playerDirection = -1;
