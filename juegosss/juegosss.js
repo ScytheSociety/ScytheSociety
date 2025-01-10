@@ -141,8 +141,10 @@ function startGame() {
   playerName = document.getElementById("name").value;
   playerAvatar = document.getElementById("avatar").value;
 
-  if (!playerName || !playerAvatar) {
-    alert("Por favor, ingresa un nombre y un avatar válidos.");
+  if (!playerName || !playerAvatar || playerName.length < 3) {
+    alert(
+      "Por favor, ingresa un nombre (mínimo 3 caracteres) y un avatar (1 caracter)"
+    );
     return;
   }
 
@@ -173,17 +175,15 @@ function startGame() {
   }
   ctx = canvas.getContext("2d");
 
-  // Configurar el tamaño responsivo
   setupResponsiveCanvas();
   setupTouchControls();
 
-  // Inicializar jugador
   player = {
     x: canvas.width / 2 - PLAYER_WIDTH / 2,
-    y: canvas.height - PLAYER_HEIGHT - 10,
+    y: canvas.height - PLAYER_HEIGHT - 20,
     width: PLAYER_WIDTH,
     height: PLAYER_HEIGHT,
-    speed: canvas.width * 0.005, // Velocidad responsiva
+    speed: isMobile ? canvas.width * 0.015 : canvas.width * 0.01,
     image: playerImage,
   };
 

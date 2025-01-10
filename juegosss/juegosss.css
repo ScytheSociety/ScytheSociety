@@ -117,42 +117,6 @@ input {
   text-align: right;
 }
 
-.emoji-input-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-}
-
-.emoji-picker {
-  position: absolute;
-  background: #333;
-  border: 1px solid #444;
-  border-radius: 8px;
-  padding: 10px;
-  max-width: 300px;
-  margin-top: 10px;
-}
-
-.emoji-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
-  gap: 5px;
-  max-height: 200px;
-  overflow-y: auto;
-  cursor: pointer;
-}
-
-.emoji-list span {
-  padding: 5px;
-  cursor: pointer;
-}
-
-.emoji-list span:hover {
-  background-color: #444;
-  border-radius: 4px;
-}
-
 #avatar {
   width: 40px;
   text-align: center;
