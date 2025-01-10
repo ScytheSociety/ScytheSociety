@@ -82,7 +82,7 @@ function setupTouchControls() {
 
     // Hacer el movimiento más sensible
     playerDirection = diffX > 0 ? 1 : diffX < 0 ? -1 : 0;
-    player.x += playerDirection * player.speed * 1.5; // Aumentar la velocidad de movimiento
+    player.x += playerDirection * player.speed * 1.2; // Aumentar la velocidad de movimiento
     player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
 
     touchStartX = touchX;
@@ -210,7 +210,7 @@ function spawnEnemy() {
     y: -enemyWidth,
     width: enemyWidth,
     height: enemyWidth,
-    speed: (0.2 + level * 0.1) * (canvas.height / 600),
+    speed: (0.4 + level * 0.1) * (canvas.height / 600),
     image: enemyImages[level - 1],
   });
   enemiesRemaining--;
