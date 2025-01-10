@@ -15,10 +15,10 @@ let playerDirection = 0;
 let enemiesRemaining = 0; // Enemigos que faltan por aparecer
 let spawnTimer = 0; // Contador para el spawn de enemigos
 const SPAWN_RATE = 60; // Frames entre cada spawn de enemigo (60 frames = 1 segundo aprox)
-const PLAYER_WIDTH = 80; // Aumentado de 50 a 80
-const PLAYER_HEIGHT = 80; // Aumentado de 50 a 80
-const BULLET_WIDTH = 20; // Aumentado de 10 a 20
-const BULLET_HEIGHT = 40; // Aumentado de 20 a 40
+let PLAYER_WIDTH = 80;
+let PLAYER_HEIGHT = 80;
+let BULLET_WIDTH = 20;
+let BULLET_HEIGHT = 40;
 let isMobile = false;
 let touchStartX = 0;
 let lastTapTime = 0;
@@ -34,21 +34,20 @@ window.onload = function () {
 };
 
 function setupResponsiveCanvas() {
-  const gameArea = document.getElementById("game-area");
   canvas = document.getElementById("game-canvas");
   if (!canvas) return;
 
-  // Set canvas size to window size
+  // Ajustar el tamaño del canvas
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  // Adjust player and game elements sizes based on screen size
+  // Calcular las dimensiones responsivas
   PLAYER_WIDTH = Math.min(canvas.width * 0.1, 80);
   PLAYER_HEIGHT = PLAYER_WIDTH;
   BULLET_WIDTH = PLAYER_WIDTH * 0.25;
   BULLET_HEIGHT = BULLET_WIDTH * 2;
 
-  // Update player position if exists
+  // Actualizar el jugador si existe
   if (player) {
     player.width = PLAYER_WIDTH;
     player.height = PLAYER_HEIGHT;
@@ -132,13 +131,13 @@ function startGame() {
     return;
   }
 
-  // Resetear todos los contadores
+  // Resetear contadores
   level = 1;
   enemiesKilled = 0;
   score = 0;
   gameTime = 0;
 
-  // Actualizar toda la información en pantalla
+  // Actualizar información en pantalla
   document.getElementById("level").textContent = `Nivel ${level}`;
   document.getElementById(
     "enemies-killed"
@@ -150,25 +149,26 @@ function startGame() {
   document.getElementById("game-area").style.display = "block";
 
   updatePlayerInfo();
-  setupTouchControls();
-  setupResponsiveCanvas();
 
+  // Configurar canvas y contexto
   canvas = document.getElementById("game-canvas");
   if (!canvas) {
     console.error("No se encontró el canvas.");
     return;
   }
   ctx = canvas.getContext("2d");
-  canvas.width = 800;
-  canvas.height = 600;
 
-  // Inicializar jugador con nuevas dimensiones
+  // Configurar el tamaño responsivo
+  setupResponsiveCanvas();
+  setupTouchControls();
+
+  // Inicializar jugador
   player = {
     x: canvas.width / 2 - PLAYER_WIDTH / 2,
     y: canvas.height - PLAYER_HEIGHT - 10,
     width: PLAYER_WIDTH,
     height: PLAYER_HEIGHT,
-    speed: 5,
+    speed: canvas.width * 0.005, // Velocidad responsiva
     image: playerImage,
   };
 
@@ -196,7 +196,7 @@ function spawnEnemy() {
     y: -enemyWidth,
     width: enemyWidth,
     height: enemyWidth,
-    speed: (0.2 + level * 0.1) * (canvas.height / 600), // Adjust speed based on screen height
+    speed: (0.2 + level * 0.1) * (canvas.height / 600),
     image: enemyImages[level - 1],
   });
   enemiesRemaining--;
@@ -265,8 +265,10 @@ function moveEnemies() {
 }
 
 function updateBullets() {
+  const bulletSpeed = canvas.height * 0.02; // Velocidad responsiva para las balas
+
   for (let bullet of bullets) {
-    bullet.y -= 10;
+    bullet.y -= bulletSpeed;
     ctx.drawImage(bulletImage, bullet.x, bullet.y, bullet.width, bullet.height);
   }
 
