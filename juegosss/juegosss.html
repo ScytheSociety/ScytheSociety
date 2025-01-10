@@ -11,16 +11,30 @@
 <body>
     <div id="main-menu">
         <h1>Hell Shooter</h1>
-        <div>
-            <label for="name">Nombre:</label>
-            <input type="text" id="name" maxlength="4" minlength="3">
+        <div class="input-container">
+            <div class="input-row">
+                <label for="name">Nombre:</label>
+                <input type="text" id="name" maxlength="4" minlength="3">
+            </div>
+            <div class="input-row">
+                <label for="avatar">Emoji:</label>
+                <div class="emoji-input-group">
+                    <input type="text" id="avatar" maxlength="1" minlength="1">
+                    <button id="emoji-picker-btn" class="emoji-btn">Seleccionar Emoji 😊</button>
+                </div>
+            </div>
+            <div class="emoji-picker" id="emoji-picker" style="display: none;">
+                <div class="emoji-list">
+                    😀 😁 😂 🤣 😃 😄 😅 😆 😉 😊 🙂 🙃 😋 😎 😍 😘 🥰 😗 😙 😚
+                    👻 💀 ☠️ 👽 👾 🤖 🎃 😺 😸 😹 😻 😼 😽 🙀 😿 😾
+                    👿 👹 👺 🤡 💩 👻 💀 ☠️ 👽 👾
+                </div>
+            </div>
         </div>
-        <div>
-            <label for="avatar">Emoji:</label>
-            <input type="text" id="avatar" maxlength="1" minlength="1">
+        <div class="button-container">
+            <button onclick="startGame()">Jugar</button>
+            <button onclick="viewRanking()">Ranking</button>
         </div>
-        <button onclick="startGame()">Jugar</button>
-        <button onclick="viewRanking()">Ranking</button>
     </div>
 
     <div id="game-area" style="display: none;">

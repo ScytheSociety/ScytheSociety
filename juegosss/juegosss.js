@@ -38,37 +38,39 @@ function setupResponsiveCanvas() {
   canvas = document.getElementById("game-canvas");
   if (!canvas) return;
 
-  // Ajustar el tamaño del canvas
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  // Calcular las dimensiones responsivas
   PLAYER_WIDTH = Math.min(canvas.width * 0.1, 80);
   PLAYER_HEIGHT = PLAYER_WIDTH;
   BULLET_WIDTH = PLAYER_WIDTH * 0.25;
   BULLET_HEIGHT = BULLET_WIDTH * 2;
 
-  // Actualizar el jugador si existe
-  if (player) {
-    player.width = PLAYER_WIDTH;
-    player.height = PLAYER_HEIGHT;
-    player.x = canvas.width / 2 - PLAYER_WIDTH / 2;
-    player.y = canvas.height - PLAYER_HEIGHT - 10;
-  }
+  // Ajustar la velocidad base del jugador según el ancho de la pantalla
+  const baseSpeed = canvas.width * 0.01; // Aumentado para mejor respuesta en móviles
+  player = {
+    ...player,
+    width: PLAYER_WIDTH,
+    height: PLAYER_HEIGHT,
+    speed: isMobile ? baseSpeed * 1.5 : baseSpeed, // 50% más rápido en móviles
+    x: canvas.width / 2 - PLAYER_WIDTH / 2,
+    y: canvas.height - PLAYER_HEIGHT - 20, // Ajustado para mejor visibilidad
+  };
 }
 
 function setupTouchControls() {
   if (!isMobile) return;
 
+  let touchStartX = 0;
+  let lastTapTime = 0;
+
   canvas.addEventListener("touchstart", (e) => {
     e.preventDefault();
     touchStartX = e.touches[0].clientX;
 
-    // Double tap detection for shooting
-    const currentTime = new Date().getTime();
-    const tapLength = currentTime - lastTapTime;
-
-    if (tapLength < 300 && tapLength > 0) {
+    // Detección de doble tap para disparar
+    const currentTime = Date.now();
+    if (currentTime - lastTapTime < 300) {
       shootBullet();
     }
     lastTapTime = currentTime;
@@ -79,7 +81,11 @@ function setupTouchControls() {
     const touchX = e.touches[0].clientX;
     const diffX = touchX - touchStartX;
 
+    // Hacer el movimiento más sensible
     playerDirection = diffX > 0 ? 1 : diffX < 0 ? -1 : 0;
+    player.x += playerDirection * player.speed * 1.5; // Aumentar la velocidad de movimiento
+    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+
     touchStartX = touchX;
   });
 
@@ -480,39 +486,46 @@ function allowEmoji(event) {
 
 function setupEmojiInput() {
   const avatarInput = document.getElementById("avatar");
+  const emojiPickerBtn = document.getElementById("emoji-picker-btn");
+  const emojiPicker = document.getElementById("emoji-picker");
 
-  // Agregar un botón específico para móviles
-  const emojiButton = document.createElement("button");
-  emojiButton.textContent = "Seleccionar Emoji 😊";
-  emojiButton.style.marginTop = "10px";
-  avatarInput.parentNode.insertBefore(emojiButton, avatarInput.nextSibling);
-
-  // Crear un elemento input temporal para emojis
-  const tempInput = document.createElement("input");
-  tempInput.type = "text";
-  tempInput.style.position = "absolute";
-  tempInput.style.opacity = "0";
-  tempInput.style.pointerEvents = "none";
-  document.body.appendChild(tempInput);
-
-  emojiButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    tempInput.focus();
-  });
-
-  function isEmoji(str) {
-    const emojiRegex = /(\p{Emoji})/u;
-    return emojiRegex.test(str);
-  }
-
-  // Manejar la entrada de emoji
-  tempInput.addEventListener("input", (e) => {
+  // Manejar input directo desde teclado de emoji
+  avatarInput.addEventListener("input", (e) => {
     const lastChar = e.target.value.slice(-1);
     if (isEmoji(lastChar)) {
       avatarInput.value = lastChar;
+    } else if (e.target.value.length > 0) {
+      avatarInput.value = "";
     }
-    tempInput.value = "";
   });
+
+  // Mostrar/ocultar el selector de emojis
+  emojiPickerBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    emojiPicker.style.display =
+      emojiPicker.style.display === "none" ? "block" : "none";
+  });
+
+  // Manejar la selección de emoji
+  document.querySelector(".emoji-list").addEventListener("click", (e) => {
+    const emoji = e.target.textContent.trim();
+    if (isEmoji(emoji)) {
+      avatarInput.value = emoji;
+      emojiPicker.style.display = "none";
+    }
+  });
+
+  // Cerrar el picker al hacer clic fuera
+  document.addEventListener("click", (e) => {
+    if (!emojiPicker.contains(e.target) && e.target !== emojiPickerBtn) {
+      emojiPicker.style.display = "none";
+    }
+  });
+}
+
+function isEmoji(str) {
+  const emojiRegex = /(\p{Emoji})/u;
+  return emojiRegex.test(str);
 }
 
 window.addEventListener("keydown", (e) => {
