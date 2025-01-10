@@ -19,10 +19,74 @@ const PLAYER_WIDTH = 80; // Aumentado de 50 a 80
 const PLAYER_HEIGHT = 80; // Aumentado de 50 a 80
 const BULLET_WIDTH = 20; // Aumentado de 10 a 20
 const BULLET_HEIGHT = 40; // Aumentado de 20 a 40
+let isMobile = false;
+let touchStartX = 0;
+let lastTapTime = 0;
 
 window.onload = function () {
+  isMobile =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+  setupResponsiveCanvas();
+  window.addEventListener("resize", setupResponsiveCanvas);
   loadGameAssets();
 };
+
+function setupResponsiveCanvas() {
+  const gameArea = document.getElementById("game-area");
+  canvas = document.getElementById("game-canvas");
+  if (!canvas) return;
+
+  // Set canvas size to window size
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  // Adjust player and game elements sizes based on screen size
+  PLAYER_WIDTH = Math.min(canvas.width * 0.1, 80);
+  PLAYER_HEIGHT = PLAYER_WIDTH;
+  BULLET_WIDTH = PLAYER_WIDTH * 0.25;
+  BULLET_HEIGHT = BULLET_WIDTH * 2;
+
+  // Update player position if exists
+  if (player) {
+    player.width = PLAYER_WIDTH;
+    player.height = PLAYER_HEIGHT;
+    player.x = canvas.width / 2 - PLAYER_WIDTH / 2;
+    player.y = canvas.height - PLAYER_HEIGHT - 10;
+  }
+}
+
+function setupTouchControls() {
+  if (!isMobile) return;
+
+  canvas.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    touchStartX = e.touches[0].clientX;
+
+    // Double tap detection for shooting
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTapTime;
+
+    if (tapLength < 300 && tapLength > 0) {
+      shootBullet();
+    }
+    lastTapTime = currentTime;
+  });
+
+  canvas.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    const touchX = e.touches[0].clientX;
+    const diffX = touchX - touchStartX;
+
+    playerDirection = diffX > 0 ? 1 : diffX < 0 ? -1 : 0;
+    touchStartX = touchX;
+  });
+
+  canvas.addEventListener("touchend", () => {
+    playerDirection = 0;
+  });
+}
 
 function loadGameAssets() {
   fetch("assets.json")
@@ -33,18 +97,14 @@ function loadGameAssets() {
         backgroundImages[index].src = src;
       });
 
-      // Cargar enemigos con modo de renderizado específico
-      data.enemies.forEach((src, index) => {
-        enemyImages[index] = new Image();
-        // Forzar el modo de renderizado para GIFs
-        enemyImages[index].style = "image-rendering: pixelated";
-        enemyImages[index].src = src;
+      enemyImages = data.enemies.map((src) => {
+        const img = new Image();
+        img.src = src;
+        return img;
       });
 
       playerImage = new Image();
-      playerImage.style = "image-rendering: pixelated";
       playerImage.src = data.player;
-
       bulletImage = new Image();
       bulletImage.src = data.bullet;
     })
@@ -90,6 +150,8 @@ function startGame() {
   document.getElementById("game-area").style.display = "block";
 
   updatePlayerInfo();
+  setupTouchControls();
+  setupResponsiveCanvas();
 
   canvas = document.getElementById("game-canvas");
   if (!canvas) {
@@ -126,13 +188,15 @@ function startLevel() {
 }
 
 function spawnEnemy() {
-  const margin = 50;
+  const enemyWidth = Math.min(canvas.width * 0.08, 50);
+  const margin = enemyWidth;
+
   enemies.push({
     x: margin + Math.random() * (canvas.width - 2 * margin),
-    y: -50, // Comenzar arriba del canvas
-    width: 50,
-    height: 50,
-    speed: 0.2 + level * 0.1, // Reducido el multiplicador para que sea más lento
+    y: -enemyWidth,
+    width: enemyWidth,
+    height: enemyWidth,
+    speed: (0.2 + level * 0.1) * (canvas.height / 600), // Adjust speed based on screen height
     image: enemyImages[level - 1],
   });
   enemiesRemaining--;
@@ -291,7 +355,6 @@ async function saveScore() {
   };
 
   try {
-    // Leer el archivo ranking.json actual
     const response = await fetch("ranking.json");
     let ranking = [];
 
@@ -299,20 +362,9 @@ async function saveScore() {
       ranking = await response.json();
     }
 
-    // Agregar nuevo score
     ranking.push(playerData);
+    ranking.sort((a, b) => b.score - a.score || a.time - b.time);
 
-    // Ordenar el ranking
-    ranking.sort((a, b) => {
-      // Primero ordenar por score
-      if (b.score !== a.score) {
-        return b.score - a.score;
-      }
-      // Si hay empate en score, ordenar por tiempo (menor tiempo primero)
-      return a.time - b.time;
-    });
-
-    // Guardar el ranking actualizado
     const saveResponse = await fetch("save_ranking.php", {
       method: "POST",
       headers: {
@@ -321,15 +373,16 @@ async function saveScore() {
       body: JSON.stringify(ranking),
     });
 
-    if (!saveResponse.ok) {
-      throw new Error("Error al guardar el ranking");
+    const result = await saveResponse.json();
+
+    if (!saveResponse.ok || result.error) {
+      throw new Error(result.error || "Error al guardar el ranking");
     }
 
-    // Mostrar mensaje de éxito
     alert("¡Puntuación guardada con éxito!");
   } catch (error) {
     console.error("Error:", error);
-    alert("Error al guardar la puntuación");
+    alert(`Error al guardar la puntuación: ${error.message}`);
   }
 }
 
