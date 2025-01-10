@@ -480,17 +480,39 @@ function allowEmoji(event) {
 
 function setupEmojiInput() {
   const avatarInput = document.getElementById("avatar");
+
+  // Agregar un botón específico para móviles
   const emojiButton = document.createElement("button");
   emojiButton.textContent = "Seleccionar Emoji 😊";
   emojiButton.style.marginTop = "10px";
   avatarInput.parentNode.insertBefore(emojiButton, avatarInput.nextSibling);
 
-  const picker = new EmojiButton();
-  picker.on("emoji", (emoji) => {
-    avatarInput.value = emoji;
+  // Crear un elemento input temporal para emojis
+  const tempInput = document.createElement("input");
+  tempInput.type = "text";
+  tempInput.style.position = "absolute";
+  tempInput.style.opacity = "0";
+  tempInput.style.pointerEvents = "none";
+  document.body.appendChild(tempInput);
+
+  emojiButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    tempInput.focus();
   });
 
-  emojiButton.addEventListener("click", () => picker.togglePicker(emojiButton));
+  function isEmoji(str) {
+    const emojiRegex = /(\p{Emoji})/u;
+    return emojiRegex.test(str);
+  }
+
+  // Manejar la entrada de emoji
+  tempInput.addEventListener("input", (e) => {
+    const lastChar = e.target.value.slice(-1);
+    if (isEmoji(lastChar)) {
+      avatarInput.value = lastChar;
+    }
+    tempInput.value = "";
+  });
 }
 
 window.addEventListener("keydown", (e) => {
