@@ -15,6 +15,10 @@ let playerDirection = 0;
 let enemiesRemaining = 0; // Enemigos que faltan por aparecer
 let spawnTimer = 0; // Contador para el spawn de enemigos
 const SPAWN_RATE = 60; // Frames entre cada spawn de enemigo (60 frames = 1 segundo aprox)
+const PLAYER_WIDTH = 80; // Aumentado de 50 a 80
+const PLAYER_HEIGHT = 80; // Aumentado de 50 a 80
+const BULLET_WIDTH = 20; // Aumentado de 10 a 20
+const BULLET_HEIGHT = 40; // Aumentado de 20 a 40
 
 window.onload = function () {
   loadGameAssets();
@@ -24,20 +28,21 @@ function loadGameAssets() {
   fetch("assets.json")
     .then((response) => response.json())
     .then((data) => {
-      // Cargar backgrounds
       data.backgrounds.forEach((src, index) => {
         backgroundImages[index] = new Image();
         backgroundImages[index].src = src;
       });
 
-      // Cargar enemigos
+      // Cargar enemigos con modo de renderizado específico
       data.enemies.forEach((src, index) => {
         enemyImages[index] = new Image();
+        // Forzar el modo de renderizado para GIFs
+        enemyImages[index].style = "image-rendering: pixelated";
         enemyImages[index].src = src;
       });
 
-      // Cargar jugador y bala
       playerImage = new Image();
+      playerImage.style = "image-rendering: pixelated";
       playerImage.src = data.player;
 
       bulletImage = new Image();
@@ -67,13 +72,25 @@ function startGame() {
     return;
   }
 
+  // Resetear todos los contadores
+  level = 1;
+  enemiesKilled = 0;
+  score = 0;
+  gameTime = 0;
+
+  // Actualizar toda la información en pantalla
+  document.getElementById("level").textContent = `Nivel ${level}`;
+  document.getElementById(
+    "enemies-killed"
+  ).textContent = `Enemigos: ${enemiesKilled}`;
+  document.getElementById("time").textContent = `Tiempo: 0s`;
+  document.getElementById("score").textContent = `Puntuación: 0`;
+
   document.getElementById("main-menu").style.display = "none";
   document.getElementById("game-area").style.display = "block";
 
-  // Actualizar información del jugador
   updatePlayerInfo();
 
-  // Inicializar canvas
   canvas = document.getElementById("game-canvas");
   if (!canvas) {
     console.error("No se encontró el canvas.");
@@ -83,23 +100,18 @@ function startGame() {
   canvas.width = 800;
   canvas.height = 600;
 
-  // Inicializar jugador
+  // Inicializar jugador con nuevas dimensiones
   player = {
-    x: canvas.width / 2 - 25,
-    y: canvas.height - 50,
-    width: 50,
-    height: 50,
+    x: canvas.width / 2 - PLAYER_WIDTH / 2,
+    y: canvas.height - PLAYER_HEIGHT - 10,
+    width: PLAYER_WIDTH,
+    height: PLAYER_HEIGHT,
     speed: 5,
     image: playerImage,
   };
 
-  // Inicializar variables del juego
   bullets = [];
   enemies = [];
-  score = 0;
-  enemiesKilled = 0;
-  gameTime = 0;
-
   startLevel();
   gameInterval = setInterval(gameLoop, 1000 / 60);
 }
@@ -172,14 +184,20 @@ function drawPlayer() {
     console.warn("La imagen del jugador no está lista.");
     return;
   }
+
+  // Usar smoothing para mejor calidad de GIF
+  ctx.imageSmoothingEnabled = false;
   ctx.drawImage(player.image, player.x, player.y, player.width, player.height);
+  ctx.imageSmoothingEnabled = true;
 }
 
 function moveEnemies() {
+  ctx.imageSmoothingEnabled = false;
   for (let enemy of enemies) {
     enemy.y += enemy.speed;
     ctx.drawImage(enemy.image, enemy.x, enemy.y, enemy.width, enemy.height);
   }
+  ctx.imageSmoothingEnabled = true;
 }
 
 function updateBullets() {
@@ -232,17 +250,16 @@ function checkGameOver() {
 
 function shootBullet() {
   const currentTime = Date.now();
-  const cooldownTime = 1000 - level * 100; // Reduce el tiempo de cooldown con cada nivel (máximo 0.1s a nivel 10)
+  const cooldownTime = 1000 - level * 100;
 
-  // Si ha pasado el tiempo suficiente según el cooldown
   if (currentTime - lastShootTime > cooldownTime) {
     bullets.push({
-      x: player.x + player.width / 2 - 5,
+      x: player.x + PLAYER_WIDTH / 2 - BULLET_WIDTH / 2,
       y: player.y,
-      width: 10,
-      height: 20,
+      width: BULLET_WIDTH,
+      height: BULLET_HEIGHT,
     });
-    lastShootTime = currentTime; // Actualizar el tiempo del último disparo
+    lastShootTime = currentTime;
   }
 }
 
@@ -259,7 +276,7 @@ function restartGame() {
   startGame();
 }
 
-function saveScore() {
+async function saveScore() {
   const playerData = {
     name: playerName,
     avatar: playerAvatar,
@@ -269,13 +286,86 @@ function saveScore() {
     score: score,
   };
 
-  const ranking = JSON.parse(localStorage.getItem("ranking")) || [];
-  ranking.push(playerData);
-  localStorage.setItem("ranking", JSON.stringify(ranking));
+  try {
+    // Leer el archivo ranking.json actual
+    const response = await fetch("ranking.json");
+    let ranking = [];
+
+    if (response.ok) {
+      ranking = await response.json();
+    }
+
+    // Agregar nuevo score
+    ranking.push(playerData);
+
+    // Ordenar el ranking
+    ranking.sort((a, b) => {
+      // Primero ordenar por score
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      // Si hay empate en score, ordenar por tiempo (menor tiempo primero)
+      return a.time - b.time;
+    });
+
+    // Guardar el ranking actualizado
+    const saveResponse = await fetch("save_ranking.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(ranking),
+    });
+
+    if (!saveResponse.ok) {
+      console.error("Error al guardar el ranking");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+  }
 }
 
-function viewRanking() {
-  window.location.href = "ranking.html";
+async function viewRanking() {
+  try {
+    const response = await fetch("ranking.json");
+    if (!response.ok) {
+      throw new Error("No se pudo cargar el ranking");
+    }
+
+    const ranking = await response.json();
+    const rankingTable = document.createElement("table");
+    rankingTable.innerHTML = `
+            <tr>
+                <th>Posición</th>
+                <th>Jugador</th>
+                <th>Avatar</th>
+                <th>Nivel</th>
+                <th>Enemigos</th>
+                <th>Tiempo</th>
+                <th>Puntuación</th>
+            </tr>
+            ${ranking
+              .map(
+                (player, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${player.name}</td>
+                    <td>${player.avatar}</td>
+                    <td>${player.level}</td>
+                    <td>${player.enemiesKilled}</td>
+                    <td>${player.time}s</td>
+                    <td>${player.score}</td>
+                </tr>
+            `
+              )
+              .join("")}
+        `;
+
+    document.getElementById("ranking-container").innerHTML = "";
+    document.getElementById("ranking-container").appendChild(rankingTable);
+  } catch (error) {
+    console.error("Error al cargar el ranking:", error);
+  }
 }
 
 function allowEmoji(event) {
