@@ -1,35 +1,39 @@
 <?php
+// Asegurarse de que no haya salida HTML antes de los headers
 header('Content-Type: application/json');
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
 
 try {
-    // Get the posted data
+    // Obtener los datos enviados
     $rankingData = file_get_contents('php://input');
-
-    // Validate JSON
+    
+    // Validar que los datos sean JSON válido
     $decoded = json_decode($rankingData);
-    if ($decoded === null) {
-        throw new Exception('Invalid JSON data');
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception('Datos JSON inválidos: ' . json_last_error_msg());
     }
-
-    // Check if file is writable
-    if (!is_writable('ranking.json')) {
-        throw new Exception('Ranking file is not writable');
+    
+    // Verificar permisos del archivo
+    $rankingFile = 'ranking.json';
+    if (!is_writable($rankingFile) && file_exists($rankingFile)) {
+        chmod($rankingFile, 0666);
     }
-
-    // Save to file
-    $result = file_put_contents('ranking.json', $rankingData);
-
+    
+    // Guardar en el archivo
+    $result = file_put_contents($rankingFile, $rankingData);
+    
     if ($result === false) {
-        throw new Exception('Failed to write to ranking file');
+        throw new Exception('Error al escribir en el archivo');
     }
-
-    http_response_code(200);
+    
     echo json_encode(['success' => true]);
-
+    
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
         'error' => $e->getMessage(),
-        'details' => error_get_last()
+        'success' => false
     ]);
 }
+?>

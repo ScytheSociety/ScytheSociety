@@ -29,6 +29,7 @@ window.onload = function () {
       navigator.userAgent
     );
   setupResponsiveCanvas();
+  setupEmojiInput(); // Agregar esta línea
   window.addEventListener("resize", setupResponsiveCanvas);
   loadGameAssets();
 };
@@ -91,19 +92,27 @@ function loadGameAssets() {
   fetch("assets.json")
     .then((response) => response.json())
     .then((data) => {
+      // Cargar fondos
       data.backgrounds.forEach((src, index) => {
         backgroundImages[index] = new Image();
         backgroundImages[index].src = src;
       });
 
+      // Cargar enemigos - Eliminar cualquier propiedad que pueda interferir con la animación
       enemyImages = data.enemies.map((src) => {
         const img = new Image();
+        // Eliminar cualquier estilo que pueda interferir
+        img.style = "";
         img.src = src;
         return img;
       });
 
+      // Cargar imagen del jugador
       playerImage = new Image();
+      playerImage.style = "";
       playerImage.src = data.player;
+
+      // Cargar imagen de la bala
       bulletImage = new Image();
       bulletImage.src = data.bullet;
     })
@@ -168,7 +177,7 @@ function startGame() {
     y: canvas.height - PLAYER_HEIGHT - 10,
     width: PLAYER_WIDTH,
     height: PLAYER_HEIGHT,
-    speed: canvas.width * 0.005, // Velocidad responsiva
+    speed: canvas.width * 0.015, // Velocidad responsiva
     image: playerImage,
   };
 
@@ -357,16 +366,26 @@ async function saveScore() {
   };
 
   try {
-    const response = await fetch("ranking.json");
+    // Primero intentamos cargar el ranking existente
     let ranking = [];
-
-    if (response.ok) {
-      ranking = await response.json();
+    try {
+      const response = await fetch("ranking.json");
+      if (response.ok) {
+        ranking = await response.json();
+      }
+    } catch (e) {
+      console.warn(
+        "No se pudo cargar el ranking existente, se creará uno nuevo"
+      );
     }
 
+    // Agregar nuevo score
     ranking.push(playerData);
+
+    // Ordenar el ranking
     ranking.sort((a, b) => b.score - a.score || a.time - b.time);
 
+    // Guardar el ranking actualizado
     const saveResponse = await fetch("save_ranking.php", {
       method: "POST",
       headers: {
@@ -377,14 +396,16 @@ async function saveScore() {
 
     const result = await saveResponse.json();
 
-    if (!saveResponse.ok || result.error) {
-      throw new Error(result.error || "Error al guardar el ranking");
+    if (!result.success) {
+      throw new Error(result.error || "Error desconocido al guardar");
     }
 
     alert("¡Puntuación guardada con éxito!");
   } catch (error) {
-    console.error("Error:", error);
-    alert(`Error al guardar la puntuación: ${error.message}`);
+    console.error("Error al guardar:", error);
+    alert(
+      `Error al guardar la puntuación: ${error.message}. Por favor, inténtalo de nuevo.`
+    );
   }
 }
 
@@ -455,6 +476,43 @@ function allowEmoji(event) {
   } else {
     alert("Solo puedes pegar emojis.");
   }
+}
+
+function setupEmojiInput() {
+  const avatarInput = document.getElementById("avatar");
+
+  // Agregar un botón específico para móviles
+  const emojiButton = document.createElement("button");
+  emojiButton.textContent = "Seleccionar Emoji 😊";
+  emojiButton.style.marginTop = "10px";
+  avatarInput.parentNode.insertBefore(emojiButton, avatarInput.nextSibling);
+
+  // Crear un elemento input temporal para emojis
+  const tempInput = document.createElement("input");
+  tempInput.type = "text";
+  tempInput.style.position = "absolute";
+  tempInput.style.opacity = "0";
+  tempInput.style.pointerEvents = "none";
+  document.body.appendChild(tempInput);
+
+  emojiButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    tempInput.focus();
+  });
+
+  function isEmoji(str) {
+    const emojiRegex = /(\p{Emoji})/u;
+    return emojiRegex.test(str);
+  }
+
+  // Manejar la entrada de emoji
+  tempInput.addEventListener("input", (e) => {
+    const lastChar = e.target.value.slice(-1);
+    if (isEmoji(lastChar)) {
+      avatarInput.value = lastChar;
+    }
+    tempInput.value = "";
+  });
 }
 
 window.addEventListener("keydown", (e) => {
