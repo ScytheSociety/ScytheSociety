@@ -177,7 +177,7 @@ function startGame() {
     y: canvas.height - PLAYER_HEIGHT - 10,
     width: PLAYER_WIDTH,
     height: PLAYER_HEIGHT,
-    speed: canvas.width * 0.015, // Velocidad responsiva
+    speed: canvas.width * 0.005, // Velocidad responsiva
     image: playerImage,
   };
 
