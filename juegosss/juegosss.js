@@ -325,7 +325,7 @@ function checkGameOver() {
 
 function shootBullet() {
   const currentTime = Date.now();
-  const cooldownTime = 1000 - level * 100;
+  const cooldownTime = 0;
 
   if (currentTime - lastShootTime > cooldownTime) {
     bullets.push({
