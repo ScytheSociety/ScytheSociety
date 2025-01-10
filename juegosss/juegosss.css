@@ -44,3 +44,30 @@ input {
   padding: 5px;
   margin: 5px;
 }
+
+#ranking-container {
+  margin: 20px auto;
+  max-width: 800px;
+}
+
+#ranking-container table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+#ranking-container th,
+#ranking-container td {
+  padding: 10px;
+  border: 1px solid #444;
+  text-align: center;
+}
+
+#ranking-container th {
+  background-color: #28a745;
+  color: white;
+}
+
+#ranking-container tr:nth-child(even) {
+  background-color: rgba(40, 167, 69, 0.1);
+}

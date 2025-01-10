@@ -327,45 +327,59 @@ async function saveScore() {
 
 async function viewRanking() {
   try {
+    // Ocultar menú principal y área de juego
+    document.getElementById("main-menu").style.display = "none";
+    document.getElementById("game-area").style.display = "none";
+
+    // Mostrar contenedor del ranking
+    const rankingContainer = document.getElementById("ranking-container");
+    rankingContainer.style.display = "block";
+
     const response = await fetch("ranking.json");
     if (!response.ok) {
       throw new Error("No se pudo cargar el ranking");
     }
 
     const ranking = await response.json();
-    const rankingTable = document.createElement("table");
-    rankingTable.innerHTML = `
-            <tr>
-                <th>Posición</th>
-                <th>Jugador</th>
-                <th>Avatar</th>
-                <th>Nivel</th>
-                <th>Enemigos</th>
-                <th>Tiempo</th>
-                <th>Puntuación</th>
-            </tr>
-            ${ranking
-              .map(
-                (player, index) => `
+    rankingContainer.innerHTML = `
+            <h2>Ranking de Jugadores</h2>
+            <table>
                 <tr>
-                    <td>${index + 1}</td>
-                    <td>${player.name}</td>
-                    <td>${player.avatar}</td>
-                    <td>${player.level}</td>
-                    <td>${player.enemiesKilled}</td>
-                    <td>${player.time}s</td>
-                    <td>${player.score}</td>
+                    <th>Posición</th>
+                    <th>Jugador</th>
+                    <th>Avatar</th>
+                    <th>Nivel</th>
+                    <th>Enemigos</th>
+                    <th>Tiempo</th>
+                    <th>Puntuación</th>
                 </tr>
-            `
-              )
-              .join("")}
+                ${ranking
+                  .map(
+                    (player, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${player.name}</td>
+                        <td>${player.avatar}</td>
+                        <td>${player.level}</td>
+                        <td>${player.enemiesKilled}</td>
+                        <td>${player.time}s</td>
+                        <td>${player.score}</td>
+                    </tr>
+                `
+                  )
+                  .join("")}
+            </table>
+            <button onclick="backToMenu()">Volver al Menú</button>
         `;
-
-    document.getElementById("ranking-container").innerHTML = "";
-    document.getElementById("ranking-container").appendChild(rankingTable);
   } catch (error) {
     console.error("Error al cargar el ranking:", error);
   }
+}
+
+// Agregar esta nueva función para volver al menú
+function backToMenu() {
+  document.getElementById("ranking-container").style.display = "none";
+  document.getElementById("main-menu").style.display = "block";
 }
 
 function allowEmoji(event) {

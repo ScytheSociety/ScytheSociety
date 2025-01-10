@@ -13,15 +13,15 @@
   ],
   "enemies": [
     "../imagenes/imagenesjuegosss/enemy1.gif",
-    "../imagenes/imagenesjuegosss/enemy1.gif",
-    "../imagenes/imagenesjuegosss/enemy1.gif",
-    "../imagenes/imagenesjuegosss/enemy1.gif",
-    "../imagenes/imagenesjuegosss/enemy1.gif",
-    "../imagenes/imagenesjuegosss/enemy1.gif",
-    "../imagenes/imagenesjuegosss/enemy1.gif",
-    "../imagenes/imagenesjuegosss/enemy1.gif",
-    "../imagenes/imagenesjuegosss/enemy1.gif",
-    "../imagenes/imagenesjuegosss/enemy1.gif"
+    "../imagenes/imagenesjuegosss/enemy2.gif",
+    "../imagenes/imagenesjuegosss/enemy3.gif",
+    "../imagenes/imagenesjuegosss/enemy4.gif",
+    "../imagenes/imagenesjuegosss/enemy5.gif",
+    "../imagenes/imagenesjuegosss/enemy6.gif",
+    "../imagenes/imagenesjuegosss/enemy7.gif",
+    "../imagenes/imagenesjuegosss/enemy8.gif",
+    "../imagenes/imagenesjuegosss/enemy9.gif",
+    "../imagenes/imagenesjuegosss/enemy10.gif"
   ],
   "player": "../imagenes/imagenesjuegosss/player.gif",
   "bullet": "../imagenes/imagenesjuegosss/bone.png"
