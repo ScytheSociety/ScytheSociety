@@ -466,6 +466,55 @@ function backToMenu() {
   document.getElementById("main-menu").style.display = "block";
 }
 
+function allowEmoji(event) {
+  event.preventDefault();
+  const pastedText = event.clipboardData.getData("text");
+  // Verificar si es un emoji usando una expresión regular
+  const emojiRegex = /(\p{Emoji})/u;
+  if (emojiRegex.test(pastedText)) {
+    document.getElementById("avatar").value = pastedText;
+  } else {
+    alert("Solo puedes pegar emojis.");
+  }
+}
+
+function setupEmojiInput() {
+  const avatarInput = document.getElementById("avatar");
+
+  // Agregar un botón específico para móviles
+  const emojiButton = document.createElement("button");
+  emojiButton.textContent = "Seleccionar Emoji 😊";
+  emojiButton.style.marginTop = "10px";
+  avatarInput.parentNode.insertBefore(emojiButton, avatarInput.nextSibling);
+
+  // Crear un elemento input temporal para emojis
+  const tempInput = document.createElement("input");
+  tempInput.type = "text";
+  tempInput.style.position = "absolute";
+  tempInput.style.opacity = "0";
+  tempInput.style.pointerEvents = "none";
+  document.body.appendChild(tempInput);
+
+  emojiButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    tempInput.focus();
+  });
+
+  function isEmoji(str) {
+    const emojiRegex = /(\p{Emoji})/u;
+    return emojiRegex.test(str);
+  }
+
+  // Manejar la entrada de emoji
+  tempInput.addEventListener("input", (e) => {
+    const lastChar = e.target.value.slice(-1);
+    if (isEmoji(lastChar)) {
+      avatarInput.value = lastChar;
+    }
+    tempInput.value = "";
+  });
+}
+
 window.addEventListener("keydown", (e) => {
   if (e.key === "a" || e.key === "ArrowLeft") {
     playerDirection = -1;
