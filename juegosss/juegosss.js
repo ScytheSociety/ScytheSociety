@@ -29,7 +29,6 @@ window.onload = function () {
       navigator.userAgent
     );
   setupResponsiveCanvas();
-  setupEmojiInput(); // Agregar esta línea
   window.addEventListener("resize", setupResponsiveCanvas);
   loadGameAssets();
 };
@@ -470,62 +469,6 @@ async function viewRanking() {
 function backToMenu() {
   document.getElementById("ranking-container").style.display = "none";
   document.getElementById("main-menu").style.display = "block";
-}
-
-function allowEmoji(event) {
-  event.preventDefault();
-  const pastedText = event.clipboardData.getData("text");
-  // Verificar si es un emoji usando una expresión regular
-  const emojiRegex = /(\p{Emoji})/u;
-  if (emojiRegex.test(pastedText)) {
-    document.getElementById("avatar").value = pastedText;
-  } else {
-    alert("Solo puedes pegar emojis.");
-  }
-}
-
-function setupEmojiInput() {
-  const avatarInput = document.getElementById("avatar");
-  const emojiPickerBtn = document.getElementById("emoji-picker-btn");
-  const emojiPicker = document.getElementById("emoji-picker");
-
-  // Manejar input directo desde teclado de emoji
-  avatarInput.addEventListener("input", (e) => {
-    const lastChar = e.target.value.slice(-1);
-    if (isEmoji(lastChar)) {
-      avatarInput.value = lastChar;
-    } else if (e.target.value.length > 0) {
-      avatarInput.value = "";
-    }
-  });
-
-  // Mostrar/ocultar el selector de emojis
-  emojiPickerBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    emojiPicker.style.display =
-      emojiPicker.style.display === "none" ? "block" : "none";
-  });
-
-  // Manejar la selección de emoji
-  document.querySelector(".emoji-list").addEventListener("click", (e) => {
-    const emoji = e.target.textContent.trim();
-    if (isEmoji(emoji)) {
-      avatarInput.value = emoji;
-      emojiPicker.style.display = "none";
-    }
-  });
-
-  // Cerrar el picker al hacer clic fuera
-  document.addEventListener("click", (e) => {
-    if (!emojiPicker.contains(e.target) && e.target !== emojiPickerBtn) {
-      emojiPicker.style.display = "none";
-    }
-  });
-}
-
-function isEmoji(str) {
-  const emojiRegex = /(\p{Emoji})/u;
-  return emojiRegex.test(str);
 }
 
 window.addEventListener("keydown", (e) => {
