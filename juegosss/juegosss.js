@@ -210,7 +210,7 @@ function spawnEnemy() {
     y: -enemyWidth,
     width: enemyWidth,
     height: enemyWidth,
-    speed: (0.4 + level * 0.1) * (canvas.height / 600),
+    speed: (0.5 + level * 0.2) * (canvas.height / 600),
     image: enemyImages[level - 1],
   });
   enemiesRemaining--;
