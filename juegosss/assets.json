@@ -23,6 +23,6 @@
     "../imagenes/imagenesjuegosss/enemy9.gif",
     "../imagenes/imagenesjuegosss/enemy10.gif"
   ],
-  "player": "../imagenes/imagenesjuegosss/player.gif",
+  "player": "../imagenes/imagenesjuegosss/player.png",
   "bullet": "../imagenes/imagenesjuegosss/bone.png"
 }
