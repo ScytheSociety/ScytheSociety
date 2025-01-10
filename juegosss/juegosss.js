@@ -267,13 +267,17 @@ function gameOver() {
   clearInterval(gameInterval);
   document.getElementById("game-over").style.display = "block";
   document.getElementById("game-over-text").textContent = "Game Over";
-
-  saveScore();
 }
 
 function restartGame() {
   document.getElementById("game-over").style.display = "none";
   startGame();
+}
+
+async function saveAndViewRanking() {
+  await saveScore(); // Esperar a que se guarde el score
+  viewRanking(); // Mostrar el ranking
+  document.getElementById("game-over").style.display = "none"; // Ocultar la pantalla de game over
 }
 
 async function saveScore() {
@@ -318,10 +322,14 @@ async function saveScore() {
     });
 
     if (!saveResponse.ok) {
-      console.error("Error al guardar el ranking");
+      throw new Error("Error al guardar el ranking");
     }
+
+    // Mostrar mensaje de éxito
+    alert("¡Puntuación guardada con éxito!");
   } catch (error) {
     console.error("Error:", error);
+    alert("Error al guardar la puntuación");
   }
 }
 

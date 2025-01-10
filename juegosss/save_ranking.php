@@ -1,5 +1,4 @@
 <?php
-// save_ranking.php
 header('Content-Type: application/json');
 
 // Obtener los datos enviados
