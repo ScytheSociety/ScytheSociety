@@ -6,7 +6,7 @@ let enemiesKilled = 0;
 let score = 0;
 let gameTime = 0;
 let cooldown = 0;
-let levelUpEnemies = [20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240];
+let levelUpEnemies = [50, 150, 450, 1350, 4050, 12150, 36450, 109350, 328050];
 let backgroundImages = [];
 let enemyImages = [];
 let playerImage, bulletImage;
