@@ -4,62 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feliz Cumpleaños</title>
-    <style>
-        body {
-            background: linear-gradient(45deg, #f9c5d1, #9796f0);
-            font-family: 'Arial', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .container {
-            text-align: center;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
-        }
-
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 0.5rem;
-        }
-
-        p {
-            font-size: 1.5rem;
-            margin: 0.5rem 0;
-        }
-
-        .balloons {
-            font-size: 3rem;
-            animation: float 3s infinite;
-        }
-
-        @keyframes float {
-            0% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-20px);
-            }
-
-            100% {
-                transform: translateY(0);
-            }
-        }
-    </style>
+    <title>Feliz Cumpleaños HELL</title>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body>
-    <div class="container">
-        <div class="balloons">🎈🎉🎂</div>
-        <h1>¡Feliz Cumpleaños!</h1>
-        <p>Que todos tus deseos se hagan realidad 🎁</p>
-        <p>🎊 ¡Disfruta tu día especial! 🎊</p>
+    <div id="gameContainer">
+        <div id="startScreen">
+            <div class="balloons">🎈🎉🎂</div>
+            <h1>¡Feliz Cumpleaños!</h1>
+            <p>Que todos tus deseos se hagan realidad 🎁</p>
+            <button id="startButton" class="button">JUGAR</button>
+        </div>
+        <canvas id="gameCanvas"></canvas>
     </div>
+
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
 </body>
 
 </html>
