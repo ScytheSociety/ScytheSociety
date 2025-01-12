@@ -20,6 +20,9 @@ class Game {
     this.touchStart = null;
     this.lastTouchTime = 0;
     this.doubleTapDelay = 300;
+    this.scale = 1;
+    this.baseWidth = 1920;
+    this.baseHeight = 1080;
 
     this.resizeCanvas();
     window.addEventListener("resize", () => this.resizeCanvas());
@@ -38,52 +41,83 @@ class Game {
       if (e.code === "ArrowRight") this.keys.right = false;
     });
 
-    this.canvas.addEventListener("touchstart", (e) => {
-      const currentTime = Date.now();
-      if (currentTime - this.lastTouchTime < this.doubleTapDelay) {
-        this.jump();
-      }
-      this.lastTouchTime = currentTime;
-      this.touchStart = e.touches[0].clientX;
-    });
+    this.canvas.addEventListener(
+      "touchstart",
+      (e) => {
+        e.preventDefault();
+        const currentTime = Date.now();
+        if (currentTime - this.lastTouchTime < this.doubleTapDelay) {
+          this.jump();
+        }
+        this.lastTouchTime = currentTime;
+        this.touchStart = e.touches[0].clientX;
+      },
+      { passive: false }
+    );
 
-    this.canvas.addEventListener("touchmove", (e) => {
-      if (this.touchStart === null) return;
-      const touchCurrent = e.touches[0].clientX;
-      const diff = touchCurrent - this.touchStart;
+    this.canvas.addEventListener(
+      "touchmove",
+      (e) => {
+        e.preventDefault();
+        if (this.touchStart === null) return;
+        const touchCurrent = e.touches[0].clientX;
+        const diff = touchCurrent - this.touchStart;
 
-      this.keys.left = diff < -10;
-      this.keys.right = diff > 10;
+        this.keys.left = diff < -10;
+        this.keys.right = diff > 10;
 
-      this.touchStart = touchCurrent;
-    });
+        this.touchStart = touchCurrent;
+      },
+      { passive: false }
+    );
 
-    this.canvas.addEventListener("touchend", () => {
-      this.keys.left = false;
-      this.keys.right = false;
-      this.touchStart = null;
-    });
+    this.canvas.addEventListener(
+      "touchend",
+      (e) => {
+        e.preventDefault();
+        this.keys.left = false;
+        this.keys.right = false;
+        this.touchStart = null;
+      },
+      { passive: false }
+    );
   }
 
   resizeCanvas() {
     const container = document.getElementById("gameContainer");
-    this.canvas.width = container.offsetWidth;
-    this.canvas.height = window.innerHeight * 0.7;
+    const containerWidth = container.offsetWidth;
+    const containerHeight = container.offsetHeight;
+
+    this.canvas.width = containerWidth;
+    this.canvas.height = containerHeight;
+
+    const scaleX = containerWidth / this.baseWidth;
+    const scaleY = containerHeight / this.baseHeight;
+    this.scale = Math.min(scaleX, scaleY);
+
+    if (this.player) {
+      this.player.speed = 5 * this.scale;
+      this.player.width = 50 * this.scale;
+      this.player.height = 50 * this.scale;
+      this.player.jumpForce = -15 * this.scale;
+      this.player.gravity = 0.8 * this.scale;
+    }
   }
 
   async init() {
     await this.loadResources();
 
+    const scaledPlayerSize = 50 * this.scale;
     this.player = {
       x: 50,
-      y: this.canvas.height - 100,
-      width: 50,
-      height: 50,
-      speed: 5,
+      y: this.canvas.height - scaledPlayerSize - 50,
+      width: scaledPlayerSize,
+      height: scaledPlayerSize,
+      speed: 5 * this.scale,
       jumping: false,
-      jumpForce: -15,
+      jumpForce: -15 * this.scale,
       velocity: 0,
-      gravity: 0.8,
+      gravity: 0.8 * this.scale,
       onGround: false,
     };
 
@@ -124,9 +158,9 @@ class Game {
   initBlocksAndPlatforms() {
     this.platforms.push({
       x: 0,
-      y: this.canvas.height - 50,
+      y: this.canvas.height - 50 * this.scale,
       width: this.canvas.width * 3,
-      height: 50,
+      height: 50 * this.scale,
     });
 
     const blockConfigs = [
@@ -154,13 +188,14 @@ class Game {
       { name: "RED", height: 250 },
     ];
 
-    let lastX = 300;
+    let lastX = 300 * this.scale;
     blockConfigs.forEach((config, i) => {
+      const scaledHeight = config.height * this.scale;
       const block = {
         x: lastX,
-        y: this.canvas.height - config.height,
-        width: 50,
-        height: 50,
+        y: this.canvas.height - scaledHeight,
+        width: 50 * this.scale,
+        height: 50 * this.scale,
         name: config.name,
         broken: false,
         respawnTime: null,
@@ -171,23 +206,23 @@ class Game {
         let platformHeight = 150;
         while (platformHeight < config.height - 50) {
           this.platforms.push({
-            x: lastX - 70,
-            y: this.canvas.height - platformHeight,
-            width: 50,
-            height: 20,
+            x: lastX - 70 * this.scale,
+            y: this.canvas.height - platformHeight * this.scale,
+            width: 50 * this.scale,
+            height: 20 * this.scale,
           });
           platformHeight += 100;
         }
       }
 
-      lastX += 200;
+      lastX += 200 * this.scale;
     });
 
     this.meta = {
-      x: lastX + 100,
-      y: this.canvas.height - 150,
-      width: 50,
-      height: 150,
+      x: lastX + 100 * this.scale,
+      y: this.canvas.height - 150 * this.scale,
+      width: 50 * this.scale,
+      height: 150 * this.scale,
     };
   }
 
@@ -200,7 +235,10 @@ class Game {
     this.player.velocity += this.player.gravity;
     this.player.y += this.player.velocity;
 
-    this.player.x = Math.max(0, Math.min(this.player.x, this.meta.x + 100));
+    this.player.x = Math.max(
+      0,
+      Math.min(this.player.x, this.meta.x + 100 * this.scale)
+    );
 
     const idealOffset = -this.player.x + this.canvas.width * 0.3;
     const maxOffset = 0;
@@ -259,23 +297,24 @@ class Game {
 
     this.ctx.save();
     this.ctx.translate(this.cameraOffset, 0);
+    this.ctx.scale(this.scale, this.scale);
 
+    // Dibujar fondo
     if (this.backgroundImage) {
+      const bgWidth = this.canvas.width / this.scale;
+      const bgHeight = this.canvas.height / this.scale;
       this.ctx.drawImage(
         this.backgroundImage,
-        -this.cameraOffset,
+        -this.cameraOffset / this.scale,
         0,
-        this.canvas.width,
-        this.canvas.height
+        bgWidth,
+        bgHeight
       );
     } else {
+      const bgWidth = this.canvas.width / this.scale;
+      const bgHeight = this.canvas.height / this.scale;
       this.ctx.fillStyle = "#87CEEB";
-      this.ctx.fillRect(
-        -this.cameraOffset,
-        0,
-        this.canvas.width,
-        this.canvas.height
-      );
+      this.ctx.fillRect(-this.cameraOffset / this.scale, 0, bgWidth, bgHeight);
     }
 
     this.ctx.fillStyle = "#8B4513";
