@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const trackTitle = document.getElementById("trackTitle");
 
   // Configuración de sonidos
-  const backgroundTrack = "assets/sonidos/background-music.mp3";
+  const backgroundTrack = "assets/sonidos/background.mp3";
   const tracks = [
     "AILIN.mp3",
     "ALACRAN.mp3",
@@ -65,6 +65,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   nextTrack.addEventListener("click", () => {
+    currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+    loadTrack();
+  });
+
+  // Cambiar automáticamente al siguiente archivo MP3
+  trackPlayer.addEventListener("ended", () => {
     currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
     loadTrack();
   });

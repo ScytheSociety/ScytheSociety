@@ -5,6 +5,7 @@ body {
   text-align: center;
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
@@ -14,19 +15,33 @@ body {
   width: 100%;
 }
 
-#startScreen h1 {
-  font-size: 2.5rem;
+#floatingBalloons {
+  position: relative;
   margin-bottom: 20px;
+  z-index: 10;
 }
 
-#startScreen .balloons {
+.balloons {
   font-size: 3rem;
+  animation: float 3s infinite ease-in-out;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 #playerScreen {
   padding: 20px;
   background: rgba(0, 0, 0, 0.5);
   border-radius: 10px;
+  margin-top: -30px; /* Para ajustar la posición */
+  z-index: 5;
 }
 
 audio {
