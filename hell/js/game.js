@@ -12,9 +12,57 @@ class Game {
     this.playerImage = null;
     this.blockImage = null;
     this.backgroundImage = null;
+    this.cameraOffset = 0;
+    this.keys = {
+      left: false,
+      right: false,
+    };
+    this.touchStart = null;
+    this.lastTouchTime = 0;
+    this.doubleTapDelay = 300;
 
     this.resizeCanvas();
     window.addEventListener("resize", () => this.resizeCanvas());
+    this.setupControls();
+  }
+
+  setupControls() {
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "ArrowLeft") this.keys.left = true;
+      if (e.code === "ArrowRight") this.keys.right = true;
+      if (e.code === "Space") this.jump();
+    });
+
+    document.addEventListener("keyup", (e) => {
+      if (e.code === "ArrowLeft") this.keys.left = false;
+      if (e.code === "ArrowRight") this.keys.right = false;
+    });
+
+    this.canvas.addEventListener("touchstart", (e) => {
+      const currentTime = Date.now();
+      if (currentTime - this.lastTouchTime < this.doubleTapDelay) {
+        this.jump();
+      }
+      this.lastTouchTime = currentTime;
+      this.touchStart = e.touches[0].clientX;
+    });
+
+    this.canvas.addEventListener("touchmove", (e) => {
+      if (this.touchStart === null) return;
+      const touchCurrent = e.touches[0].clientX;
+      const diff = touchCurrent - this.touchStart;
+
+      this.keys.left = diff < -10;
+      this.keys.right = diff > 10;
+
+      this.touchStart = touchCurrent;
+    });
+
+    this.canvas.addEventListener("touchend", () => {
+      this.keys.left = false;
+      this.keys.right = false;
+      this.touchStart = null;
+    });
   }
 
   resizeCanvas() {
@@ -115,6 +163,7 @@ class Game {
         height: 50,
         name: config.name,
         broken: false,
+        respawnTime: null,
       };
       this.blocks.push(block);
 
@@ -145,9 +194,18 @@ class Game {
   update() {
     if (!this.isPlaying) return;
 
-    this.player.x += this.player.speed;
+    if (this.keys.left) this.player.x -= this.player.speed;
+    if (this.keys.right) this.player.x += this.player.speed;
+
     this.player.velocity += this.player.gravity;
     this.player.y += this.player.velocity;
+
+    this.player.x = Math.max(0, Math.min(this.player.x, this.meta.x + 100));
+
+    const idealOffset = -this.player.x + this.canvas.width * 0.3;
+    const maxOffset = 0;
+    const minOffset = -this.meta.x + this.canvas.width * 0.7;
+    this.cameraOffset = Math.max(minOffset, Math.min(maxOffset, idealOffset));
 
     this.player.onGround = false;
 
@@ -162,12 +220,23 @@ class Game {
       }
     });
 
+    const currentTime = Date.now();
     this.blocks.forEach((block, index) => {
       if (!block.broken && this.checkCollision(this.player, block)) {
         block.broken = true;
+        block.respawnTime = currentTime + 10000;
         if (this.sounds[index]) {
           this.sounds[index].play();
         }
+      }
+
+      if (
+        block.broken &&
+        block.respawnTime &&
+        currentTime >= block.respawnTime
+      ) {
+        block.broken = false;
+        block.respawnTime = null;
       }
     });
 
@@ -188,17 +257,25 @@ class Game {
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+    this.ctx.save();
+    this.ctx.translate(this.cameraOffset, 0);
+
     if (this.backgroundImage) {
       this.ctx.drawImage(
         this.backgroundImage,
-        0,
+        -this.cameraOffset,
         0,
         this.canvas.width,
         this.canvas.height
       );
     } else {
       this.ctx.fillStyle = "#87CEEB";
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillRect(
+        -this.cameraOffset,
+        0,
+        this.canvas.width,
+        this.canvas.height
+      );
     }
 
     this.ctx.fillStyle = "#8B4513";
@@ -280,6 +357,8 @@ class Game {
         this.player.height
       );
     }
+
+    this.ctx.restore();
   }
 
   gameLoop() {
