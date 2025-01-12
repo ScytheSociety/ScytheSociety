@@ -1,3 +1,5 @@
+import Game from "./game.js";
+
 // Inicializar juego
 window.onload = () => {
   const game = new Game();
