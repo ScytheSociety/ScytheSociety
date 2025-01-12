@@ -189,7 +189,7 @@ class Game {
     ];
 
     let lastX = 300 * this.scale;
-    blockConfigs.forEach((config, i) => {
+    blockConfigs.forEach((config) => {
       const scaledHeight = config.height * this.scale;
       const block = {
         x: lastX,
@@ -201,20 +201,6 @@ class Game {
         respawnTime: null,
       };
       this.blocks.push(block);
-
-      if (config.height > 150) {
-        let platformHeight = 150;
-        while (platformHeight < config.height - 50) {
-          this.platforms.push({
-            x: lastX - 70 * this.scale,
-            y: this.canvas.height - platformHeight * this.scale,
-            width: 50 * this.scale,
-            height: 20 * this.scale,
-          });
-          platformHeight += 100;
-        }
-      }
-
       lastX += 200 * this.scale;
     });
 
@@ -258,26 +244,6 @@ class Game {
       }
     });
 
-    const currentTime = Date.now();
-    this.blocks.forEach((block, index) => {
-      if (!block.broken && this.checkCollision(this.player, block)) {
-        block.broken = true;
-        block.respawnTime = currentTime + 10000;
-        if (this.sounds[index]) {
-          this.sounds[index].play();
-        }
-      }
-
-      if (
-        block.broken &&
-        block.respawnTime &&
-        currentTime >= block.respawnTime
-      ) {
-        block.broken = false;
-        block.respawnTime = null;
-      }
-    });
-
     if (this.checkCollision(this.player, this.meta)) {
       this.victory();
     }
@@ -299,7 +265,7 @@ class Game {
     this.ctx.translate(this.cameraOffset, 0);
     this.ctx.scale(this.scale, this.scale);
 
-    // Dibujar fondo
+    // Fondo
     if (this.backgroundImage) {
       const bgWidth = this.canvas.width / this.scale;
       const bgHeight = this.canvas.height / this.scale;
@@ -311,51 +277,11 @@ class Game {
         bgHeight
       );
     } else {
-      const bgWidth = this.canvas.width / this.scale;
-      const bgHeight = this.canvas.height / this.scale;
       this.ctx.fillStyle = "#87CEEB";
-      this.ctx.fillRect(-this.cameraOffset / this.scale, 0, bgWidth, bgHeight);
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    this.ctx.fillStyle = "#8B4513";
-    this.platforms.forEach((platform) => {
-      this.ctx.fillRect(
-        platform.x,
-        platform.y,
-        platform.width,
-        platform.height
-      );
-    });
-
-    this.blocks.forEach((block) => {
-      if (!block.broken) {
-        if (this.blockImage) {
-          this.ctx.drawImage(
-            this.blockImage,
-            block.x,
-            block.y,
-            block.width,
-            block.height
-          );
-        } else {
-          this.ctx.fillStyle = "#4CAF50";
-          this.ctx.fillRect(block.x, block.y, block.width, block.height);
-        }
-
-        this.ctx.fillStyle = "white";
-        this.ctx.strokeStyle = "black";
-        this.ctx.font = "bold 16px Arial";
-        this.ctx.textAlign = "center";
-        this.ctx.lineWidth = 3;
-        this.ctx.strokeText(
-          block.name,
-          block.x + block.width / 2,
-          block.y - 15
-        );
-        this.ctx.fillText(block.name, block.x + block.width / 2, block.y - 15);
-      }
-    });
-
+    // Dibujar meta
     this.ctx.fillStyle = "#FF4081";
     this.ctx.fillRect(
       this.meta.x,
@@ -364,38 +290,24 @@ class Game {
       this.meta.height
     );
 
+    // Dibujar texto de meta
     this.ctx.fillStyle = "white";
-    this.ctx.strokeStyle = "black";
+    this.ctx.textAlign = "center";
     this.ctx.font = "bold 24px Arial";
-    this.ctx.lineWidth = 4;
-    this.ctx.strokeText(
-      "META",
-      this.meta.x + this.meta.width / 2,
-      this.meta.y - 20
-    );
     this.ctx.fillText(
       "META",
       this.meta.x + this.meta.width / 2,
-      this.meta.y - 20
+      this.meta.y - 10
     );
 
-    if (this.playerImage) {
-      this.ctx.drawImage(
-        this.playerImage,
-        this.player.x,
-        this.player.y,
-        this.player.width,
-        this.player.height
-      );
-    } else {
-      this.ctx.fillStyle = "#2196F3";
-      this.ctx.fillRect(
-        this.player.x,
-        this.player.y,
-        this.player.width,
-        this.player.height
-      );
-    }
+    // Dibujar jugador
+    this.ctx.fillStyle = "#2196F3";
+    this.ctx.fillRect(
+      this.player.x,
+      this.player.y,
+      this.player.width,
+      this.player.height
+    );
 
     this.ctx.restore();
   }
@@ -403,28 +315,39 @@ class Game {
   gameLoop() {
     this.update();
     this.draw();
-    requestAnimationFrame(() => this.gameLoop());
+    if (this.isPlaying) {
+      requestAnimationFrame(() => this.gameLoop());
+    }
   }
 
   start() {
     this.isPlaying = true;
-    document.getElementById("startScreen").style.display = "none";
-    this.canvas.style.display = "block";
     this.backgroundMusic.play();
   }
 
   victory() {
     this.isPlaying = false;
     this.backgroundMusic.pause();
-    alert("¡FELIZ CUMPLEAÑOS HELL!");
-    location.reload();
+    const overlay = document.createElement("div");
+    overlay.style.position = "absolute";
+    overlay.style.top = "0";
+    overlay.style.left = "0";
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.background = "rgba(0, 0, 0, 0.8)";
+    overlay.style.display = "flex";
+    overlay.style.justifyContent = "center";
+    overlay.style.alignItems = "center";
+    overlay.style.color = "white";
+    overlay.style.fontSize = "48px";
+    overlay.style.zIndex = "1000";
+    overlay.innerText = "¡FELIZ CUMPLEAÑOS HELL!";
+    document.body.appendChild(overlay);
   }
 
   jump() {
     if (this.player.onGround) {
-      this.player.jumping = true;
       this.player.velocity = this.player.jumpForce;
-      this.player.onGround = false;
     }
   }
 }
