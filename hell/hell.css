@@ -23,7 +23,17 @@ body {
 
 .balloons {
   font-size: 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px; /* Espaciado entre emojis e imágenes */
   animation: float 3s infinite ease-in-out;
+}
+
+.balloons img {
+  height: 3rem; /* Tamaño igual al de los emojis */
+  width: 3rem;
+  object-fit: contain;
 }
 
 @keyframes float {
