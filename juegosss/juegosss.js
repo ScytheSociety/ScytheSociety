@@ -22,7 +22,8 @@ let isMobile = false;
 let touchStartX = 0;
 let lastTapTime = 0;
 const SPAWN_RATE = 60; // Frames entre cada spawn de enemigo (60 frames = 1 segundo aprox)
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycby1ikFdfkpTmJIeb5NPE5hxKpPKiZrG6t0lfcGprYqGX3nXBJWUwOmsi0HdbyEhChs2HA/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwMAd7Ipbz9hGStUsWPPFo0zbXLsymjG0fQij7wz4teHsXv09sy7YrtJ6U-BIOyGZAsZw/exec';
+const SECRET_KEY = 'hell_game_2024'; // Esta es tu clave secreta, puedes cambiarla si quieres
 
 window.onload = function () {
   isMobile =
@@ -321,12 +322,18 @@ function checkCollisions() {
 }
 
 function checkGameOver() {
-  for (let enemy of enemies) {
-    if (enemy.y + enemy.height >= player.y) {
-      gameOver();
-      break;
+    // Verificar derrota (si un enemigo toca al jugador)
+    for (let enemy of enemies) {
+        if (enemy.y + enemy.height >= player.y) {
+            gameOver();
+            return;
+        }
     }
-  }
+
+    // Verificar victoria (si se completaron todos los niveles)
+    if (level > levelUpEnemies.length) { // Si superamos el último nivel
+        victory();
+    }
 }
 
 function shootBullet() {
@@ -345,9 +352,9 @@ function shootBullet() {
 }
 
 function gameOver() {
-  clearInterval(gameInterval);
-  document.getElementById("game-over").style.display = "block";
-  document.getElementById("game-over-text").textContent = "Game Over";
+    clearInterval(gameInterval);
+    document.getElementById("game-over").style.display = "block";
+    document.getElementById("game-over-text").textContent = "Game Over 💀";
 }
 
 function restartGame() {
@@ -363,47 +370,61 @@ async function saveAndViewRanking() {
 
 async function saveScore() {
     const playerData = {
+        gameKey: SECRET_KEY,
         name: playerName,
         avatar: playerAvatar,
         level: level,
         enemiesKilled: enemiesKilled,
         time: gameTime,
-        score: score
+        score: score,
+        status: document.getElementById("game-over-text").textContent.includes("Victoria") ? "Victoria" : "Derrota"
     };
 
     try {
         const response = await fetch(SHEET_URL, {
             method: 'POST',
-            mode: 'no-cors',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(playerData)
         });
-
-        alert("¡Puntuación guardada con éxito!");
+        
+        const result = await response.json();
+        if (result.success) {
+            alert("¡Puntuación guardada con éxito! 🎉");
+        } else {
+            throw new Error(result.error);
+        }
     } catch (error) {
         console.error("Error al guardar:", error);
         alert("Error al guardar la puntuación. Por favor, inténtalo de nuevo.");
     }
 }
 
+function victory() {
+    clearInterval(gameInterval);
+    document.getElementById("game-over").style.display = "block";
+    document.getElementById("game-over-text").textContent = "¡Victoria! 🎉";
+}
+
 async function viewRanking() {
     try {
-        // Ocultar menú principal y área de juego
         document.getElementById("main-menu").style.display = "none";
         document.getElementById("game-area").style.display = "none";
 
-        // Mostrar contenedor del ranking
         const rankingContainer = document.getElementById("ranking-container");
         rankingContainer.style.display = "block";
 
-        // Obtener datos del Google Sheet
         const response = await fetch(SHEET_URL);
         const data = await response.json();
 
-        // Ordenar por puntuación
-        const sortedData = data.sort((a, b) => b.score - a.score);
+        // Ordenar por puntuación y tiempo
+        const sortedData = data.sort((a, b) => {
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            return a.time - b.time;
+        });
 
         rankingContainer.innerHTML = `
             <h2>🏆 Ranking de Jugadores 🏆</h2>
@@ -416,6 +437,7 @@ async function viewRanking() {
                     <th>Enemigos</th>
                     <th>Tiempo</th>
                     <th>Score</th>
+                    <th>Estado</th>
                 </tr>
                 ${sortedData.map((player, index) => `
                     <tr>
@@ -426,16 +448,17 @@ async function viewRanking() {
                         <td>${player.enemiesKilled}</td>
                         <td>${player.time}s</td>
                         <td>${player.score}</td>
+                        <td>${player.status === 'Victoria' ? '🏆' : '💀'}</td>
                     </tr>
                 `).join('')}
             </table>
-            <button onclick="backToMenu()">Volver al Menú</button>
+            <button onclick="backToMenu()" class="menu-button">Volver al Menú</button>
         `;
     } catch (error) {
         console.error("Error al cargar el ranking:", error);
         rankingContainer.innerHTML = `
-            <h2>Error al cargar el ranking</h2>
-            <button onclick="backToMenu()">Volver al Menú</button>
+            <h2>❌ Error al cargar el ranking</h2>
+            <button onclick="backToMenu()" class="menu-button">Volver al Menú</button>
         `;
     }
 }
