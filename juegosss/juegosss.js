@@ -383,6 +383,7 @@ async function saveScore() {
     try {
         const response = await fetch(SHEET_URL, {
             method: 'POST',
+            mode: 'cors', // Cambiado de 'no-cors' a 'cors'
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -415,7 +416,10 @@ async function viewRanking() {
         const rankingContainer = document.getElementById("ranking-container");
         rankingContainer.style.display = "block";
 
-        const response = await fetch(SHEET_URL);
+        const response = await fetch(SHEET_URL, {
+            method: 'GET',
+            mode: 'cors'  // Añadido modo cors
+        });
         const data = await response.json();
 
         // Ordenar por puntuación y tiempo
