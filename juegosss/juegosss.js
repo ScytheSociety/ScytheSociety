@@ -386,6 +386,7 @@ async function saveScore() {
             mode: 'cors', // Cambiado de 'no-cors' a 'cors'
             headers: {
                 'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
             },
             body: JSON.stringify(playerData)
         });
