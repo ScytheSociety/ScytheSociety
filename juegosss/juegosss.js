@@ -14,7 +14,6 @@ let lastShootTime = 0;
 let playerDirection = 0;
 let enemiesRemaining = 0; // Enemigos que faltan por aparecer
 let spawnTimer = 0; // Contador para el spawn de enemigos
-const SPAWN_RATE = 60; // Frames entre cada spawn de enemigo (60 frames = 1 segundo aprox)
 let PLAYER_WIDTH = 80;
 let PLAYER_HEIGHT = 80;
 let BULLET_WIDTH = 20;
@@ -22,6 +21,8 @@ let BULLET_HEIGHT = 40;
 let isMobile = false;
 let touchStartX = 0;
 let lastTapTime = 0;
+const SPAWN_RATE = 60; // Frames entre cada spawn de enemigo (60 frames = 1 segundo aprox)
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycby1ikFdfkpTmJIeb5NPE5hxKpPKiZrG6t0lfcGprYqGX3nXBJWUwOmsi0HdbyEhChs2HA/exec';
 
 window.onload = function () {
   isMobile =
@@ -355,114 +356,88 @@ function restartGame() {
 }
 
 async function saveAndViewRanking() {
-  await saveScore(); // Esperar a que se guarde el score
-  viewRanking(); // Mostrar el ranking
-  document.getElementById("game-over").style.display = "none"; // Ocultar la pantalla de game over
+    await saveScore();
+    viewRanking();
+    document.getElementById("game-over").style.display = "none";
 }
 
 async function saveScore() {
-  const playerData = {
-    name: playerName,
-    avatar: playerAvatar,
-    level: level,
-    enemiesKilled: enemiesKilled,
-    time: gameTime,
-    score: score,
-  };
+    const playerData = {
+        name: playerName,
+        avatar: playerAvatar,
+        level: level,
+        enemiesKilled: enemiesKilled,
+        time: gameTime,
+        score: score
+    };
 
-  try {
-    // Primero intentamos cargar el ranking existente
-    let ranking = [];
     try {
-      const response = await fetch("ranking.json");
-      if (response.ok) {
-        ranking = await response.json();
-      }
-    } catch (e) {
-      console.warn(
-        "No se pudo cargar el ranking existente, se creará uno nuevo"
-      );
+        const response = await fetch(SHEET_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(playerData)
+        });
+
+        alert("¡Puntuación guardada con éxito!");
+    } catch (error) {
+        console.error("Error al guardar:", error);
+        alert("Error al guardar la puntuación. Por favor, inténtalo de nuevo.");
     }
-
-    // Agregar nuevo score
-    ranking.push(playerData);
-
-    // Ordenar el ranking
-    ranking.sort((a, b) => b.score - a.score || a.time - b.time);
-
-    // Guardar el ranking actualizado
-    const saveResponse = await fetch("save_ranking.php", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(ranking),
-    });
-
-    const result = await saveResponse.json();
-
-    if (!result.success) {
-      throw new Error(result.error || "Error desconocido al guardar");
-    }
-
-    alert("¡Puntuación guardada con éxito!");
-  } catch (error) {
-    console.error("Error al guardar:", error);
-    alert(
-      `Error al guardar la puntuación: ${error.message}. Por favor, inténtalo de nuevo.`
-    );
-  }
 }
 
 async function viewRanking() {
-  try {
-    // Ocultar menú principal y área de juego
-    document.getElementById("main-menu").style.display = "none";
-    document.getElementById("game-area").style.display = "none";
+    try {
+        // Ocultar menú principal y área de juego
+        document.getElementById("main-menu").style.display = "none";
+        document.getElementById("game-area").style.display = "none";
 
-    // Mostrar contenedor del ranking
-    const rankingContainer = document.getElementById("ranking-container");
-    rankingContainer.style.display = "block";
+        // Mostrar contenedor del ranking
+        const rankingContainer = document.getElementById("ranking-container");
+        rankingContainer.style.display = "block";
 
-    const response = await fetch("ranking.json");
-    if (!response.ok) {
-      throw new Error("No se pudo cargar el ranking");
-    }
+        // Obtener datos del Google Sheet
+        const response = await fetch(SHEET_URL);
+        const data = await response.json();
 
-    const ranking = await response.json();
-    rankingContainer.innerHTML = `
-            <h2>Ranking de Jugadores</h2>
+        // Ordenar por puntuación
+        const sortedData = data.sort((a, b) => b.score - a.score);
+
+        rankingContainer.innerHTML = `
+            <h2>🏆 Ranking de Jugadores 🏆</h2>
             <table>
                 <tr>
-                    <th>Posición</th>
-                    <th>Jugador</th>
+                    <th>Pos</th>
                     <th>Avatar</th>
+                    <th>Nombre</th>
                     <th>Nivel</th>
                     <th>Enemigos</th>
                     <th>Tiempo</th>
-                    <th>Puntuación</th>
+                    <th>Score</th>
                 </tr>
-                ${ranking
-                  .map(
-                    (player, index) => `
+                ${sortedData.map((player, index) => `
                     <tr>
                         <td>${index + 1}</td>
-                        <td>${player.name}</td>
                         <td>${player.avatar}</td>
+                        <td>${player.name}</td>
                         <td>${player.level}</td>
                         <td>${player.enemiesKilled}</td>
                         <td>${player.time}s</td>
                         <td>${player.score}</td>
                     </tr>
-                `
-                  )
-                  .join("")}
+                `).join('')}
             </table>
             <button onclick="backToMenu()">Volver al Menú</button>
         `;
-  } catch (error) {
-    console.error("Error al cargar el ranking:", error);
-  }
+    } catch (error) {
+        console.error("Error al cargar el ranking:", error);
+        rankingContainer.innerHTML = `
+            <h2>Error al cargar el ranking</h2>
+            <button onclick="backToMenu()">Volver al Menú</button>
+        `;
+    }
 }
 
 // Agregar esta nueva función para volver al menú
