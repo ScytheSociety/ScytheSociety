@@ -6,14 +6,17 @@ let enemiesKilled = 0;
 let score = 0;
 let gameTime = 0;
 let cooldown = 0;
+let currentLevelEnemies = 0;
+let totalEnemiesKilled = 0;
 let levelUpEnemies = [50, 150, 450, 1350, 4050, 12150, 36450, 109350, 328050];
+let isLevelTransition = false;
 let backgroundImages = [];
 let enemyImages = [];
 let playerImage, bulletImage;
 let lastShootTime = 0;
 let playerDirection = 0;
-let enemiesRemaining = 0; // Enemigos que faltan por aparecer
-let spawnTimer = 0; // Contador para el spawn de enemigos
+let enemiesRemaining = 0;
+let spawnTimer = 0;
 let PLAYER_WIDTH = 80;
 let PLAYER_HEIGHT = 80;
 let BULLET_WIDTH = 20;
@@ -21,9 +24,18 @@ let BULLET_HEIGHT = 40;
 let isMobile = false;
 let touchStartX = 0;
 let lastTapTime = 0;
-const SPAWN_RATE = 60; // Frames entre cada spawn de enemigo (60 frames = 1 segundo aprox)
+let canShoot = true;
+const SPAWN_RATE = 60;
 const SHEET_URL = 'https://sheetdb.io/api/v1/0agliopzbpm6x';
-const SECRET_KEY = 'hell_game_2024'; // Esta es tu clave secreta, puedes cambiarla si quieres
+const SECRET_KEY = 'hell_game_2024';
+const sounds = {
+  shoot: new Audio('sounds/shoot.mp3'),
+  hit: new Audio('sounds/hit.mp3'),
+  gameOver: new Audio('sounds/gameover.mp3'),
+  victory: new Audio('sounds/victory.mp3'),
+  levelUp: new Audio('sounds/levelup.mp3'),
+  background: new Audio('sounds/background.mp3')
+};
 
 window.onload = function () {
   isMobile =
@@ -35,6 +47,25 @@ window.onload = function () {
   loadGameAssets();
 };
 
+function playSound(soundName) {
+  if (sounds[soundName]) {
+      const sound = sounds[soundName].cloneNode();
+      sound.volume = soundName === 'background' ? 0.3 : 0.5;
+      sound.play();
+  }
+}
+
+function startBackgroundMusic() {
+  sounds.background.loop = true;
+  sounds.background.volume = 0.3;
+  sounds.background.play();
+}
+
+function stopBackgroundMusic() {
+  sounds.background.pause();
+  sounds.background.currentTime = 0;
+}
+
 function setupResponsiveCanvas() {
   canvas = document.getElementById("game-canvas");
   if (!canvas) return;
@@ -42,20 +73,19 @@ function setupResponsiveCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  PLAYER_WIDTH = Math.min(canvas.width * 0.1, 80);
+  PLAYER_WIDTH = Math.min(canvas.width * 0.08, 60);
   PLAYER_HEIGHT = PLAYER_WIDTH;
   BULLET_WIDTH = PLAYER_WIDTH * 0.25;
   BULLET_HEIGHT = BULLET_WIDTH * 2;
 
-  // Ajustar la velocidad base del jugador según el ancho de la pantalla
-  const baseSpeed = canvas.width * 0.01; // Aumentado para mejor respuesta en móviles
+  const baseSpeed = canvas.width * 0.005;
   player = {
-    ...player,
-    width: PLAYER_WIDTH,
-    height: PLAYER_HEIGHT,
-    speed: isMobile ? baseSpeed * 1.5 : baseSpeed, // 50% más rápido en móviles
-    x: canvas.width / 2 - PLAYER_WIDTH / 2,
-    y: canvas.height - PLAYER_HEIGHT - 20, // Ajustado para mejor visibilidad
+      ...player,
+      width: PLAYER_WIDTH,
+      height: PLAYER_HEIGHT,
+      speed: isMobile ? baseSpeed * 1.2 : baseSpeed,
+      x: canvas.width / 2 - PLAYER_WIDTH / 2,
+      y: canvas.height - PLAYER_HEIGHT - (canvas.height * 0.1),
   };
 }
 
@@ -69,7 +99,6 @@ function setupTouchControls() {
     e.preventDefault();
     touchStartX = e.touches[0].clientX;
 
-    // Detección de doble tap para disparar
     const currentTime = Date.now();
     if (currentTime - lastTapTime < 300) {
       shootBullet();
@@ -82,9 +111,8 @@ function setupTouchControls() {
     const touchX = e.touches[0].clientX;
     const diffX = touchX - touchStartX;
 
-    // Hacer el movimiento más sensible
     playerDirection = diffX > 0 ? 1 : diffX < 0 ? -1 : 0;
-    player.x += playerDirection * player.speed * 1.2; // Aumentar la velocidad de movimiento
+    player.x += playerDirection * player.speed * 1.2;
     player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
 
     touchStartX = touchX;
@@ -99,27 +127,22 @@ function loadGameAssets() {
   fetch("assets.json")
     .then((response) => response.json())
     .then((data) => {
-      // Cargar fondos
       data.backgrounds.forEach((src, index) => {
         backgroundImages[index] = new Image();
         backgroundImages[index].src = src;
       });
 
-      // Cargar enemigos - Eliminar cualquier propiedad que pueda interferir con la animación
       enemyImages = data.enemies.map((src) => {
         const img = new Image();
-        // Eliminar cualquier estilo que pueda interferir
         img.style = "";
         img.src = src;
         return img;
       });
 
-      // Cargar imagen del jugador
       playerImage = new Image();
       playerImage.style = "";
       playerImage.src = data.player;
 
-      // Cargar imagen de la bala
       bulletImage = new Image();
       bulletImage.src = data.bullet;
     })
@@ -149,13 +172,11 @@ function startGame() {
     return;
   }
 
-  // Resetear contadores
   level = 1;
   enemiesKilled = 0;
   score = 0;
   gameTime = 0;
 
-  // Actualizar información en pantalla
   document.getElementById("level").textContent = `Nivel ${level}`;
   document.getElementById(
     "enemies-killed"
@@ -168,7 +189,6 @@ function startGame() {
 
   updatePlayerInfo();
 
-  // Configurar canvas y contexto
   canvas = document.getElementById("game-canvas");
   if (!canvas) {
     console.error("No se encontró el canvas.");
@@ -197,10 +217,70 @@ function startGame() {
 function startLevel() {
   enemies = [];
   cooldown = 0;
-  enemiesRemaining = levelUpEnemies[level - 1]; // Establecer cuántos enemigos faltan por aparecer
+  enemiesRemaining = levelUpEnemies[level - 1];
+  currentLevelEnemies = 0;
   spawnTimer = 0;
 
-  document.getElementById("level").textContent = `Nivel ${level}`;
+  showLevelTransition();
+}
+
+function showLevelTransition() {
+  isLevelTransition = true;
+  const transition = document.createElement('div');
+  transition.style.position = 'fixed';
+  transition.style.top = '50%';
+  transition.style.left = '50%';
+  transition.style.transform = 'translate(-50%, -50%)';
+  transition.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+  transition.style.padding = '20px';
+  transition.style.borderRadius = '10px';
+  transition.style.zIndex = '1000';
+  transition.style.fontSize = '2em';
+  transition.style.color = 'white';
+  transition.innerHTML = `NIVEL ${level}`;
+  document.body.appendChild(transition);
+
+  playSound('levelUp');
+
+  setTimeout(() => {
+      document.body.removeChild(transition);
+      isLevelTransition = false;
+  }, 2000);
+}
+
+class SpriteAnimation {
+  constructor(imageUrl, frameWidth, frameHeight, frameCount, frameRate) {
+      this.image = new Image();
+      this.image.src = imageUrl;
+      this.frameWidth = frameWidth;
+      this.frameHeight = frameHeight;
+      this.frameCount = frameCount;
+      this.frameRate = frameRate;
+      this.currentFrame = 0;
+      this.frameTimer = 0;
+  }
+
+  update() {
+      this.frameTimer++;
+      if (this.frameTimer >= this.frameRate) {
+          this.currentFrame = (this.currentFrame + 1) % this.frameCount;
+          this.frameTimer = 0;
+      }
+  }
+
+  draw(ctx, x, y, width, height) {
+      ctx.drawImage(
+          this.image,
+          this.currentFrame * this.frameWidth,
+          0,
+          this.frameWidth,
+          this.frameHeight,
+          x,
+          y,
+          width,
+          height
+      );
+  }
 }
 
 function spawnEnemy() {
@@ -225,7 +305,6 @@ function gameLoop() {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Dibujar background
   if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
     ctx.drawImage(
       backgroundImages[level - 1],
@@ -236,11 +315,9 @@ function gameLoop() {
     );
   }
 
-  // Sistema de spawn de enemigos
   if (enemiesRemaining > 0) {
     spawnTimer++;
-    // Ajustar la tasa de spawn según el nivel
-    const spawnDelay = Math.max(SPAWN_RATE - level * 5, 20); // Mínimo 20 frames de delay
+    const spawnDelay = Math.max(SPAWN_RATE - level * 5, 20);
 
     if (spawnTimer >= spawnDelay) {
       spawnEnemy();
@@ -248,7 +325,6 @@ function gameLoop() {
     }
   }
 
-  // Actualizar posición del jugador
   player.x += playerDirection * player.speed;
   player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
 
@@ -265,7 +341,6 @@ function drawPlayer() {
     return;
   }
 
-  // Usar smoothing para mejor calidad de GIF
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(player.image, player.x, player.y, player.width, player.height);
   ctx.imageSmoothingEnabled = true;
@@ -281,7 +356,7 @@ function moveEnemies() {
 }
 
 function updateBullets() {
-  const bulletSpeed = canvas.height * 0.02; // Velocidad responsiva para las balas
+  const bulletSpeed = canvas.height * 0.02;
 
   for (let bullet of bullets) {
     bullet.y -= bulletSpeed;
@@ -304,11 +379,11 @@ function checkCollisions() {
         score += 10;
         enemies = enemies.filter((e) => e !== enemy);
         bullets = bullets.filter((b) => b !== bullet);
+        playSound('hit'); // Añadido aquí
         document.getElementById(
           "enemies-killed"
         ).textContent = `Enemigos: ${enemiesKilled}`;
 
-        // Cambiar al siguiente nivel solo si no quedan enemigos por spawner y todos han sido eliminados
         if (
           enemiesKilled >= levelUpEnemies[level - 1] &&
           enemiesRemaining === 0
@@ -322,7 +397,6 @@ function checkCollisions() {
 }
 
 function checkGameOver() {
-    // Verificar derrota (si un enemigo toca al jugador)
     for (let enemy of enemies) {
         if (enemy.y + enemy.height >= player.y) {
             gameOver();
@@ -330,8 +404,7 @@ function checkGameOver() {
         }
     }
 
-    // Verificar victoria (si se completaron todos los niveles)
-    if (level > levelUpEnemies.length) { // Si superamos el último nivel
+    if (level > levelUpEnemies.length) {
         victory();
     }
 }
@@ -355,6 +428,7 @@ function gameOver() {
     clearInterval(gameInterval);
     document.getElementById("game-over").style.display = "block";
     document.getElementById("game-over-text").textContent = "Game Over 💀";
+    playSound('gameOver'); // Añadido aquí
 }
 
 function restartGame() {
@@ -392,7 +466,7 @@ async function saveScore() {
       });
       
       if (response.ok) {
-          alert("¡Puntuación guardada con éxito! 🎉");
+          alert("¡Puntuación guardada con éxito! 🎉");  
       } else {
           throw new Error("Error al guardar la puntuación");
       }
@@ -403,90 +477,115 @@ async function saveScore() {
 }
 
 function victory() {
-    clearInterval(gameInterval);
-    document.getElementById("game-over").style.display = "block";
-    document.getElementById("game-over-text").textContent = "¡Victoria! 🎉";
+  clearInterval(gameInterval);
+  document.getElementById("game-over").style.display = "block";
+  document.getElementById("game-over-text").textContent = "¡Victoria! 🎉";
+  playSound('victory'); // Añadido aquí
 }
 
 async function viewRanking() {
-  try {
-      document.getElementById("main-menu").style.display = "none";
-      document.getElementById("game-area").style.display = "none";
+try {
+    document.getElementById("main-menu").style.display = "none";
+    document.getElementById("game-area").style.display = "none";
 
-      const rankingContainer = document.getElementById("ranking-container");
-      rankingContainer.style.display = "block";
+    const rankingContainer = document.getElementById("ranking-container");
+    rankingContainer.style.display = "block";
 
-      const response = await fetch(SHEET_URL);
-      const data = await response.json();
+    const response = await fetch(SHEET_URL);
+    const data = await response.json();
 
-      // Ordenar por puntuación y tiempo
-      const sortedData = data.sort((a, b) => {
-          if (b.score !== a.score) {
-              return b.score - a.score;
-          }
-          return a.time - b.time;
-      });
+    const sortedData = data.sort((a, b) => {
+        if (b.score !== a.score) {
+            return b.score - a.score;
+        }
+        return a.time - b.time;
+    });
 
-      rankingContainer.innerHTML = `
-          <h2>🏆 Ranking de Jugadores 🏆</h2>
-          <table>
-              <tr>
-                  <th>Pos</th>
-                  <th>Avatar</th>
-                  <th>Nombre</th>
-                  <th>Nivel</th>
-                  <th>Enemigos</th>
-                  <th>Tiempo</th>
-                  <th>Score</th>
-                  <th>Estado</th>
-              </tr>
-              ${sortedData.map((player, index) => `
-                  <tr>
-                      <td>${index + 1}</td>
-                      <td>${player.avatar}</td>
-                      <td>${player.name}</td>
-                      <td>${player.level}</td>
-                      <td>${player.enemiesKilled}</td>
-                      <td>${player.time}s</td>
-                      <td>${player.score}</td>
-                      <td>${player.status === 'Victoria' ? '🏆' : '💀'}</td>
-                  </tr>
-              `).join('')}
-          </table>
-          <button onclick="backToMenu()" class="menu-button">Volver al Menú</button>
-      `;
-  } catch (error) {
-      console.error("Error al cargar el ranking:", error);
-      rankingContainer.innerHTML = `
-          <h2>❌ Error al cargar el ranking</h2>
-          <button onclick="backToMenu()" class="menu-button">Volver al Menú</button>
-      `;
-  }
+    rankingContainer.innerHTML = `
+        <h2>🏆 Ranking de Jugadores 🏆</h2>
+        <table>
+            <tr>
+                <th>Pos</th>
+                <th>Avatar</th>
+                <th>Nombre</th>
+                <th>Nivel</th>
+                <th>Enemigos</th>
+                <th>Tiempo</th>
+                <th>Score</th>
+                <th>Estado</th>
+            </tr>
+            ${sortedData.map((player, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${player.avatar}</td>
+                    <td>${player.name}</td>
+                    <td>${player.level}</td>
+                    <td>${player.enemiesKilled}</td>
+                    <td>${player.time}s</td>
+                    <td>${player.score}</td>
+                    <td>${player.status === 'Victoria' ? '🏆' : '💀'}</td>
+                </tr>
+            `).join('')}
+        </table>
+        <button onclick="backToMenu()" class="menu-button">Volver al Menú</button>
+    `;
+} catch (error) {
+    console.error("Error al cargar el ranking:", error);
+    rankingContainer.innerHTML = `
+        <h2>❌ Error al cargar el ranking</h2>
+        <button onclick="backToMenu()" class="menu-button">Volver al Menú</button>
+    `;
+}
 }
 
-// Agregar esta nueva función para volver al menú
 function backToMenu() {
-  document.getElementById("ranking-container").style.display = "none";
-  document.getElementById("main-menu").style.display = "block";
+document.getElementById("ranking-container").style.display = "none";
+document.getElementById("main-menu").style.display = "block";
+centerMainMenu(); // Añadido aquí
+}
+
+function centerMainMenu() {
+const mainMenu = document.getElementById('main-menu');
+mainMenu.style.display = 'flex';
+mainMenu.style.flexDirection = 'column';
+mainMenu.style.justifyContent = 'center';
+mainMenu.style.alignItems = 'center';
+mainMenu.style.height = '100vh';
+}
+
+function drawBackground() {
+if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
+    const img = backgroundImages[level - 1];
+    const scale = Math.max(
+        canvas.width / img.width,
+        canvas.height / img.height
+    );
+    const scaledWidth = img.width * scale;
+    const scaledHeight = img.height * scale;
+    const x = (canvas.width - scaledWidth) / 2;
+    const y = (canvas.height - scaledHeight) / 2;
+    
+    ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+}
 }
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "a" || e.key === "ArrowLeft") {
-    playerDirection = -1;
-  }
-  if (e.key === "d" || e.key === "ArrowRight") {
-    playerDirection = 1;
-  }
-  if (e.key === " ") {
-    shootBullet();
-  }
+if (e.key === "a" || e.key === "ArrowLeft") {
+  playerDirection = -1;
+}
+if (e.key === "d" || e.key === "ArrowRight") {
+  playerDirection = 1;
+}
+if (e.key === " ") {
+  shootBullet();
+}
 });
 
 window.addEventListener("keyup", (e) => {
-  if ((e.key === "a" || e.key === "ArrowLeft") && playerDirection === -1) {
-    playerDirection = 0;
-  }
-  if ((e.key === "d" || e.key === "ArrowRight") && playerDirection === 1) {
-    playerDirection = 0;
-  }
+if ((e.key === "a" || e.key === "ArrowLeft") && playerDirection === -1) {
+  playerDirection = 0;
+}
+if ((e.key === "d" || e.key === "ArrowRight") && playerDirection === 1) {
+  playerDirection = 0;
+}
 });
