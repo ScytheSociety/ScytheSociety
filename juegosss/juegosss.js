@@ -73,23 +73,19 @@ function setupResponsiveCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  // Ajustar tamaños proporcionalmente
   PLAYER_WIDTH = Math.min(canvas.width * 0.08, 60);
   PLAYER_HEIGHT = PLAYER_WIDTH;
   BULLET_WIDTH = PLAYER_WIDTH * 0.25;
   BULLET_HEIGHT = BULLET_WIDTH * 2;
 
-  // Ajustar la posición Y del jugador para que esté visible en móvil
-  const bottomMargin = isMobile ? canvas.height * 0.2 : canvas.height * 0.1;
-  
+  const baseSpeed = canvas.width * 0.005;
   player = {
       ...player,
       width: PLAYER_WIDTH,
       height: PLAYER_HEIGHT,
-      // Reducir velocidad en móvil
-      speed: isMobile ? canvas.width * 0.004 : canvas.width * 0.005,
+      speed: isMobile ? baseSpeed * 1.2 : baseSpeed,
       x: canvas.width / 2 - PLAYER_WIDTH / 2,
-      y: canvas.height - PLAYER_HEIGHT - bottomMargin,
+      y: canvas.height - PLAYER_HEIGHT - (canvas.height * 0.1),
   };
 }
 
@@ -98,38 +94,32 @@ function setupTouchControls() {
 
   let touchStartX = 0;
   let lastTapTime = 0;
-  let touchThreshold = 20; // Umbral para detectar movimiento
 
   canvas.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      touchStartX = e.touches[0].clientX;
+    e.preventDefault();
+    touchStartX = e.touches[0].clientX;
 
-      const currentTime = Date.now();
-      if (currentTime - lastTapTime < 300) {
-          shootBullet();
-      }
-      lastTapTime = currentTime;
+    const currentTime = Date.now();
+    if (currentTime - lastTapTime < 300) {
+      shootBullet();
+    }
+    lastTapTime = currentTime;
   });
 
   canvas.addEventListener("touchmove", (e) => {
-      e.preventDefault();
-      const touchX = e.touches[0].clientX;
-      const diffX = touchX - touchStartX;
+    e.preventDefault();
+    const touchX = e.touches[0].clientX;
+    const diffX = touchX - touchStartX;
 
-      // Aplicar movimiento solo si supera el umbral
-      if (Math.abs(diffX) > touchThreshold) {
-          playerDirection = diffX > 0 ? 0.5 : -0.5; // Reducir la velocidad
-          player.x += playerDirection * player.speed;
-          player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-      } else {
-          playerDirection = 0;
-      }
+    playerDirection = diffX > 0 ? 1 : diffX < 0 ? -1 : 0;
+    player.x += playerDirection * player.speed * 1.2;
+    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
 
-      touchStartX = touchX;
+    touchStartX = touchX;
   });
 
   canvas.addEventListener("touchend", () => {
-      playerDirection = 0;
+    playerDirection = 0;
   });
 }
 
@@ -296,17 +286,15 @@ class SpriteAnimation {
 function spawnEnemy() {
   const enemyWidth = Math.min(canvas.width * 0.08, 50);
   const margin = enemyWidth;
-  
-  const enemy = new Enemy(
-      margin + Math.random() * (canvas.width - 2 * margin),
-      -enemyWidth,
-      enemyWidth,
-      enemyWidth,
-      (0.5 + level * 0.2) * (canvas.height / 600),
-      enemyImages[level - 1]
-  );
-  
-  enemies.push(enemy);
+
+  enemies.push({
+    x: margin + Math.random() * (canvas.width - 2 * margin),
+    y: -enemyWidth,
+    width: enemyWidth,
+    height: enemyWidth,
+    speed: (0.5 + level * 0.2) * (canvas.height / 600),
+    image: enemyImages[level - 1],
+  });
   enemiesRemaining--;
 }
 
@@ -361,8 +349,8 @@ function drawPlayer() {
 function moveEnemies() {
   ctx.imageSmoothingEnabled = false;
   for (let enemy of enemies) {
-      enemy.update();
-      enemy.draw(ctx);
+    enemy.y += enemy.speed;
+    ctx.drawImage(enemy.image, enemy.x, enemy.y, enemy.width, enemy.height);
   }
   ctx.imageSmoothingEnabled = true;
 }
@@ -566,69 +554,19 @@ mainMenu.style.height = '100vh';
 }
 
 function drawBackground() {
-  if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
-      const img = backgroundImages[level - 1];
-      const canvas = document.getElementById("game-canvas");
-      const ctx = canvas.getContext("2d");
-
-      // Mantener aspecto original
-      const aspectRatio = img.width / img.height;
-      let renderWidth = canvas.width;
-      let renderHeight = canvas.width / aspectRatio;
-
-      // Si la altura renderizada es menor que el canvas, ajustar por altura
-      if (renderHeight < canvas.height) {
-          renderHeight = canvas.height;
-          renderWidth = canvas.height * aspectRatio;
-      }
-
-      // Centrar la imagen
-      const x = (canvas.width - renderWidth) / 2;
-      const y = (canvas.height - renderHeight) / 2;
-
-      ctx.drawImage(img, x, y, renderWidth, renderHeight);
-  }
+if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
+    const img = backgroundImages[level - 1];
+    const scale = Math.max(
+        canvas.width / img.width,
+        canvas.height / img.height
+    );
+    const scaledWidth = img.width * scale;
+    const scaledHeight = img.height * scale;
+    const x = (canvas.width - scaledWidth) / 2;
+    const y = (canvas.height - scaledHeight) / 2;
+    
+    ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
 }
-
-class Enemy {
-  constructor(x, y, width, height, speed, spriteSheet) {
-      this.x = x;
-      this.y = y;
-      this.width = width;
-      this.height = height;
-      this.speed = speed;
-      this.spriteSheet = spriteSheet;
-      this.frameIndex = 0;
-      this.tickCount = 0;
-      this.ticksPerFrame = 5;
-      this.numberOfFrames = 4; // Ajustar según tu spritesheet
-  }
-
-  update() {
-      this.tickCount++;
-      
-      if (this.tickCount > this.ticksPerFrame) {
-          this.tickCount = 0;
-          this.frameIndex = (this.frameIndex + 1) % this.numberOfFrames;
-      }
-      
-      this.y += this.speed;
-  }
-
-  draw(ctx) {
-      const frameWidth = this.spriteSheet.width / this.numberOfFrames;
-      ctx.drawImage(
-          this.spriteSheet,
-          this.frameIndex * frameWidth,
-          0,
-          frameWidth,
-          this.spriteSheet.height,
-          this.x,
-          this.y,
-          this.width,
-          this.height
-      );
-  }
 }
 
 window.addEventListener("keydown", (e) => {
