@@ -78,12 +78,13 @@ function setupResponsiveCanvas() {
   BULLET_WIDTH = PLAYER_WIDTH * 0.25;
   BULLET_HEIGHT = BULLET_WIDTH * 2;
 
-  const baseSpeed = canvas.width * 0.005;
+  player.speed = isMobile ? canvas.width * 0.005 : canvas.width * 0.007; // Ajustar velocidad
+
   player = {
       ...player,
       width: PLAYER_WIDTH,
       height: PLAYER_HEIGHT,
-      speed: isMobile ? baseSpeed * 1.2 : baseSpeed,
+      speed: player.speed,
       x: canvas.width / 2 - PLAYER_WIDTH / 2,
       y: canvas.height - PLAYER_HEIGHT - (canvas.height * 0.1),
   };
@@ -111,10 +112,10 @@ function setupTouchControls() {
     const touchX = e.touches[0].clientX;
     const diffX = touchX - touchStartX;
 
+    const touchSensitivity = 0.8; // Reducir sensibilidad del movimiento
     playerDirection = diffX > 0 ? 1 : diffX < 0 ? -1 : 0;
-    player.x += playerDirection * player.speed * 1.2;
+    player.x += diffX * touchSensitivity; // Mover proporcional al desplazamiento
     player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-
     touchStartX = touchX;
   });
 
