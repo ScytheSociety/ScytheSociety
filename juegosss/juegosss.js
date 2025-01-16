@@ -49,9 +49,9 @@ window.onload = function () {
 
 function playSound(soundName) {
   if (sounds[soundName]) {
-      const sound = sounds[soundName].cloneNode();
-      sound.volume = soundName === 'background' ? 0.3 : 0.5;
-      sound.play();
+    const sound = sounds[soundName].cloneNode();
+    sound.volume = soundName === 'background' ? 0.3 : 0.5;
+    sound.play();
   }
 }
 
@@ -73,20 +73,26 @@ function setupResponsiveCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
+  // Ajustar tamaños proporcionalmente al tamaño de la pantalla
   PLAYER_WIDTH = Math.min(canvas.width * 0.08, 60);
   PLAYER_HEIGHT = PLAYER_WIDTH;
   BULLET_WIDTH = PLAYER_WIDTH * 0.25;
   BULLET_HEIGHT = BULLET_WIDTH * 2;
 
-  player.speed = isMobile ? canvas.width * 0.005 : canvas.width * 0.007; // Ajustar velocidad
+  // Ajustar velocidad base del jugador
+  const baseSpeed = isMobile ?
+    canvas.width * 0.003 : // Velocidad más lenta en móvil
+    canvas.width * 0.007;  // Velocidad normal en desktop
 
   player = {
-      ...player,
-      width: PLAYER_WIDTH,
-      height: PLAYER_HEIGHT,
-      speed: player.speed,
-      x: canvas.width / 2 - PLAYER_WIDTH / 2,
-      y: canvas.height - PLAYER_HEIGHT - (canvas.height * 0.1),
+    width: PLAYER_WIDTH,
+    height: PLAYER_HEIGHT,
+    speed: baseSpeed,
+    // Posicionar el jugador más arriba en la pantalla en móvil
+    y: isMobile ?
+      canvas.height - PLAYER_HEIGHT - (canvas.height * 0.2) : // 20% desde abajo en móvil
+      canvas.height - PLAYER_HEIGHT - (canvas.height * 0.1),  // 10% desde abajo en desktop
+    x: canvas.width / 2 - PLAYER_WIDTH / 2
   };
 }
 
@@ -112,9 +118,15 @@ function setupTouchControls() {
     const touchX = e.touches[0].clientX;
     const diffX = touchX - touchStartX;
 
-    const touchSensitivity = 0.8; // Reducir sensibilidad del movimiento
-    playerDirection = diffX > 0 ? 1 : diffX < 0 ? -1 : 0;
-    player.x += diffX * touchSensitivity; // Mover proporcional al desplazamiento
+    // Reducir sensibilidad del movimiento
+    const touchSensitivity = 0.5;
+    const movement = diffX * touchSensitivity;
+
+    // Suavizar el movimiento con límites de velocidad
+    const maxSpeed = player.speed * 2;
+    const smoothMovement = Math.min(Math.max(movement, -maxSpeed), maxSpeed);
+
+    player.x += smoothMovement;
     player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
     touchStartX = touchX;
   });
@@ -244,43 +256,43 @@ function showLevelTransition() {
   playSound('levelUp');
 
   setTimeout(() => {
-      document.body.removeChild(transition);
-      isLevelTransition = false;
+    document.body.removeChild(transition);
+    isLevelTransition = false;
   }, 2000);
 }
 
 class SpriteAnimation {
   constructor(imageUrl, frameWidth, frameHeight, frameCount, frameRate) {
-      this.image = new Image();
-      this.image.src = imageUrl;
-      this.frameWidth = frameWidth;
-      this.frameHeight = frameHeight;
-      this.frameCount = frameCount;
-      this.frameRate = frameRate;
-      this.currentFrame = 0;
-      this.frameTimer = 0;
+    this.image = new Image();
+    this.image.src = imageUrl;
+    this.frameWidth = frameWidth;
+    this.frameHeight = frameHeight;
+    this.frameCount = frameCount;
+    this.frameRate = frameRate;
+    this.currentFrame = 0;
+    this.frameTimer = 0;
   }
 
   update() {
-      this.frameTimer++;
-      if (this.frameTimer >= this.frameRate) {
-          this.currentFrame = (this.currentFrame + 1) % this.frameCount;
-          this.frameTimer = 0;
-      }
+    this.frameTimer++;
+    if (this.frameTimer >= this.frameRate) {
+      this.currentFrame = (this.currentFrame + 1) % this.frameCount;
+      this.frameTimer = 0;
+    }
   }
 
   draw(ctx, x, y, width, height) {
-      ctx.drawImage(
-          this.image,
-          this.currentFrame * this.frameWidth,
-          0,
-          this.frameWidth,
-          this.frameHeight,
-          x,
-          y,
-          width,
-          height
-      );
+    ctx.drawImage(
+      this.image,
+      this.currentFrame * this.frameWidth,
+      0,
+      this.frameWidth,
+      this.frameHeight,
+      x,
+      y,
+      width,
+      height
+    );
   }
 }
 
@@ -398,16 +410,16 @@ function checkCollisions() {
 }
 
 function checkGameOver() {
-    for (let enemy of enemies) {
-        if (enemy.y + enemy.height >= player.y) {
-            gameOver();
-            return;
-        }
+  for (let enemy of enemies) {
+    if (enemy.y + enemy.height >= player.y) {
+      gameOver();
+      return;
     }
+  }
 
-    if (level > levelUpEnemies.length) {
-        victory();
-    }
+  if (level > levelUpEnemies.length) {
+    victory();
+  }
 }
 
 function shootBullet() {
@@ -426,10 +438,10 @@ function shootBullet() {
 }
 
 function gameOver() {
-    clearInterval(gameInterval);
-    document.getElementById("game-over").style.display = "block";
-    document.getElementById("game-over-text").textContent = "Game Over 💀";
-    playSound('gameOver'); // Añadido aquí
+  clearInterval(gameInterval);
+  document.getElementById("game-over").style.display = "block";
+  document.getElementById("game-over-text").textContent = "Game Over 💀";
+  playSound('gameOver'); // Añadido aquí
 }
 
 function restartGame() {
@@ -438,42 +450,42 @@ function restartGame() {
 }
 
 async function saveAndViewRanking() {
-    await saveScore();
-    viewRanking();
-    document.getElementById("game-over").style.display = "none";
+  await saveScore();
+  viewRanking();
+  document.getElementById("game-over").style.display = "none";
 }
 
 async function saveScore() {
   const playerData = {
-      date: new Date().toISOString(),
-      avatar: playerAvatar,
-      name: playerName,
-      level: level,
-      enemiesKilled: enemiesKilled,
-      time: gameTime,
-      score: score,
-      status: document.getElementById("game-over-text").textContent.includes("Victoria") ? "Victoria" : "Derrota"
+    date: new Date().toISOString(),
+    avatar: playerAvatar,
+    name: playerName,
+    level: level,
+    enemiesKilled: enemiesKilled,
+    time: gameTime,
+    score: score,
+    status: document.getElementById("game-over-text").textContent.includes("Victoria") ? "Victoria" : "Derrota"
   };
 
   try {
-      const response = await fetch(SHEET_URL, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-              data: [playerData]
-          })
-      });
-      
-      if (response.ok) {
-          alert("¡Puntuación guardada con éxito! 🎉");  
-      } else {
-          throw new Error("Error al guardar la puntuación");
-      }
+    const response = await fetch(SHEET_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        data: [playerData]
+      })
+    });
+
+    if (response.ok) {
+      alert("¡Puntuación guardada con éxito! 🎉");
+    } else {
+      throw new Error("Error al guardar la puntuación");
+    }
   } catch (error) {
-      console.error("Error al guardar:", error);
-      alert("Error al guardar la puntuación. Por favor, inténtalo de nuevo.");
+    console.error("Error al guardar:", error);
+    alert("Error al guardar la puntuación. Por favor, inténtalo de nuevo.");
   }
 }
 
@@ -485,7 +497,7 @@ function victory() {
 }
 
 async function viewRanking() {
-try {
+  try {
     document.getElementById("main-menu").style.display = "none";
     document.getElementById("game-area").style.display = "none";
 
@@ -496,10 +508,10 @@ try {
     const data = await response.json();
 
     const sortedData = data.sort((a, b) => {
-        if (b.score !== a.score) {
-            return b.score - a.score;
-        }
-        return a.time - b.time;
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      return a.time - b.time;
     });
 
     rankingContainer.innerHTML = `
@@ -530,63 +542,82 @@ try {
         </table>
         <button onclick="backToMenu()" class="menu-button">Volver al Menú</button>
     `;
-} catch (error) {
+  } catch (error) {
     console.error("Error al cargar el ranking:", error);
     rankingContainer.innerHTML = `
         <h2>❌ Error al cargar el ranking</h2>
         <button onclick="backToMenu()" class="menu-button">Volver al Menú</button>
     `;
-}
+  }
 }
 
 function backToMenu() {
-document.getElementById("ranking-container").style.display = "none";
-document.getElementById("main-menu").style.display = "block";
-centerMainMenu(); // Añadido aquí
+  document.getElementById("ranking-container").style.display = "none";
+  document.getElementById("main-menu").style.display = "block";
+  centerMainMenu(); // Añadido aquí
 }
 
 function centerMainMenu() {
-const mainMenu = document.getElementById('main-menu');
-mainMenu.style.display = 'flex';
-mainMenu.style.flexDirection = 'column';
-mainMenu.style.justifyContent = 'center';
-mainMenu.style.alignItems = 'center';
-mainMenu.style.height = '100vh';
+  const mainMenu = document.getElementById('main-menu');
+  mainMenu.style.display = 'flex';
+  mainMenu.style.flexDirection = 'column';
+  mainMenu.style.justifyContent = 'center';
+  mainMenu.style.alignItems = 'center';
+  mainMenu.style.height = '100vh';
 }
 
 function drawBackground() {
-if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
+  if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
     const img = backgroundImages[level - 1];
-    const scale = Math.max(
-        canvas.width / img.width,
-        canvas.height / img.height
-    );
-    const scaledWidth = img.width * scale;
-    const scaledHeight = img.height * scale;
-    const x = (canvas.width - scaledWidth) / 2;
-    const y = (canvas.height - scaledHeight) / 2;
-    
-    ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
-}
+    const canvas = document.getElementById("game-canvas");
+
+    // Calcular proporciones
+    const imgRatio = img.width / img.height;
+    const canvasRatio = canvas.width / canvas.height;
+
+    let drawWidth, drawHeight, x, y;
+
+    if (canvasRatio > imgRatio) {
+      // Si el canvas es más ancho que la imagen
+      drawWidth = canvas.width;
+      drawHeight = canvas.width / imgRatio;
+      x = 0;
+      y = (canvas.height - drawHeight) / 2;
+    } else {
+      // Si el canvas es más alto que la imagen
+      drawHeight = canvas.height;
+      drawWidth = canvas.height * imgRatio;
+      x = (canvas.width - drawWidth) / 2;
+      y = 0;
+    }
+
+    // Asegurarse de que el fondo cubra todo el canvas
+    if (drawWidth < canvas.width) drawWidth = canvas.width;
+    if (drawHeight < canvas.height) drawHeight = canvas.height;
+
+    // Centrar y recortar el fondo
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, x, y, drawWidth, drawHeight);
+  }
 }
 
 window.addEventListener("keydown", (e) => {
-if (e.key === "a" || e.key === "ArrowLeft") {
-  playerDirection = -1;
-}
-if (e.key === "d" || e.key === "ArrowRight") {
-  playerDirection = 1;
-}
-if (e.key === " ") {
-  shootBullet();
-}
+  if (e.key === "a" || e.key === "ArrowLeft") {
+    playerDirection = -1;
+  }
+  if (e.key === "d" || e.key === "ArrowRight") {
+    playerDirection = 1;
+  }
+  if (e.key === " ") {
+    shootBullet();
+  }
 });
 
 window.addEventListener("keyup", (e) => {
-if ((e.key === "a" || e.key === "ArrowLeft") && playerDirection === -1) {
-  playerDirection = 0;
-}
-if ((e.key === "d" || e.key === "ArrowRight") && playerDirection === 1) {
-  playerDirection = 0;
-}
+  if ((e.key === "a" || e.key === "ArrowLeft") && playerDirection === -1) {
+    playerDirection = 0;
+  }
+  if ((e.key === "d" || e.key === "ArrowRight") && playerDirection === 1) {
+    playerDirection = 0;
+  }
 });
