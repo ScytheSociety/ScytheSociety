@@ -41,7 +41,7 @@ function copyToClipboard(text) {
     document.querySelector(".copiable").innerText = originalText;
   }, 2000); // Vuelve al texto original después de 2 segundos
 }
-/*FIN de navi copiab le*/
+/*FIN de navi copiable*/
 
 // INICIO Ruta al archivo JSON que genera las imagenes de las misiones
 const jsonFile = "./romisiones/romisiones.json";

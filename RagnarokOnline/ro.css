@@ -10,20 +10,6 @@ body {
   margin: 0; /* Elimina el margen por defecto del body */
 }
 
-.banner {
-  position: relative; /* Permite posicionar el contenido encima de la imagen de fondo */
-  text-align: center; /* Centra el texto dentro del banner */
-  color: white; /* Color del texto del banner */
-  background-image: url("../imagenes/banner00.png"); /* Ruta de tu imagen de fondo */
-  background-size: cover; /* La imagen cubre todo el contenedor */
-  background-position: center; /* Centra la imagen dentro del banner */
-  width: 100%; /* Asegura que el banner ocupe el ancho completo */
-  padding: 100px 20px; /* Añade espacio alrededor del texto (puedes ajustar según necesites) */
-  margin: 0; /* Sin márgenes para el banner */
-  overflow: hidden; /* Asegura que nada se salga del contenedor */
-  margin-bottom: 30px; /* Ajustar el espacio abajo del subtítulo */
-}
-
 .container {
   display: flex;
   flex-direction: column; /* Asegúrate de que los hijos se apilen verticalmente */
@@ -67,76 +53,6 @@ body {
   background-color: #222; /* Color de fondo del pie de página */
   width: 100%;
   color: #ffffff; /* Color del texto del pie de página */
-}
-
-/* Estilo para el navbar */
-.navbar {
-  background-color: #343a40; /* Color de fondo oscuro similar a los botones */
-  border-radius: 0.25rem; /* Bordes redondeados */
-  padding: 10px 0; /* Espaciado interno */
-}
-
-/* Estilo para los enlaces del navbar */
-.navbar-nav .nav-link {
-  color: #ffffff; /* Color del texto */
-  transition: background-color 0.3s, color 0.3s; /* Transición suave al pasar el mouse */
-}
-
-/* Efecto hover para los enlaces del navbar */
-.navbar-nav .nav-link:hover {
-  background-color: #ca3939; /* Color de fondo al pasar el mouse */
-  color: #ffffff; /* Color del texto al pasar el mouse */
-  border-radius: 0.25rem; /* Bordes redondeados */
-}
-
-/* Estilo para el dropdown */
-.dropdown-menu {
-  background-color: #343a40; /* Color de fondo oscuro para el menú desplegable */
-  border-radius: 0.25rem; /* Bordes redondeados */
-}
-
-/* Estilo para el submenú */
-.dropdown-submenu {
-  position: relative;
-}
-
-/* Estilo para el submenú cuando se activa */
-.dropdown-submenu .dropdown-menu {
-  top: 0;
-  left: 100%; /* Mueve el submenú a la derecha del menú padre */
-  margin-top: -6px; /* Alinea el submenú con el menú padre */
-  display: none; /* Oculta el submenú por defecto */
-}
-
-/* Estilo para los elementos del dropdown */
-.dropdown-item {
-  color: #ffffff; /* Color del texto del elemento del menú */
-}
-
-/* Efecto hover para los elementos del dropdown */
-.dropdown-item:hover {
-  background-color: #343a41; /* Color de fondo al pasar el mouse en el dropdown */
-  color: #ffffff; /* Color del texto al pasar el mouse en el dropdown */
-}
-
-/* Estilo para el ícono de la hamburguesa en pantallas pequeñas */
-.navbar-toggler {
-  border-color: #ffffff; /* Color del borde del botón de hamburguesa */
-}
-
-.navbar-toggler-icon {
-  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='white' stroke-width='2' d='M5 7h20M5 15h20M5 23h20'/%3E%3C/svg%3E"); /* Color del ícono de la hamburguesa */
-}
-
-/* Muestra el submenú cuando se pasa el mouse sobre el elemento del submenú */
-.dropdown-submenu:hover .dropdown-menu {
-  display: block; /* Muestra el submenú al pasar el mouse */
-}
-
-@media (max-width: 768px) {
-  .btn-dark {
-    width: 100%; /* Abarcar el ancho completo en móviles */
-  }
 }
 
 /* rocss */

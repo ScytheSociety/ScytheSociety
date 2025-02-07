@@ -1,8 +1,14 @@
 [
   {
-    "titulo": "Izlude para Tontos",
-    "link": "https://xredragonx.github.io/ScytheSociety/ragnarokonline/romisiones/izludeparanovatos.html",
-    "imagen": "../imagenes/imagenesromisiones/romisiones001.webp",
+    "titulo": "Hell Shooter [Beta]",
+    "link": "https://scythesociety.github.io/ScytheSociety/juegosss/juegosss.html",
+    "imagen": "imagenes/index/hellshooter_logo.png",
+    "descripcion": "Descripción de la imagen 1"
+  },
+  {
+    "titulo": "Ganador Hell Game",
+    "link": "https://scythesociety.github.io/ScytheSociety/juegosss/juegosss.html",
+    "imagen": "imagenes/index/hellgame_logo.png",
     "descripcion": "Descripción de la imagen 1"
   },
   {
@@ -14,13 +20,13 @@
   {
     "titulo": "Testeando con Hell",
     "link": "pagina3.html",
-    "imagen": "imagen3.jpg",
+    "imagen": "https://kaleoz-media.seagmcdn.com/kaleoz-store/202308/oss-7b2b3a319665682eb5f3fbf5f79f1e9b.jpg",
     "descripcion": "Descripción de la imagen 3"
   },
   {
     "titulo": "Título de la Misión 4",
     "link": "pagina4.html",
-    "imagen": "imagen4.jpg",
+    "imagen": "https://kaleoz-media.seagmcdn.com/kaleoz-store/202308/oss-7b2b3a319665682eb5f3fbf5f79f1e9b.jpg",
     "descripcion": "Descripción de la imagen 4"
   }
 ]

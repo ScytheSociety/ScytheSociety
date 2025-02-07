@@ -82,7 +82,7 @@ $(".dropdown-submenu .dropdown-toggle").on("click", function (e) {
 });
 
 // INICIO Ruta al archivo JSON que genera las imagenes de las misiones
-const jsonFile = "index.json";
+const jsonFile = "./index.json";
 
 // Contenedor donde se agregarán las misiones
 const container = document.getElementById("index-container");
@@ -92,10 +92,10 @@ fetch(jsonFile)
   .then((data) => {
     data.forEach((index) => {
       // Crear el elemento HTML para cada misión
-      const misionElement = document.createElement("div");
-      misionElement.className = "col-lg-2 col-md-3 col-sm-4 col-12 mb-4";
+      const indexElement = document.createElement("div");
+      indexElement.className = "col-lg-2 col-md-3 col-sm-4 col-12 mb-4";
 
-      misionElement.innerHTML = `
+      indexElement.innerHTML = `
         <a href="${index.link}">
           <div class="image-container">
             <img src="${index.imagen}" class="img-fluid" alt="${index.descripcion}">

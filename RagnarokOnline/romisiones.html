@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scythe Society</title>
     <link rel="stylesheet" href="ro.css">
+    <link rel="stylesheet" href="../codigos/navbar.css"> <!-- Ruta corregida -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 
@@ -14,29 +15,20 @@
         <h1 class="main-title">Scythe Society</h1>
         <h2 class="sub-title">Comunidad Gamer</h2>
     </div>
+    <!-- Aquí se carga el menú -->
+    <div id="navbar-placeholder"></div>
 
     <div class="container text-center">
-
-        <!-- Aquí se carga el menú -->
-        <div id="navbar-placeholder"></div>
-
         <div class="description">
             <h1 class="pagina-titulo">Misiones de Ragnarok Online</h1>
-            <p class="pagina-descripcion">Bienvenido a la sección de Misiones de Ragnarok Online, donde la aventura
+            <p class="pagina-descripcion">
+                Bienvenido a la sección de Misiones de Ragnarok Online, donde la aventura
                 y la exploración se encuentran. Aquí podrás sumergirte en el vasto mundo de Rune-Midgard y elegir entre
                 una variedad de misiones emocionantes que pondrán a prueba tus habilidades y estrategia.
-
-                Cada misión está diseñada para ofrecerte desafíos únicos, recompensas valiosas y la oportunidad de
-                interactuar con otros aventureros. Desde misiones de caza que te llevarán a los rincones más peligrosos
-                del mapa, hasta misiones de búsqueda que desvelarán secretos ocultos, nuestra lista está cuidadosamente
-                seleccionada para satisfacer a todos los tipos de jugadores.
-
-                Ya seas un guerrero experimentado o un nuevo aventurero, ¡aquí encontrarás la misión perfecta para ti!
-                No olvides compartir tus experiencias y consejos con la comunidad. ¡Prepárate para embarcarte en una
-                emocionante aventura en el mundo de Ragnarok Online!
             </p>
         </div>
-        <!-- Contiene las imagenes de las misiones -->
+
+        <!-- Contiene las imágenes de las misiones -->
         <div class="romisiones row" id="misiones-container">
             <!-- El contenido se generará aquí -->
         </div>
@@ -46,18 +38,13 @@
         <p>Creado por Scythe Society © 2024</p>
     </footer>
 
-    <!-- Script para cargar el menú -->
+    <!-- Cargar Navbar dinámicamente -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             fetch("../codigos/navbar.html")
-                .then(response => {
-                    if (!response.ok) throw new Error("Error al cargar navbar");
-                    return response.text();
-                })
-                .then(data => {
-                    document.getElementById("navbar-placeholder").innerHTML = data;
-                })
-                .catch(error => console.error('Error:', error));
+                .then(response => response.text())
+                .then(data => document.getElementById("navbar-placeholder").innerHTML = data)
+                .catch(error => console.error('Error cargando navbar:', error));
         });
     </script>
 
