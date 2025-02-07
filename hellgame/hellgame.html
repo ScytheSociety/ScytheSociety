@@ -9,8 +9,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(45deg, #000000, #1a1a1a);
-            color: gold;
+            background: linear-gradient(45deg, #003366, #0099cc);
+            background-image: url('imagenes_hellgame/hellbg.png');
+            background-size: cover;
+            background-position: center;
+            color: #00ffff;
             text-align: center;
             font-family: 'Cinzel', serif;
         }
@@ -22,25 +25,32 @@
         .glory {
             font-size: 3rem;
             font-weight: bold;
-            text-shadow: 0px 0px 20px gold;
+            text-shadow: 0px 0px 20px #00ffff;
             animation: glow 1.5s infinite alternate;
+        }
+
+        .season {
+            font-size: 2rem;
+            color: #66ffff;
+            text-shadow: 0px 0px 10px #00ffff;
+            margin-top: 10px;
         }
 
         @keyframes glow {
             from {
-                text-shadow: 0px 0px 10px gold;
+                text-shadow: 0px 0px 10px #00ffff;
             }
 
             to {
-                text-shadow: 0px 0px 30px goldenrod;
+                text-shadow: 0px 0px 30px #66ffff;
             }
         }
 
         .winner-name {
             font-size: 5rem;
             font-weight: bold;
-            color: gold;
-            text-shadow: 0px 0px 15px gold;
+            color: #00ffff;
+            text-shadow: 0px 0px 15px #00ffff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -54,6 +64,8 @@
         .message {
             font-size: 1.5rem;
             margin-top: 20px;
+            text-align: center;
+            color: #00ffff;
         }
 
         .cards-container {
@@ -68,12 +80,12 @@
 
         .card-mvp {
             max-width: 150px;
-            box-shadow: 0px 0px 15px gold;
+            box-shadow: 0px 0px 15px #00ffff;
         }
 
         .card-normal {
-            max-width: 100px;
-            box-shadow: 0px 0px 10px silver;
+            max-width: 120px;
+            box-shadow: 0px 0px 10px #66ffff;
         }
 
         .card-img:hover {
@@ -83,7 +95,7 @@
         .footer {
             margin-top: 50px;
             font-size: 1rem;
-            color: silver;
+            color: #99ffff;
         }
     </style>
 </head>
@@ -96,9 +108,19 @@
             <img src="imagenes_hellgame/hell.png" class="hell-image" alt="Hell">
         </div>
         <p class="glory">¡CAMPEÓN DE HELL GAME!</p>
-        <p class="message">Conquistaste la Ilusión de Veracruz, recolectando las 17 cartas legendarias y demostrando tu
-            valentía. Tu nombre quedará grabado en la historia de Scythe Society.</p>
-        <p class="message">🔥 ¡La comunidad te saluda, guerrero! 🔥</p>
+        <p class="season">1era Temporada: Illusion of Veracruz</p>
+        <p class="message">¡La épica primera temporada de Hell Game ha llegado a su fin!</br> Enfrentándose a los
+            temibles enemigos del universo de Ragnarok
+            Online, nuestros valientes jugadores lucharon por recolectar las cartas más poderosas, en una competencia
+            de resistencia, estrategia y valentía.
+
+            Desde el 1 de diciembre de 2024 hasta el 5 de febrero de 2025, la Ilusión de Veracruz mantuvo a todos al
+            borde de sus asientos. Finalmente, nuestro héroe Rossen se alzó como el vencedor, con su increíble hazaña de
+            recolectar las 17 cartas legendarias, 14 de monstruos normales y 3 de temibles MVPs. Su victoria resuena en
+            la historia de Scythe Society y su nombre quedará grabado como el primero en conquistar esta aventura.
+
+            ¡La comunidad celebra con orgullo su hazaña, felicitándolo por su destreza y determinación! 🎉</p>
+        <p class="message">🌊 ¡La comunidad te saluda, guerrero! 🌊</p>
 
         <div class="cards-container">
             <div class="row justify-content-center">
@@ -113,44 +135,54 @@
                 </div>
             </div>
             <div class="row justify-content-center mt-4">
-                <div class="col-3 col-md-2 col-lg-1">
+                <div class="col-4 col-md-3 col-lg-2">
                     <img src="imagenes_hellgame/normal/4001.png" class="card-img card-normal" alt="Carta 4001">
                 </div>
-                <div class="col-3 col-md-2 col-lg-1">
+                <div class="col-4 col-md-3 col-lg-2">
                     <img src="imagenes_hellgame/normal/4002.png" class="card-img card-normal" alt="Carta 4002">
                 </div>
-                <div class="col-3 col-md-2 col-lg-1">
+                <div class="col-4 col-md-3 col-lg-2">
                     <img src="imagenes_hellgame/normal/4006.png" class="card-img card-normal" alt="Carta 4006">
                 </div>
-                <div class="col-3 col-md-2 col-lg-1">
+                <div class="col-4 col-md-3 col-lg-2">
                     <img src="imagenes_hellgame/normal/4066.png" class="card-img card-normal" alt="Carta 4066">
                 </div>
-                <div class="col-3 col-md-2 col-lg-1">
+                <div class="col-4 col-md-3 col-lg-2">
                     <img src="imagenes_hellgame/normal/300140.png" class="card-img card-normal" alt="Carta 300140">
-                </div>
-                <div class="col-3 col-md-2 col-lg-1">
-                    <img src="imagenes_hellgame/normal/300141.png" class="card-img card-normal" alt="Carta 300141">
-                </div>
-                <div class="col-3 col-md-2 col-lg-1">
-                    <img src="imagenes_hellgame/normal/300142.png" class="card-img card-normal" alt="Carta 300142">
                 </div>
             </div>
             <div class="row justify-content-center mt-4">
-                <div class="col-3 col-md-2 col-lg-1">
+                <div class="col-4 col-md-3 col-lg-2">
+                    <img src="imagenes_hellgame/normal/300141.png" class="card-img card-normal" alt="Carta 300141">
+                </div>
+                <div class="col-4 col-md-3 col-lg-2">
+                    <img src="imagenes_hellgame/normal/300142.png" class="card-img card-normal" alt="Carta 300142">
+                </div>
+                <div class="col-4 col-md-3 col-lg-2">
                     <img src="imagenes_hellgame/normal/300143.png" class="card-img card-normal" alt="Carta 300143">
                 </div>
-                <div class="col-3 col-md-2 col-lg-1">
+                <div class="col-4 col-md-3 col-lg-2">
                     <img src="imagenes_hellgame/normal/300144.png" class="card-img card-normal" alt="Carta 300144">
                 </div>
-                <div class="col-3 col-md-2 col-lg-1">
+            </div>
+            <div class="row justify-content-center mt-4">
+                <div class="col-4 col-md-3 col-lg-2">
                     <img src="imagenes_hellgame/normal/300146.png" class="card-img card-normal" alt="Carta 300146">
                 </div>
-                <div class="col-3 col-md-2 col-lg-1">
+                <div class="col-4 col-md-3 col-lg-2">
                     <img src="imagenes_hellgame/normal/300147.png" class="card-img card-normal" alt="Carta 300147">
+                </div>
+                <div class="col-4 col-md-3 col-lg-2">
+                    <img src="imagenes_hellgame/normal/300148.png" class="card-img card-normal" alt="Carta 300148">
+                </div>
+                <div class="col-4 col-md-3 col-lg-2">
+                    <img src="imagenes_hellgame/normal/300149.png" class="card-img card-normal" alt="Carta 300149">
+                </div>
+                <div class="col-4 col-md-3 col-lg-2">
+                    <img src="imagenes_hellgame/normal/300150.png" class="card-img card-normal" alt="Carta 300150">
                 </div>
             </div>
         </div>
-
         <p class="footer">Creado por Scythe Society © 2024</p>
     </div>
 </body>
