@@ -16,26 +16,20 @@
         <h2 class="sub-title">Comunidad Gamer</h2>
     </div>
 
+    <!-- Navbar cargado dinámicamente -->
+    <div id="navbar-placeholder"></div>
+
     <div class="container text-center">
-
-        <!-- Aquí se carga el menú -->
-        <div id="navbar-placeholder"></div>
-
         <p class="description">Desde 2004, uniendo a la gente por una misma pasión: los videojuegos. Buscamos ser los
             mejores.</p>
 
         <div class="row">
             <div class="col-md-3 buttons-container">
-                <button onclick="showContent('twitch1')" class="btn btn-dark btn-block"
-                    aria-label="Ver canal 1">Twitch</button>
-                <button onclick="showContent('twitch2')" class="btn btn-dark btn-block"
-                    aria-label="Ver canal 2">Youtube</S></button>
-                <button onclick="showContent('twitch3')" class="btn btn-dark btn-block"
-                    aria-label="Ver canal 3">Facebook</button>
-                <button onclick="showContent('twitch4')" class="btn btn-dark btn-block" aria-label="Ver canal 4">Canal
-                    4</button>
-                <button onclick="showContent('twitch5')" class="btn btn-dark btn-block" aria-label="Ver canal 5">Canal
-                    5</button>
+                <button onclick="showContent('twitch1')" class="btn btn-dark btn-block">Twitch</button>
+                <button onclick="showContent('twitch2')" class="btn btn-dark btn-block">Youtube</button>
+                <button onclick="showContent('twitch3')" class="btn btn-dark btn-block">Facebook</button>
+                <button onclick="showContent('twitch4')" class="btn btn-dark btn-block">Canal 4</button>
+                <button onclick="showContent('twitch5')" class="btn btn-dark btn-block">Canal 5</button>
             </div>
 
             <div class="col-md-7 stream-container" id="display">
@@ -48,27 +42,21 @@
         </div>
     </div>
 
-    <!-- Contiene las imagenes de las misiones -->
     <div class="index row" id="index-container">
-        <!-- El contenido se generará aquí -->
+        <!-- Contenido dinámico de misiones -->
     </div>
 
     <footer class="footer">
         <p>Creado por Scythe Society © 2024</p>
     </footer>
 
-    <!-- Script para cargar el menú -->
+    <!-- Cargar Navbar dinámicamente -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             fetch("codigos/navbar.html")
-                .then(response => {
-                    if (!response.ok) throw new Error("Error al cargar navbar");
-                    return response.text();
-                })
-                .then(data => {
-                    document.getElementById("navbar-placeholder").innerHTML = data;
-                })
-                .catch(error => console.error('Error:', error));
+                .then(response => response.text())
+                .then(data => document.getElementById("navbar-placeholder").innerHTML = data)
+                .catch(error => console.error('Error cargando navbar:', error));
         });
     </script>
 
