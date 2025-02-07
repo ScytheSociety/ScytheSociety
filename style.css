@@ -11,17 +11,16 @@ body {
 }
 
 .banner {
-  position: relative; /* Permite posicionar el contenido encima de la imagen de fondo */
-  text-align: center; /* Centra el texto dentro del banner */
-  color: white; /* Color del texto del banner */
-  background-image: url("imagenes/banner00.png"); /* Ruta de tu imagen de fondo */
-  background-size: cover; /* La imagen cubre todo el contenedor */
-  background-position: center; /* Centra la imagen dentro del banner */
-  width: 100%; /* Asegura que el banner ocupe el ancho completo */
-  padding: 100px 20px; /* Añade espacio alrededor del texto (puedes ajustar según necesites) */
-  margin: 0; /* Sin márgenes para el banner */
-  overflow: hidden; /* Asegura que nada se salga del contenedor */
-  margin-bottom: 30px; /* Ajustar el espacio abajo del subtítulo */
+  position: relative;
+  text-align: center;
+  color: white;
+  background-image: url("imagenes/banner00.png");
+  background-size: cover;
+  background-position: center;
+  width: 100%;
+  padding: 50px 20px; /* Reduce el padding para evitar demasiado espacio */
+  margin: 0; /* Asegura que no haya márgenes adicionales */
+  overflow: hidden;
 }
 
 .container {
@@ -90,9 +89,14 @@ body {
 
 /* Estilo para el navbar */
 .navbar {
-  background-color: #343a40; /* Color de fondo oscuro similar a los botones */
-  border-radius: 0.25rem; /* Bordes redondeados */
+  background-color: #222; /* Color de fondo oscuro similar a los botones */
+  border-radius: 0; /* Bordes redondeados */
   padding: 10px 0; /* Espaciado interno */
+}
+
+#navbar-placeholder {
+  margin-top: 0;
+  padding-top: 0;
 }
 
 /* Estilo para los enlaces del navbar */
