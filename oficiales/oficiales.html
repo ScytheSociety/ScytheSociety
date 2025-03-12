@@ -1,10 +1,41 @@
+<script>
+    // Verificar autenticación
+    function checkAuth() {
+        const sessionToken = localStorage.getItem("sessionToken");
+        const username = localStorage.getItem("username");
+        const loginTime = localStorage.getItem("loginTime");
+
+        // Verificar si la sesión existe y no ha expirado (ejemplo: 24 horas)
+        if (sessionToken && username && loginTime) {
+            const currentTime = Date.now();
+            const sessionAge = currentTime - parseInt(loginTime);
+            const sessionLimit = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
+
+            if (sessionAge < sessionLimit) {
+                return true; // Usuario autenticado
+            }
+        }
+
+        // No autenticado o sesión expirada
+        return false;
+    }
+
+    // Redirigir si no está autenticado
+    if (!checkAuth()) {
+        window.location.href = "login.html";
+    }
+</script>
+
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página Protegida</title>
+    <title>Scythe Society</title>
+    <link rel="stylesheet" href="oficiales.css">
+    <link rel="stylesheet" href="../codigos/navbar.css"> <!-- Ruta corregida -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 
@@ -13,45 +44,30 @@
         <h1 class="main-title">Scythe Society</h1>
         <h2 class="sub-title">Comunidad Gamer</h2>
     </div>
+    <div id="navbar-placeholder"></div>
 
     <div class="container text-center">
 
-        <!-- Aquí se carga el menú -->
-        <div id="navbar-placeholder"></div>
+    </div>
 
-        <h1>Bienvenido a la Página Protegida</h1>
-        <p class="description">Solo accesible para usuarios autenticados.</p>
+    <div class="index row" id="index-container">
+        <!-- Contenido dinámico de misiones -->
     </div>
 
     <footer class="footer">
         <p>Creado por Scythe Society © 2024</p>
     </footer>
 
-    <!-- Script para cargar el menú -->
+    <!-- Cargar Navbar dinámicamente -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             fetch("../codigos/navbar.html")
-                .then(response => {
-                    if (!response.ok) throw new Error("Error al cargar navbar");
-                    return response.text();
-                })
-                .then(data => {
-                    document.getElementById("navbar-placeholder").innerHTML = data;
-                })
-                .catch(error => console.error('Error:', error));
+                .then(response => response.text())
+                .then(data => document.getElementById("navbar-placeholder").innerHTML = data)
+                .catch(error => console.error('Error cargando navbar:', error));
         });
     </script>
 
-    <script>
-        // Verificar si el usuario ha iniciado sesión
-        if (localStorage.getItem('loggedIn') !== 'true') {
-            // Si no ha iniciado sesión, redirigir a la página de inicio de sesión
-            window.location.href = 'login.html';
-        }
-    </script>
-
-
-    <script src="script.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

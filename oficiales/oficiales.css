@@ -2,6 +2,9 @@ body {
   background-color: #121212; /* Color de fondo oscuro */
   color: #ffffff; /* Color del texto */
   font-family: Arial, sans-serif; /* Fuente */
+  min-height: 100vh; /* Altura mínima del cuerpo */
+  display: flex;
+  flex-direction: column; /* Organiza el contenido en columna */
 }
 
 html,
@@ -10,26 +13,10 @@ body {
   margin: 0; /* Elimina el margen por defecto del body */
 }
 
-.banner {
-  position: relative; /* Permite posicionar el contenido encima de la imagen de fondo */
-  text-align: center; /* Centra el texto dentro del banner */
-  color: white; /* Color del texto del banner */
-  background-image: url("../imagenes/banner00.png"); /* Ruta de tu imagen de fondo */
-  background-size: cover; /* La imagen cubre todo el contenedor */
-  background-position: center; /* Centra la imagen dentro del banner */
-  width: 100%; /* Asegura que el banner ocupe el ancho completo */
-  padding: 100px 20px; /* Añade espacio alrededor del texto (puedes ajustar según necesites) */
-  margin: 0; /* Sin márgenes para el banner */
-  overflow: hidden; /* Asegura que nada se salga del contenedor */
-  margin-bottom: 30px; /* Ajustar el espacio abajo del subtítulo */
-}
-
 .container {
   display: flex;
   flex-direction: column; /* Asegúrate de que los hijos se apilen verticalmente */
-  min-height: calc(
-    100vh - 50px
-  ); /* Resta la altura del footer del 100% de la vista */
+  flex: 1; /* Toma el espacio disponible */
   margin-bottom: 30px; /* Espacio adicional antes del footer */
 }
 
@@ -44,97 +31,99 @@ body {
   font-size: 1.5rem; /* Tamaño del subtítulo */
 }
 
-.description {
-  font-size: 1rem; /* Tamaño de la descripción */
-  margin-bottom: 20px;
-}
-
-.btn-dark {
-  background-color: #444; /* Color oscuro para botones */
-  border: none; /* Sin borde */
-  margin-bottom: 10px; /* Espacio entre botones */
-  width: 80%; /* Reducir ancho de los botones */
-  transition: background-color 0.3s ease;
-}
-
-.btn-dark:hover {
-  background-color: #555; /* Cambia el color en hover */
-}
-
 .footer {
   text-align: center;
   padding: 10px;
   background-color: #222; /* Color de fondo del pie de página */
   width: 100%;
   color: #ffffff; /* Color del texto del pie de página */
+  margin-top: auto; /* Empuja el footer hacia abajo */
 }
 
-/* Estilo para el navbar */
-.navbar {
-  background-color: #343a40; /* Color de fondo oscuro similar a los botones */
-  border-radius: 0.25rem; /* Bordes redondeados */
-  padding: 10px 0; /* Espaciado interno */
+/* Estilos personalizados para el formulario de login */
+.login-container {
+  max-width: 400px; /* Ancho máximo para el contenedor de login */
+  margin: 0 auto; /* Centrar horizontalmente */
+  padding: 20px;
+  background-color: #1e1e1e; /* Fondo ligeramente más claro que el body */
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  margin-top: 50px;
+  margin-bottom: auto; /* Empuja el contenido hacia arriba */
 }
 
-/* Estilo para los enlaces del navbar */
-.navbar-nav .nav-link {
-  color: #ffffff; /* Color del texto */
-  transition: background-color 0.3s, color 0.3s; /* Transición suave al pasar el mouse */
+.login-title {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #ffffff;
 }
 
-/* Efecto hover para los enlaces del navbar */
-.navbar-nav .nav-link:hover {
-  background-color: #ca3939; /* Color de fondo al pasar el mouse */
-  color: #ffffff; /* Color del texto al pasar el mouse */
-  border-radius: 0.25rem; /* Bordes redondeados */
+.form-group {
+  margin-bottom: 20px;
 }
 
-/* Estilo para el dropdown */
-.dropdown-menu {
-  background-color: #343a40; /* Color de fondo oscuro para el menú desplegable */
-  border-radius: 0.25rem; /* Bordes redondeados */
+.form-group label {
+  color: #ffffff; /* Asegurando que las etiquetas sean blancas */
+  font-weight: bold; /* Texto en negrita */
+  display: block;
+  margin-bottom: 5px;
 }
 
-/* Estilo para el submenú */
-.dropdown-submenu {
-  position: relative;
+.form-control {
+  background-color: #333; /* Color de fondo para los inputs */
+  border: 1px solid #444;
+  color: #000000 !important; /* Color del texto dentro del input en negro */
+  font-weight: bold !important; /* Texto en negrita con !important */
+  max-width: 100%; /* Ancho máximo */
+  padding: 10px;
+  border-radius: 4px;
 }
 
-/* Estilo para el submenú cuando se activa */
-.dropdown-submenu .dropdown-menu {
-  top: 0;
-  left: 100%; /* Mueve el submenú a la derecha del menú padre */
-  margin-top: -6px; /* Alinea el submenú con el menú padre */
-  display: none; /* Oculta el submenú por defecto */
+.form-control::placeholder {
+  color: #aaa; /* Color para el placeholder */
 }
 
-/* Estilo para los elementos del dropdown */
-.dropdown-item {
-  color: #ffffff; /* Color del texto del elemento del menú */
+.form-control:focus {
+  background-color: #f0f0f0; /* Fondo más claro al enfocar */
+  color: #000000 !important; /* Texto en negro al enfocar */
+  border-color: #ff0000; /* Mantiene el borde rojo */
 }
 
-/* Efecto hover para los elementos del dropdown */
-.dropdown-item:hover {
-  background-color: #343a41; /* Color de fondo al pasar el mouse en el dropdown */
-  color: #ffffff; /* Color del texto al pasar el mouse en el dropdown */
+/* Clase específica para el botón de inicio de sesión */
+.btn-login {
+  background-color: #ff0000 !important; /* Botón rojo forzado con !important */
+  color: #ffffff !important; /* Texto blanco forzado con !important */
+  border: none !important;
+  padding: 10px 20px;
+  border-radius: 4px;
+  width: 100%;
+  font-weight: bold !important;
+  transition: background-color 0.3s;
 }
 
-/* Estilo para el ícono de la hamburguesa en pantallas pequeñas */
-.navbar-toggler {
-  border-color: #ffffff; /* Color del borde del botón de hamburguesa */
+.btn-login:hover {
+  background-color: #cc0000 !important; /* Rojo más oscuro al pasar el mouse */
 }
 
-.navbar-toggler-icon {
-  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='white' stroke-width='2' d='M5 7h20M5 15h20M5 23h20'/%3E%3C/svg%3E"); /* Color del ícono de la hamburguesa */
+/* Asegurarse de que el texto del error sea visible */
+#error-message {
+  color: #ff3333; /* Rojo brillante para errores */
+  font-weight: bold;
+  text-align: center;
 }
 
-/* Muestra el submenú cuando se pasa el mouse sobre el elemento del submenú */
-.dropdown-submenu:hover .dropdown-menu {
-  display: block; /* Muestra el submenú al pasar el mouse */
-}
+/* Media queries para responsividad */
+@media (max-width: 576px) {
+  .login-container {
+    max-width: 90%;
+    margin-top: 30px;
+  }
 
-@media (max-width: 768px) {
-  .btn-dark {
-    width: 100%; /* Abarcar el ancho completo en móviles */
+  .main-title {
+    font-size: 2rem;
+  }
+
+  .sub-title {
+    font-size: 1.2rem;
   }
 }
