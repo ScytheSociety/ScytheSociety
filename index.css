@@ -1,0 +1,243 @@
+/**
+ * index.css - Estilos específicos para la página principal
+ * Scythe Society
+ */
+
+/* Banner específico para la página principal */
+.banner#index-banner {
+  background-image: url("https://wallpapercave.com/wp/wp5253716.jpg");
+}
+
+/* Oscurecemos la imagen para que destaque más el texto */
+.banner#index-banner::before {
+  background: rgba(0, 0, 0, 0.7); /* Capa oscura para la página principal */
+}
+
+/* Estilos específicos para títulos en la página principal */
+.banner#index-banner .main-title {
+  text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.9);
+  font-weight: 800;
+}
+
+.banner#index-banner .sub-title {
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.9);
+}
+
+/* Estilos para las tarjetas de juegos */
+#game-cards .news-card {
+  transition: all 0.4s ease;
+  border-bottom: 3px solid transparent;
+}
+
+#game-cards .news-card:hover {
+  transform: translateY(-10px);
+  border-bottom: 3px solid var(--accent-color);
+}
+
+/* Efecto de brillo al pasar sobre los iconos en la sección de comunidad */
+.content-card i.fa-4x {
+  transition: all 0.5s ease;
+}
+
+.content-card:hover i.fa-4x {
+  filter: drop-shadow(0 0 5px currentColor);
+  transform: scale(1.1);
+}
+
+/* Animaciones para el contenido destacado */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#featured-content .news-card {
+  animation: fadeInUp 0.8s ease forwards;
+  opacity: 0;
+}
+
+#featured-content .news-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+#featured-content .news-card:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+#featured-content .news-card:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+/* Estilos para el ranking de HellGame */
+.hellgame-ranking-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.hellgame-ranking-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("https://images.pexels.com/photos/957061/chess-checkmated-chess-pieces-black-white-957061.jpeg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.15;
+  z-index: -1;
+}
+
+.hellgame-card {
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hellgame-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.hellgame-card .card-header {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hellgame-card .card-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.hellgame-card .card-header i {
+  margin-right: 10px;
+  font-size: 1.8rem;
+}
+
+.hellgame-card .card-body {
+  padding: 1.25rem;
+}
+
+/* Estilos para la tabla del ranking */
+.hellgame-ranking-section .table {
+  margin-bottom: 0;
+  background-color: transparent;
+  color: var(--text-color);
+}
+
+.hellgame-ranking-section .table th {
+  border-top: none;
+  border-bottom: 2px solid var(--accent-color);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  padding: 1rem 0.75rem;
+  color: var(--accent-color);
+}
+
+.hellgame-ranking-section .table td {
+  border-color: rgba(255, 255, 255, 0.1);
+  padding: 0.75rem;
+  vertical-align: middle;
+}
+
+/* Estilos para las posiciones del ranking */
+.ranking-row {
+  transition: transform 0.2s ease;
+}
+
+.ranking-row:hover {
+  transform: translateX(5px);
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.ranking-position-1 td:first-child {
+  position: relative;
+  color: gold;
+  font-weight: bold;
+}
+
+.ranking-position-1 td:first-child::before {
+  content: "👑";
+  margin-right: 5px;
+}
+
+.ranking-position-2 td:first-child {
+  color: silver;
+  font-weight: bold;
+}
+
+.ranking-position-3 td:first-child {
+  color: #cd7f32; /* bronce */
+  font-weight: bold;
+}
+
+/* Animaciones para el ranking */
+@keyframes fadeInRanking {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hellgame-card {
+  animation: fadeInRanking 0.6s ease forwards;
+}
+
+/* Ajustes responsivos específicos para la página principal */
+@media (max-width: 991.98px) {
+  .banner#index-banner .main-title {
+    font-size: 2.7rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .banner#index-banner .main-title {
+    font-size: 2.2rem;
+  }
+
+  .banner#index-banner .sub-title {
+    font-size: 1.2rem;
+  }
+
+  .content-card i.fa-4x {
+    font-size: 3em;
+  }
+
+  .hellgame-card .card-header h3 {
+    font-size: 1.3rem;
+  }
+
+  .hellgame-ranking-section .table th,
+  .hellgame-ranking-section .table td {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .banner#index-banner .main-title {
+    font-size: 1.8rem;
+  }
+
+  .banner#index-banner .sub-title {
+    font-size: 1rem;
+  }
+}

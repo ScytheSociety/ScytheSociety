@@ -1,0 +1,38 @@
+[
+  {
+    "titulo": "Hell Shooter [Beta]",
+    "link": "/pages/hellshooter/hellshooter.html",
+    "imagen": "/assets/images/games/hellshooter.jpg",
+    "descripcion": "Juega nuestra versión beta del nuevo shooter en primera persona"
+  },
+  {
+    "titulo": "Ganador Hell Game",
+    "link": "/pages/hellgame/hellgame.html",
+    "imagen": "/assets/images/games/hellgame.jpg",
+    "descripcion": "Conoce al ganador de nuestro último torneo"
+  },
+  {
+    "titulo": "Guía de Ragnarok Online",
+    "link": "/pages/ro/roguias/leveobasico2025.html",
+    "imagen": "/assets/images/guides/roguide.jpg",
+    "descripcion": "Estrategias actualizadas para subir de nivel en 2025"
+  },
+  {
+    "titulo": "Misiones WoW: Shadowlands",
+    "link": "/pages/wow/guias-clases.html",
+    "imagen": "/assets/images/guides/wow-missions.jpg",
+    "descripcion": "Las mejores misiones para farmear reputación"
+  },
+  {
+    "titulo": "Testeando con Hell",
+    "link": "/pages/hellshooter/updates.html",
+    "imagen": "/assets/images/news/testing.jpg",
+    "descripcion": "Últimas actualizaciones de nuestro shooter"
+  },
+  {
+    "titulo": "Evento de Pascua 2025",
+    "link": "/pages/ro/roeventos/pascua2025.html",
+    "imagen": "/assets/images/events/easter2025.jpg",
+    "descripcion": "Todo sobre el evento especial de temporada"
+  }
+]

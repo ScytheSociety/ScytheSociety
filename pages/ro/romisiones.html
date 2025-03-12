@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Misiones de Ragnarok Online | Scythe Society</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon">
+
+    <!-- CSS de Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&family=Poppins:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS personalizado -->
+    <link rel="stylesheet" href="/assets/css/style.css">
+
+    <!-- CSS adicional para esta página -->
+    <style>
+        .mission-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .mission-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .difficulty-indicator {
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .difficulty-indicator.filled {
+            color: var(--accent-color);
+        }
+
+        .difficulty-indicator.empty {
+            color: #666;
+        }
+
+        .reward-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .reward-exp {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .reward-item {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .reward-zeny {
+            background-color: #f1c40f;
+            color: #333;
+        }
+
+        .reward-skill {
+            background-color: #9b59b6;
+            color: white;
+        }
+
+        .filter-btn.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <div id="navbar-container">
+        <!-- El contenido del navbar se cargará aquí -->
+    </div>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+        <!-- Banner principal -->
+        <section class="banner" style="background-image: url('/assets/images/missions/ro-missions-banner.jpg');">
+            <div class="banner-content">
+                <div class="container">
+                    <h1 class="main-title">MISIONES DE RAGNAROK ONLINE</h1>
+                    <p class="sub-title">Guías detalladas para todas las quests</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Introducción -->
+        <section class="py-5">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <h2 class="section-title">GUÍA DE MISIONES</h2>
+                        <p class="description">
+                            Descubre todas las misiones disponibles en Ragnarok Online con nuestras guías detalladas.
+                            Desde las más básicas para principiantes hasta las más desafiantes para jugadores
+                            experimentados,
+                            te proporcionamos toda la información que necesitas para completarlas con éxito.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filtros de misiones -->
+        <section class="py-3 bg-dark">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <h3 class="mb-3">Filtrar Misiones</h3>
+                        <div class="d-flex flex-wrap">
+                            <button class="btn btn-gaming me-2 mb-2 filter-btn active" data-filter="all">Todas</button>
+                            <button class="btn btn-gaming me-2 mb-2 filter-btn"
+                                data-filter="beginner">Principiante</button>
+                            <button class="btn btn-gaming me-2 mb-2 filter-btn"
+                                data-filter="intermediate">Intermedio</button>
+                            <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="advanced">Avanzado</button>
+                            <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="exp">EXP</button>
+                            <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="item">Items</button>
+                            <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="skill">Skills</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lista de misiones -->
+        <section class="py-5">
+            <div class="container">
+                <div class="row" id="missions-container">
+                    <!-- Misión 1: Dangerous Rumors -->
+                    <div class="col-lg-4 col-md-6 mb-4 mission-card" data-categories="beginner exp item">
+                        <div class="content-card h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h4>Dangerous Rumors</h4>
+                                <div>
+                                    <span class="difficulty-indicator filled"><i class="fas fa-star"></i></span>
+                                    <span class="difficulty-indicator empty"><i class="fas fa-star"></i></span>
+                                    <span class="difficulty-indicator empty"><i class="fas fa-star"></i></span>
+                                </div>
+                            </div>
+
+                            <p>
+                                Investiga los rumores sobre monstruos extraños que han aparecido en las afueras de
+                                Prontera.
+                                Esta misión te llevará a descubrir una amenaza creciente que podría afectar a todo el
+                                reino.
+                            </p>
+
+                            <div class="mb-3">
+                                <span class="reward-tag reward-exp">10,000 EXP</span>
+                                <span class="reward-tag reward-item">Poción x10</span>
+                                <span class="reward-tag reward-zeny">5,000 Zeny</span>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Nivel recomendado: 20-30</span>
+                                <a href="/pages/ro/romisiones/dangerousrumors.html" class="btn btn-sm btn-gaming">Ver
+                                    Guía</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Misión 2: Cursed Spirit -->
+                    <div class="col-lg-4 col-md-6 mb-4 mission-card" data-categories="intermediate exp item">
+                        <div class="content-card h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h4>Cursed Spirit</h4>
+                                <div>
+                                    <span class="difficulty-indicator filled"><i class="fas fa-star"></i></span>
+                                    <span class="difficulty-indicator filled"><i class="fas fa-star"></i></span>
+                                    <span class="difficulty-indicator empty"><i class="fas fa-star"></i></span>
+                                </div>
+                            </div>
+
+                            <p>
+                                Un espíritu maldito ha sido avistado en el Castillo de Geffen. Los aventureros valientes
+                                que se atrevan a investigar descubrirán una historia trágica y tendrán la oportunidad de
+                                liberar al espíritu de su sufrimiento.
+                            </p>
+
+                            <div class="mb-3">
+                                <span class="reward-tag reward-exp">30,000 EXP</span>
+                                <span class="reward-tag reward-item">Ghost Armor</span>
+                                <span class="reward-tag reward-zeny">15,000 Zeny</span>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Nivel recomendado: 40-50</span>
+                                <a href="/pages/ro/romisiones/cursedspirit.html" class="btn btn-sm btn-gaming">Ver
+                                    Guía</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Misión 3: Friendship Test -->
+                    <div class="col-lg-4 col-md-6 mb-4 mission-card" data-categories="beginner exp">
+                        <div class="content-card h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h4>Friendship Test</h4>
+                                <div>
+                                    <span class="difficulty-indicator filled"><i class="fas fa-star"></i></span>
+                                    <span class="difficulty-indicator empty"><i class="fas fa-star"></i></span>
+                                    <span class="difficulty-indicator empty"><i class="fas fa-star"></i></span>
+                                </div>
+                            </div>
+
+                            <p>
+                                Ayuda a un grupo de amigos a resolver sus diferencias mediante una serie de pruebas
+                                que demostrarán el verdadero valor de la amistad. Una misión perfecta para nuevos
+                                jugadores.
+                            </p>
+
+                            <div class="mb-3">
+                                <span class="reward-tag reward-exp">5,000 EXP</span>
+                                <span class="reward-tag reward-zeny">2,000 Zeny</span>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Nivel recomendado: 10-20</span>
+                                <a href="/pages/ro/romisiones/friendship.html" class="btn btn-sm btn-gaming">Ver
+                                    Guía</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Misión 4: Ancient Artifact -->
+                    <div class="col-lg-4 col-md-6 mb-4 mission-card" data-categories="advanced exp item skill">
+                        <div class="content-card h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h4>Ancient Artifact</h4>
+                                <div>
+                                    <span class="difficulty-indicator filled"><i class="fas fa-star"></i></span>
+                                    <span class="difficulty-indicator filled"><i class="fas fa-star"></i></span>
+                                    <span class="difficulty-indicator filled"><i class="fas fa-star"></i></span>
+                                </div>
+                            </div>
+
+                            <p>
+                                Embárcate en la búsqueda de un artefacto antiguo con poderes extraordinarios.
+                                Esta peligrosa misión te llevará a través de múltiples mazmorras y te enfrentará a
+                                enemigos formidables.
+                            </p>
+
+                            <div class="mb-3">
+                                <span class="reward-tag reward-exp">80,000 EXP</span>
+                                <span class="reward-tag reward-item">Ancient Relic</span>
+                                <span class="reward-tag reward-skill">Skill Especial</span>
+                                <span class="reward-tag reward-zeny">50,000 Zeny</span>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Nivel recomendado: 70+</span>
+                                <a href="#" class="btn btn-sm btn-gaming">Ver Guía</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Misión 5: City in Peril -->
+                    <div class="col-lg-4 col-md-6 mb-4 mission-card" data-categories="intermediate exp zeny">
+                        <div class="content-card h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h4>City in Peril</h4>
+                                <div>
+                                    <span class="difficulty-indicator filled"><i class="fas fa-star"></i></span>
+                                    <span class="difficulty-indicator filled"><i class="fas fa-star"></i></span>
+                                    <span class="difficulty-indicator empty"><i class="fas fa-star"></i></span>
+                                </div>
+                            </div>
+
+                            <p>
+                                La ciudad de Alberta está siendo atacada por piratas. Únete a la defensa de la ciudad
+                                y protege a sus habitantes antes de que sea demasiado tarde.
+                            </p>
+
+                            <div class="mb-3">
+                                <span class="reward-tag reward-exp">25,000 EXP</span>
+                                <span class="reward-tag reward-zeny">30,000 Zeny</span>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Nivel recomendado: 35-45</span>
+                                <a href="#" class="btn btn-sm btn-gaming">Ver Guía</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Misión 6: Training the Novice -->
+                    <div class="col-lg-4 col-md-6 mb-4 mission-card" data-categories="beginner exp skill">
+                        <div class="content-card h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h4>Training the Novice</h4>
+                                <div>
+                                    <span class="difficulty-indicator filled"><i class="fas fa-star"></i></span>
+                                    <span class="difficulty-indicator empty"><i class="fas fa-star"></i></span>
+                                    <span class="difficulty-indicator empty"><i class="fas fa-star"></i></span>
+                                </div>
+                            </div>
+
+                            <p>
+                                Ayuda a entrenar a un grupo de novatos en las artes del combate. Esta misión es perfecta
+                                para jugadores nuevos que quieren aprender los fundamentos del juego.
+                            </p>
+
+                            <div class="mb-3">
+                                <span class="reward-tag reward-exp">3,000 EXP</span>
+                                <span class="reward-tag reward-skill">Habilidad Básica</span>
+                                <span class="reward-tag reward-zeny">1,000 Zeny</span>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Nivel recomendado: 1-10</span>
+                                <a href="#" class="btn btn-sm btn-gaming">Ver Guía</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paginación -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <nav aria-label="Navegación de páginas">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Anterior</a>
+                                </li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">Siguiente</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <div id="footer-container">
+        <!-- El contenido del footer se cargará aquí -->
+    </div>
+
+    <!-- JavaScript de Bootstrap 5 y Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery (para compatibilidad con scripts más antiguos) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- JavaScript personalizado -->
+    <script src="/assets/js/main.js"></script>
+
+    <!-- Script para cargar componentes HTML -->
+    <script>
+        // Cargar navbar
+        fetch('/templates/navbar.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('navbar-container').innerHTML = data;
+            })
+            .catch(error => {
+                console.error('Error cargando el navbar:', error);
+                document.getElementById('navbar-container').innerHTML =
+                    '<p class="text-center p-3">Error al cargar el navbar</p>';
+            });
+
+        // Cargar footer
+        fetch('/templates/footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            })
+            .catch(error => {
+                console.error('Error cargando el footer:', error);
+                document.getElementById('footer-container').innerHTML =
+                    '<p class="text-center p-3">Error al cargar el footer</p>';
+            });
+
+        // Filtrado de misiones
+        document.addEventListener('DOMContentLoaded', function () {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const missionCards = document.querySelectorAll('.mission-card');
+
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    // Quitar clase active de todos los botones
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+
+                    // Añadir clase active al botón clickeado
+                    this.classList.add('active');
+
+                    // Obtener filtro seleccionado
+                    const filter = this.getAttribute('data-filter');
+
+                    // Mostrar/ocultar misiones según el filtro
+                    missionCards.forEach(card => {
+                        if (filter === 'all' || card.getAttribute('data-categories')
+                            .includes(filter)) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,146 @@
+/**
+ * responsive.css - Estilos responsivos para todo el sitio web
+ * Scythe Society
+ */
+
+/* Estilos generales para pantallas grandes */
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1140px;
+  }
+}
+
+/* Dispositivos grandes (ordenadores de escritorio menos de 1200px) */
+@media (max-width: 1199.98px) {
+  .main-title {
+    font-size: 2.8rem;
+  }
+
+  .sub-title {
+    font-size: 1.4rem;
+  }
+
+  .content-card {
+    padding: 18px;
+  }
+}
+
+/* Dispositivos medianos (tablets menos de 992px) */
+@media (max-width: 991.98px) {
+  .main-title {
+    font-size: 2.5rem;
+  }
+
+  .sub-title {
+    font-size: 1.3rem;
+  }
+
+  .section-title {
+    font-size: 1.8rem;
+  }
+
+  .description {
+    font-size: 1rem;
+  }
+
+  .banner {
+    padding: 60px 0;
+  }
+
+  .btn-gaming {
+    padding: 8px 16px;
+  }
+
+  /* Layout para secciones en tablets */
+  .section-content .col-lg-6 {
+    margin-bottom: 20px;
+  }
+}
+
+/* Dispositivos pequeños (móviles en horizontal menos de 768px) */
+@media (max-width: 767.98px) {
+  .main-title {
+    font-size: 2rem;
+  }
+
+  .sub-title {
+    font-size: 1.1rem;
+  }
+
+  .section-title {
+    font-size: 1.6rem;
+  }
+
+  .banner {
+    padding: 40px 0;
+  }
+
+  .btn-gaming {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  /* Ajustes para las cards de eventos/noticias */
+  .news-card .image-container {
+    height: 180px;
+  }
+
+  .news-card h5 {
+    font-size: 1rem;
+  }
+}
+
+/* Dispositivos muy pequeños (móviles en vertical menos de 576px) */
+@media (max-width: 575.98px) {
+  .main-title {
+    font-size: 1.8rem;
+  }
+
+  .sub-title {
+    font-size: 1rem;
+  }
+
+  .section-title {
+    font-size: 1.4rem;
+  }
+
+  .description {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .banner {
+    padding: 30px 0;
+  }
+
+  /* Ajustes específicos para la navegación */
+  .navbar-brand img {
+    width: 25px;
+    height: 25px;
+  }
+
+  /* Ajustes para el footer */
+  .footer {
+    padding: 20px 0;
+    text-align: center;
+  }
+
+  .footer h5 {
+    font-size: 1.1rem;
+  }
+}
+
+/* Ajustes específicos para dispositivos muy pequeños */
+@media (max-width: 359.98px) {
+  .main-title {
+    font-size: 1.5rem;
+  }
+
+  .banner {
+    padding: 20px 0;
+  }
+
+  .content-card {
+    padding: 12px;
+  }
+}
