@@ -15,7 +15,7 @@ function loadHellGameRanking() {
   }
 
   // URL de tu API (reemplaza con la IP o dominio de tu servidor OVHcloud)
-  const rankingURL = "http://51.195.219.193:5000/api/ranking";
+  const rankingURL = "https://hellgameapi.duckdns.org:5000/api/ranking";
 
   // Añadir timestamp para evitar caché
   const timestamp = new Date().getTime();
