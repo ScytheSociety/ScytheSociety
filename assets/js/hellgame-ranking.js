@@ -30,8 +30,8 @@ function loadHellGameRanking() {
       return response.json();
     })
     .then((data) => {
-      // Limitar a los primeros 5 usuarios
-      const top5 = data.slice(0, 5);
+      // Limitar a los primeros 10 usuarios
+      const top10 = data.slice(0, 10);
 
       // Crear la tabla para mostrar el ranking
       let rankingHTML = `
@@ -48,7 +48,7 @@ function loadHellGameRanking() {
             `;
 
       // Añadir cada usuario a la tabla
-      top5.forEach((user) => {
+      top10.forEach((user) => {
         rankingHTML += `
                     <tr class="ranking-row ranking-position-${user.posicion}">
                         <td>${user.posicion}</td>
@@ -63,7 +63,7 @@ function loadHellGameRanking() {
                         </tbody>
                     </table>
                 </div>
-                <p class="text-center text-muted small">Última actualización: ${top5[0].ultima_actualizacion}</p>
+                <p class="text-center text-muted small">Última actualización: ${top10[0].ultima_actualizacion}</p>
             `;
 
       // Insertar el HTML en el contenedor
