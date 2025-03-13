@@ -33,38 +33,75 @@ function loadHellGameRanking() {
       // Limitar a los primeros 10 usuarios
       const top10 = data.slice(0, 10);
 
-      // Crear la tabla para mostrar el ranking
+      // Crear HTML para el podio
       let rankingHTML = `
-                <div class="table-responsive">
-                    <table class="table table-dark table-hover">
-                        <thead>
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">Usuario</th>
-                                <th scope="col">Cartas</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
+        <div class="podium-container">
+          <!-- Top 3 Jugadores (Podio) -->
+          <div class="podium-top3">
+            <!-- Segundo Lugar -->
+            <div class="podium-position podium-second">
+              <div class="podium-avatar">
+                <img src="${top10[1].avatar_url}" alt="${top10[1].usuario_nickname}" class="avatar-image">
+                <div class="podium-medal silver">2</div>
+              </div>
+              <div class="podium-platform second-platform">
+                <div class="podium-name">${top10[1].usuario_nickname}</div>
+                <div class="podium-score">${top10[1].cartas} cartas</div>
+              </div>
+            </div>
+            
+            <!-- Primer Lugar -->
+            <div class="podium-position podium-first">
+              <div class="podium-avatar">
+                <i class="fas fa-crown crown-icon"></i>
+                <img src="${top10[0].avatar_url}" alt="${top10[0].usuario_nickname}" class="avatar-image">
+                <div class="podium-medal gold">1</div>
+              </div>
+              <div class="podium-platform first-platform">
+                <div class="podium-name">${top10[0].usuario_nickname}</div>
+                <div class="podium-score">${top10[0].cartas} cartas</div>
+              </div>
+            </div>
+            
+            <!-- Tercer Lugar -->
+            <div class="podium-position podium-third">
+              <div class="podium-avatar">
+                <img src="${top10[2].avatar_url}" alt="${top10[2].usuario_nickname}" class="avatar-image">
+                <div class="podium-medal bronze">3</div>
+              </div>
+              <div class="podium-platform third-platform">
+                <div class="podium-name">${top10[2].usuario_nickname}</div>
+                <div class="podium-score">${top10[2].cartas} cartas</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Resto del Top 10 -->
+          <div class="podium-others">
+      `;
 
-      // Añadir cada usuario a la tabla
-      top10.forEach((user) => {
+      // Añadir jugadores del 4 al 10
+      for (let i = 3; i < top10.length; i++) {
         rankingHTML += `
-                    <tr class="ranking-row ranking-position-${user.posicion}">
-                        <td>${user.posicion}</td>
-                        <td>${user.usuario_nickname}</td>
-                        <td>${user.cartas}</td>
-                    </tr>
-                `;
-      });
+          <div class="podium-position podium-small">
+            <div class="podium-number">${i + 1}</div>
+            <div class="podium-avatar-small">
+              <img src="${top10[i].avatar_url}" alt="${
+          top10[i].usuario_nickname
+        }" class="avatar-image-small">
+            </div>
+            <div class="podium-name">${top10[i].usuario_nickname}</div>
+            <div class="podium-score">${top10[i].cartas}</div>
+          </div>
+        `;
+      }
 
-      // Cerrar la tabla
+      // Cerrar los divs
       rankingHTML += `
-                        </tbody>
-                    </table>
-                </div>
-                <p class="text-center text-muted small">Última actualización: ${top10[0].ultima_actualizacion}</p>
-            `;
+          </div>
+          <p class="text-center text-muted small mt-3">Última actualización: ${top10[0].ultima_actualizacion}</p>
+        </div>
+      `;
 
       // Insertar el HTML en el contenedor
       rankingContainer.innerHTML = rankingHTML;
@@ -72,11 +109,11 @@ function loadHellGameRanking() {
     .catch((error) => {
       console.error("Error:", error);
       rankingContainer.innerHTML = `
-                <div class="alert alert-danger" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    No se pudo cargar el ranking. Por favor, intenta de nuevo más tarde.
-                </div>
-            `;
+        <div class="alert alert-danger" role="alert">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          No se pudo cargar el ranking. Por favor, intenta de nuevo más tarde.
+        </div>
+      `;
     });
 }
 

@@ -202,6 +202,265 @@
   animation: fadeInRanking 0.6s ease forwards;
 }
 
+/* Estilos para el podio de HellGame */
+.podium-container {
+  padding: 20px 0;
+  font-family: var(--font-title);
+}
+
+/* Estilos para el Top 3 */
+.podium-top3 {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  margin-bottom: 30px;
+  height: 220px;
+}
+
+.podium-position {
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+/* Plataformas del podio */
+.podium-platform {
+  width: 120px;
+  background-color: var(--card-bg);
+  border-top: 4px solid var(--accent-color);
+  border-radius: 5px 5px 0 0;
+  padding: 10px 0;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.first-platform {
+  height: 120px;
+  margin-top: 20px;
+}
+
+.second-platform {
+  height: 90px;
+  margin-top: 30px;
+}
+
+.third-platform {
+  height: 70px;
+  margin-top: 50px;
+}
+
+/* Avatares y medallas */
+.podium-avatar {
+  position: relative;
+  margin: 0 auto 10px;
+  width: 80px;
+  height: 80px;
+  z-index: 2;
+}
+
+.podium-first .podium-avatar {
+  width: 100px;
+  height: 100px;
+}
+
+.podium-avatar .fa-user-circle {
+  font-size: 70px;
+  color: #e0e0e0;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4));
+}
+
+.podium-first .podium-avatar .fa-user-circle {
+  font-size: 90px;
+}
+
+.podium-medal {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.gold {
+  background: linear-gradient(45deg, #ffd700, #ffc800);
+}
+
+.silver {
+  background: linear-gradient(45deg, #c0c0c0, #e0e0e0);
+}
+
+.bronze {
+  background: linear-gradient(45deg, #cd7f32, #e6a96b);
+}
+
+.crown-icon {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffd700;
+  font-size: 28px;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
+  animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-5px);
+  }
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.podium-name {
+  font-weight: bold;
+  font-size: 14px;
+  color: #ffffff;
+  margin-bottom: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 5px;
+}
+
+.podium-first .podium-name {
+  font-size: 16px;
+}
+
+.podium-score {
+  font-size: 13px;
+  color: var(--accent-color);
+}
+
+.podium-first .podium-score {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+/* Resto del Top 10 */
+.podium-others {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.podium-small {
+  width: 110px;
+  background-color: rgba(30, 30, 30, 0.7);
+  border-radius: 8px;
+  padding: 10px 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.podium-small:hover {
+  transform: translateY(-5px);
+  background-color: rgba(40, 40, 40, 0.9);
+}
+
+.podium-number {
+  display: inline-block;
+  width: 25px;
+  height: 25px;
+  line-height: 25px;
+  background-color: var(--secondary-bg);
+  color: #fff;
+  border-radius: 50%;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.podium-small .podium-name {
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.podium-small .podium-score {
+  font-size: 11px;
+}
+
+/* Efectos de hover */
+.podium-position:hover {
+  transform: translateY(-8px);
+}
+
+.podium-small:hover .podium-number {
+  background-color: var(--accent-color);
+}
+
+/* Responsive */
+@media (max-width: 767.98px) {
+  .podium-platform {
+    width: 100px;
+  }
+
+  .podium-avatar {
+    width: 70px;
+    height: 70px;
+  }
+
+  .podium-avatar .fa-user-circle {
+    font-size: 60px;
+  }
+
+  .podium-first .podium-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .podium-first .podium-avatar .fa-user-circle {
+    font-size: 70px;
+  }
+
+  .podium-small {
+    width: 90px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .podium-top3 {
+    height: 180px;
+  }
+
+  .podium-platform {
+    width: 80px;
+  }
+
+  .first-platform {
+    height: 100px;
+  }
+
+  .second-platform {
+    height: 70px;
+  }
+
+  .third-platform {
+    height: 50px;
+  }
+
+  .podium-small {
+    width: 80px;
+    padding: 8px 3px;
+  }
+
+  .podium-small .podium-name,
+  .podium-small .podium-score {
+    font-size: 10px;
+  }
+}
+
 /* Ajustes responsivos específicos para la página principal */
 @media (max-width: 991.98px) {
   .banner#index-banner .main-title {
@@ -239,5 +498,95 @@
 
   .banner#index-banner .sub-title {
     font-size: 1rem;
+  }
+}
+
+/* Estilos para las imágenes de avatar en el podio */
+.avatar-image {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--card-bg);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.podium-first .avatar-image {
+  width: 90px;
+  height: 90px;
+  border: 4px solid var(--accent-color);
+}
+
+/* Cambiar el color del contador de cartas */
+.podium-score {
+  font-size: 13px;
+  color: #ff6b6b; /* Rojo más claro y llamativo */
+  font-weight: 500; /* Un poco más grueso para que se vea mejor */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* Sombra sutil para mejorar legibilidad */
+}
+
+.podium-first .podium-score {
+  font-size: 15px;
+  font-weight: bold;
+  color: #ff4757; /* Rojo ligeramente más intenso para el primer lugar */
+}
+
+/* Para los puestos 4-10, un estilo ligeramente diferente */
+.podium-small .podium-score {
+  font-size: 13px;
+  color: hsl(0, 100%, 83%); /* Rojo más claro */
+}
+
+/* Ajuste para eliminar el icono de usuario por defecto */
+.podium-avatar .fa-user-circle {
+  display: none;
+}
+
+/* Estilos para los avatares pequeños (posiciones 4-10) */
+.podium-avatar-small {
+  margin: 0 auto 5px;
+}
+
+.avatar-image-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--card-bg);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Ajustes responsivos para los avatares */
+@media (max-width: 767.98px) {
+  .avatar-image {
+    width: 60px;
+    height: 60px;
+  }
+
+  .podium-first .avatar-image {
+    width: 70px;
+    height: 70px;
+  }
+
+  .avatar-image-small {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .avatar-image {
+    width: 50px;
+    height: 50px;
+  }
+
+  .podium-first .avatar-image {
+    width: 60px;
+    height: 60px;
+  }
+
+  .avatar-image-small {
+    width: 30px;
+    height: 30px;
   }
 }
