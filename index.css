@@ -732,3 +732,34 @@
     font-size: 0.9rem;
   }
 }
+
+/* Estilos para los contenedores de TikTok */
+.tiktok-embed-container {
+  background-color: var(--card-bg);
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+}
+
+.tiktok-info {
+  text-align: center;
+  padding: 20px;
+  max-width: 80%;
+}
+
+.tiktok-info i {
+  color: #00f2ea;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.tiktok-info h3 {
+  margin-bottom: 15px;
+  color: #fff;
+}
+
+.tiktok-info p {
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 15px;
+}
