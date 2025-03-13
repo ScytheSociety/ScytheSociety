@@ -46,14 +46,12 @@ function initializePage() {
   // Marcado del enlace activo en el navbar
   highlightActiveNavLink(currentPath);
 
-  // Cargar cualquier contenido dinámico según la página
-  if (currentPath.includes("/streams.html")) {
-    // Si estamos en la página de streams, inicializar
-    if (typeof initializeStreams === "function") {
-      initializeStreams();
-    }
-  } else if (currentPath.includes("/index.html") || currentPath === "/") {
-    // Si estamos en la página principal
+  // Cargar contenido destacado si estamos en la página principal
+  if (
+    currentPath.includes("/index.html") ||
+    currentPath === "/" ||
+    currentPath.endsWith("/")
+  ) {
     loadFeaturedContent();
   }
 }
@@ -66,7 +64,7 @@ function highlightActiveNavLink(path) {
 
     // Si el enlace coincide con la ruta actual o si es un submenú
     const href = link.getAttribute("href");
-    if (href && path.includes(href) && href !== "/") {
+    if (href && path.includes(href) && href !== "/" && href !== "./") {
       link.classList.add("active");
 
       // Si es parte de un dropdown, también marcar el dropdown padre
@@ -77,7 +75,10 @@ function highlightActiveNavLink(path) {
           dropdownToggle.classList.add("active");
         }
       }
-    } else if (href === "/" && (path === "/" || path === "/index.html")) {
+    } else if (
+      (href === "/" || href === "./") &&
+      (path === "/" || path === "/index.html" || path.endsWith("/"))
+    ) {
       // Caso especial para la página de inicio
       link.classList.add("active");
     }
@@ -113,88 +114,4 @@ function loadFeaturedContent() {
     .catch((error) => {
       console.error("Error cargando el contenido destacado:", error);
     });
-}
-
-// Función para mostrar el contenido de streams
-function showContent(channel) {
-  let displayDiv = document.getElementById("display");
-  let chatDiv = document.getElementById("chat");
-
-  if (!displayDiv || !chatDiv) return;
-
-  // Limpia el contenido actual
-  displayDiv.innerHTML = "";
-  chatDiv.innerHTML = "";
-
-  switch (channel) {
-    case "twitch1":
-      displayDiv.innerHTML =
-        '<iframe src="https://player.twitch.tv/?channel=pandarina&parent=scythesociety.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
-      chatDiv.innerHTML =
-        '<iframe src="https://www.twitch.tv/pandarina/chat" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
-      break;
-    case "twitch2":
-      displayDiv.innerHTML =
-        '<iframe src="https://www.youtube.com/embed/live_stream?channel=UCc9x200As2pVAv6jos1wY7A&autoplay=1" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
-      chatDiv.innerHTML =
-        '<iframe src="https://www.youtube.com/embed/live_chat?channel=UCc9x200As2pVAv6jos1wY7A&autoplay=1" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
-      break;
-    case "twitch3":
-      displayDiv.innerHTML =
-        '<iframe src="https://player.twitch.tv/?channel=spursito&parent=scythesociety.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
-      chatDiv.innerHTML =
-        '<iframe src="https://www.twitch.tv/spursito/chat" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
-      break;
-    case "twitch4":
-      displayDiv.innerHTML =
-        '<iframe src="https://player.twitch.tv/?channel=auronplay&parent=scythesociety.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
-      chatDiv.innerHTML =
-        '<iframe src="https://www.twitch.tv/auronplay/chat" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
-      break;
-    case "twitch5":
-      displayDiv.innerHTML =
-        '<iframe src="https://player.twitch.tv/?channel=ibai&parent=scythesociety.github.io" frameborder="0" allowfullscreen="true" scrolling="no" height="400" width="100%"></iframe>';
-      chatDiv.innerHTML =
-        '<iframe src="https://www.twitch.tv/ibai/chat" frameborder="0" allowfullscreen="true" height="400" width="100%"></iframe>';
-      break;
-    default:
-      displayDiv.innerHTML =
-        "<p>Selecciona un canal para ver su contenido.</p>";
-      chatDiv.innerHTML = "<p>Selecciona un canal para ver su chat.</p>";
-  }
-
-  // Agregar la clase 'show' para hacer la animación
-  setTimeout(() => {
-    const iframes = displayDiv.querySelectorAll("iframe");
-    if (iframes.length > 0) {
-      iframes[0].classList.add("show");
-    }
-
-    const chatIframes = chatDiv.querySelectorAll("iframe");
-    if (chatIframes.length > 0) {
-      chatIframes[0].classList.add("show");
-    }
-  }, 50);
-}
-
-// Inicialización para la página de streams
-function initializeStreams() {
-  // Mostrar el primer stream por defecto
-  showContent("twitch1");
-
-  // Añadir manejadores de eventos a los botones
-  const streamButtons = document.querySelectorAll(".stream-button");
-  streamButtons.forEach((button) => {
-    button.addEventListener("click", function () {
-      // Remover la clase active de todos los botones
-      streamButtons.forEach((btn) => btn.classList.remove("active"));
-
-      // Añadir la clase active al botón clickeado
-      this.classList.add("active");
-
-      // Mostrar el stream seleccionado
-      const channel = this.getAttribute("data-channel");
-      showContent(channel);
-    });
-  });
 }

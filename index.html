@@ -289,6 +289,8 @@
     <script src="./assets/js/hellgame-ranking.js"></script>
     <!-- JavaScript para Featured -->
     <script src="./assets/js/index/featured.js"></script>
+    <!-- JavaScript para Streams -->
+    <script src="./assets/js/index/stream.js"></script>
 
     <!-- Script para cargar componentes HTML -->
     <script>
@@ -315,32 +317,6 @@
                 document.getElementById('footer-container').innerHTML =
                     '<p class="text-center p-3">Error al cargar el footer</p>';
             });
-
-        // Inicializar el display de streams cuando cargue la página
-        document.addEventListener('DOMContentLoaded', function () {
-            // Mostrar el primer stream por defecto
-            showContent("twitch1");
-
-            // Cargar contenido destacado desde JSON
-            loadFeaturedContent();
-
-            // Añadir eventos a los botones de streams
-            document.querySelectorAll('.stream-button').forEach(button => {
-                button.addEventListener('click', function () {
-                    // Quitar la clase active de todos los botones
-                    document.querySelectorAll('.stream-button').forEach(btn => {
-                        btn.classList.remove('active');
-                    });
-
-                    // Añadir la clase active al botón seleccionado
-                    this.classList.add('active');
-
-                    // Mostrar el stream correspondiente
-                    const channel = this.getAttribute('data-channel');
-                    showContent(channel);
-                });
-            });
-        });
     </script>
 </body>
 
