@@ -24,6 +24,8 @@
     <link rel="stylesheet" href="./assets/css/style.css">
     <!-- CSS responsivo global -->
     <link rel="stylesheet" href="./assets/css/responsive.css">
+    <!-- CSS Featured -->
+    <link rel="stylesheet" href="./assets/css/index/featured.css">
     <!-- CSS específico para la página principal -->
     <link rel="stylesheet" href="./index.css">
 
@@ -66,8 +68,43 @@
             </div>
         </section>
 
+        <!-- Sección de Streams -->
+        <section class="py-5 " id="streams">
+            <div class="container">
+                <h2 class="section-title">STREAMS EN VIVO</h2>
+                <p class="description">
+                    Sigue nuestros streams en vivo y mantente al día con las últimas novedades, eventos y gameplay de
+                    nuestra comunidad.
+                </p>
+
+                <div class="row mb-3">
+                    <div class="col-12 d-flex flex-wrap justify-content-center">
+                        <button class="btn btn-gaming me-2 mb-2 stream-button active"
+                            data-channel="twitch1">Pandarina</button>
+                        <button class="btn btn-gaming me-2 mb-2 stream-button" data-channel="twitch2">YouTube</button>
+                        <button class="btn btn-gaming me-2 mb-2 stream-button" data-channel="twitch3">Spursito</button>
+                        <button class="btn btn-gaming me-2 mb-2 stream-button" data-channel="twitch4">Auronplay</button>
+                        <button class="btn btn-gaming mb-2 stream-button" data-channel="twitch5">Ibai</button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="stream-container" id="display">
+                            <!-- Stream content here -->
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="stream-container" id="chat">
+                            <!-- Chat content here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Sección de juegos destacados -->
-        <section class="py-5" id="juegos">
+        <section class="py-5 bg-dark" id="juegos">
             <div class="container">
                 <h2 class="section-title">NUESTROS JUEGOS</h2>
                 <p class="description">
@@ -120,7 +157,7 @@
         </section>
 
         <!-- Sección de Ranking de HellGame -->
-        <section class="py-5 bg-dark hellgame-ranking-section" id="hellgame">
+        <section class="py-5 hellgame-ranking-section" id="hellgame">
             <div class="container">
                 <h2 class="section-title">HELL GAME</h2>
                 <p class="description">
@@ -150,41 +187,6 @@
             </div>
         </section>
 
-        <!-- Sección de Streams -->
-        <section class="py-5" id="streams">
-            <div class="container">
-                <h2 class="section-title">STREAMS EN VIVO</h2>
-                <p class="description">
-                    Sigue nuestros streams en vivo y mantente al día con las últimas novedades, eventos y gameplay de
-                    nuestra comunidad.
-                </p>
-
-                <div class="row mb-3">
-                    <div class="col-12 d-flex flex-wrap justify-content-center">
-                        <button class="btn btn-gaming me-2 mb-2 stream-button active"
-                            data-channel="twitch1">Pandarina</button>
-                        <button class="btn btn-gaming me-2 mb-2 stream-button" data-channel="twitch2">YouTube</button>
-                        <button class="btn btn-gaming me-2 mb-2 stream-button" data-channel="twitch3">Spursito</button>
-                        <button class="btn btn-gaming me-2 mb-2 stream-button" data-channel="twitch4">Auronplay</button>
-                        <button class="btn btn-gaming mb-2 stream-button" data-channel="twitch5">Ibai</button>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-lg-8">
-                        <div class="stream-container" id="display">
-                            <!-- Stream content here -->
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="stream-container" id="chat">
-                            <!-- Chat content here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- Contenido Destacado -->
         <section class="py-5 bg-dark" id="destacado">
             <div class="container">
@@ -193,8 +195,22 @@
                     Descubre las últimas noticias, guías y recursos creados por nuestra comunidad.
                 </p>
 
-                <div class="row" id="featured-content">
-                    <!-- Se llenará dinámicamente desde el JSON -->
+                <div class="news-list-container">
+                    <!-- El contenido dinámico se cargará aquí -->
+                    <div id="featured-content" class="news-list">
+                        <!-- Se llenará dinámicamente desde el JSON -->
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-danger" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2 text-white">Cargando contenido...</p>
+                        </div>
+                    </div>
+
+                    <!-- Paginación -->
+                    <div class="news-pagination" id="featured-pagination">
+                        <!-- Se añadirá dinámicamente -->
+                    </div>
                 </div>
             </div>
         </section>
@@ -215,7 +231,8 @@
                             <h3 class="mb-3">Discord</h3>
                             <p>Únete a nuestro servidor de Discord para chatear con la comunidad y mantenerte al día con
                                 nuestros eventos.</p>
-                            <a href="#" class="btn btn-gaming w-100">Unirse a Discord</a>
+                            <a href="https://discord.com/invite/eT6m66G" class="btn btn-gaming w-100">Unirse a
+                                Discord</a>
                         </div>
                     </div>
 
@@ -231,16 +248,24 @@
 
                     <div class="col-lg-4 col-md-6 mb-4">
                         <div class="content-card text-center">
-                            <i class="fas fa-users fa-4x mb-3" style="color: #3b5998;"></i>
+                            <i class="fas fa-users fa-4x mb-3" style="color: #ffc862;"></i>
                             <h3 class="mb-3">Redes Sociales</h3>
                             <p>Síguenos en nuestras redes sociales para no perderte ninguna actualización o anuncio
                                 importante.</p>
                             <div class="social-icons">
-                                <a href="#" target="_blank" aria-label="Discord"><i class="fab fa-discord"></i></a>
-                                <a href="#" target="_blank" aria-label="Twitch"><i class="fab fa-twitch"></i></a>
-                                <a href="#" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-                                <a href="#" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                                <a href="#" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                                <a href="https://www.tiktok.com/@scythesocietygg" target="_blank" aria-label="TikTok"><i
+                                        class="fab fa-tiktok"></i></a>
+                                <a href="https://www.twitch.tv/scythesocietygg" target="_blank" aria-label="Twitch"><i
+                                        class="fab fa-twitch"></i></a>
+                                <a href="https://kick.com/scythesocietygg" target="_blank" aria-label="Kick"><i
+                                        class="fab fa-k"></i></a>
+                                <a href="https://www.youtube.com/@scythesocietygg" target="_blank"
+                                    aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                                <a href="https://www.instagram.com/scythesocietygg/" target="_blank"
+                                    aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                                <a href="https://x.com/scythesocietygg" target="_blank" aria-label="X"><i
+                                        class="fab fa-twitter"></i></a>
+                                <!--<a href="#" target="_blank" aria-label="Facebook"><i class="fab fa-facebook"></i></a>-->
                             </div>
                         </div>
                     </div>
@@ -256,14 +281,14 @@
 
     <!-- JavaScript de Bootstrap 5 y Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <!-- jQuery (para compatibilidad con scripts más antiguos) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <!-- JavaScript personalizado -->
     <script src="./assets/js/main.js"></script>
     <!-- JavaScript para el ranking de HellGame -->
     <script src="./assets/js/hellgame-ranking.js"></script>
+    <!-- JavaScript para Featured -->
+    <script src="./assets/js/index/featured.js"></script>
 
     <!-- Script para cargar componentes HTML -->
     <script>

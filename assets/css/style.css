@@ -35,6 +35,10 @@ body {
   flex-shrink: 0;
 }
 
+.footer a {
+  text-decoration: none;
+}
+
 html {
   scroll-behavior: smooth;
 }
