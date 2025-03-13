@@ -90,7 +90,7 @@ function loadFeaturedContent() {
   if (!featuredContainer) return;
 
   // Intentar cargar el contenido desde el JSON
-  fetch("/data/featured.json")
+  fetch("./data/featured.json")
     .then((response) => response.json())
     .then((data) => {
       // Crear tarjetas para cada elemento destacado
