@@ -474,6 +474,9 @@ function startLevel() {
   // Update UI
   document.getElementById("level").textContent = `Nivel ${level}`;
 
+  // Update shooting speed based on new level
+  updateShootingSpeed();
+
   showLevelTransition();
 }
 
@@ -515,24 +518,26 @@ function showLevelTransition() {
  * Spawns a new enemy with random properties
  */
 function spawnEnemy() {
-  // Randomize enemy size based on level
+  // Randomize enemy size based on level - smaller at higher levels
   const sizeVariation = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
   const baseSize =
     ENEMY_MIN_SIZE + Math.random() * (ENEMY_MAX_SIZE - ENEMY_MIN_SIZE);
-  const enemySize = baseSize * sizeVariation;
+  const enemySize = baseSize * sizeVariation * Math.max(0.6, 1 - level * 0.05); // Reduce size with level
 
   // Random position (top of screen)
   const x = Math.random() * (canvas.width - enemySize);
 
-  // Random velocity components
-  const levelSpeedFactor = 1 + level * 0.1; // Increase speed with level
-  const baseSpeed = canvas.height * 0.002 * levelSpeedFactor;
+  // Velocidad base aumentada significativamente - más rápido con cada nivel
+  const levelSpeedFactor = 1 + level * 0.2; // 20% más rápido por nivel
+  const baseSpeed = canvas.height * 0.006 * levelSpeedFactor; // Velocidad base incrementada
 
-  // Calculate random velocity components
-  const angle = Math.random() * Math.PI; // Mostly downward angle (0 to PI)
-  const speed = baseSpeed * (0.8 + Math.random() * 0.4); // 0.8x to 1.2x base speed
-  const velocityX = Math.sin(angle) * speed * (Math.random() < 0.5 ? -1 : 1);
-  const velocityY = Math.abs(Math.cos(angle) * speed); // Make sure Y is positive (moving down)
+  // Angle is mostly downward (between -PI/4 and PI/4 from vertical)
+  const angle = (Math.random() * Math.PI) / 2 - Math.PI / 4;
+
+  // Velocity components - mainly vertical with some horizontal variation
+  const speed = baseSpeed * (0.8 + Math.random() * 0.6); // 0.8x to 1.4x base speed
+  const velocityX = Math.sin(angle) * speed;
+  const velocityY = Math.abs(Math.cos(angle) * speed); // Always positive (downward)
 
   // Create the enemy object
   enemies.push({
@@ -543,17 +548,31 @@ function spawnEnemy() {
     velocityX: velocityX,
     velocityY: velocityY,
     image: enemyImages[level - 1] || enemyImages[0], // Fallback to first image if level image not available
+    speedFactor: 1.0, // Factor usado para aumentar velocidad en colisiones
   });
+
+  // Si estamos en nivel alto, aumentar la cantidad de enemigos
+  if (level > 3 && Math.random() < level * 0.05) {
+    // Spawn additional enemies based on level
+    const extraEnemies = Math.min(Math.floor(level / 2), 5); // Max 5 extra enemies at once
+    for (let i = 0; i < extraEnemies; i++) {
+      setTimeout(() => {
+        if (gameInterval) {
+          // Verificar que el juego aún está en marcha
+          spawnEnemy();
+        }
+      }, Math.random() * 500); // Retraso aleatorio hasta 500ms
+    }
+  }
 }
 
 /**
  * Updates enemy positions and handles collision with walls and other enemies
  */
 function updateEnemies() {
-  const edgeBounceFactorX = 0.8; // Reduce velocity slightly when bouncing off walls
-  const edgeBounceFactorY = 0.9;
-  const enemyBounceFactorX = 0.7; // Reduce velocity when bouncing off other enemies
-  const enemyBounceFactorY = 0.7;
+  const wallBounceFactorX = 0.9; // Rebote con paredes laterales
+  const wallBounceFactorY = 1.05; // Rebote con techo/suelo - aumenta velocidad
+  const enemyBounceFactorBase = 1.1; // Base para rebote entre enemigos - aumenta velocidad
 
   // Update each enemy's position
   for (let i = 0; i < enemies.length; i++) {
@@ -563,30 +582,45 @@ function updateEnemies() {
     enemy.x += enemy.velocityX;
     enemy.y += enemy.velocityY;
 
-    // Bounce off edges
+    // Bounce off side walls - change direction but maintain mainly downward movement
     if (enemy.x <= 0) {
-      enemy.velocityX = Math.abs(enemy.velocityX) * edgeBounceFactorX;
+      enemy.velocityX = Math.abs(enemy.velocityX) * wallBounceFactorX;
       enemy.x = 0;
+      // Randomly adjust Y velocity slightly to prevent identical bouncing patterns
+      enemy.velocityY *= 0.95 + Math.random() * 0.1;
     } else if (enemy.x + enemy.width >= canvas.width) {
-      enemy.velocityX = -Math.abs(enemy.velocityX) * edgeBounceFactorX;
+      enemy.velocityX = -Math.abs(enemy.velocityX) * wallBounceFactorX;
       enemy.x = canvas.width - enemy.width;
+      // Randomly adjust Y velocity slightly
+      enemy.velocityY *= 0.95 + Math.random() * 0.1;
     }
 
-    // Bounce off bottom
+    // Bounce off top
+    if (enemy.y <= 0) {
+      // If hitting top, always bounce downward
+      enemy.velocityY = Math.abs(enemy.velocityY) * wallBounceFactorY;
+      enemy.y = 0;
+    }
+
+    // Bounce off bottom - SIEMPRE hacia arriba
     if (enemy.y + enemy.height >= canvas.height) {
-      enemy.velocityY = -Math.abs(enemy.velocityY) * edgeBounceFactorY;
+      // If hitting bottom, always bounce upward with slight horizontal adjustment
+      enemy.velocityY = -Math.abs(enemy.velocityY) * wallBounceFactorY;
       enemy.y = canvas.height - enemy.height;
+      // Add some horizontal variation on bounce
+      enemy.velocityX += (Math.random() - 0.5) * (canvas.width * 0.003);
     }
 
-    // Random chance for enemies to change direction occasionally
-    if (Math.random() < 0.005) {
-      // 0.5% chance per frame
-      const angle = Math.random() * Math.PI * 2;
+    // Random direction change - but mostly downward (very low probability)
+    if (Math.random() < 0.001) {
+      // Sólo 0.1% de probabilidad por frame
+      // Downward bias - angle between -PI/3 and PI/3 from vertical
+      const angle = Math.random() * ((2 * Math.PI) / 3) - Math.PI / 3;
       const speed = Math.sqrt(
         enemy.velocityX * enemy.velocityX + enemy.velocityY * enemy.velocityY
       );
-      enemy.velocityX = Math.cos(angle) * speed;
-      enemy.velocityY = Math.sin(angle) * speed;
+      enemy.velocityX = Math.sin(angle) * speed;
+      enemy.velocityY = Math.abs(Math.cos(angle) * speed); // Asegurar que es hacia abajo
     }
 
     // Check collision with other enemies
@@ -595,7 +629,7 @@ function updateEnemies() {
 
       // Check if enemies are colliding
       if (checkCollisionBetweenObjects(enemy, otherEnemy)) {
-        // Calculate collision response (simple bounce)
+        // Calculate collision response with increased velocities
         const dx =
           otherEnemy.x + otherEnemy.width / 2 - (enemy.x + enemy.width / 2);
         const dy =
@@ -603,25 +637,35 @@ function updateEnemies() {
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist > 0) {
+          // Normalize direction
           const nx = dx / dist;
           const ny = dy / dist;
 
-          // Exchange velocity components along the collision normal
+          // Calculate bounce factors based on enemy speed factor
+          const enemyBounceFactor = enemyBounceFactorBase * enemy.speedFactor;
+          const otherEnemyBounceFactor =
+            enemyBounceFactorBase * otherEnemy.speedFactor;
+
+          // Exchange velocity components along the collision normal - with speed increase
           const p1 = enemy.velocityX * nx + enemy.velocityY * ny;
           const p2 = otherEnemy.velocityX * nx + otherEnemy.velocityY * ny;
 
           enemy.velocityX =
-            (enemy.velocityX + nx * (p2 - p1)) * enemyBounceFactorX;
+            (enemy.velocityX + nx * (p2 - p1)) * enemyBounceFactor;
           enemy.velocityY =
-            (enemy.velocityY + ny * (p2 - p1)) * enemyBounceFactorY;
+            (enemy.velocityY + ny * (p2 - p1)) * enemyBounceFactor;
 
           otherEnemy.velocityX =
-            (otherEnemy.velocityX + nx * (p1 - p2)) * enemyBounceFactorX;
+            (otherEnemy.velocityX + nx * (p1 - p2)) * otherEnemyBounceFactor;
           otherEnemy.velocityY =
-            (otherEnemy.velocityY + ny * (p1 - p2)) * enemyBounceFactorY;
+            (otherEnemy.velocityY + ny * (p1 - p2)) * otherEnemyBounceFactor;
+
+          // Increase speed factor for both enemies (more aggression)
+          enemy.speedFactor = Math.min(enemy.speedFactor * 1.05, 1.5);
+          otherEnemy.speedFactor = Math.min(otherEnemy.speedFactor * 1.05, 1.5);
 
           // Separate the enemies to prevent sticking
-          const overlap = (enemy.width + otherEnemy.width) / 2 - dist;
+          const overlap = (enemy.width + otherEnemy.width) / 2 - dist + 2; // +2 para separar un poco más
           if (overlap > 0) {
             enemy.x -= (nx * overlap) / 2;
             enemy.y -= (ny * overlap) / 2;
@@ -630,6 +674,17 @@ function updateEnemies() {
           }
         }
       }
+    }
+
+    // Speed cap to prevent enemies from going too fast
+    const maxSpeed = canvas.height * 0.02 * (1 + level * 0.1);
+    const currentSpeed = Math.sqrt(
+      enemy.velocityX * enemy.velocityX + enemy.velocityY * enemy.velocityY
+    );
+    if (currentSpeed > maxSpeed) {
+      const ratio = maxSpeed / currentSpeed;
+      enemy.velocityX *= ratio;
+      enemy.velocityY *= ratio;
     }
 
     // Draw the enemy
@@ -663,21 +718,65 @@ function checkCollisionBetweenObjects(obj1, obj2) {
 // ======================================================
 
 /**
+ * Updates the auto-shooting speed based on current level
+ */
+function updateShootingSpeed() {
+  // Clear existing interval
+  if (autoShootInterval) {
+    clearInterval(autoShootInterval);
+  }
+
+  // Calculate new shooting delay based on level
+  // Level 1: 200ms, Level 10: 80ms
+  const newDelay = Math.max(80, AUTO_SHOOT_DELAY - level * 12);
+
+  // Set up new interval with updated delay
+  autoShootInterval = setInterval(() => {
+    shootBullet();
+  }, newDelay);
+}
+
+/**
  * Creates a regular bullet (fired upward)
  */
 function shootBullet() {
   const currentTime = Date.now();
-  const cooldownTime = 200; // 200ms cooldown between shots
+  const cooldownTime = Math.max(80, 200 - level * 12); // Same as auto-shoot delay
 
   if (currentTime - lastShootTime > cooldownTime) {
-    bullets.push({
-      x: player.x + player.width / 2 - BULLET_WIDTH / 2,
-      y: player.y - BULLET_HEIGHT,
-      width: BULLET_WIDTH,
-      height: BULLET_HEIGHT,
-      velocityX: 0,
-      velocityY: -canvas.height * 0.015, // Upward velocity
-    });
+    // Base bullet properties
+    const bulletSpeed = canvas.height * (0.015 + level * 0.002); // Increase speed with level
+
+    // Add multiple bullets based on level
+    if (level >= 3) {
+      // Add side bullets at higher levels
+      const spreadAngle = Math.PI / 12; // 15 degrees spread
+      const bulletCount = Math.min(1 + Math.floor(level / 3), 5); // Max 5 bullets
+
+      for (let i = 0; i < bulletCount; i++) {
+        const offset = i - Math.floor(bulletCount / 2);
+        const angle = offset * spreadAngle;
+
+        bullets.push({
+          x: player.x + player.width / 2 - BULLET_WIDTH / 2,
+          y: player.y - BULLET_HEIGHT,
+          width: BULLET_WIDTH,
+          height: BULLET_HEIGHT,
+          velocityX: Math.sin(angle) * bulletSpeed,
+          velocityY: -Math.cos(angle) * bulletSpeed, // Upward with angle
+        });
+      }
+    } else {
+      // Just one bullet at lower levels
+      bullets.push({
+        x: player.x + player.width / 2 - BULLET_WIDTH / 2,
+        y: player.y - BULLET_HEIGHT,
+        width: BULLET_WIDTH,
+        height: BULLET_HEIGHT,
+        velocityX: 0,
+        velocityY: -bulletSpeed, // Upward velocity
+      });
+    }
 
     lastShootTime = currentTime;
     playSound("shoot");
@@ -904,7 +1003,7 @@ function checkPlayerEnemyCollisions() {
 // ======================================================
 
 /**
- * Main game loop function
+ * Main game loop function - Updated for more aggressive gameplay
  */
 function gameLoop() {
   // Skip update during level transition
@@ -936,12 +1035,27 @@ function gameLoop() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  // Spawn enemies if needed
+  // Spawn enemies if needed - adjusted for more aggressive gameplay
   spawnTimer++;
-  const spawnDelay = Math.max(SPAWN_RATE - level * 5, 20);
 
+  // Delay between enemy spawns decreases with level
+  // Level 1: 60 frames, Level 5: 40 frames, Level 10: 20 frames
+  const spawnDelay = Math.max(20, SPAWN_RATE - level * 4);
+
+  // Multiple enemy spawning at higher levels
   if (spawnTimer >= spawnDelay) {
+    // Spawn at least one enemy
     spawnEnemy();
+
+    // Chance to spawn additional enemies based on level
+    if (level > 2) {
+      const extraEnemyChance = Math.min(0.05 * level, 0.4); // Max 40% chance
+      if (Math.random() < extraEnemyChance) {
+        spawnEnemy();
+      }
+    }
+
+    // Reset spawn timer
     spawnTimer = 0;
   }
 
