@@ -12,7 +12,7 @@
 let canvas, ctx;
 
 // Game Objects
-let player, bullets, enemies, specialBullets;
+let player, bullets, enemies, specialBullets, hearts, powerUps;
 
 // Game Control
 let gameInterval;
@@ -26,7 +26,39 @@ let specialPowerReady = false;
 let specialPowerActive = false;
 let specialPowerTimer = 0;
 let enemiesForSpecialPower = 0;
-const ENEMIES_FOR_SPECIAL = 25;
+let ENEMIES_FOR_SPECIAL = 25;
+
+// Lives System
+let playerLives = 5;
+let invulnerableTime = 0;
+let INVULNERABLE_DURATION = 120; // 2 segundos a 60fps
+let heartSpawned = false;
+
+// Power-up System
+const POWERUP_TYPES = {
+  PENETRATING: {
+    id: 0,
+    color: "#FFFF00",
+    name: "Balas Penetrantes",
+    duration: 600,
+  },
+  WIDE_SHOT: { id: 1, color: "#00FFFF", name: "Disparo Amplio", duration: 500 },
+  EXPLOSIVE: {
+    id: 2,
+    color: "#FF8800",
+    name: "Balas Explosivas",
+    duration: 450,
+  },
+  RAPID_FIRE: {
+    id: 3,
+    color: "#FF00FF",
+    name: "Disparo Rápido",
+    duration: 550,
+  },
+};
+let activePowerUp = null;
+let powerUpTimeLeft = 0;
+let powerUpsSpawned = false;
 
 // Game States
 let level = 1;
@@ -61,9 +93,10 @@ let isTouch = false;
 const SPAWN_RATE = 60;
 const SHEET_URL = "https://sheetdb.io/api/v1/0agliopzbpm6x";
 const SECRET_KEY = "hell_game_2024";
-const SPECIAL_POWER_DURATION = 3000; // 3 seconds
-const SPECIAL_BULLET_COUNT = 16; // Number of bullets in special attack
-const AUTO_SHOOT_DELAY = 200; // Auto shoot every 200ms
+let SPECIAL_POWER_DURATION = 3000; // 3 seconds
+let SPECIAL_BULLET_COUNT = 16; // Number of bullets in special attack
+let AUTO_SHOOT_DELAY = 200; // Auto shoot every 200ms
+let EXPLOSION_RADIUS = 80; // Radio para explosiones de balas explosivas
 
 // Sound Assets
 const sounds = {
@@ -74,7 +107,90 @@ const sounds = {
   levelUp: new Audio("sounds/levelup.mp3"),
   background: new Audio("sounds/background.mp3"),
   special: new Audio("sounds/special.mp3"),
+  powerUp: new Audio("sounds/powerup.mp3"),
+  heart: new Audio("sounds/heart.mp3"),
+  explosion: new Audio("sounds/explosion.mp3"),
+  damaged: new Audio("sounds/damaged.mp3"),
 };
+
+// ======================================================
+// GAME CONFIG - Variables ajustables para balancear el juego
+// ======================================================
+
+const GAME_CONFIG = {
+  // Dificultad General
+  difficulty: 0.8, // Multiplicador general de dificultad (1.0 = normal)
+
+  // Enemigos
+  enemies: {
+    baseSpeed: 0.004, // Velocidad base como fracción de altura de canvas
+    levelSpeedIncrease: 0.2, // Aumento de velocidad por nivel (20%)
+    sizeReduction: 0.05, // Reducción de tamaño por nivel (5%)
+    maxSpeedFactor: 1.5, // Factor máximo de velocidad tras rebotes
+    spawnRateBase: 60, // Frames entre apariciones base
+    spawnRateReduction: 4, // Reducción de frames por nivel
+    minSpawnRate: 20, // Mínimo tiempo entre apariciones (frames)
+    extraEnemiesThreshold: 2, // Nivel a partir del cual pueden aparecer enemigos extra
+    extraEnemyChancePerLevel: 0.05, // Probabilidad por nivel de enemigos extra
+    maxExtraEnemyChance: 0.4, // Probabilidad máxima de enemigos extra
+  },
+
+  // Power-ups y corazones
+  items: {
+    heartSpawnChance: 0.0002, // Probabilidad por frame de aparición de corazón
+    powerUpSpawnChance: 0.00015, // Probabilidad por frame de aparición de power-up
+    maxPowerUpDuration: 600, // Duración máxima de power-ups (en frames)
+    minPowerUpDuration: 450, // Duración mínima de power-ups (en frames)
+    explosionRadius: 80, // Radio de explosión (píxeles)
+  },
+
+  // Jugador
+  player: {
+    lives: 5, // Vidas iniciales
+    invulnerabilityTime: 120, // Tiempo de invulnerabilidad tras daño (frames)
+    autoShootDelayBase: 200, // Delay base entre disparos automáticos (ms)
+    autoShootDelayReduction: 12, // Reducción de delay por nivel (ms)
+    autoShootDelayMin: 80, // Delay mínimo entre disparos (ms)
+    bulletSpeedBase: 0.015, // Velocidad base de balas
+    bulletSpeedIncrease: 0.002, // Aumento de velocidad de balas por nivel
+    specialPowerCost: 25, // Enemigos necesarios para poder especial
+    specialPowerDuration: 3000, // Duración del poder especial (ms)
+    specialBulletCount: 16, // Número de balas del poder especial
+  },
+
+  // Niveles
+  levels: {
+    enemiesPerLevel: [50, 150, 450, 1350, 4050, 12150, 36450, 109350, 328050], // Enemigos para pasar de nivel
+  },
+};
+
+/**
+ * Actualiza las constantes globales basadas en la configuración
+ */
+function updateGameConstants() {
+  // Actualizar constantes importantes del juego desde la configuración
+  EXPLOSION_RADIUS = GAME_CONFIG.items.explosionRadius;
+  INVULNERABLE_DURATION = GAME_CONFIG.player.invulnerabilityTime;
+  SPECIAL_POWER_DURATION = GAME_CONFIG.player.specialPowerDuration;
+  SPECIAL_BULLET_COUNT = GAME_CONFIG.player.specialBulletCount;
+  AUTO_SHOOT_DELAY = GAME_CONFIG.player.autoShootDelayBase;
+  ENEMIES_FOR_SPECIAL = GAME_CONFIG.player.specialPowerCost;
+
+  // También actualizar array de enemigos por nivel
+  levelUpEnemies = GAME_CONFIG.levels.enemiesPerLevel;
+}
+
+/**
+ * Inicializa el juego con la configuración actual
+ */
+function initializeGame() {
+  // Actualizar constantes
+  updateGameConstants();
+
+  // Establecer valores iniciales basados en configuración
+  playerLives = GAME_CONFIG.player.lives;
+  enemiesForSpecialPower = 0;
+}
 
 // ======================================================
 // INITIALIZATION
@@ -102,12 +218,37 @@ window.onload = function () {
     .getElementById("emoji-button")
     .addEventListener("click", openEmojiPicker);
 
+  // Precarga de sonidos para mejor rendimiento
+  preloadSounds();
+
   // Load game assets
   loadGameAssets();
 
   // Center the main menu
   centerMainMenu();
 };
+
+/**
+ * Preload all sound effects
+ */
+function preloadSounds() {
+  // Recorre todos los sonidos y establece volumen predeterminado
+  for (const key in sounds) {
+    if (sounds.hasOwnProperty(key)) {
+      const sound = sounds[key];
+      sound.volume = 0.5; // Volumen moderado para todos los sonidos
+
+      // Intentar precargar
+      sound.load();
+    }
+  }
+
+  // Ajustar volúmenes específicos
+  sounds.background.volume = 0.3;
+  sounds.explosion.volume = 0.6;
+  sounds.special.volume = 0.7;
+  sounds.powerUp.volume = 0.6;
+}
 
 /**
  * Opens the emoji picker modal
@@ -154,8 +295,10 @@ function centerMainMenu() {
  */
 function playSound(soundName) {
   if (sounds[soundName]) {
+    // Clonar el sonido para permitir múltiples instancias superpuestas
     const sound = sounds[soundName].cloneNode();
-    sound.volume = soundName === "background" ? 0.3 : 0.5;
+
+    // Intentar reproducir el sonido, manejando errores silenciosamente
     sound.play().catch((error) => {
       console.warn(`Error playing sound ${soundName}:`, error);
     });
@@ -182,6 +325,35 @@ function startBackgroundMusic() {
 function stopBackgroundMusic() {
   sounds.background.pause();
   sounds.background.currentTime = 0;
+}
+
+/**
+ * Muestra un mensaje con efecto visual en la pantalla
+ * @param {string} message - El mensaje a mostrar
+ * @param {string} color - Color del texto (opcional)
+ */
+function showScreenMessage(message, color = "#FFFFFF") {
+  const messageElement = document.createElement("div");
+  messageElement.textContent = message;
+  messageElement.style.position = "fixed";
+  messageElement.style.top = "30%";
+  messageElement.style.left = "50%";
+  messageElement.style.transform = "translate(-50%, -50%)";
+  messageElement.style.color = color;
+  messageElement.style.fontSize = "24px";
+  messageElement.style.fontWeight = "bold";
+  messageElement.style.textShadow = "0 0 10px #FF0000";
+  messageElement.style.zIndex = "1000";
+  document.body.appendChild(messageElement);
+
+  // Animación de desvanecimiento
+  setTimeout(() => {
+    messageElement.style.transition = "opacity 1s";
+    messageElement.style.opacity = "0";
+    setTimeout(() => {
+      document.body.removeChild(messageElement);
+    }, 1000);
+  }, 1500);
 }
 
 // ======================================================
@@ -288,31 +460,105 @@ function setupControls() {
  * Loads all game assets from assets.json
  */
 function loadGameAssets() {
+  console.log("Loading game assets...");
+
   fetch("assets.json")
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then((data) => {
-      // Load background images
+      console.log("Assets data loaded successfully");
+
+      // Load background images with error handling
       data.backgrounds.forEach((src, index) => {
         backgroundImages[index] = new Image();
         backgroundImages[index].src = src;
+        backgroundImages[index].onerror = () => {
+          console.error(`Error loading background image ${index}: ${src}`);
+        };
+        backgroundImages[index].onload = () => {
+          console.log(`Background image ${index} loaded`);
+        };
       });
 
-      // Load enemy images
-      enemyImages = data.enemies.map((src) => {
+      // Load enemy images with error handling
+      enemyImages = data.enemies.map((src, index) => {
         const img = new Image();
         img.src = src;
+        img.onerror = () => {
+          console.error(`Error loading enemy image ${index}: ${src}`);
+        };
+        img.onload = () => {
+          console.log(`Enemy image ${index} loaded`);
+        };
         return img;
       });
 
-      // Load player image
+      // Load player image with error handling
       playerImage = new Image();
       playerImage.src = data.player;
+      playerImage.onerror = () => {
+        console.error(`Error loading player image: ${data.player}`);
+      };
+      playerImage.onload = () => {
+        console.log("Player image loaded successfully");
+      };
 
-      // Load bullet image
+      // Load bullet image with error handling
       bulletImage = new Image();
       bulletImage.src = data.bullet;
+      bulletImage.onerror = () => {
+        console.error(`Error loading bullet image: ${data.bullet}`);
+      };
+      bulletImage.onload = () => {
+        console.log("Bullet image loaded successfully");
+      };
     })
-    .catch((error) => console.error("Error loading assets:", error));
+    .catch((error) => {
+      console.error("Error loading assets:", error);
+      // Create fallbacks for images if they fail to load
+      playerImage = createFallbackImage(80, 80, "#FF0000");
+      bulletImage = createFallbackImage(20, 40, "#FFFFFF");
+      backgroundImages[0] = createFallbackImage(
+        canvas.width,
+        canvas.height,
+        "#111111"
+      );
+
+      alert("Error loading game assets. Using fallback graphics.");
+    });
+}
+
+/**
+ * Helper function to create fallback canvas images
+ */
+function createFallbackImage(width, height, color) {
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = width;
+  tempCanvas.height = height;
+  const tempCtx = tempCanvas.getContext("2d");
+  tempCtx.fillStyle = color;
+  tempCtx.fillRect(0, 0, width, height);
+
+  if (color === "#FF0000") {
+    // Player
+    // Add crosshair to fallback player image
+    tempCtx.strokeStyle = "#FFFFFF";
+    tempCtx.lineWidth = 2;
+    tempCtx.beginPath();
+    tempCtx.moveTo(width / 2, 0);
+    tempCtx.lineTo(width / 2, height);
+    tempCtx.moveTo(0, height / 2);
+    tempCtx.lineTo(width, height / 2);
+    tempCtx.stroke();
+  }
+
+  const img = new Image();
+  img.src = tempCanvas.toDataURL();
+  return img;
 }
 
 /**
@@ -325,6 +571,125 @@ function createImage(src) {
   img.src = src;
   img.onerror = () => console.error(`Error loading image: ${src}`);
   return img;
+}
+
+/**
+ * Crea un efecto de partículas para explosiones o efectos visuales
+ * @param {number} x - Posición X del centro de la explosión
+ * @param {number} y - Posición Y del centro de la explosión
+ * @param {string} color - Color de las partículas
+ * @param {number} particleCount - Número de partículas
+ */
+function createParticleEffect(x, y, color, particleCount) {
+  const particles = [];
+
+  // Crear partículas
+  for (let i = 0; i < particleCount; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1 + Math.random() * 3;
+
+    particles.push({
+      x: x,
+      y: y,
+      size: 2 + Math.random() * 3,
+      speedX: Math.cos(angle) * speed,
+      speedY: Math.sin(angle) * speed,
+      life: 30 + Math.random() * 20,
+    });
+  }
+
+  // Función para animar partículas
+  function animateParticles() {
+    if (particles.length === 0) return;
+
+    // Actualizar y dibujar partículas
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+
+      p.x += p.speedX;
+      p.y += p.speedY;
+      p.life--;
+
+      // Dibujar partícula
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = p.life / 50; // Desvanecer con el tiempo
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Eliminar partículas muertas
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+      }
+    }
+
+    // Continuar animación
+    if (particles.length > 0) {
+      requestAnimationFrame(animateParticles);
+    }
+  }
+
+  // Iniciar animación
+  requestAnimationFrame(animateParticles);
+}
+
+/**
+ * Crea un efecto de explosión con ondas expansivas
+ * @param {number} x - Posición X del centro de la explosión
+ * @param {number} y - Posición Y del centro de la explosión
+ */
+function createExplosionEffect(x, y) {
+  // Crear partículas
+  createParticleEffect(x, y, "#FF8800", 30);
+
+  // Crear onda expansiva
+  const shockwaves = [];
+  shockwaves.push({
+    x: x,
+    y: y,
+    radius: 5,
+    maxRadius: EXPLOSION_RADIUS,
+    life: 20,
+  });
+
+  // Función para animar onda expansiva
+  function animateShockwave() {
+    if (shockwaves.length === 0) return;
+
+    // Actualizar y dibujar ondas
+    for (let i = shockwaves.length - 1; i >= 0; i--) {
+      const wave = shockwaves[i];
+
+      wave.radius += (wave.maxRadius - wave.radius) * 0.2;
+      wave.life--;
+
+      // Dibujar onda
+      ctx.beginPath();
+      ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = "#FF8800";
+      ctx.globalAlpha = wave.life / 20;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Eliminar ondas muertas
+      if (wave.life <= 0) {
+        shockwaves.splice(i, 1);
+      }
+    }
+
+    // Continuar animación
+    if (shockwaves.length > 0) {
+      requestAnimationFrame(animateShockwave);
+    }
+  }
+
+  // Iniciar animación
+  requestAnimationFrame(animateShockwave);
+
+  // Reproducir sonido
+  playSound("explosion");
 }
 
 // ======================================================
@@ -356,7 +721,112 @@ function updateSpecialPowerIndicator() {
 }
 
 /**
- * Starts the game
+ * Actualiza la visualización de vidas en la UI
+ */
+function updateLivesDisplay() {
+  const livesDisplay = document.getElementById("player-lives");
+
+  // Si no existe el elemento, lo creamos (primera vez)
+  if (!livesDisplay) {
+    const gameInfo = document.getElementById("game-info");
+    const livesElement = document.createElement("span");
+    livesElement.id = "player-lives";
+    gameInfo.appendChild(livesElement);
+  }
+
+  // Actualizar el texto con emojis de calavera
+  document.getElementById("player-lives").textContent = "💀".repeat(
+    playerLives
+  );
+}
+
+/**
+ * Actualiza el estado de power-up activo y su indicador visual
+ */
+function updatePowerUpIndicator() {
+  // Si hay un power-up activo pero no hay elemento aún, crearlo
+  if (activePowerUp) {
+    let indicator = document.getElementById("power-up-indicator");
+
+    if (!indicator) {
+      // Crear indicador de power-up
+      indicator = document.createElement("div");
+      indicator.id = "power-up-indicator";
+      indicator.className = "power-up-indicator";
+      document.getElementById("game-area").appendChild(indicator);
+
+      // Aplicar estilos
+      indicator.style.position = "fixed";
+      indicator.style.bottom = "20px";
+      indicator.style.left = "20px";
+      indicator.style.backgroundColor = activePowerUp.color;
+      indicator.style.color = "#FFFFFF";
+      indicator.style.padding = "5px 10px";
+      indicator.style.borderRadius = "20px";
+      indicator.style.fontSize = "14px";
+      indicator.style.fontWeight = "bold";
+      indicator.style.boxShadow = `0 0 10px ${activePowerUp.color}`;
+      indicator.style.transition = "all 0.3s";
+      indicator.style.zIndex = "100";
+    }
+
+    // Actualizar contenido
+    const timeLeft = Math.ceil(powerUpTimeLeft / 60); // Convertir frames a segundos
+    indicator.textContent = `${activePowerUp.name}: ${timeLeft}s`;
+    indicator.style.backgroundColor = activePowerUp.color;
+
+    // Parpadeo cuando está por terminar
+    if (powerUpTimeLeft < 60) {
+      // Menos de 1 segundo
+      indicator.style.opacity = Math.sin(gameTime * 0.2) * 0.5 + 0.5;
+    } else {
+      indicator.style.opacity = "1";
+    }
+  } else {
+    // Si no hay power-up activo, eliminar indicador si existe
+    const indicator = document.getElementById("power-up-indicator");
+    if (indicator && indicator.parentNode) {
+      indicator.parentNode.removeChild(indicator);
+    }
+  }
+}
+
+/**
+ * Dibuja un fondo estático para mostrar mientras se ven las instrucciones
+ */
+function drawStaticGameBackground() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw background
+  if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
+    ctx.drawImage(
+      backgroundImages[level - 1],
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+  } else {
+    // Fallback background
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // Dibujar jugador para que esté visible mientras se leen las instrucciones
+  if (player && player.image && player.image.complete) {
+    ctx.drawImage(
+      player.image,
+      player.x,
+      player.y,
+      player.width,
+      player.height
+    );
+  }
+}
+
+/**
+ * Modifica la función startGame para mostrar instrucciones primero y no iniciar el bucle del juego
+ * hasta que el usuario confirme
  */
 function startGame() {
   playerName = document.getElementById("name").value;
@@ -370,6 +840,9 @@ function startGame() {
     return;
   }
 
+  // Inicializar el juego con la configuración actual
+  initializeGame();
+
   // Reset game state
   level = 1;
   enemiesKilled = 0;
@@ -378,6 +851,17 @@ function startGame() {
   enemiesForSpecialPower = 0;
   specialPowerReady = false;
   specialPowerActive = false;
+  heartSpawned = false;
+  powerUpsSpawned = false;
+  activePowerUp = null;
+  powerUpTimeLeft = 0;
+
+  // Inicializar arrays
+  hearts = [];
+  powerUps = [];
+  bullets = [];
+  specialBullets = [];
+  enemies = [];
 
   // Update UI display
   document.getElementById("level").textContent = `Nivel ${level}`;
@@ -387,6 +871,7 @@ function startGame() {
   document.getElementById("time").textContent = `Tiempo: 0s`;
   document.getElementById("score").textContent = `Puntuación: 0`;
   updateSpecialPowerIndicator();
+  updateLivesDisplay();
 
   // Show game area, hide menu
   document.getElementById("main-menu").style.display = "none";
@@ -416,26 +901,152 @@ function startGame() {
     width: PLAYER_WIDTH,
     height: PLAYER_HEIGHT,
     image: playerImage,
+    visible: true, // Para efecto de parpadeo
+    damaged: false, // Estado de daño
   };
 
   // Setup controls
   setupControls();
 
-  bullets = [];
-  specialBullets = [];
-  enemies = [];
-
   // Start background music
   startBackgroundMusic();
 
-  // Start automatic shooting
+  // Dibujar fondo estático para las instrucciones
+  drawStaticGameBackground();
+
+  // Mostrar instrucciones antes de iniciar el nivel 1
+  showInstructions();
+}
+
+/**
+ * Muestra las instrucciones del juego antes de iniciar el nivel 1
+ */
+function showInstructions() {
+  // Crear elemento de instrucciones
+  const instructionsModal = document.createElement("div");
+  instructionsModal.id = "instructions-modal";
+  instructionsModal.style.position = "fixed";
+  instructionsModal.style.top = "50%";
+  instructionsModal.style.left = "50%";
+  instructionsModal.style.width = "80%";
+  instructionsModal.style.maxWidth = "600px";
+  instructionsModal.style.transform = "translate(-50%, -50%)";
+  instructionsModal.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
+  instructionsModal.style.border = "3px solid #8B0000";
+  instructionsModal.style.borderRadius = "10px";
+  instructionsModal.style.padding = "20px";
+  instructionsModal.style.color = "#FFFFFF";
+  instructionsModal.style.zIndex = "1000";
+  instructionsModal.style.fontFamily = '"Times New Roman", Times, serif';
+  instructionsModal.style.boxShadow = "0 0 20px #FF0000";
+  instructionsModal.style.textAlign = "left";
+  instructionsModal.style.maxHeight = "80vh";
+  instructionsModal.style.overflowY = "auto";
+
+  // Contenido HTML de las instrucciones
+  instructionsModal.innerHTML = `
+    <h2 style="text-align: center; color: #FF0000; text-shadow: 0 0 10px #FF0000; margin-bottom: 20px;">INSTRUCCIONES DE JUEGO</h2>
+    
+    <div style="margin-bottom: 15px;">
+      <h3 style="color: #FF0000; margin-bottom: 5px;">CONTROLES:</h3>
+      <p>• <strong>Movimiento:</strong> Mueve el ratón o desliza el dedo en dispositivos táctiles para controlar al jugador.</p>
+      <p>• <strong>Disparo:</strong> Automático. Tu personaje dispara constantemente hacia arriba.</p>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <h3 style="color: #FF0000; margin-bottom: 5px;">OBJETIVO:</h3>
+      <p>Sobrevive a las hordas de enemigos y elimina el número requerido para avanzar de nivel. Los enemigos se vuelven más rápidos y numerosos en niveles superiores.</p>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <h3 style="color: #FF0000; margin-bottom: 5px;">VIDAS:</h3>
+      <p>• Tienes 5 vidas (💀💀💀💀💀) al comenzar.</p>
+      <p>• Pierdes una vida al ser golpeado por un enemigo.</p>
+      <p>• Después de ser golpeado, eres invulnerable por unos segundos.</p>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <h3 style="color: #FF0000; margin-bottom: 5px;">PODER ESPECIAL:</h3>
+      <p>• Por cada 25 enemigos eliminados, se carga tu poder especial (indicador inferior derecho).</p>
+      <p>• Actívalo con ESPACIO (PC) o tocando el indicador (móvil).</p>
+      <p>• Dispara balas en todas direcciones durante unos segundos.</p>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <h3 style="color: #FF0000; margin-bottom: 5px;">ELEMENTOS DE AYUDA:</h3>
+      <p>• <span style="color: #FF0000;">❤️</span> <strong>Corazones:</strong> Recuperan una vida perdida.</p>
+      <p>• <span style="color: #FFFF00;">⬦</span> <strong>Balas Penetrantes:</strong> Atraviesan varios enemigos.</p>
+      <p>• <span style="color: #00FFFF;">⬦</span> <strong>Disparo Amplio:</strong> Dispara en abanico.</p>
+      <p>• <span style="color: #FF8800;">⬦</span> <strong>Balas Explosivas:</strong> Crean explosiones que dañan enemigos cercanos.</p>
+      <p>• <span style="color: #FF00FF;">⬦</span> <strong>Disparo Rápido:</strong> Aumenta la velocidad de disparo.</p>
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px;">
+      <button id="start-game-btn" style="background-color: #8B0000; color: white; padding: 10px 20px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; font-family: inherit; box-shadow: 0 0 10px #FF0000;">¡COMENZAR JUEGO!</button>
+    </div>
+  `;
+
+  // Añadir al DOM
+  document.body.appendChild(instructionsModal);
+
+  // Asignar evento al botón - AHORA LLAMA A startRealGame
+  document.getElementById("start-game-btn").addEventListener("click", () => {
+    document.body.removeChild(instructionsModal);
+    startRealGame(); // Usar la función nueva para iniciar el juego real
+  });
+}
+
+/**
+ * Función para iniciar el juego real después de las instrucciones
+ */
+function startRealGame() {
+  // Make sure player image is fully loaded before starting game
+  if (playerImage && !playerImage.complete) {
+    playerImage.onload = function () {
+      console.log("Player image loaded successfully");
+      initializeGameLoop();
+    };
+
+    // Add error handling for image loading
+    playerImage.onerror = function () {
+      console.error("Error loading player image, using fallback");
+      // Continue anyway after a brief delay
+      setTimeout(initializeGameLoop, 500);
+    };
+
+    // If image takes too long, start anyway after 2 seconds
+    setTimeout(function () {
+      if (!playerImage.complete) {
+        console.warn(
+          "Player image taking too long to load, starting game anyway"
+        );
+        initializeGameLoop();
+      }
+    }, 2000);
+  } else {
+    // Image already loaded or doesn't exist, start immediately
+    initializeGameLoop();
+  }
+}
+
+/**
+ * Helper function to actually start the game loop
+ */
+function initializeGameLoop() {
+  // Ensure player is visible
+  player.visible = true;
+
+  // Now start auto-shooting
   startAutoShoot();
 
-  // Start the first level
+  // Start the game loop
+  gameInterval = setInterval(gameLoop, 1000 / 60);
+
+  // Start the level (without sound in level 1)
   startLevel();
 
-  // Start game loop
-  gameInterval = setInterval(gameLoop, 1000 / 60);
+  // Log successful game start
+  console.log("Game loop initialized successfully");
 }
 
 /**
@@ -447,10 +1058,39 @@ function startAutoShoot() {
     clearInterval(autoShootInterval);
   }
 
-  // Set up new interval
+  // Calculate new shooting delay based on level
+  const newDelay = Math.max(
+    GAME_CONFIG.player.autoShootDelayMin,
+    GAME_CONFIG.player.autoShootDelayBase -
+      level * GAME_CONFIG.player.autoShootDelayReduction
+  );
+
+  // Set up new interval with updated delay
   autoShootInterval = setInterval(() => {
     shootBullet();
-  }, AUTO_SHOOT_DELAY);
+  }, newDelay);
+}
+
+/**
+ * Updates the auto-shooting speed based on current level
+ */
+function updateShootingSpeed() {
+  // Clear existing interval
+  if (autoShootInterval) {
+    clearInterval(autoShootInterval);
+  }
+
+  // Calculate new shooting delay based on level
+  const newDelay = Math.max(
+    GAME_CONFIG.player.autoShootDelayMin,
+    GAME_CONFIG.player.autoShootDelayBase -
+      level * GAME_CONFIG.player.autoShootDelayReduction
+  );
+
+  // Set up new interval with updated delay
+  autoShootInterval = setInterval(() => {
+    shootBullet();
+  }, newDelay);
 }
 
 /**
@@ -470,6 +1110,8 @@ function startLevel() {
   // Keep existing enemies, don't clear them
   enemiesRemaining = levelUpEnemies[level - 1] - enemiesKilled;
   spawnTimer = 0;
+  heartSpawned = false; // Reset to allow a new heart
+  powerUpsSpawned = false; // Reset to allow a new power-up
 
   // Update UI
   document.getElementById("level").textContent = `Nivel ${level}`;
@@ -477,13 +1119,16 @@ function startLevel() {
   // Update shooting speed based on new level
   updateShootingSpeed();
 
-  showLevelTransition();
+  // Solo reproduce sonido de transición si no es el primer nivel o el juego está recién comenzando
+  const playTransitionSound = level > 1;
+  showLevelTransition(playTransitionSound);
 }
 
 /**
  * Shows the level transition screen
+ * @param {boolean} playSound - Si debe reproducir sonido (por defecto true)
  */
-function showLevelTransition() {
+function showLevelTransition(playSound = true) {
   isLevelTransition = true;
   const transition = document.createElement("div");
   transition.className = "level-transition";
@@ -502,7 +1147,10 @@ function showLevelTransition() {
   transition.innerHTML = `NIVEL ${level}`;
   document.body.appendChild(transition);
 
-  playSound("levelUp");
+  // Solo reproduce sonido si se indica
+  if (playSound) {
+    playSound("levelUp");
+  }
 
   setTimeout(() => {
     document.body.removeChild(transition);
@@ -510,581 +1158,59 @@ function showLevelTransition() {
   }, 2000);
 }
 
-// ======================================================
-// ENEMY MANAGEMENT
-// ======================================================
-
-/**
- * Spawns a new enemy with random properties
- */
-function spawnEnemy() {
-  // Randomize enemy size based on level - smaller at higher levels
-  const sizeVariation = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
-  const baseSize =
-    ENEMY_MIN_SIZE + Math.random() * (ENEMY_MAX_SIZE - ENEMY_MIN_SIZE);
-  const enemySize = baseSize * sizeVariation * Math.max(0.6, 1 - level * 0.05); // Reduce size with level
-
-  // Random position (top of screen)
-  const x = Math.random() * (canvas.width - enemySize);
-
-  // Velocidad base aumentada significativamente - más rápido con cada nivel
-  const levelSpeedFactor = 1 + level * 0.2; // 20% más rápido por nivel
-  const baseSpeed = canvas.height * 0.006 * levelSpeedFactor; // Velocidad base incrementada
-
-  // Angle is mostly downward (between -PI/4 and PI/4 from vertical)
-  const angle = (Math.random() * Math.PI) / 2 - Math.PI / 4;
-
-  // Velocity components - mainly vertical with some horizontal variation
-  const speed = baseSpeed * (0.8 + Math.random() * 0.6); // 0.8x to 1.4x base speed
-  const velocityX = Math.sin(angle) * speed;
-  const velocityY = Math.abs(Math.cos(angle) * speed); // Always positive (downward)
-
-  // Create the enemy object
-  enemies.push({
-    x: x,
-    y: -enemySize,
-    width: enemySize,
-    height: enemySize,
-    velocityX: velocityX,
-    velocityY: velocityY,
-    image: enemyImages[level - 1] || enemyImages[0], // Fallback to first image if level image not available
-    speedFactor: 1.0, // Factor usado para aumentar velocidad en colisiones
-  });
-
-  // Si estamos en nivel alto, aumentar la cantidad de enemigos
-  if (level > 3 && Math.random() < level * 0.05) {
-    // Spawn additional enemies based on level
-    const extraEnemies = Math.min(Math.floor(level / 2), 5); // Max 5 extra enemies at once
-    for (let i = 0; i < extraEnemies; i++) {
-      setTimeout(() => {
-        if (gameInterval) {
-          // Verificar que el juego aún está en marcha
-          spawnEnemy();
-        }
-      }, Math.random() * 500); // Retraso aleatorio hasta 500ms
-    }
-  }
-}
-
-/**
- * Updates enemy positions and handles collision with walls and other enemies
- */
-function updateEnemies() {
-  const wallBounceFactorX = 0.9; // Rebote con paredes laterales
-  const wallBounceFactorY = 1.05; // Rebote con techo/suelo - aumenta velocidad
-  const enemyBounceFactorBase = 1.1; // Base para rebote entre enemigos - aumenta velocidad
-
-  // Update each enemy's position
-  for (let i = 0; i < enemies.length; i++) {
-    const enemy = enemies[i];
-
-    // Move enemy
-    enemy.x += enemy.velocityX;
-    enemy.y += enemy.velocityY;
-
-    // Bounce off side walls - change direction but maintain mainly downward movement
-    if (enemy.x <= 0) {
-      enemy.velocityX = Math.abs(enemy.velocityX) * wallBounceFactorX;
-      enemy.x = 0;
-      // Randomly adjust Y velocity slightly to prevent identical bouncing patterns
-      enemy.velocityY *= 0.95 + Math.random() * 0.1;
-    } else if (enemy.x + enemy.width >= canvas.width) {
-      enemy.velocityX = -Math.abs(enemy.velocityX) * wallBounceFactorX;
-      enemy.x = canvas.width - enemy.width;
-      // Randomly adjust Y velocity slightly
-      enemy.velocityY *= 0.95 + Math.random() * 0.1;
-    }
-
-    // Bounce off top
-    if (enemy.y <= 0) {
-      // If hitting top, always bounce downward
-      enemy.velocityY = Math.abs(enemy.velocityY) * wallBounceFactorY;
-      enemy.y = 0;
-    }
-
-    // Bounce off bottom - SIEMPRE hacia arriba
-    if (enemy.y + enemy.height >= canvas.height) {
-      // If hitting bottom, always bounce upward with slight horizontal adjustment
-      enemy.velocityY = -Math.abs(enemy.velocityY) * wallBounceFactorY;
-      enemy.y = canvas.height - enemy.height;
-      // Add some horizontal variation on bounce
-      enemy.velocityX += (Math.random() - 0.5) * (canvas.width * 0.003);
-    }
-
-    // Random direction change - but mostly downward (very low probability)
-    if (Math.random() < 0.001) {
-      // Sólo 0.1% de probabilidad por frame
-      // Downward bias - angle between -PI/3 and PI/3 from vertical
-      const angle = Math.random() * ((2 * Math.PI) / 3) - Math.PI / 3;
-      const speed = Math.sqrt(
-        enemy.velocityX * enemy.velocityX + enemy.velocityY * enemy.velocityY
-      );
-      enemy.velocityX = Math.sin(angle) * speed;
-      enemy.velocityY = Math.abs(Math.cos(angle) * speed); // Asegurar que es hacia abajo
-    }
-
-    // Check collision with other enemies
-    for (let j = i + 1; j < enemies.length; j++) {
-      const otherEnemy = enemies[j];
-
-      // Check if enemies are colliding
-      if (checkCollisionBetweenObjects(enemy, otherEnemy)) {
-        // Calculate collision response with increased velocities
-        const dx =
-          otherEnemy.x + otherEnemy.width / 2 - (enemy.x + enemy.width / 2);
-        const dy =
-          otherEnemy.y + otherEnemy.height / 2 - (enemy.y + enemy.height / 2);
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist > 0) {
-          // Normalize direction
-          const nx = dx / dist;
-          const ny = dy / dist;
-
-          // Calculate bounce factors based on enemy speed factor
-          const enemyBounceFactor = enemyBounceFactorBase * enemy.speedFactor;
-          const otherEnemyBounceFactor =
-            enemyBounceFactorBase * otherEnemy.speedFactor;
-
-          // Exchange velocity components along the collision normal - with speed increase
-          const p1 = enemy.velocityX * nx + enemy.velocityY * ny;
-          const p2 = otherEnemy.velocityX * nx + otherEnemy.velocityY * ny;
-
-          enemy.velocityX =
-            (enemy.velocityX + nx * (p2 - p1)) * enemyBounceFactor;
-          enemy.velocityY =
-            (enemy.velocityY + ny * (p2 - p1)) * enemyBounceFactor;
-
-          otherEnemy.velocityX =
-            (otherEnemy.velocityX + nx * (p1 - p2)) * otherEnemyBounceFactor;
-          otherEnemy.velocityY =
-            (otherEnemy.velocityY + ny * (p1 - p2)) * otherEnemyBounceFactor;
-
-          // Increase speed factor for both enemies (more aggression)
-          enemy.speedFactor = Math.min(enemy.speedFactor * 1.05, 1.5);
-          otherEnemy.speedFactor = Math.min(otherEnemy.speedFactor * 1.05, 1.5);
-
-          // Separate the enemies to prevent sticking
-          const overlap = (enemy.width + otherEnemy.width) / 2 - dist + 2; // +2 para separar un poco más
-          if (overlap > 0) {
-            enemy.x -= (nx * overlap) / 2;
-            enemy.y -= (ny * overlap) / 2;
-            otherEnemy.x += (nx * overlap) / 2;
-            otherEnemy.y += (ny * overlap) / 2;
-          }
-        }
-      }
-    }
-
-    // Speed cap to prevent enemies from going too fast
-    const maxSpeed = canvas.height * 0.02 * (1 + level * 0.1);
-    const currentSpeed = Math.sqrt(
-      enemy.velocityX * enemy.velocityX + enemy.velocityY * enemy.velocityY
-    );
-    if (currentSpeed > maxSpeed) {
-      const ratio = maxSpeed / currentSpeed;
-      enemy.velocityX *= ratio;
-      enemy.velocityY *= ratio;
-    }
-
-    // Draw the enemy
-    if (enemy.image && enemy.image.complete) {
-      ctx.drawImage(enemy.image, enemy.x, enemy.y, enemy.width, enemy.height);
-    } else {
-      // Draw placeholder if image not loaded
-      ctx.fillStyle = "#8B0000";
-      ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-    }
-  }
-}
-
-/**
- * Check collision between two objects with x, y, width, height
- * @param {Object} obj1 - First object
- * @param {Object} obj2 - Second object
- * @returns {boolean} - True if collision detected
- */
-function checkCollisionBetweenObjects(obj1, obj2) {
-  return (
-    obj1.x < obj2.x + obj2.width &&
-    obj1.x + obj1.width > obj2.x &&
-    obj1.y < obj2.y + obj2.height &&
-    obj1.y + obj1.height > obj2.y
-  );
-}
-
-// ======================================================
-// BULLET MANAGEMENT
-// ======================================================
-
-/**
- * Updates the auto-shooting speed based on current level
- */
-function updateShootingSpeed() {
-  // Clear existing interval
-  if (autoShootInterval) {
-    clearInterval(autoShootInterval);
-  }
-
-  // Calculate new shooting delay based on level
-  // Level 1: 200ms, Level 10: 80ms
-  const newDelay = Math.max(80, AUTO_SHOOT_DELAY - level * 12);
-
-  // Set up new interval with updated delay
-  autoShootInterval = setInterval(() => {
-    shootBullet();
-  }, newDelay);
-}
-
-/**
- * Creates a regular bullet (fired upward)
- */
-function shootBullet() {
-  const currentTime = Date.now();
-  const cooldownTime = Math.max(80, 200 - level * 12); // Same as auto-shoot delay
-
-  if (currentTime - lastShootTime > cooldownTime) {
-    // Base bullet properties
-    const bulletSpeed = canvas.height * (0.015 + level * 0.002); // Increase speed with level
-
-    // Add multiple bullets based on level
-    if (level >= 3) {
-      // Add side bullets at higher levels
-      const spreadAngle = Math.PI / 12; // 15 degrees spread
-      const bulletCount = Math.min(1 + Math.floor(level / 3), 5); // Max 5 bullets
-
-      for (let i = 0; i < bulletCount; i++) {
-        const offset = i - Math.floor(bulletCount / 2);
-        const angle = offset * spreadAngle;
-
-        bullets.push({
-          x: player.x + player.width / 2 - BULLET_WIDTH / 2,
-          y: player.y - BULLET_HEIGHT,
-          width: BULLET_WIDTH,
-          height: BULLET_HEIGHT,
-          velocityX: Math.sin(angle) * bulletSpeed,
-          velocityY: -Math.cos(angle) * bulletSpeed, // Upward with angle
-        });
-      }
-    } else {
-      // Just one bullet at lower levels
-      bullets.push({
-        x: player.x + player.width / 2 - BULLET_WIDTH / 2,
-        y: player.y - BULLET_HEIGHT,
-        width: BULLET_WIDTH,
-        height: BULLET_HEIGHT,
-        velocityX: 0,
-        velocityY: -bulletSpeed, // Upward velocity
-      });
-    }
-
-    lastShootTime = currentTime;
-    playSound("shoot");
-  }
-}
-
-/**
- * Activates the special power (radial bullets)
- */
-function activateSpecialPower() {
-  if (!specialPowerReady || specialPowerActive) return;
-
-  specialPowerActive = true;
-  specialPowerReady = false;
-  enemiesForSpecialPower = 0;
-
-  // Update indicator
-  updateSpecialPowerIndicator();
-
-  // Create bullets in a circle
-  const bulletCount = SPECIAL_BULLET_COUNT;
-  const bulletSpeed = canvas.height * 0.01;
-
-  for (let i = 0; i < bulletCount; i++) {
-    // Calculate direction vector for each bullet
-    const angle = (i / bulletCount) * Math.PI * 2;
-    const velocityX = Math.cos(angle) * bulletSpeed;
-    const velocityY = Math.sin(angle) * bulletSpeed;
-
-    // Create the special bullet
-    specialBullets.push({
-      x: player.x + player.width / 2 - BULLET_WIDTH / 2,
-      y: player.y + player.height / 2 - BULLET_HEIGHT / 2,
-      width: BULLET_WIDTH,
-      height: BULLET_HEIGHT,
-      velocityX: velocityX,
-      velocityY: velocityY,
-      life: (SPECIAL_POWER_DURATION / 1000) * 60, // Convert to frames (assuming 60fps)
-    });
-  }
-
-  // Play special power sound
-  playSound("special");
-
-  // Reset special power state after duration
-  setTimeout(() => {
-    specialPowerActive = false;
-  }, SPECIAL_POWER_DURATION);
-}
-
-/**
- * Updates and draws all bullets
- */
-function updateBullets() {
-  // Update regular bullets
-  for (let i = 0; i < bullets.length; i++) {
-    const bullet = bullets[i];
-
-    // Move bullet
-    bullet.x += bullet.velocityX;
-    bullet.y += bullet.velocityY;
-
-    // Draw bullet
-    if (bulletImage && bulletImage.complete) {
-      ctx.drawImage(
-        bulletImage,
-        bullet.x,
-        bullet.y,
-        bullet.width,
-        bullet.height
-      );
-    } else {
-      // Draw placeholder
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-    }
-  }
-
-  // Update special bullets
-  for (let i = 0; i < specialBullets.length; i++) {
-    const bullet = specialBullets[i];
-
-    // Decrease life
-    bullet.life--;
-
-    // Move bullet
-    bullet.x += bullet.velocityX;
-    bullet.y += bullet.velocityY;
-
-    // Draw bullet with glow effect
-    ctx.save();
-    // Add glow effect
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = "#FF0000";
-
-    if (bulletImage && bulletImage.complete) {
-      ctx.drawImage(
-        bulletImage,
-        bullet.x,
-        bullet.y,
-        bullet.width,
-        bullet.height
-      );
-    } else {
-      // Draw placeholder
-      ctx.fillStyle = "#FF3333";
-      ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-    }
-    ctx.restore();
-  }
-
-  // Remove bullets that are off-screen or expired
-  bullets = bullets.filter(
-    (bullet) =>
-      bullet.x + bullet.width > 0 &&
-      bullet.x < canvas.width &&
-      bullet.y + bullet.height > 0 &&
-      bullet.y < canvas.height
-  );
-
-  specialBullets = specialBullets.filter(
-    (bullet) =>
-      bullet.life > 0 &&
-      bullet.x + bullet.width > 0 &&
-      bullet.x < canvas.width &&
-      bullet.y + bullet.height > 0 &&
-      bullet.y < canvas.height
-  );
-}
-
-// ======================================================
-// COLLISION DETECTION
-// ======================================================
-
-/**
- * Check for collisions between bullets and enemies
- */
-function checkBulletEnemyCollisions() {
-  // Check regular bullets vs enemies
-  for (let i = enemies.length - 1; i >= 0; i--) {
-    const enemy = enemies[i];
-    let enemyHit = false;
-
-    // Check against regular bullets
-    for (let j = bullets.length - 1; j >= 0; j--) {
-      const bullet = bullets[j];
-
-      if (checkCollisionBetweenObjects(bullet, enemy)) {
-        // Remove bullet
-        bullets.splice(j, 1);
-
-        // Mark enemy as hit
-        enemyHit = true;
-        break;
-      }
-    }
-
-    // Check against special bullets if enemy wasn't already hit
-    if (!enemyHit) {
-      for (let j = specialBullets.length - 1; j >= 0; j--) {
-        const bullet = specialBullets[j];
-
-        if (checkCollisionBetweenObjects(bullet, enemy)) {
-          // Mark enemy as hit
-          enemyHit = true;
-          break;
-        }
-      }
-    }
-
-    // Process enemy hit
-    if (enemyHit) {
-      // Remove enemy
-      enemies.splice(i, 1);
-
-      // Update game stats
-      enemiesKilled++;
-      enemiesForSpecialPower++;
-      score += 10 * level; // Score increases with level
-
-      // Check if special power is ready
-      if (enemiesForSpecialPower >= ENEMIES_FOR_SPECIAL) {
-        specialPowerReady = true;
-        enemiesForSpecialPower = ENEMIES_FOR_SPECIAL;
-      }
-
-      // Update UI
-      document.getElementById(
-        "enemies-killed"
-      ).textContent = `Enemigos: ${enemiesKilled}`;
-      document.getElementById("score").textContent = `Puntuación: ${score}`;
-      updateSpecialPowerIndicator();
-
-      // Play hit sound
-      playSound("hit");
-
-      // Check for level completion
-      if (enemiesKilled >= levelUpEnemies[level - 1]) {
-        level++;
-        if (level > levelUpEnemies.length) {
-          victory();
-        } else {
-          startLevel();
-        }
-      }
-    }
-  }
-}
-
-/**
- * Check for collisions between player and enemies
- */
-function checkPlayerEnemyCollisions() {
-  for (let i = 0; i < enemies.length; i++) {
-    if (checkCollisionBetweenObjects(player, enemies[i])) {
-      gameOver();
-      return;
-    }
-  }
-}
-
-// ======================================================
-// GAME LOOP
-// ======================================================
-
-/**
- * Main game loop function - Updated for more aggressive gameplay
- */
-function gameLoop() {
-  // Skip update during level transition
-  if (isLevelTransition) return;
-
-  // Update game time (60 updates per second = 1 second)
-  gameTime++;
-  if (gameTime % 60 === 0) {
-    document.getElementById("time").textContent = `Tiempo: ${Math.floor(
-      gameTime / 60
-    )}s`;
-  }
-
-  // Clear canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Draw background
-  if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
-    ctx.drawImage(
-      backgroundImages[level - 1],
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-  } else {
-    // Fallback background
-    ctx.fillStyle = "#111";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
-
-  // Spawn enemies if needed - adjusted for more aggressive gameplay
-  spawnTimer++;
-
-  // Delay between enemy spawns decreases with level
-  // Level 1: 60 frames, Level 5: 40 frames, Level 10: 20 frames
-  const spawnDelay = Math.max(20, SPAWN_RATE - level * 4);
-
-  // Multiple enemy spawning at higher levels
-  if (spawnTimer >= spawnDelay) {
-    // Spawn at least one enemy
-    spawnEnemy();
-
-    // Chance to spawn additional enemies based on level
-    if (level > 2) {
-      const extraEnemyChance = Math.min(0.05 * level, 0.4); // Max 40% chance
-      if (Math.random() < extraEnemyChance) {
-        spawnEnemy();
-      }
-    }
-
-    // Reset spawn timer
-    spawnTimer = 0;
-  }
-
-  // Update and draw game elements
-  updateEnemies();
-  updateBullets();
-  drawPlayer();
-
-  // Check collisions
-  checkBulletEnemyCollisions();
-  checkPlayerEnemyCollisions();
-}
-
 /**
  * Draws the player on the canvas
  */
 function drawPlayer() {
+  // Always ensure player is at the mouse position
+  player.x = mouseX - player.width / 2;
+  player.y = mouseY - player.height / 2;
+
+  // Keep player within canvas bounds
+  player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+  player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+
+  // Ensure player is visible during gameplay
+  if (gameInterval && !isLevelTransition) {
+    player.visible = invulnerableTime <= 0 || gameTime % 10 < 5;
+  } else {
+    player.visible = true;
+  }
+
+  // If the player is invulnerable and in an invisibility frame, don't draw
+  if (invulnerableTime > 0 && !player.visible) {
+    return;
+  }
+
+  // Draw player fallback if image not loaded
   if (
     !player.image ||
     !player.image.complete ||
     player.image.naturalWidth === 0
   ) {
-    // Draw placeholder if image not loaded
     ctx.fillStyle = "#FF0000";
     ctx.fillRect(player.x, player.y, player.width, player.height);
+
+    // Draw a crosshair to make sure player is visible
+    const centerX = player.x + player.width / 2;
+    const centerY = player.y + player.height / 2;
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, player.width * 0.6, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(255, 0, 0, 0.8)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
     return;
   }
 
+  // Visual effect during invulnerability
+  if (invulnerableTime > 0) {
+    ctx.globalAlpha = 0.7;
+  }
+
+  // Draw the player image
   ctx.drawImage(player.image, player.x, player.y, player.width, player.height);
+  ctx.globalAlpha = 1.0; // Restore alpha
 
   // Draw a cursor/target indicator
   ctx.beginPath();
@@ -1118,206 +1244,247 @@ function drawPlayer() {
   ctx.moveTo(centerX, centerY - size);
   ctx.lineTo(centerX, centerY + size);
   ctx.stroke();
-}
 
-/**
- * Handles game over
- */
-function gameOver() {
-  clearInterval(gameInterval);
-  stopAutoShoot();
-  stopBackgroundMusic();
-  document.getElementById("game-over").style.display = "block";
-  document.getElementById("game-over-text").textContent = "Game Over 💀";
-  playSound("gameOver");
-}
+  // Draw shield effect when invulnerable
+  if (invulnerableTime > 0) {
+    const shieldSize = player.width * 0.7;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, shieldSize, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255, 0, 0, ${
+      0.3 + Math.sin(gameTime * 0.2) * 0.2
+    })`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
 
-/**
- * Restarts the game
- */
-function restartGame() {
-  document.getElementById("game-over").style.display = "none";
-  startGame();
-}
-
-/**
- * Saves score and shows ranking
- */
-async function saveAndViewRanking() {
-  await saveScore();
-  viewRanking();
-  document.getElementById("game-over").style.display = "none";
-}
-
-/**
- * Saves the player's score to the database
- */
-async function saveScore() {
-  const playerData = {
-    date: new Date().toISOString(),
-    avatar: playerAvatar,
-    name: playerName,
-    level: level,
-    enemiesKilled: enemiesKilled,
-    time: Math.floor(gameTime / 60),
-    score: score,
-    status: document
-      .getElementById("game-over-text")
-      .textContent.includes("Victoria")
-      ? "Victoria"
-      : "Derrota",
-  };
-
-  try {
-    const response = await fetch(SHEET_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        data: [playerData],
-      }),
-    });
-
-    if (response.ok) {
-      alert("¡Puntuación guardada con éxito! 🎉");
-    } else {
-      throw new Error("Error al guardar la puntuación");
-    }
-  } catch (error) {
-    console.error("Error al guardar:", error);
-    alert("Error al guardar la puntuación. Por favor, inténtalo de nuevo.");
+  // Draw aura if power-up is active
+  if (activePowerUp) {
+    const auraSize = player.width * 0.8;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, auraSize, 0, Math.PI * 2);
+    ctx.strokeStyle = `${activePowerUp.color}80`; // With 50% opacity
+    ctx.lineWidth = 3;
+    ctx.stroke();
   }
 }
 
 /**
- * Handles victory
+ * Main game loop function
  */
-function victory() {
-  clearInterval(gameInterval);
-  stopAutoShoot();
-  stopBackgroundMusic();
-  document.getElementById("game-over").style.display = "block";
-  document.getElementById("game-over-text").textContent = "¡Victoria! 🎉";
-  playSound("victory");
-}
-
-/**
- * Views the ranking from the database
- */
-async function viewRanking() {
+function gameLoop() {
   try {
-    document.getElementById("main-menu").style.display = "none";
-    document.getElementById("game-area").style.display = "none";
+    // Skip update during level transition
+    if (isLevelTransition) return;
 
-    const rankingContainer = document.getElementById("ranking-container");
-    rankingContainer.style.display = "block";
-    rankingContainer.innerHTML = `<h2>⌛ Cargando ranking... ⌛</h2>`;
+    // Update game time (60 updates per second = 1 second)
+    gameTime++;
+    if (gameTime % 60 === 0) {
+      document.getElementById("time").textContent = `Tiempo: ${Math.floor(
+        gameTime / 60
+      )}s`;
+    }
 
-    const response = await fetch(SHEET_URL);
-    const data = await response.json();
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const sortedData = data.sort((a, b) => {
-      if (b.score !== a.score) {
-        return b.score - a.score;
+    // Draw background
+    if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
+      ctx.drawImage(
+        backgroundImages[level - 1],
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+    } else {
+      // Fallback background
+      ctx.fillStyle = "#111";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Try to spawn a heart or power-up randomly
+    trySpawnHeart();
+    trySpawnPowerUp();
+
+    // Spawn enemies if needed
+    spawnTimer++;
+
+    // Delay between enemy spawns decreases with level
+    const spawnDelay = Math.max(
+      GAME_CONFIG.enemies.minSpawnRate,
+      GAME_CONFIG.enemies.spawnRateBase -
+        level * GAME_CONFIG.enemies.spawnRateReduction
+    );
+
+    // Multiple enemy spawning at higher levels
+    if (spawnTimer >= spawnDelay) {
+      // Spawn at least one enemy
+      spawnEnemy();
+
+      // Chance to spawn additional enemies based on level
+      if (level > GAME_CONFIG.enemies.extraEnemiesThreshold) {
+        const extraEnemyChance = Math.min(
+          GAME_CONFIG.enemies.extraEnemyChancePerLevel * level,
+          GAME_CONFIG.enemies.maxExtraEnemyChance
+        );
+        if (Math.random() < extraEnemyChance) {
+          spawnEnemy();
+        }
       }
-      return a.time - b.time;
-    });
 
-    rankingContainer.innerHTML = `
-        <h2>🏆 Ranking de Jugadores 🏆</h2>
-        <table>
-            <tr>
-                <th>Pos</th>
-                <th>Avatar</th>
-                <th>Nombre</th>
-                <th>Nivel</th>
-                <th>Enemigos</th>
-                <th>Tiempo</th>
-                <th>Score</th>
-                <th>Estado</th>
-            </tr>
-            ${sortedData
-              .map(
-                (player, index) => `
-                <tr ${index < 3 ? 'class="top-player"' : ""}>
-                    <td>${index + 1}${
-                  index === 0
-                    ? " 🥇"
-                    : index === 1
-                    ? " 🥈"
-                    : index === 2
-                    ? " 🥉"
-                    : ""
-                }</td>
-                    <td>${player.avatar}</td>
-                    <td>${player.name}</td>
-                    <td>${player.level}</td>
-                    <td>${player.enemiesKilled}</td>
-                    <td>${player.time}s</td>
-                    <td>${player.score}</td>
-                    <td>${player.status === "Victoria" ? "🏆" : "💀"}</td>
-                </tr>
-            `
-              )
-              .join("")}
-        </table>
-        <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
-    `;
-  } catch (error) {
-    console.error("Error al cargar el ranking:", error);
-    const rankingContainer = document.getElementById("ranking-container");
-    rankingContainer.innerHTML = `
-        <h2>❌ Error al cargar el ranking</h2>
-        <p>No se pudo conectar con el servidor. Por favor, inténtalo de nuevo más tarde.</p>
-        <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
-    `;
-  }
-}
-
-/**
- * Returns to the main menu
- */
-function backToMenu() {
-  document.getElementById("ranking-container").style.display = "none";
-  document.getElementById("main-menu").style.display = "block";
-  centerMainMenu();
-}
-
-/**
- * Draws the background image
- */
-function drawBackground() {
-  if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
-    const img = backgroundImages[level - 1];
-    const canvas = document.getElementById("game-canvas");
-
-    // Calculate proportions
-    const imgRatio = img.width / img.height;
-    const canvasRatio = canvas.width / canvas.height;
-
-    let drawWidth, drawHeight, x, y;
-
-    if (canvasRatio > imgRatio) {
-      // If canvas is wider than the image
-      drawWidth = canvas.width;
-      drawHeight = canvas.width / imgRatio;
-      x = 0;
-      y = (canvas.height - drawHeight) / 2;
-    } else {
-      // If canvas is taller than the image
-      drawHeight = canvas.height;
-      drawWidth = canvas.height * imgRatio;
-      x = (canvas.width - drawWidth) / 2;
-      y = 0;
+      // Reset spawn timer
+      spawnTimer = 0;
     }
 
-    // Ensure background covers the entire canvas
-    if (drawWidth < canvas.width) drawWidth = canvas.width;
-    if (drawHeight < canvas.height) drawHeight = canvas.height;
+    // Update invulnerability timer
+    updateInvulnerability();
 
-    // Center and crop the background
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, x, y, drawWidth, drawHeight);
+    // Update and draw game elements
+    updateEnemies();
+    updateBullets();
+    updateHearts();
+    updatePowerUps();
+    drawPlayer();
+
+    // Check collisions
+    checkBulletEnemyCollisions();
+    checkPlayerEnemyCollisions();
+
+    // Draw UI overlays
+    drawGameInfo();
+
+    // Troubleshoot if the game has been running for a while with no enemy kills
+    if (gameTime > 300 && enemiesKilled === 0) {
+      troubleshootGame();
+    }
+  } catch (error) {
+    console.error("Error in game loop:", error);
+
+    // Try to recover
+    if (!gameInterval) {
+      gameInterval = setInterval(gameLoop, 1000 / 60);
+    }
   }
 }
+
+/**
+ * Función de depuración para mostrar el estado actual del juego
+ */
+function debugGameState() {
+  console.log("Game State Debug:");
+  console.log(
+    "- Player position:",
+    player ? `(${player.x}, ${player.y})` : "undefined"
+  );
+  console.log("- Player visible:", player ? player.visible : "N/A");
+  console.log(
+    "- Player image loaded:",
+    playerImage ? playerImage.complete : "No image"
+  );
+  console.log(
+    "- Canvas size:",
+    canvas ? `${canvas.width}x${canvas.height}` : "undefined"
+  );
+  console.log("- Game interval active:", gameInterval ? "yes" : "no");
+  console.log(
+    "- Auto shoot interval:",
+    autoShootInterval ? "active" : "inactive"
+  );
+  console.log("- Bullet count:", bullets ? bullets.length : "undefined");
+  console.log("- Enemy count:", enemies ? enemies.length : "undefined");
+  console.log("- Level:", level);
+  console.log("- Game time:", gameTime);
+}
+
+/**
+ * Función para solucionar problemas del juego
+ */
+function troubleshootGame() {
+  // Log current state
+  debugGameState();
+
+  // If game is stuck, try to recover
+  if (gameInterval && player) {
+    console.log("Attempting to troubleshoot game...");
+
+    // Reset player position to center
+    player.x = canvas.width / 2 - player.width / 2;
+    player.y = canvas.height / 2 - player.height / 2;
+    player.visible = true;
+
+    // Make sure we have at least one enemy
+    if (enemies.length === 0) {
+      spawnEnemy();
+    }
+
+    // Force redraw
+    clearInterval(gameInterval);
+    gameInterval = setInterval(gameLoop, 1000 / 60);
+
+    console.log("Game troubleshooting complete");
+  }
+}
+
+/**
+ * Función manual para solucionar problemas del juego
+ */
+window.fixGame = function () {
+  console.log("Manual game fix initiated");
+
+  // Debug current state
+  debugGameState();
+
+  // Try to fix common issues
+  if (!player) {
+    console.log("Player object missing, recreating...");
+    player = {
+      x: canvas.width / 2 - PLAYER_WIDTH / 2,
+      y: canvas.height / 2 - PLAYER_HEIGHT / 2,
+      width: PLAYER_WIDTH,
+      height: PLAYER_HEIGHT,
+      image: playerImage,
+      visible: true,
+      damaged: false,
+    };
+  }
+
+  // Ensure intervals are running
+  if (!gameInterval) {
+    console.log("Game interval not running, restarting...");
+    gameInterval = setInterval(gameLoop, 1000 / 60);
+  }
+
+  if (!autoShootInterval) {
+    console.log("Auto shoot interval not running, restarting...");
+    startAutoShoot();
+  }
+
+  // Force player to be visible
+  player.visible = true;
+
+  // Force redraw
+  if (canvas && ctx) {
+    console.log("Forcing canvas redraw...");
+    gameLoop();
+  }
+
+  console.log("Fix completed");
+  return "Game fix attempt completed. Check console for details.";
+};
+
+// Prevent context menu on right click
+window.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  return false;
+});
+
+// Ensure all event listeners are removed when page unloads
+window.addEventListener("beforeunload", () => {
+  if (gameInterval) {
+    clearInterval(gameInterval);
+  }
+  if (autoShootInterval) {
+    clearInterval(autoShootInterval);
+  }
+  stopBackgroundMusic();
+});
