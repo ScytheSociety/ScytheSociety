@@ -68,7 +68,7 @@ let gameTime = 0;
 let isLevelTransition = false;
 
 // Level Management
-let levelUpEnemies = [50, 150, 450, 1350, 4050, 12150, 36450, 109350, 328050];
+let levelUpEnemies = [30, 70, 110, 150, 190, 230, 270, 210, 250];
 let enemiesRemaining = 0;
 let spawnTimer = 0;
 
