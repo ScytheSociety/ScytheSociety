@@ -413,8 +413,10 @@ function setupControls() {
       e.preventDefault(); // Prevent scrolling
       const rect = canvas.getBoundingClientRect();
       const touch = e.touches[0];
+
+      // Modificación para que el jugador aparezca por encima del dedo
       mouseX = touch.clientX - rect.left;
-      mouseY = touch.clientY - rect.top;
+      mouseY = touch.clientY - rect.top - 80; // 80 píxeles hacia arriba
 
       if (player) {
         player.x = mouseX - player.width / 2;
@@ -431,6 +433,26 @@ function setupControls() {
 
     canvas.addEventListener("touchstart", (e) => {
       e.preventDefault(); // Prevent unwanted behaviors
+
+      // También permitir que el movimiento comience con el dedo
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+
+      // Misma modificación que en touchmove
+      mouseX = touch.clientX - rect.left;
+      mouseY = touch.clientY - rect.top - 80; // 80 píxeles hacia arriba
+
+      if (player) {
+        player.x = mouseX - player.width / 2;
+        player.y = mouseY - player.height / 2;
+
+        // Keep player within canvas bounds
+        player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+        player.y = Math.max(
+          0,
+          Math.min(canvas.height - player.height, player.y)
+        );
+      }
     });
   }
 
