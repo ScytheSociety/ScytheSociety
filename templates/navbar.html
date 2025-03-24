@@ -1,9 +1,8 @@
-<!-- Navbar Template - Se incluirá en todas las páginas -->
+<!-- Navbar Template Universal - Se adapta a cualquier nivel -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
     <div class="container">
-        <a class="navbar-brand" href="/">
-            <img src="./assets/images/logos/logosss.png" alt="Scythe Society" width="30" height="30"
-                class="d-inline-block align-top">
+        <a class="navbar-brand" href="#" id="home-link">
+            <img src="#" alt="Scythe Society" width="30" height="30" id="logo-img" class="d-inline-block align-top">
             Scythe Society
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -13,22 +12,24 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="/">Inicio</a>
+                    <a class="nav-link" href="#" id="home-nav">Inicio</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="gamesDropdown" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
                         Juegos
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="gamesDropdown">
-                        <li><a class="dropdown-item" href="/pages/lol/index.html">League of Legends</a></li>
-                        <li><a class="dropdown-item" href="/pages/wow/index.html">World of Warcraft</a></li>
-                        <li><a class="dropdown-item" href="/pages/ro/index.html">Ragnarok Online</a></li>
-                        <li><a class="dropdown-item" href="/pages/smite/index.html">Smite</a></li>
+                    <ul class="dropdown-menu" aria-labelledby="gamesDropdown" id="games-menu">
+                        <li><a class="dropdown-item" href="#" data-path="pages/lol/index.html">League of Legends</a>
+                        </li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/wow/index.html">World of Warcraft</a>
+                        </li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/ro/index.html">Ragnarok Online</a></li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/smite/index.html">Smite</a></li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item" href="/pages/games.html">Ver todos</a></li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/games.html">Ver todos</a></li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown">
@@ -36,12 +37,12 @@
                         data-bs-toggle="dropdown" aria-expanded="false">
                         Contenido
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="contentDropdown">
-                        <li><a class="dropdown-item" href="/pages/guias.html">Guías</a></li>
-                        <li><a class="dropdown-item" href="/pages/tutoriales.html">Tutoriales</a></li>
-                        <li><a class="dropdown-item" href="/pages/noticias.html">Noticias</a></li>
-                        <li><a class="dropdown-item" href="/pages/imagenes.html">Imágenes</a></li>
-                        <li><a class="dropdown-item" href="/pages/clips.html">Clips</a></li>
+                    <ul class="dropdown-menu" aria-labelledby="contentDropdown" id="content-menu">
+                        <li><a class="dropdown-item" href="#" data-path="pages/guias.html">Guías</a></li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/tutoriales.html">Tutoriales</a></li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/noticias.html">Noticias</a></li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/imagenes.html">Imágenes</a></li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/clips.html">Clips</a></li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown">
@@ -49,11 +50,12 @@
                         aria-expanded="false">
                         Ragnarok Online
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="roDropdown">
-                        <li><a class="dropdown-item" href="/pages/ro/romiembros.html">Miembros</a></li>
-                        <li><a class="dropdown-item" href="/pages/ro/romisiones.html">Misiones</a></li>
-                        <li><a class="dropdown-item" href="/pages/ro/roguias/index.html">Guías de Clases</a></li>
-                        <li><a class="dropdown-item" href="/pages/ro/roeventos/index.html">Eventos</a></li>
+                    <ul class="dropdown-menu" aria-labelledby="roDropdown" id="ro-menu">
+                        <li><a class="dropdown-item" href="#" data-path="pages/ro/romiembros.html">Miembros</a></li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/ro/romisiones.html">Misiones</a></li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/ro/roguias/index.html">Guías de
+                                Clases</a></li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/ro/roeventos/index.html">Eventos</a></li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown">
@@ -61,18 +63,21 @@
                         data-bs-toggle="dropdown" aria-expanded="false">
                         World of Warcraft
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="wowDropdown">
-                        <li><a class="dropdown-item" href="/pages/wow/guias-mazmorras.html">Guías de Mazmorras</a></li>
-                        <li><a class="dropdown-item" href="/pages/wow/guias-raids.html">Guías de Raides</a></li>
-                        <li><a class="dropdown-item" href="/pages/wow/guias-clases.html">Guías de Clases</a></li>
-                        <li><a class="dropdown-item" href="/pages/wow/trucos.html">Trucos y Tips</a></li>
+                    <ul class="dropdown-menu" aria-labelledby="wowDropdown" id="wow-menu">
+                        <li><a class="dropdown-item" href="#" data-path="pages/wow/guias-mazmorras.html">Guías de
+                                Mazmorras</a></li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/wow/guias-raids.html">Guías de Raides</a>
+                        </li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/wow/guias-clases.html">Guías de
+                                Clases</a></li>
+                        <li><a class="dropdown-item" href="#" data-path="pages/wow/trucos.html">Trucos y Tips</a></li>
                     </ul>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/streams.html">Streams</a>
+                    <a class="nav-link" href="#" data-path="pages/streams.html" id="streams-link">Streams</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/pages/contacto.html">Contacto</a>
+                    <a class="nav-link" href="#" data-path="pages/contacto.html" id="contact-link">Contacto</a>
                 </li>
             </ul>
         </div>

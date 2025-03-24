@@ -3,30 +3,41 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hell Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hell Shooter</title>
     <link rel="stylesheet" href="juegosss.css">
+    <!-- Font Awesome for emoji picker button -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body>
+    <!-- Main Menu Screen -->
     <div id="main-menu">
-        <h1>🎉 Feliz Cumpleaños Hell 🎉</h1>
+        <h1>👹 Hell Shooter 💀</h1>
         <div class="input-container">
             <div class="input-row">
-                <label for="name">Nombre:</label>
-                <input type="text" id="name" maxlength="4" minlength="3">
-            </div>
-            <div class="input-row">
-                <label for="avatar">Avatar:</label>
-                <input type="text" id="avatar" maxlength="2" minlength="1">
+                <div class="input-group">
+                    <label for="name">Nombre:</label>
+                    <input type="text" id="name" maxlength="4" minlength="3" placeholder="Max 4">
+                </div>
+                <div class="input-group">
+                    <label for="avatar">Avatar:</label>
+                    <div class="avatar-input-container">
+                        <input type="text" id="avatar" maxlength="2" minlength="1" placeholder="1-2">
+                        <button id="emoji-button" type="button">
+                            <i class="fas fa-smile"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="button-container">
-            <button onclick="startGame()">Jugar</button>
-            <button onclick="viewRanking()">Ranking</button>
+            <button onclick="startGame()" class="gothic-button">Jugar</button>
+            <button onclick="viewRanking()" class="gothic-button">Ranking</button>
         </div>
     </div>
 
+    <!-- Game Area -->
     <div id="game-area" style="display: none;">
         <div id="game-info">
             <span id="player-name"></span> - <span id="player-avatar"></span>
@@ -36,15 +47,47 @@
             <span id="score">Puntuación: 0</span>
         </div>
         <canvas id="game-canvas"></canvas>
+        <div id="special-power-indicator" class="special-power-indicator">
+            <span id="special-power-counter">0</span>
+        </div>
         <div id="game-over" style="display: none;">
             <h2 id="game-over-text"></h2>
-            <button onclick="restartGame()">Jugar otra vez</button>
-            <button onclick="saveAndViewRanking()">Guardar Ranking</button>
+            <button onclick="restartGame()" class="gothic-button">Jugar otra vez</button>
+            <button onclick="saveAndViewRanking()" class="gothic-button">Guardar Ranking</button>
         </div>
     </div>
 
+    <!-- Ranking Container -->
     <div id="ranking-container" style="display: none;"></div>
 
+    <!-- Emoji Picker Modal -->
+    <div id="emoji-picker" style="display: none;">
+        <div class="emoji-picker-content">
+            <h3>Selecciona un emoji</h3>
+            <div class="emoji-grid">
+                <!-- Common gothic/horror themed emojis -->
+                <span class="emoji-option" onclick="selectEmoji('👹')">👹</span>
+                <span class="emoji-option" onclick="selectEmoji('👺')">👺</span>
+                <span class="emoji-option" onclick="selectEmoji('👻')">👻</span>
+                <span class="emoji-option" onclick="selectEmoji('💀')">💀</span>
+                <span class="emoji-option" onclick="selectEmoji('☠️')">☠️</span>
+                <span class="emoji-option" onclick="selectEmoji('👽')">👽</span>
+                <span class="emoji-option" onclick="selectEmoji('👾')">👾</span>
+                <span class="emoji-option" onclick="selectEmoji('🤖')">🤖</span>
+                <span class="emoji-option" onclick="selectEmoji('🎃')">🎃</span>
+                <span class="emoji-option" onclick="selectEmoji('🧛')">🧛</span>
+                <span class="emoji-option" onclick="selectEmoji('🧟')">🧟</span>
+                <span class="emoji-option" onclick="selectEmoji('🔥')">🔥</span>
+                <span class="emoji-option" onclick="selectEmoji('⚡')">⚡</span>
+                <span class="emoji-option" onclick="selectEmoji('🌑')">🌑</span>
+                <span class="emoji-option" onclick="selectEmoji('🦇')">🦇</span>
+                <span class="emoji-option" onclick="selectEmoji('🕸️')">🕸️</span>
+            </div>
+            <button onclick="closeEmojiPicker()" class="gothic-button">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="juegosss.js"></script>
 </body>
 

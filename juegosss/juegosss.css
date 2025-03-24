@@ -1,15 +1,38 @@
+/* 
+ * Hell Shooter - Gothic Themed Game
+ * Main CSS Stylesheet
+ * Fully Responsive for all devices
+ */
+
+/* Global Styles */
+:root {
+  --primary-color: #000000;
+  --secondary-color: #8b0000; /* Dark Red */
+  --accent-color: #ff0000;
+  --text-color: #ffffff;
+  --border-color: #440000;
+  --hover-color: #aa0000;
+  --input-bg: #1a1a1a;
+  --modal-bg: rgba(0, 0, 0, 0.9);
+}
+
+/* Base Styles */
 body {
-  font-family: Arial, sans-serif;
+  font-family: "Times New Roman", Times, serif;
   text-align: center;
-  background-color: #000;
-  color: #fff;
+  background-color: var(--primary-color);
+  color: var(--text-color);
   margin: 0;
   padding: 0;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  background-image: url("/api/placeholder/800/600"); /* Replace with a gothic background image */
+  background-size: cover;
+  background-position: center;
 }
 
+/* Main Menu Styles */
 #main-menu {
   padding: 20px;
   height: 100vh;
@@ -17,14 +40,122 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: 30px;
+  background-color: rgba(0, 0, 0, 0.8);
 }
 
 h1 {
-  margin-bottom: 30px;
-  font-size: 2.5em;
+  margin-bottom: 10px;
+  font-size: 3em;
+  text-shadow: 0 0 10px var(--accent-color);
+  letter-spacing: 2px;
+  color: var(--accent-color);
 }
 
+/* Input Container Styles */
+.input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 10px;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-group label {
+  color: var(--accent-color);
+  font-weight: bold;
+  width: auto;
+  text-align: right;
+}
+
+.avatar-input-container {
+  display: flex;
+  align-items: center;
+}
+
+input {
+  padding: 8px 12px;
+  border: 2px solid var(--border-color);
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  border-radius: 4px;
+  font-family: "Times New Roman", Times, serif;
+  transition: border-color 0.3s;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 5px var(--accent-color);
+}
+
+#avatar {
+  width: 40px;
+  text-align: center;
+  font-size: 1.2em;
+}
+
+#name {
+  width: 100px;
+  text-align: center;
+}
+
+/* Button Styles */
+.button-container {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+}
+
+button,
+.gothic-button {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+  padding: 10px 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.1em;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  min-width: 120px;
+  font-family: "Times New Roman", Times, serif;
+}
+
+button:hover,
+.gothic-button:hover {
+  background-color: var(--hover-color);
+  box-shadow: 0 0 10px var(--accent-color);
+  transform: translateY(-2px);
+}
+
+#emoji-button {
+  padding: 8px;
+  min-width: auto;
+  background-color: var(--input-bg);
+  border: 2px solid var(--border-color);
+}
+
+#emoji-button:hover {
+  background-color: var(--secondary-color);
+}
+
+/* Game Area Styles */
 #game-area {
   width: 100vw;
   height: 100vh;
@@ -37,7 +168,7 @@ h1 {
   width: 100%;
   height: 100%;
   display: block;
-  background-color: #222;
+  background-color: #111;
   touch-action: none;
 }
 
@@ -47,119 +178,259 @@ h1 {
   left: 0;
   right: 0;
   padding: 10px;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   z-index: 100;
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
+  border-bottom: 2px solid var(--border-color);
 }
 
 #game-info span {
   margin: 5px;
+  color: var(--text-color);
+  text-shadow: 0 0 5px var(--accent-color);
 }
 
-button {
-  background-color: #28a745;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1em;
-}
-
-.button-container {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-button:hover {
-  background-color: #218838;
-}
-
+/* Game Over Screen */
 #game-over {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.9);
-  padding: 20px;
+  background: var(--modal-bg);
+  padding: 30px;
   border-radius: 10px;
   z-index: 1000;
+  border: 3px solid var(--border-color);
+  min-width: 300px;
 }
 
-input {
-  padding: 8px;
-  border: 1px solid #444;
-  background-color: #222;
-  color: white;
-  border-radius: 4px;
+#game-over h2 {
+  color: var(--accent-color);
+  margin-bottom: 20px;
+  font-size: 2em;
 }
 
-.input-container {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  width: 100%;
-  max-width: 400px;
-}
-
-.input-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.input-row label {
-  width: 80px;
-  text-align: right;
-}
-
-#avatar {
-  width: 40px;
-  text-align: center;
-}
-
-#name {
-  width: 200px;
-}
-
+/* Ranking Table Styles */
 #ranking-container {
   margin: 20px auto;
   max-width: 800px;
+  background-color: var(--modal-bg);
+  padding: 20px;
+  border-radius: 10px;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#ranking-container h2 {
+  color: var(--accent-color);
+  margin-bottom: 20px;
+  font-size: 2em;
+  text-shadow: 0 0 10px var(--accent-color);
 }
 
 #ranking-container table {
   width: 100%;
   border-collapse: collapse;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(0, 0, 0, 0.5);
+  margin-bottom: 20px;
 }
 
 #ranking-container th,
 #ranking-container td {
-  padding: 10px;
-  border: 1px solid #444;
+  padding: 12px;
+  border: 1px solid var(--border-color);
   text-align: center;
 }
 
 #ranking-container th {
-  background-color: #28a745;
-  color: white;
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 #ranking-container tr:nth-child(even) {
-  background-color: rgba(40, 167, 69, 0.1);
+  background-color: rgba(139, 0, 0, 0.2);
 }
 
+#ranking-container tr:hover {
+  background-color: rgba(139, 0, 0, 0.4);
+}
+
+/* Emoji Picker Modal */
+#emoji-picker {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.emoji-picker-content {
+  background-color: var(--primary-color);
+  border: 3px solid var(--border-color);
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.emoji-option {
+  font-size: 2em;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.emoji-option:hover {
+  background-color: var(--secondary-color);
+}
+
+/* Responsive Styles */
 @media (max-width: 768px) {
-  #game-info {
-    font-size: 0.8em;
+  .input-row {
+    flex-direction: column;
+    gap: 15px;
   }
 
-  button {
-    padding: 15px;
-    font-size: 1.1em;
+  #game-info {
+    font-size: 0.8em;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 5px 10px;
+  }
+
+  #game-info span {
+    margin: 2px;
+  }
+
+  button,
+  .gothic-button {
+    padding: 12px 15px;
+    font-size: 1em;
+  }
+
+  .emoji-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  h1 {
+    font-size: 2em;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.8em;
+  }
+
+  #game-info {
+    font-size: 0.7em;
+  }
+
+  button,
+  .gothic-button {
+    padding: 10px 12px;
+    font-size: 0.9em;
+    min-width: 100px;
+  }
+
+  .emoji-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+
+  .emoji-option {
+    font-size: 1.5em;
+    padding: 8px;
+  }
+
+  #game-over {
+    padding: 20px;
+  }
+
+  #game-over h2 {
+    font-size: 1.5em;
+  }
+}
+
+/* Special power indicator */
+.special-power-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(139, 0, 0, 0.7);
+  padding: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5em;
+  z-index: 100;
+  box-shadow: 0 0 10px var(--accent-color);
+  transition: all 0.3s;
+}
+
+.special-power-ready {
+  background: rgba(255, 0, 0, 0.7);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Game cursor style */
+#game-canvas {
+  cursor: none;
+}
+
+/* Level transition animation */
+.level-transition {
+  animation: fadeInOut 2s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
