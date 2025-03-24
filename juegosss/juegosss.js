@@ -123,16 +123,16 @@ const GAME_CONFIG = {
 
   // Enemigos
   enemies: {
-    baseSpeed: 0.004, // Velocidad base como fracción de altura de canvas
-    levelSpeedIncrease: 0.2, // Aumento de velocidad por nivel (20%)
-    sizeReduction: 0.05, // Reducción de tamaño por nivel (5%)
-    maxSpeedFactor: 1.5, // Factor máximo de velocidad tras rebotes
-    spawnRateBase: 60, // Frames entre apariciones base
-    spawnRateReduction: 4, // Reducción de frames por nivel
-    minSpawnRate: 20, // Mínimo tiempo entre apariciones (frames)
-    extraEnemiesThreshold: 2, // Nivel a partir del cual pueden aparecer enemigos extra
-    extraEnemyChancePerLevel: 0.05, // Probabilidad por nivel de enemigos extra
-    maxExtraEnemyChance: 0.4, // Probabilidad máxima de enemigos extra
+    baseSpeed: 0.001, // Reducido de 0.002 a 0.001 (velocidad base más lenta)
+    levelSpeedIncrease: 0.1, // Reducido de 0.2 a 0.1 (menor incremento por nivel)
+    sizeReduction: 0.03, // Reducido de 0.05 a 0.03 (los enemigos se reducen menos)
+    maxSpeedFactor: 0.3, // Reducido de 0.5 a 0.3 (velocidad máxima menor tras rebotes)
+    spawnRateBase: 90, // Aumentado de 60 a 90 (más tiempo entre apariciones)
+    spawnRateReduction: 2, // Reducido de 4 a 2 (menor reducción por nivel)
+    minSpawnRate: 40, // Aumentado de 20 a 40 (mínimo tiempo mayor)
+    extraEnemiesThreshold: 3, // Aumentado de 2 a 3 (enemigos extra aparecen en nivel más alto)
+    extraEnemyChancePerLevel: 0.03, // Reducido de 0.05 a 0.03 (menor probabilidad)
+    maxExtraEnemyChance: 0.2, // Reducido de 0.4 a 0.2 (probabilidad máxima menor)
   },
 
   // Power-ups y corazones
@@ -1179,7 +1179,7 @@ function startLevel() {
  * Shows the level transition screen
  * @param {boolean} playSound - Si debe reproducir sonido (por defecto true)
  */
-function showLevelTransition(playSound = true) {
+function showLevelTransition(playTransitionSound = true) {
   isLevelTransition = true;
   const transition = document.createElement("div");
   transition.className = "level-transition";
@@ -1199,14 +1199,27 @@ function showLevelTransition(playSound = true) {
   document.body.appendChild(transition);
 
   // Solo reproduce sonido si se indica
-  if (playSound) {
-    playSound("levelUp");
+  if (playTransitionSound) {
+    // Cambiado de playSound a la función correcta
+    playLevelUpSound();
   }
 
   setTimeout(() => {
     document.body.removeChild(transition);
     isLevelTransition = false;
   }, 2000);
+}
+
+/**
+ * Reproduce el sonido de subir de nivel
+ */
+function playLevelUpSound() {
+  if (sounds["levelUp"]) {
+    const sound = sounds["levelUp"].cloneNode();
+    sound.play().catch((error) => {
+      console.warn("Error playing level up sound:", error);
+    });
+  }
 }
 
 // ======================================================
