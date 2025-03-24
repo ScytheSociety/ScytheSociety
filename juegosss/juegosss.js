@@ -160,7 +160,7 @@ const GAME_CONFIG = {
 
   // Niveles
   levels: {
-    enemiesPerLevel: [50, 150, 450, 1350, 4050, 12150, 36450, 109350, 328050], // Enemigos para pasar de nivel
+    enemiesPerLevel: [30, 70, 110, 150, 190, 230, 270, 210, 250], // Enemigos para pasar de nivel
   },
 };
 
@@ -2607,6 +2607,9 @@ async function viewRanking() {
       return a.time - b.time;
     });
 
+    // Solo tomar los 10 primeros lugares
+    const top10 = sortedData.slice(0, 10);
+
     rankingContainer.innerHTML = `
         <h2>🏆 Ranking de Jugadores 🏆</h2>
         <table>
@@ -2618,10 +2621,9 @@ async function viewRanking() {
                 <th>Enemigos</th>
                 <th>Tiempo</th>
                 <th>Score</th>
-                <th>Vidas</th>
                 <th>Estado</th>
             </tr>
-            ${sortedData
+            ${top10
               .map(
                 (player, index) => `
                 <tr ${index < 3 ? 'class="top-player"' : ""}>
@@ -2640,7 +2642,6 @@ async function viewRanking() {
                     <td>${player.enemiesKilled}</td>
                     <td>${player.time}s</td>
                     <td>${player.score}</td>
-                    <td>${player.livesLeft || 0}</td>
                     <td>${player.status === "Victoria" ? "🏆" : "💀"}</td>
                 </tr>
             `
