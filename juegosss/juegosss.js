@@ -519,46 +519,66 @@ function loadGameAssets() {
     })
     .catch((error) => {
       console.error("Error loading assets:", error);
-      // Create fallbacks for images if they fail to load
-      playerImage = createFallbackImage(80, 80, "#FF0000");
-      bulletImage = createFallbackImage(20, 40, "#FFFFFF");
-      backgroundImages[0] = createFallbackImage(
-        canvas.width,
-        canvas.height,
-        "#111111"
-      );
 
-      alert("Error loading game assets. Using fallback graphics.");
+      // Create fallback images if loading fails
+      createFallbackImages();
     });
 }
 
 /**
- * Helper function to create fallback canvas images
+ * Creates fallback images if loading fails
  */
-function createFallbackImage(width, height, color) {
-  const tempCanvas = document.createElement("canvas");
-  tempCanvas.width = width;
-  tempCanvas.height = height;
-  const tempCtx = tempCanvas.getContext("2d");
-  tempCtx.fillStyle = color;
-  tempCtx.fillRect(0, 0, width, height);
+function createFallbackImages() {
+  console.log("Creating fallback images");
 
-  if (color === "#FF0000") {
-    // Player
-    // Add crosshair to fallback player image
-    tempCtx.strokeStyle = "#FFFFFF";
-    tempCtx.lineWidth = 2;
-    tempCtx.beginPath();
-    tempCtx.moveTo(width / 2, 0);
-    tempCtx.lineTo(width / 2, height);
-    tempCtx.moveTo(0, height / 2);
-    tempCtx.lineTo(width, height / 2);
-    tempCtx.stroke();
+  // Create simple fallback player image (red rectangle)
+  const playerCanvas = document.createElement("canvas");
+  playerCanvas.width = 80;
+  playerCanvas.height = 80;
+  const playerCtx = playerCanvas.getContext("2d");
+  playerCtx.fillStyle = "#FF0000";
+  playerCtx.fillRect(0, 0, 80, 80);
+  playerCtx.strokeStyle = "#FFFFFF";
+  playerCtx.lineWidth = 2;
+  playerCtx.strokeRect(5, 5, 70, 70);
+  playerImage = new Image();
+  playerImage.src = playerCanvas.toDataURL();
+
+  // Create simple fallback bullet image (white rectangle)
+  const bulletCanvas = document.createElement("canvas");
+  bulletCanvas.width = 20;
+  bulletCanvas.height = 40;
+  const bulletCtx = bulletCanvas.getContext("2d");
+  bulletCtx.fillStyle = "#FFFFFF";
+  bulletCtx.fillRect(0, 0, 20, 40);
+  bulletImage = new Image();
+  bulletImage.src = bulletCanvas.toDataURL();
+
+  // Create simple fallback background image (dark background)
+  if (backgroundImages.length === 0) {
+    const bgCanvas = document.createElement("canvas");
+    bgCanvas.width = 100;
+    bgCanvas.height = 100;
+    const bgCtx = bgCanvas.getContext("2d");
+    bgCtx.fillStyle = "#111111";
+    bgCtx.fillRect(0, 0, 100, 100);
+    const bgImage = new Image();
+    bgImage.src = bgCanvas.toDataURL();
+    backgroundImages[0] = bgImage;
   }
 
-  const img = new Image();
-  img.src = tempCanvas.toDataURL();
-  return img;
+  // Create a simple fallback enemy image
+  if (enemyImages.length === 0) {
+    const enemyCanvas = document.createElement("canvas");
+    enemyCanvas.width = 50;
+    enemyCanvas.height = 50;
+    const enemyCtx = enemyCanvas.getContext("2d");
+    enemyCtx.fillStyle = "#FF9900";
+    enemyCtx.fillRect(0, 0, 50, 50);
+    const enemyImage = new Image();
+    enemyImage.src = enemyCanvas.toDataURL();
+    enemyImages[0] = enemyImage;
+  }
 }
 
 /**
@@ -572,6 +592,10 @@ function createImage(src) {
   img.onerror = () => console.error(`Error loading image: ${src}`);
   return img;
 }
+
+// ======================================================
+// VISUAL EFFECTS
+// ======================================================
 
 /**
  * Crea un efecto de partículas para explosiones o efectos visuales
@@ -690,6 +714,33 @@ function createExplosionEffect(x, y) {
 
   // Reproducir sonido
   playSound("explosion");
+}
+
+/**
+ * Crea un efecto visual de celebración
+ */
+function celebrationEffect() {
+  // Crear múltiples explosiones de partículas por la pantalla
+  const colors = [
+    "#FF0000",
+    "#00FF00",
+    "#0000FF",
+    "#FFFF00",
+    "#FF00FF",
+    "#00FFFF",
+  ];
+
+  for (let i = 0; i < 10; i++) {
+    setTimeout(() => {
+      // Posición aleatoria
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      // Color aleatorio
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      // Crear partículas
+      createParticleEffect(x, y, color, 50);
+    }, i * 300); // Espaciar en el tiempo
+  }
 }
 
 // ======================================================
@@ -1158,6 +1209,78 @@ function showLevelTransition(playSound = true) {
   }, 2000);
 }
 
+// ======================================================
+// LIVES SYSTEM
+// ======================================================
+
+/**
+ * Maneja la colisión del jugador con un enemigo
+ */
+function playerHit() {
+  // Si el jugador es invulnerable, no recibe daño
+  if (invulnerableTime > 0) return;
+
+  // Reducir vidas
+  playerLives--;
+
+  // Actualizar visualización
+  updateLivesDisplay();
+
+  // Reproducir sonido de daño
+  playSound("damaged");
+
+  // Hacer jugador invulnerable temporalmente
+  invulnerableTime = INVULNERABLE_DURATION;
+
+  // Comprobar game over
+  if (playerLives <= 0) {
+    gameOver();
+  } else {
+    // Efecto visual de daño
+    flashPlayer();
+
+    // Mensaje en pantalla
+    showScreenMessage("¡Daño recibido!", "#FF0000");
+
+    // Crear efecto de onda de impacto
+    createParticleEffect(
+      player.x + player.width / 2,
+      player.y + player.height / 2,
+      "#FF0000",
+      20
+    );
+  }
+}
+
+/**
+ * Crea un efecto visual de parpadeo cuando el jugador recibe daño
+ */
+function flashPlayer() {
+  // Añade clase para efecto visual o cambia opacidad
+  player.damaged = true;
+
+  // Quitar el efecto después de la invulnerabilidad
+  setTimeout(() => {
+    player.damaged = false;
+  }, (INVULNERABLE_DURATION * 1000) / 60); // Convertir frames a ms
+}
+
+/**
+ * Actualiza el estado de invulnerabilidad del jugador
+ */
+function updateInvulnerability() {
+  if (invulnerableTime > 0) {
+    invulnerableTime--;
+
+    // Efecto visual de parpadeo mientras es invulnerable
+    if (player.damaged) {
+      player.visible = Math.floor(invulnerableTime / 5) % 2 === 0;
+    }
+  } else {
+    player.visible = true;
+  }
+}
+
 /**
  * Draws the player on the canvas
  */
@@ -1268,6 +1391,936 @@ function drawPlayer() {
   }
 }
 
+// ======================================================
+// HEARTS & POWER-UPS MANAGEMENT
+// ======================================================
+
+/**
+ * Intenta crear un corazón de recuperación aleatoriamente
+ */
+function trySpawnHeart() {
+  // Si ya apareció un corazón en este nivel, no crear otro
+  if (heartSpawned) return;
+
+  // Probabilidad baja de aparición (0.02% por frame)
+  if (Math.random() < GAME_CONFIG.items.heartSpawnChance) {
+    spawnHeart();
+    heartSpawned = true;
+  }
+}
+
+/**
+ * Crea un corazón de recuperación
+ */
+function spawnHeart() {
+  const heartSize = PLAYER_WIDTH * 0.8;
+
+  // Posición aleatoria (evitando bordes)
+  const x = heartSize + Math.random() * (canvas.width - heartSize * 2);
+  const y = -heartSize; // Aparece desde arriba
+
+  // Velocidad similar a los enemigos pero más lenta
+  const levelSpeedFactor = 1 + level * 0.1;
+  const speed = canvas.height * 0.003 * levelSpeedFactor;
+
+  hearts.push({
+    x: x,
+    y: y,
+    width: heartSize,
+    height: heartSize,
+    velocityY: speed,
+    velocityX: (Math.random() - 0.5) * speed * 0.5, // Ligero movimiento horizontal
+  });
+}
+
+/**
+ * Actualiza y dibuja los corazones de recuperación
+ */
+function updateHearts() {
+  for (let i = hearts.length - 1; i >= 0; i--) {
+    const heart = hearts[i];
+
+    // Mover corazón
+    heart.x += heart.velocityX;
+    heart.y += heart.velocityY;
+
+    // Rebotar en los bordes
+    if (heart.x <= 0 || heart.x + heart.width >= canvas.width) {
+      heart.velocityX *= -1;
+    }
+
+    // Dibujar corazón
+    ctx.fillStyle = "#FF0000";
+
+    // Dibujar forma de corazón
+    ctx.save();
+    ctx.beginPath();
+    const centerX = heart.x + heart.width / 2;
+    const centerY = heart.y + heart.height / 2;
+    const size = heart.width / 2;
+
+    // Efecto de pulsación
+    const pulse = 1 + Math.sin(gameTime * 0.1) * 0.1;
+    ctx.translate(centerX, centerY);
+    ctx.scale(pulse, pulse);
+
+    // Dibujar corazón con path
+    ctx.moveTo(0, -size / 4);
+    ctx.bezierCurveTo(size / 2, -size, size, -size / 4, 0, size);
+    ctx.bezierCurveTo(-size, -size / 4, -size / 2, -size, 0, -size / 4);
+
+    // Añadir brillo
+    ctx.shadowColor = "#FF0000";
+    ctx.shadowBlur = 15;
+
+    ctx.fillStyle = "#FF0000";
+    ctx.fill();
+    ctx.restore();
+
+    // Comprobar colisión con jugador
+    if (checkCollisionBetweenObjects(player, heart)) {
+      // Recuperar vida si no tiene el máximo
+      if (playerLives < 5) {
+        playerLives++;
+        updateLivesDisplay();
+        playSound("heart");
+        showScreenMessage("¡Vida recuperada! ❤️", "#FF0000");
+
+        // Efecto visual al recoger corazón
+        createParticleEffect(
+          heart.x + heart.width / 2,
+          heart.y + heart.height / 2,
+          "#FF0000",
+          30
+        );
+      }
+
+      // Eliminar corazón
+      hearts.splice(i, 1);
+    }
+
+    // Eliminar corazones que salen de la pantalla
+    if (heart.y > canvas.height) {
+      hearts.splice(i, 1);
+    }
+  }
+}
+
+/**
+ * Intenta crear un power-up aleatorio
+ */
+function trySpawnPowerUp() {
+  // Si ya apareció un power-up en este nivel, no crear otro
+  if (powerUpsSpawned) return;
+
+  // Probabilidad baja de aparición (0.015% por frame)
+  if (Math.random() < GAME_CONFIG.items.powerUpSpawnChance) {
+    spawnRandomPowerUp();
+    powerUpsSpawned = true;
+  }
+}
+
+/**
+ * Crea un power-up aleatorio
+ */
+function spawnRandomPowerUp() {
+  const size = PLAYER_WIDTH * 0.7;
+  const x = size + Math.random() * (canvas.width - size * 2);
+  const y = -size;
+
+  // Elegir tipo aleatorio de power-up
+  const types = Object.values(POWERUP_TYPES);
+  const type = types[Math.floor(Math.random() * types.length)];
+
+  powerUps.push({
+    x: x,
+    y: y,
+    width: size,
+    height: size,
+    velocityY: canvas.height * 0.003,
+    velocityX: (Math.random() - 0.5) * 0.002 * canvas.height,
+    type: type,
+  });
+}
+
+/**
+ * Actualiza y dibuja los power-ups
+ */
+function updatePowerUps() {
+  // Actualizar power-up activo
+  if (activePowerUp) {
+    powerUpTimeLeft--;
+
+    if (powerUpTimeLeft <= 0) {
+      // Si se acaba el tiempo, desactivar power-up
+      if (activePowerUp.id === 3) {
+        // Rapid Fire
+        // Restaurar velocidad normal de disparo
+        updateShootingSpeed();
+      }
+
+      activePowerUp = null;
+
+      // Mostrar mensaje
+      showScreenMessage("Power-up terminado", "#FFFFFF");
+    }
+
+    // Actualizar indicador visual
+    updatePowerUpIndicator();
+  }
+
+  // Procesar power-ups en pantalla
+  for (let i = powerUps.length - 1; i >= 0; i--) {
+    const powerUp = powerUps[i];
+
+    // Mover power-up
+    powerUp.y += powerUp.velocityY;
+    powerUp.x += powerUp.velocityX;
+
+    // Rebotar en bordes
+    if (powerUp.x < 0 || powerUp.x + powerUp.width > canvas.width) {
+      powerUp.velocityX *= -1;
+    }
+
+    // Dibujar power-up
+    ctx.save();
+    ctx.fillStyle = powerUp.type.color;
+    ctx.shadowColor = powerUp.type.color;
+    ctx.shadowBlur = 10;
+
+    // Efecto de flotación
+    const floatOffset = Math.sin(gameTime * 0.1) * 3;
+
+    // Forma de diamante para el power-up
+    ctx.beginPath();
+    ctx.moveTo(powerUp.x + powerUp.width / 2, powerUp.y + floatOffset);
+    ctx.lineTo(
+      powerUp.x + powerUp.width,
+      powerUp.y + powerUp.height / 2 + floatOffset
+    );
+    ctx.lineTo(
+      powerUp.x + powerUp.width / 2,
+      powerUp.y + powerUp.height + floatOffset
+    );
+    ctx.lineTo(powerUp.x, powerUp.y + powerUp.height / 2 + floatOffset);
+    ctx.closePath();
+    ctx.fill();
+
+    // Icono dentro del power-up
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `${powerUp.width * 0.4}px Arial`;
+
+    // Símbolo basado en tipo de power-up
+    let symbol = "?";
+    switch (powerUp.type.id) {
+      case 0:
+        symbol = "→";
+        break; // Penetrante
+      case 1:
+        symbol = "↑";
+        break; // Amplio
+      case 2:
+        symbol = "✺";
+        break; // Explosivo
+      case 3:
+        symbol = "⚡";
+        break; // Rápido
+    }
+
+    ctx.fillText(
+      symbol,
+      powerUp.x + powerUp.width / 2,
+      powerUp.y + powerUp.height / 2 + floatOffset
+    );
+    ctx.restore();
+
+    // Colisión con jugador
+    if (checkCollisionBetweenObjects(player, powerUp)) {
+      // Activar power-up
+      activatePowerUp(powerUp.type);
+
+      // Efecto visual
+      createParticleEffect(
+        powerUp.x + powerUp.width / 2,
+        powerUp.y + powerUp.height / 2,
+        powerUp.type.color,
+        30
+      );
+
+      // Eliminar power-up
+      powerUps.splice(i, 1);
+    }
+
+    // Eliminar si sale de pantalla
+    if (powerUp.y > canvas.height) {
+      powerUps.splice(i, 1);
+      powerUpsSpawned = false; // Permitir generar otro
+    }
+  }
+}
+
+/**
+ * Activa un power-up
+ * @param {Object} type - Tipo de power-up a activar
+ */
+function activatePowerUp(type) {
+  // Desactivar power-up anterior si existe
+  if (activePowerUp) {
+    // Restaurar disparo normal si es Disparo Rápido
+    if (activePowerUp.id === 3) {
+      updateShootingSpeed();
+    }
+  }
+
+  // Establecer nuevo power-up
+  activePowerUp = type;
+  powerUpTimeLeft = type.duration;
+
+  // Mostrar mensaje en pantalla
+  showScreenMessage(`¡${type.name}!`, type.color);
+
+  // Aplicar efecto según tipo
+  switch (type.id) {
+    case 0: // Balas Penetrantes
+      // Lógica implementada en shootBullet y checkBulletEnemyCollisions
+      break;
+    case 1: // Disparo Amplio
+      // Lógica implementada en shootBullet
+      break;
+    case 2: // Balas Explosivas
+      // Lógica implementada en checkBulletEnemyCollisions
+      break;
+    case 3: // Disparo Rápido
+      // Aumentar velocidad de disparo
+      if (autoShootInterval) {
+        clearInterval(autoShootInterval);
+      }
+      autoShootInterval = setInterval(() => {
+        shootBullet();
+      }, 50); // Muy rápido temporalmente
+      break;
+  }
+
+  // Reproducir sonido
+  playSound("powerUp");
+}
+
+/**
+ * Check collision between two objects with x, y, width, height
+ * @param {Object} obj1 - First object
+ * @param {Object} obj2 - Second object
+ * @returns {boolean} - True if collision detected
+ */
+function checkCollisionBetweenObjects(obj1, obj2) {
+  return (
+    obj1.x < obj2.x + obj2.width &&
+    obj1.x + obj1.width > obj2.x &&
+    obj1.y < obj2.y + obj2.height &&
+    obj1.y + obj1.height > obj2.y
+  );
+}
+
+// ======================================================
+// ENEMY MANAGEMENT
+// ======================================================
+
+/**
+ * Spawns a new enemy with random properties
+ */
+function spawnEnemy() {
+  // Randomize enemy size based on level - smaller at higher levels
+  const sizeVariation = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
+  const baseSize =
+    ENEMY_MIN_SIZE + Math.random() * (ENEMY_MAX_SIZE - ENEMY_MIN_SIZE);
+  const enemySize = baseSize * sizeVariation * Math.max(0.6, 1 - level * 0.05); // Reduce size with level
+
+  // Random position (top of screen)
+  const x = Math.random() * (canvas.width - enemySize);
+
+  // Velocidad base aumentada significativamente - más rápido con cada nivel
+  const levelSpeedFactor = 1 + level * 0.2; // 20% más rápido por nivel
+  const baseSpeed = canvas.height * 0.006 * levelSpeedFactor; // Velocidad base incrementada
+
+  // Angle is mostly downward (between -PI/4 and PI/4 from vertical)
+  const angle = (Math.random() * Math.PI) / 2 - Math.PI / 4;
+
+  // Velocity components - mainly vertical with some horizontal variation
+  const speed = baseSpeed * (0.8 + Math.random() * 0.6); // 0.8x to 1.4x base speed
+  const velocityX = Math.sin(angle) * speed;
+  const velocityY = Math.abs(Math.cos(angle) * speed); // Always positive (downward)
+
+  // Create the enemy object
+  enemies.push({
+    x: x,
+    y: -enemySize,
+    width: enemySize,
+    height: enemySize,
+    velocityX: velocityX,
+    velocityY: velocityY,
+    image: enemyImages[level - 1] || enemyImages[0], // Fallback to first image if level image not available
+    speedFactor: 1.0, // Factor usado para aumentar velocidad en colisiones
+  });
+
+  // Si estamos en nivel alto, aumentar la cantidad de enemigos
+  if (level > 3 && Math.random() < level * 0.05) {
+    // Spawn additional enemies based on level
+    const extraEnemies = Math.min(Math.floor(level / 2), 5); // Max 5 extra enemies at once
+    for (let i = 0; i < extraEnemies; i++) {
+      setTimeout(() => {
+        if (gameInterval) {
+          // Verificar que el juego aún está en marcha
+          spawnEnemy();
+        }
+      }, Math.random() * 500); // Retraso aleatorio hasta 500ms
+    }
+  }
+}
+
+/**
+ * Updates enemy positions and handles collision with walls and other enemies
+ */
+function updateEnemies() {
+  const wallBounceFactorX = 0.9; // Rebote con paredes laterales
+  const wallBounceFactorY = 1.05; // Rebote con techo/suelo - aumenta velocidad
+  const enemyBounceFactorBase = 1.1; // Base para rebote entre enemigos - aumenta velocidad
+
+  // Update each enemy's position
+  for (let i = 0; i < enemies.length; i++) {
+    const enemy = enemies[i];
+
+    // Move enemy
+    enemy.x += enemy.velocityX;
+    enemy.y += enemy.velocityY;
+
+    // Bounce off side walls - change direction but maintain mainly downward movement
+    if (enemy.x <= 0) {
+      enemy.velocityX = Math.abs(enemy.velocityX) * wallBounceFactorX;
+      enemy.x = 0;
+      // Randomly adjust Y velocity slightly to prevent identical bouncing patterns
+      enemy.velocityY *= 0.95 + Math.random() * 0.1;
+    } else if (enemy.x + enemy.width >= canvas.width) {
+      enemy.velocityX = -Math.abs(enemy.velocityX) * wallBounceFactorX;
+      enemy.x = canvas.width - enemy.width;
+      // Randomly adjust Y velocity slightly
+      enemy.velocityY *= 0.95 + Math.random() * 0.1;
+    }
+
+    // Bounce off top
+    if (enemy.y <= 0) {
+      // If hitting top, always bounce downward
+      enemy.velocityY = Math.abs(enemy.velocityY) * wallBounceFactorY;
+      enemy.y = 0;
+    }
+
+    // Bounce off bottom - SIEMPRE hacia arriba
+    if (enemy.y + enemy.height >= canvas.height) {
+      // If hitting bottom, always bounce upward with slight horizontal adjustment
+      enemy.velocityY = -Math.abs(enemy.velocityY) * wallBounceFactorY;
+      enemy.y = canvas.height - enemy.height;
+      // Add some horizontal variation on bounce
+      enemy.velocityX += (Math.random() - 0.5) * (canvas.width * 0.003);
+    }
+
+    // Random direction change - but mostly downward (very low probability)
+    if (Math.random() < 0.001) {
+      // Sólo 0.1% de probabilidad por frame
+      // Downward bias - angle between -PI/3 and PI/3 from vertical
+      const angle = Math.random() * ((2 * Math.PI) / 3) - Math.PI / 3;
+      const speed = Math.sqrt(
+        enemy.velocityX * enemy.velocityX + enemy.velocityY * enemy.velocityY
+      );
+      enemy.velocityX = Math.sin(angle) * speed;
+      enemy.velocityY = Math.abs(Math.cos(angle) * speed); // Asegurar que es hacia abajo
+    }
+
+    // Check collision with other enemies
+    for (let j = i + 1; j < enemies.length; j++) {
+      const otherEnemy = enemies[j];
+
+      // Check if enemies are colliding
+      if (checkCollisionBetweenObjects(enemy, otherEnemy)) {
+        // Calculate collision response with increased velocities
+        const dx =
+          otherEnemy.x + otherEnemy.width / 2 - (enemy.x + enemy.width / 2);
+        const dy =
+          otherEnemy.y + otherEnemy.height / 2 - (enemy.y + enemy.height / 2);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist > 0) {
+          // Normalize direction
+          const nx = dx / dist;
+          const ny = dy / dist;
+
+          // Calculate bounce factors based on enemy speed factor
+          const enemyBounceFactor = enemyBounceFactorBase * enemy.speedFactor;
+          const otherEnemyBounceFactor =
+            enemyBounceFactorBase * otherEnemy.speedFactor;
+
+          // Exchange velocity components along the collision normal - with speed increase
+          const p1 = enemy.velocityX * nx + enemy.velocityY * ny;
+          const p2 = otherEnemy.velocityX * nx + otherEnemy.velocityY * ny;
+
+          enemy.velocityX =
+            (enemy.velocityX + nx * (p2 - p1)) * enemyBounceFactor;
+          enemy.velocityY =
+            (enemy.velocityY + ny * (p2 - p1)) * enemyBounceFactor;
+
+          otherEnemy.velocityX =
+            (otherEnemy.velocityX + nx * (p1 - p2)) * otherEnemyBounceFactor;
+          otherEnemy.velocityY =
+            (otherEnemy.velocityY + ny * (p1 - p2)) * otherEnemyBounceFactor;
+
+          // Increase speed factor for both enemies (more aggression)
+          enemy.speedFactor = Math.min(enemy.speedFactor * 1.05, 1.5);
+          otherEnemy.speedFactor = Math.min(otherEnemy.speedFactor * 1.05, 1.5);
+
+          // Separate the enemies to prevent sticking
+          const overlap = (enemy.width + otherEnemy.width) / 2 - dist + 2; // +2 para separar un poco más
+          if (overlap > 0) {
+            enemy.x -= (nx * overlap) / 2;
+            enemy.y -= (ny * overlap) / 2;
+            otherEnemy.x += (nx * overlap) / 2;
+            otherEnemy.y += (ny * overlap) / 2;
+          }
+        }
+      }
+    }
+
+    // Speed cap to prevent enemies from going too fast
+    const maxSpeed = canvas.height * 0.02 * (1 + level * 0.1);
+    const currentSpeed = Math.sqrt(
+      enemy.velocityX * enemy.velocityX + enemy.velocityY * enemy.velocityY
+    );
+    if (currentSpeed > maxSpeed) {
+      const ratio = maxSpeed / currentSpeed;
+      enemy.velocityX *= ratio;
+      enemy.velocityY *= ratio;
+    }
+
+    // Draw the enemy
+    if (enemy.image && enemy.image.complete) {
+      ctx.drawImage(enemy.image, enemy.x, enemy.y, enemy.width, enemy.height);
+    } else {
+      // Draw placeholder if image not loaded
+      ctx.fillStyle = "#8B0000";
+      ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+    }
+  }
+}
+
+// ======================================================
+// BULLET MANAGEMENT
+// ======================================================
+
+/**
+ * Creates a regular bullet (fired upward)
+ */
+function shootBullet() {
+  const currentTime = Date.now();
+  const cooldownTime = Math.max(80, 200 - level * 12); // Cooldown base
+
+  if (currentTime - lastShootTime > cooldownTime) {
+    // Base bullet properties
+    const bulletSpeed = canvas.height * (0.015 + level * 0.002); // Increase speed with level
+
+    // Propiedades especiales basadas en power-ups
+    const isPenetrating = activePowerUp && activePowerUp.id === 0;
+    const isWideShot = activePowerUp && activePowerUp.id === 1;
+    const isExplosive = activePowerUp && activePowerUp.id === 2;
+
+    // Número de balas basado en nivel y power-up
+    let bulletCount = 1;
+    let spreadAngle = Math.PI / 12; // 15 grados por defecto
+
+    if (isWideShot) {
+      bulletCount = 7; // Muchas balas para disparo amplio
+      spreadAngle = Math.PI / 8; // 22.5 grados para mejor cobertura
+    } else if (level >= 3) {
+      bulletCount = Math.min(1 + Math.floor(level / 3), 5); // Max 5 bullets por nivel
+    }
+
+    // Crear balas
+    for (let i = 0; i < bulletCount; i++) {
+      const offset = i - Math.floor(bulletCount / 2);
+      const angle = offset * spreadAngle;
+
+      bullets.push({
+        x: player.x + player.width / 2 - BULLET_WIDTH / 2,
+        y: player.y - BULLET_HEIGHT,
+        width: BULLET_WIDTH,
+        height: BULLET_HEIGHT,
+        velocityX: Math.sin(angle) * bulletSpeed,
+        velocityY: -Math.cos(angle) * bulletSpeed, // Upward with angle
+        penetrating: isPenetrating, // Flag para balas penetrantes
+        explosive: isExplosive, // Flag para balas explosivas
+        penetrationCount: isPenetrating ? 3 : 0, // Penetra hasta 3 enemigos
+      });
+    }
+
+    lastShootTime = currentTime;
+
+    // Reproducir sonido de disparo sólo si el juego está activo y no está pausado
+    if (gameInterval) {
+      playSound("shoot");
+    }
+  }
+}
+
+/**
+ * Activates the special power (radial bullets)
+ */
+function activateSpecialPower() {
+  if (!specialPowerReady || specialPowerActive) return;
+
+  specialPowerActive = true;
+  specialPowerReady = false;
+  enemiesForSpecialPower = 0;
+
+  // Update indicator
+  updateSpecialPowerIndicator();
+
+  // Create bullets in a circle
+  const bulletCount = SPECIAL_BULLET_COUNT;
+  const bulletSpeed = canvas.height * 0.01;
+
+  for (let i = 0; i < bulletCount; i++) {
+    // Calculate direction vector for each bullet
+    const angle = (i / bulletCount) * Math.PI * 2;
+    const velocityX = Math.cos(angle) * bulletSpeed;
+    const velocityY = Math.sin(angle) * bulletSpeed;
+
+    // Create the special bullet
+    specialBullets.push({
+      x: player.x + player.width / 2 - BULLET_WIDTH / 2,
+      y: player.y + player.height / 2 - BULLET_HEIGHT / 2,
+      width: BULLET_WIDTH,
+      height: BULLET_HEIGHT,
+      velocityX: velocityX,
+      velocityY: velocityY,
+      life: (SPECIAL_POWER_DURATION / 1000) * 60, // Convert to frames (assuming 60fps)
+      explosive: true, // Special bullets are also explosive
+    });
+  }
+
+  // Efecto visual
+  createParticleEffect(
+    player.x + player.width / 2,
+    player.y + player.height / 2,
+    "#FF0000",
+    50 // Más partículas para poder especial
+  );
+
+  // Play special power sound
+  playSound("special");
+
+  // Reset special power state after duration
+  setTimeout(() => {
+    specialPowerActive = false;
+  }, SPECIAL_POWER_DURATION);
+}
+
+/**
+ * Updates and draws all bullets
+ */
+function updateBullets() {
+  // Update regular bullets
+  for (let i = 0; i < bullets.length; i++) {
+    const bullet = bullets[i];
+
+    // Move bullet
+    bullet.x += bullet.velocityX;
+    bullet.y += bullet.velocityY;
+
+    // Draw bullet - diferentes estilos según tipo
+    ctx.save();
+
+    // Efecto visual según tipo de bala
+    if (bullet.penetrating) {
+      // Efecto para balas penetrantes
+      ctx.shadowColor = "#FFFF00";
+      ctx.shadowBlur = 10;
+      ctx.strokeStyle = "#FFFF00";
+      ctx.lineWidth = 2;
+
+      // Estela tras la bala
+      ctx.beginPath();
+      ctx.moveTo(bullet.x + bullet.width / 2, bullet.y + bullet.height);
+      ctx.lineTo(bullet.x + bullet.width / 2, bullet.y + bullet.height + 15);
+      ctx.stroke();
+    } else if (bullet.explosive) {
+      // Efecto para balas explosivas
+      ctx.shadowColor = "#FF8800";
+      ctx.shadowBlur = 10;
+    }
+
+    if (bulletImage && bulletImage.complete) {
+      // Dibujar con rotación según dirección
+      const angle =
+        Math.atan2(bullet.velocityY, bullet.velocityX) + Math.PI / 2;
+
+      ctx.translate(bullet.x + bullet.width / 2, bullet.y + bullet.height / 2);
+      ctx.rotate(angle);
+      ctx.drawImage(
+        bulletImage,
+        -bullet.width / 2,
+        -bullet.height / 2,
+        bullet.width,
+        bullet.height
+      );
+    } else {
+      // Draw placeholder
+      ctx.fillStyle = bullet.penetrating
+        ? "#FFFF00"
+        : bullet.explosive
+        ? "#FF8800"
+        : "#FFFFFF";
+      ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+    }
+
+    ctx.restore();
+  }
+
+  // Update special bullets
+  for (let i = 0; i < specialBullets.length; i++) {
+    const bullet = specialBullets[i];
+
+    // Decrease life
+    bullet.life--;
+
+    // Move bullet
+    bullet.x += bullet.velocityX;
+    bullet.y += bullet.velocityY;
+
+    // Draw bullet with glow effect
+    ctx.save();
+    // Add glow effect
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "#FF0000";
+
+    // Calcular rotación según dirección
+    const angle = Math.atan2(bullet.velocityY, bullet.velocityX) + Math.PI / 2;
+
+    ctx.translate(bullet.x + bullet.width / 2, bullet.y + bullet.height / 2);
+    ctx.rotate(angle);
+
+    if (bulletImage && bulletImage.complete) {
+      ctx.drawImage(
+        bulletImage,
+        -bullet.width / 2,
+        -bullet.height / 2,
+        bullet.width,
+        bullet.height
+      );
+    } else {
+      // Draw placeholder
+      ctx.fillStyle = "#FF3333";
+      ctx.fillRect(
+        -bullet.width / 2,
+        -bullet.height / 2,
+        bullet.width,
+        bullet.height
+      );
+    }
+    ctx.restore();
+
+    // Efecto de partículas para balas especiales (estela)
+    if (gameTime % 3 === 0) {
+      // Solo cada 3 frames para no sobrecargar
+      createParticleEffect(
+        bullet.x + bullet.width / 2,
+        bullet.y + bullet.height / 2,
+        "#FF3333",
+        1
+      );
+    }
+  }
+
+  // Remove bullets that are off-screen or expired
+  bullets = bullets.filter(
+    (bullet) =>
+      bullet.x + bullet.width > 0 &&
+      bullet.x < canvas.width &&
+      bullet.y + bullet.height > 0 &&
+      bullet.y < canvas.height
+  );
+
+  specialBullets = specialBullets.filter(
+    (bullet) =>
+      bullet.life > 0 &&
+      bullet.x + bullet.width > 0 &&
+      bullet.x < canvas.width &&
+      bullet.y + bullet.height > 0 &&
+      bullet.y < canvas.height
+  );
+}
+
+/**
+ * Check for collisions between bullets and enemies
+ */
+function checkBulletEnemyCollisions() {
+  // Check regular bullets vs enemies
+  for (let i = enemies.length - 1; i >= 0; i--) {
+    const enemy = enemies[i];
+    let enemyHit = false;
+    let explosionSource = null;
+
+    // Check against regular bullets
+    for (let j = bullets.length - 1; j >= 0; j--) {
+      const bullet = bullets[j];
+
+      if (checkCollisionBetweenObjects(bullet, enemy)) {
+        // Mark enemy as hit
+        enemyHit = true;
+
+        // Guardar referencia para explosión si la bala es explosiva
+        if (bullet.explosive) {
+          explosionSource = {
+            x: enemy.x + enemy.width / 2,
+            y: enemy.y + enemy.height / 2,
+          };
+        }
+
+        // Manejar balas penetrantes
+        if (bullet.penetrating) {
+          bullet.penetrationCount--;
+          if (bullet.penetrationCount <= 0) {
+            bullets.splice(j, 1);
+          }
+        } else {
+          // Bala normal, eliminar
+          bullets.splice(j, 1);
+        }
+
+        break;
+      }
+    }
+
+    // Check against special bullets if enemy wasn't already hit
+    if (!enemyHit) {
+      for (let j = specialBullets.length - 1; j >= 0; j--) {
+        const bullet = specialBullets[j];
+
+        if (checkCollisionBetweenObjects(bullet, enemy)) {
+          // Mark enemy as hit
+          enemyHit = true;
+
+          // Special bullets are explosive
+          explosionSource = {
+            x: enemy.x + enemy.width / 2,
+            y: enemy.y + enemy.height / 2,
+          };
+
+          // No eliminar la bala especial, solo continúa
+          break;
+        }
+      }
+    }
+
+    // Process enemy hit
+    if (enemyHit) {
+      // Remove enemy
+      enemies.splice(i, 1);
+
+      // Update game stats
+      enemiesKilled++;
+      enemiesForSpecialPower++;
+      score += 10 * level; // Score increases with level
+
+      // Check if special power is ready
+      if (enemiesForSpecialPower >= ENEMIES_FOR_SPECIAL) {
+        specialPowerReady = true;
+        enemiesForSpecialPower = ENEMIES_FOR_SPECIAL;
+      }
+
+      // Update UI
+      document.getElementById(
+        "enemies-killed"
+      ).textContent = `Enemigos: ${enemiesKilled}`;
+      document.getElementById("score").textContent = `Puntuación: ${score}`;
+      updateSpecialPowerIndicator();
+
+      // Play hit sound
+      playSound("hit");
+
+      // Si había una fuente de explosión, procesarla y dañar enemigos cercanos
+      if (explosionSource) {
+        createExplosionEffect(explosionSource.x, explosionSource.y);
+
+        // Dañar enemigos cercanos con la explosión
+        for (let k = enemies.length - 1; k >= 0; k--) {
+          const nearbyEnemy = enemies[k];
+          const centerX = nearbyEnemy.x + nearbyEnemy.width / 2;
+          const centerY = nearbyEnemy.y + nearbyEnemy.height / 2;
+
+          // Calcular distancia al centro de la explosión
+          const dx = centerX - explosionSource.x;
+          const dy = centerY - explosionSource.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          // Si está dentro del radio de explosión, eliminarlo
+          if (distance < EXPLOSION_RADIUS) {
+            // Eliminar enemigo
+            enemies.splice(k, 1);
+
+            // Actualizar estadísticas
+            enemiesKilled++;
+            enemiesForSpecialPower++;
+            score += 5 * level; // Menos puntos por explosión
+
+            // Comprobar poder especial
+            if (enemiesForSpecialPower >= ENEMIES_FOR_SPECIAL) {
+              specialPowerReady = true;
+              enemiesForSpecialPower = ENEMIES_FOR_SPECIAL;
+            }
+
+            // Actualizar UI
+            document.getElementById(
+              "enemies-killed"
+            ).textContent = `Enemigos: ${enemiesKilled}`;
+            document.getElementById(
+              "score"
+            ).textContent = `Puntuación: ${score}`;
+            updateSpecialPowerIndicator();
+          }
+        }
+      }
+
+      // Check for level completion
+      if (enemiesKilled >= levelUpEnemies[level - 1]) {
+        level++;
+        if (level > levelUpEnemies.length) {
+          victory();
+        } else {
+          startLevel();
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Check for collisions between player and enemies
+ */
+function checkPlayerEnemyCollisions() {
+  for (let i = 0; i < enemies.length; i++) {
+    if (checkCollisionBetweenObjects(player, enemies[i])) {
+      if (invulnerableTime <= 0) {
+        playerHit();
+
+        // Eliminar enemigo que golpeó al jugador
+        enemies.splice(i, 1);
+        return;
+      }
+    }
+  }
+}
+
+// ======================================================
+// GAME LOOP
+// ======================================================
+
 /**
  * Main game loop function
  */
@@ -1302,7 +2355,7 @@ function gameLoop() {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Try to spawn a heart or power-up randomly
+    // Intentar generar un corazón o power-up aleatoriamente
     trySpawnHeart();
     trySpawnPowerUp();
 
@@ -1355,7 +2408,9 @@ function gameLoop() {
 
     // Troubleshoot if the game has been running for a while with no enemy kills
     if (gameTime > 300 && enemiesKilled === 0) {
-      troubleshootGame();
+      console.log(
+        "Posible problema: El juego lleva tiempo corriendo sin eliminar enemigos"
+      );
     }
   } catch (error) {
     console.error("Error in game loop:", error);
@@ -1368,9 +2423,259 @@ function gameLoop() {
 }
 
 /**
- * Función de depuración para mostrar el estado actual del juego
+ * Draws additional UI information on screen
  */
-function debugGameState() {
+function drawGameInfo() {
+  // Dibuja información adicional como nivel actual, combo, etc.
+  // Aquí podrían añadirse más elementos visuales
+
+  // Dibuja un indicador de nivel en la esquina superior derecha
+  ctx.save();
+  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+  ctx.fillRect(canvas.width - 100, 10, 90, 30);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "bold 18px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText(`Nivel ${level}`, canvas.width - 55, 30);
+  ctx.restore();
+
+  // Dibuja un indicador de puntaje actual en la esquina superior izquierda
+  // Solo cuando cambia el puntaje, mostrar animación
+  if (score > 0 && gameTime % 120 < 60) {
+    // Parpadea cada 2 segundos
+    ctx.save();
+    ctx.font = "bold 24px Arial";
+    ctx.fillStyle = "#FF0000";
+    ctx.textAlign = "left";
+    ctx.fillText(`${score}`, 20, 40);
+    ctx.restore();
+  }
+}
+
+// ======================================================
+// GAME STATE MANAGEMENT
+// ======================================================
+
+/**
+ * Handles game over
+ */
+function gameOver() {
+  clearInterval(gameInterval);
+  stopAutoShoot();
+  stopBackgroundMusic();
+  document.getElementById("game-over").style.display = "block";
+  document.getElementById("game-over-text").textContent = "Game Over 💀";
+  playSound("gameOver");
+
+  // Efecto visual de explosión grande al perder
+  createParticleEffect(
+    player.x + player.width / 2,
+    player.y + player.height / 2,
+    "#FF0000",
+    100
+  );
+}
+
+/**
+ * Restarts the game
+ */
+function restartGame() {
+  document.getElementById("game-over").style.display = "none";
+  startGame();
+}
+
+/**
+ * Saves score and shows ranking
+ */
+async function saveAndViewRanking() {
+  await saveScore();
+  viewRanking();
+  document.getElementById("game-over").style.display = "none";
+}
+
+/**
+ * Saves the player's score to the database
+ */
+async function saveScore() {
+  const playerData = {
+    date: new Date().toISOString(),
+    avatar: playerAvatar,
+    name: playerName,
+    level: level,
+    enemiesKilled: enemiesKilled,
+    time: Math.floor(gameTime / 60),
+    score: score,
+    livesLeft: playerLives,
+    status: document
+      .getElementById("game-over-text")
+      .textContent.includes("Victoria")
+      ? "Victoria"
+      : "Derrota",
+  };
+
+  try {
+    const response = await fetch(SHEET_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        data: [playerData],
+      }),
+    });
+
+    if (response.ok) {
+      alert("¡Puntuación guardada con éxito! 🎉");
+    } else {
+      throw new Error("Error al guardar la puntuación");
+    }
+  } catch (error) {
+    console.error("Error al guardar:", error);
+    alert("Error al guardar la puntuación. Por favor, inténtalo de nuevo.");
+  }
+}
+
+/**
+ * Handles victory
+ */
+function victory() {
+  clearInterval(gameInterval);
+  stopAutoShoot();
+  stopBackgroundMusic();
+  document.getElementById("game-over").style.display = "block";
+  document.getElementById("game-over-text").textContent = "¡Victoria! 🎉";
+  playSound("victory");
+
+  // Efecto visual de celebración
+  celebrationEffect();
+}
+
+/**
+ * Views the ranking from the database
+ */
+async function viewRanking() {
+  try {
+    document.getElementById("main-menu").style.display = "none";
+    document.getElementById("game-area").style.display = "none";
+
+    const rankingContainer = document.getElementById("ranking-container");
+    rankingContainer.style.display = "block";
+    rankingContainer.innerHTML = `<h2>⌛ Cargando ranking... ⌛</h2>`;
+
+    const response = await fetch(SHEET_URL);
+    const data = await response.json();
+
+    const sortedData = data.sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      return a.time - b.time;
+    });
+
+    rankingContainer.innerHTML = `
+        <h2>🏆 Ranking de Jugadores 🏆</h2>
+        <table>
+            <tr>
+                <th>Pos</th>
+                <th>Avatar</th>
+                <th>Nombre</th>
+                <th>Nivel</th>
+                <th>Enemigos</th>
+                <th>Tiempo</th>
+                <th>Score</th>
+                <th>Vidas</th>
+                <th>Estado</th>
+            </tr>
+            ${sortedData
+              .map(
+                (player, index) => `
+                <tr ${index < 3 ? 'class="top-player"' : ""}>
+                    <td>${index + 1}${
+                  index === 0
+                    ? " 🥇"
+                    : index === 1
+                    ? " 🥈"
+                    : index === 2
+                    ? " 🥉"
+                    : ""
+                }</td>
+                    <td>${player.avatar}</td>
+                    <td>${player.name}</td>
+                    <td>${player.level}</td>
+                    <td>${player.enemiesKilled}</td>
+                    <td>${player.time}s</td>
+                    <td>${player.score}</td>
+                    <td>${player.livesLeft || 0}</td>
+                    <td>${player.status === "Victoria" ? "🏆" : "💀"}</td>
+                </tr>
+            `
+              )
+              .join("")}
+        </table>
+        <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
+    `;
+  } catch (error) {
+    console.error("Error al cargar el ranking:", error);
+    const rankingContainer = document.getElementById("ranking-container");
+    rankingContainer.innerHTML = `
+        <h2>❌ Error al cargar el ranking</h2>
+        <p>No se pudo conectar con el servidor. Por favor, inténtalo de nuevo más tarde.</p>
+        <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
+    `;
+  }
+}
+
+/**
+ * Returns to the main menu
+ */
+function backToMenu() {
+  document.getElementById("ranking-container").style.display = "none";
+  document.getElementById("main-menu").style.display = "block";
+  centerMainMenu();
+}
+
+/**
+ * Draws the background image
+ */
+function drawBackground() {
+  if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
+    const img = backgroundImages[level - 1];
+    const canvas = document.getElementById("game-canvas");
+
+    // Calculate proportions
+    const imgRatio = img.width / img.height;
+    const canvasRatio = canvas.width / canvas.height;
+
+    let drawWidth, drawHeight, x, y;
+
+    if (canvasRatio > imgRatio) {
+      // If canvas is wider than the image
+      drawWidth = canvas.width;
+      drawHeight = canvas.width / imgRatio;
+      x = 0;
+      y = (canvas.height - drawHeight) / 2;
+    } else {
+      // If canvas is taller than the image
+      drawHeight = canvas.height;
+      drawWidth = canvas.height * imgRatio;
+      x = (canvas.width - drawWidth) / 2;
+      y = 0;
+    }
+
+    // Ensure background covers the entire canvas
+    if (drawWidth < canvas.width) drawWidth = canvas.width;
+    if (drawHeight < canvas.height) drawHeight = canvas.height;
+
+    // Center and crop the background
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, x, y, drawWidth, drawHeight);
+  }
+}
+
+/**
+ * Función de diagnóstico para mostrar el estado actual del juego
+ */
+window.debugGameState = function () {
   console.log("Game State Debug:");
   console.log(
     "- Player position:",
@@ -1394,83 +2699,50 @@ function debugGameState() {
   console.log("- Enemy count:", enemies ? enemies.length : "undefined");
   console.log("- Level:", level);
   console.log("- Game time:", gameTime);
-}
 
-/**
- * Función para solucionar problemas del juego
- */
-function troubleshootGame() {
-  // Log current state
-  debugGameState();
-
-  // If game is stuck, try to recover
-  if (gameInterval && player) {
-    console.log("Attempting to troubleshoot game...");
-
-    // Reset player position to center
-    player.x = canvas.width / 2 - player.width / 2;
-    player.y = canvas.height / 2 - player.height / 2;
-    player.visible = true;
-
-    // Make sure we have at least one enemy
-    if (enemies.length === 0) {
-      spawnEnemy();
-    }
-
-    // Force redraw
-    clearInterval(gameInterval);
-    gameInterval = setInterval(gameLoop, 1000 / 60);
-
-    console.log("Game troubleshooting complete");
+  // Intentar dibujar un rectángulo en la posición actual del jugador para comprobar
+  if (canvas && ctx) {
+    ctx.fillStyle = "#FF00FF";
+    ctx.fillRect(mouseX - 20, mouseY - 20, 40, 40);
+    console.log("Dibujado rectángulo de diagnóstico en posición del mouse");
   }
-}
+
+  return "Diagnóstico completado. Revisa la consola para más detalles.";
+};
 
 /**
- * Función manual para solucionar problemas del juego
+ * Función para solucionar manualmente el juego si está congelado
  */
 window.fixGame = function () {
-  console.log("Manual game fix initiated");
+  console.log("Iniciando reparación manual del juego");
 
-  // Debug current state
-  debugGameState();
+  // Detener y reiniciar los intervalos
+  if (gameInterval) clearInterval(gameInterval);
+  if (autoShootInterval) clearInterval(autoShootInterval);
 
-  // Try to fix common issues
-  if (!player) {
-    console.log("Player object missing, recreating...");
-    player = {
-      x: canvas.width / 2 - PLAYER_WIDTH / 2,
-      y: canvas.height / 2 - PLAYER_HEIGHT / 2,
-      width: PLAYER_WIDTH,
-      height: PLAYER_HEIGHT,
-      image: playerImage,
-      visible: true,
-      damaged: false,
-    };
+  // Reiniciar el bucle del juego
+  gameInterval = setInterval(gameLoop, 1000 / 60);
+  startAutoShoot();
+
+  // Asegurar que el jugador sea visible y esté centrado
+  if (player) {
+    player.visible = true;
+    player.x = canvas.width / 2 - player.width / 2;
+    player.y = canvas.height / 2 - player.height / 2;
   }
 
-  // Ensure intervals are running
-  if (!gameInterval) {
-    console.log("Game interval not running, restarting...");
-    gameInterval = setInterval(gameLoop, 1000 / 60);
+  // Forzar la creación de un enemigo si no hay ninguno
+  if (enemies && enemies.length === 0) {
+    spawnEnemy();
   }
 
-  if (!autoShootInterval) {
-    console.log("Auto shoot interval not running, restarting...");
-    startAutoShoot();
-  }
-
-  // Force player to be visible
-  player.visible = true;
-
-  // Force redraw
-  if (canvas && ctx) {
-    console.log("Forcing canvas redraw...");
-    gameLoop();
-  }
-
-  console.log("Fix completed");
-  return "Game fix attempt completed. Check console for details.";
+  console.log("Reparación manual completada");
+  return "Reparación del juego completada. Verifica si ahora funciona correctamente.";
 };
+
+// ======================================================
+// WINDOW EVENT LISTENERS
+// ======================================================
 
 // Prevent context menu on right click
 window.addEventListener("contextmenu", (e) => {
