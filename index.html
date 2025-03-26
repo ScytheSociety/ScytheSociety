@@ -296,7 +296,6 @@
     <script src="./assets/js/path-resolver.js"></script>
 
     <!-- Script para cargar componentes HTML -->
-    // Script para cargar componentes HTML
     <script>
         // Determinar la ruta base para cargar los componentes
         const pathParts = window.location.pathname.split('/').filter(part => part !== '');
@@ -307,7 +306,7 @@
 
         if (isGitHubPages) {
             // Para GitHub Pages, aseguramos incluir el nombre del repositorio
-            templatePath = '/ScytheSociety/';
+            templatePath = '/ScytheSociety'; // Sin slash al final
         } else {
             // Para desarrollo local, calculamos la profundidad relativa
             for (let i = 0; i < pathParts.length; i++) {
@@ -319,11 +318,11 @@
         console.log("Ruta base calculada:", templatePath);
 
         // Cargar navbar
-        fetch(templatePath + 'templates/navbar.html')
+        fetch(templatePath + '/templates/navbar.html')
             .then(response => {
                 if (!response.ok) {
                     throw new Error(
-                        `Error HTTP: ${response.status} - Ruta: ${templatePath + 'templates/navbar.html'}`);
+                        `Error HTTP: ${response.status} - Ruta: ${templatePath + '/templates/navbar.html'}`);
                 }
                 return response.text();
             })
@@ -339,11 +338,11 @@
             });
 
         // Cargar footer
-        fetch(templatePath + 'templates/footer.html')
+        fetch(templatePath + '/templates/footer.html')
             .then(response => {
                 if (!response.ok) {
                     throw new Error(
-                        `Error HTTP: ${response.status} - Ruta: ${templatePath + 'templates/footer.html'}`);
+                        `Error HTTP: ${response.status} - Ruta: ${templatePath + '/templates/footer.html'}`);
                 }
                 return response.text();
             })
