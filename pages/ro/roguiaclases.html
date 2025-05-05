@@ -7,7 +7,7 @@
     <title>Guías de Clases de Ragnarok Online | Scythe Society</title>
 
     <!-- Favicon -->
-    <link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="../../assets/images/logos/logosss.ico" type="image/x-icon">
 
     <!-- CSS de Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -21,8 +21,8 @@
         rel="stylesheet">
 
     <!-- CSS personalizado -->
-    <link rel="stylesheet" href="/assets/css/style.css">
-    <link rel="stylesheet" href="/assets/css/ro/roguiaclases.css">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/ro/roguiaclases.css">
 </head>
 
 <body>
@@ -34,7 +34,8 @@
     <!-- Contenido principal -->
     <main class="main-content">
         <!-- Banner principal -->
-        <section class="banner" style="background-image: url('/assets/images/ro/roguiaclases/classes-banner.jpg');">
+        <section class="banner"
+            style="background-image: url('../../assets/images/ro/roguiaclases/classes-banner.jpg');">
             <div class="banner-content">
                 <div class="container">
                     <h1 class="main-title">GUÍAS DE CLASES DE RAGNAROK ONLINE</h1>
@@ -166,16 +167,26 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- JavaScript personalizado -->
-    <script src="/assets/js/main.js"></script>
-    <script src="/assets/js/ro-class-guides.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/path-resolver.js"></script>
+    <script src="../../assets/js/ro/ro-class-guides.js"></script>
 
     <!-- Script para cargar componentes HTML -->
     <script>
+        // Determinar la ruta base para cargar los componentes
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        let templatePath = '../../';
+
+        console.log("Ruta base calculada:", templatePath);
+
         // Cargar navbar
-        fetch('/templates/navbar.html')
+        fetch(templatePath + 'templates/navbar.html')
             .then(response => response.text())
             .then(data => {
                 document.getElementById('navbar-container').innerHTML = data;
+                if (typeof adjustPaths === 'function') {
+                    setTimeout(adjustPaths, 50);
+                }
             })
             .catch(error => {
                 console.error('Error cargando el navbar:', error);
@@ -184,10 +195,13 @@
             });
 
         // Cargar footer
-        fetch('/templates/footer.html')
+        fetch(templatePath + 'templates/footer.html')
             .then(response => response.text())
             .then(data => {
                 document.getElementById('footer-container').innerHTML = data;
+                if (typeof adjustPaths === 'function') {
+                    setTimeout(adjustPaths, 50);
+                }
             })
             .catch(error => {
                 console.error('Error cargando el footer:', error);

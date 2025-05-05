@@ -1,0 +1,116 @@
+/* Estilos adicionales para la página de estadísticas */
+.avatar-text {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+}
+
+.statistics-container {
+  margin-top: 20px;
+}
+
+.statistics-container .card {
+  transition: transform 0.3s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.statistics-container .card:hover {
+  transform: translateY(-5px);
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+}
+
+.tab-content {
+  background-color: #fff;
+  border-left: 1px solid #dee2e6;
+  border-right: 1px solid #dee2e6;
+  border-bottom: 1px solid #dee2e6;
+  padding: 20px;
+  border-radius: 0 0 5px 5px;
+}
+
+.card-header {
+  font-weight: bold;
+}
+
+.loading-container {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Estilos para tarjetas de instancias */
+.instancia-details .card {
+  margin-bottom: 15px;
+}
+
+/* Tema oscuro para hellgame */
+.hellgame-theme {
+  background-color: #212529;
+  color: #e9ecef;
+}
+
+.hellgame-theme .card {
+  background-color: #2b3035;
+  color: #e9ecef;
+  border-color: #495057;
+}
+
+.hellgame-theme .card-header {
+  border-color: #495057;
+}
+
+.hellgame-theme .table {
+  color: #e9ecef;
+}
+
+.hellgame-theme .table-light,
+.hellgame-theme .table-light > th,
+.hellgame-theme .table-light > td {
+  background-color: #343a40;
+  color: #e9ecef;
+}
+
+.hellgame-theme .modal-content {
+  background-color: #2b3035;
+  color: #e9ecef;
+  border-color: #495057;
+}
+
+.hellgame-theme .close {
+  color: #e9ecef;
+}
+
+/* Interruptor de tema */
+.theme-switch {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  background-color: #343a40;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.theme-switch:hover {
+  transform: rotate(30deg);
+  background-color: #495057;
+}
