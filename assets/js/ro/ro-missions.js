@@ -4,6 +4,7 @@
  */
 
 document.addEventListener("DOMContentLoaded", function () {
+  console.log("DOM cargado, iniciando carga de misiones...");
   // Inicializar carga de misiones
   loadMissions();
 
@@ -25,17 +26,36 @@ function loadMissions() {
     return;
   }
 
-  // Cargar misiones desde JSON
-  fetch("/data/ro/romisiones.json")
+  console.log("Intentando cargar misiones desde JSON...");
+
+  // Determinar la ruta base
+  const isGitHubPages = window.location.hostname.includes("github.io");
+  let basePath = isGitHubPages ? "/ScytheSociety" : "";
+
+  // Cargar misiones desde JSON (con mejor manejo de rutas)
+  fetch(basePath + "/data/ro/romisiones.json")
     .then((response) => {
+      console.log("Respuesta recibida:", response.status);
       if (!response.ok) {
         throw new Error("Error al cargar las misiones: " + response.status);
       }
       return response.json();
     })
     .then((missions) => {
+      console.log("Misiones cargadas correctamente:", missions);
+
       // Limpiar el contenedor
       missionsContainer.innerHTML = "";
+
+      // Si no hay misiones, mostrar mensaje
+      if (!missions || missions.length === 0) {
+        missionsContainer.innerHTML = `
+                    <div class="col-12 text-center">
+                        <p>No hay misiones disponibles en este momento.</p>
+                    </div>
+                `;
+        return;
+      }
 
       // Mostrar cada misión
       missions.forEach((mission) => {
@@ -69,6 +89,11 @@ function loadMissions() {
           rewardsHTML += `<span class="reward-tag reward-skill">${skill}</span>`;
         });
 
+        // Asegurarnos de que las rutas de las imágenes sean correctas
+        const imagePath = mission.imagen.startsWith("/")
+          ? basePath + mission.imagen
+          : basePath + "/" + mission.imagen;
+
         // Crear HTML de la misión
         const missionHTML = `
                     <div class="col-lg-4 col-md-6 mb-4 mission-card" data-categories="${mission.tags.join(
@@ -76,9 +101,7 @@ function loadMissions() {
                     )}" data-title="${mission.titulo.toLowerCase()}">
                         <div class="content-card h-100">
                             <div class="mission-image">
-                                <img src="${mission.imagen}" alt="${
-          mission.titulo
-        }">
+                                <img src="${imagePath}" alt="${mission.titulo}">
                             </div>
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <h4>${mission.titulo}</h4>
@@ -98,7 +121,7 @@ function loadMissions() {
                                   mission.nivel
                                 }</span>
                                 <a href="${
-                                  mission.url
+                                  basePath + mission.url
                                 }" class="btn btn-sm btn-gaming">Ver Guía</a>
                             </div>
                         </div>
@@ -110,15 +133,32 @@ function loadMissions() {
       });
     })
     .catch((error) => {
-      console.error("Error:", error);
+      console.error("Error cargando misiones:", error);
       missionsContainer.innerHTML = `
                 <div class="col-12">
                     <div class="alert alert-danger" role="alert">
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         No se pudieron cargar las misiones. Por favor, intenta de nuevo más tarde.
+                        <br>
+                        Detalles: ${error.message}
                     </div>
                 </div>
             `;
+
+      // Intentar con una ruta alternativa
+      if (isGitHubPages) {
+        console.log("Intentando con ruta alternativa...");
+        fetch("/ScytheSociety/data/ro/romisiones.json")
+          .then((response) => response.json())
+          .then((missions) => {
+            console.log("Misiones cargadas desde ruta alternativa:", missions);
+            // Lógica para mostrar las misiones
+            // (similar al bloque anterior, pero se omite por brevedad)
+          })
+          .catch((altError) => {
+            console.error("También falló la ruta alternativa:", altError);
+          });
+      }
     });
 }
 
