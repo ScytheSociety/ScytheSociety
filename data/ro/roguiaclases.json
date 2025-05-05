@@ -1,0 +1,216 @@
+{
+  "jobCategories": {
+    "woete": [
+      "Lord Knight",
+      "Paladin",
+      "High Wizard",
+      "Scholar",
+      "Mastersmith",
+      "Biochemist",
+      "High Priest",
+      "Champion",
+      "Assassin Cross",
+      "Stalker",
+      "Sniper",
+      "Minstrel",
+      "Gypsy",
+      "Super Novice",
+      "Taekwon Kid",
+      "Ninja",
+      "Soul Linker",
+      "Gunslinger",
+      "Taekwon Master"
+    ],
+    "pvm": [
+      "Dragon Knight",
+      "Imperial Guard",
+      "Arch Mage",
+      "Elemental Master",
+      "Meister",
+      "Biolo",
+      "Cardinal",
+      "Inquisitor",
+      "Shadow Cross",
+      "Abyss Chaser",
+      "Windhawk",
+      "Troubadour",
+      "Trouvere",
+      "Sky Emperor",
+      "Soul Ascetic",
+      "Shinkiro",
+      "Shiranui",
+      "Night Watch",
+      "Hyper Novice",
+      "Spirit Handler"
+    ],
+    "woe": [
+      "Dragon Knight",
+      "Imperial Guard",
+      "Arch Mage",
+      "Elemental Master",
+      "Cardinal",
+      "Inquisitor",
+      "Shadow Cross",
+      "Troubadour",
+      "Trouvere",
+      "Windhawk",
+      "Hyper Novice",
+      "Meister"
+    ],
+    "exp": [
+      "Dragon Knight",
+      "Arch Mage",
+      "Elemental Master",
+      "Meister",
+      "Shadow Cross",
+      "Abyss Chaser",
+      "Windhawk",
+      "Inquisitor",
+      "Shinkiro"
+    ],
+    "drop": [
+      "Imperial Guard",
+      "Elemental Master",
+      "Biolo",
+      "Shadow Cross",
+      "Abyss Chaser",
+      "Windhawk",
+      "Troubadour",
+      "Trouvere",
+      "Shiranui",
+      "Night Watch"
+    ],
+    "dodge": [
+      "Dragon Knight",
+      "Imperial Guard",
+      "Arch Mage",
+      "Biolo",
+      "Cardinal",
+      "Shadow Cross",
+      "Abyss Chaser",
+      "Shinkiro",
+      "Shiranui",
+      "Hyper Novice",
+      "Spirit Handler"
+    ]
+  },
+  "guides": [
+    {
+      "id": "lord-knight-woete",
+      "titulo": "Lord Knight para WoE TE",
+      "descripcion": "Guía definitiva para Lord Knights en War of Emperium Tierra Elemental. Optimiza tu build con enfoque en tanking y daño AoE.",
+      "job": "Lord Knight",
+      "tags": ["woete"],
+      "actualizacion": "10 Abr 2025",
+      "url": "/pages/ro/roguiaclases/lord-knight-woete.html"
+    },
+    {
+      "id": "high-wizard-woete",
+      "titulo": "High Wizard - Rey del AoE en WoE TE",
+      "descripcion": "Maximiza el potencial de tu High Wizard en War of Emperium con una build enfocada en hechizos de área y control de masas.",
+      "job": "High Wizard",
+      "tags": ["woete"],
+      "actualizacion": "15 Abr 2025",
+      "url": "/pages/ro/roguiaclases/high-wizard-woete.html"
+    },
+    {
+      "id": "biochemist-woete",
+      "titulo": "Biochemist Especialista en WoE TE",
+      "descripcion": "Conviértete en un elemento clave para tu guild con esta build de Biochemist enfocada en pócimas y apoyo táctico durante War of Emperium.",
+      "job": "Biochemist",
+      "tags": ["woete"],
+      "actualizacion": "5 Abr 2025",
+      "url": "/pages/ro/roguiaclases/biochemist-woete.html"
+    },
+    {
+      "id": "dragon-knight-pvm",
+      "titulo": "Dragon Knight - Maestro del PvM",
+      "descripcion": "Guía completa para Dragon Knight con enfoque en mazmorras de alto nivel y MVPs. Incluye builds, equipo recomendado y rotación de habilidades.",
+      "job": "Dragon Knight",
+      "tags": ["pvm", "exp"],
+      "actualizacion": "8 Abr 2025",
+      "url": "/pages/ro/roguiaclases/dragon-knight-pvm.html"
+    },
+    {
+      "id": "imperial-guard-pvm",
+      "titulo": "Imperial Guard - Escudo Inquebrantable",
+      "descripcion": "Conviértete en el tanque perfecto para cualquier party con esta build de Imperial Guard enfocada en PvM y raids grupales.",
+      "job": "Imperial Guard",
+      "tags": ["pvm", "dodge", "woe"],
+      "actualizacion": "12 Abr 2025",
+      "url": "/pages/ro/roguiaclases/imperial-guard-pvm.html"
+    },
+    {
+      "id": "arch-mage-exp",
+      "titulo": "Arch Mage - Farming EXP Eficiente",
+      "descripcion": "Guía de leveleo rápido para Arch Mage. Descubre las mejores zonas, hechizos y estrategias para maximizar tu ganancia de experiencia.",
+      "job": "Arch Mage",
+      "tags": ["exp", "pvm"],
+      "actualizacion": "18 Abr 2025",
+      "url": "/pages/ro/roguiaclases/arch-mage-exp.html"
+    },
+    {
+      "id": "shadow-cross-drop",
+      "titulo": "Shadow Cross - Farming de Items",
+      "descripcion": "Maximiza tu eficiencia de farming con esta build de Shadow Cross especializada en conseguir drops raros y valiosos.",
+      "job": "Shadow Cross",
+      "tags": ["drop", "pvm"],
+      "actualizacion": "22 Abr 2025",
+      "url": "/pages/ro/roguiaclases/shadow-cross-drop.html"
+    },
+    {
+      "id": "windhawk-multi",
+      "titulo": "Windhawk - Build Multifuncional",
+      "descripcion": "Una build versátil para Windhawk que te permitirá adaptarte a diferentes situaciones: farming, PvM, y WoE con cambios mínimos de equipo.",
+      "job": "Windhawk",
+      "tags": ["pvm", "woe", "drop", "exp"],
+      "actualizacion": "25 Abr 2025",
+      "url": "/pages/ro/roguiaclases/windhawk-multi.html"
+    },
+    {
+      "id": "paladin-woete",
+      "titulo": "Paladin - Protector del Castillo",
+      "descripcion": "Guía definitiva para Paladins en WoE TE con enfoque en defensa, resistencias y soporte para tu guild en momentos críticos.",
+      "job": "Paladin",
+      "tags": ["woete"],
+      "actualizacion": "2 Abr 2025",
+      "url": "/pages/ro/roguiaclases/paladin-woete.html"
+    },
+    {
+      "id": "biolo-drop",
+      "titulo": "Biolo - Rey del Farming",
+      "descripcion": "Maximiza tus ganancias con esta build de Biolo enfocada en farming eficiente y obtención de drops raros con homúnculos especializados.",
+      "job": "Biolo",
+      "tags": ["drop", "pvm", "dodge"],
+      "actualizacion": "28 Abr 2025",
+      "url": "/pages/ro/roguiaclases/biolo-drop.html"
+    },
+    {
+      "id": "high-priest-woete",
+      "titulo": "High Priest - Soporte Esencial",
+      "descripcion": "Conviértete en el soporte indispensable para cualquier guild en WoE TE con esta build de High Priest enfocada en curación y buffs.",
+      "job": "High Priest",
+      "tags": ["woete"],
+      "actualizacion": "30 Abr 2025",
+      "url": "/pages/ro/roguiaclases/high-priest-woete.html"
+    },
+    {
+      "id": "assassin-cross-woete",
+      "titulo": "Assassin Cross - Eliminador de Objetivos",
+      "descripcion": "Guía para convertirte en un asesino letal en WoE TE. Aprende estrategias de emboscada y eliminación rápida de objetivos prioritarios.",
+      "job": "Assassin Cross",
+      "tags": ["woete"],
+      "actualizacion": "1 May 2025",
+      "url": "/pages/ro/roguiaclases/assassin-cross-woete.html"
+    },
+    {
+      "id": "elemental-master-multi",
+      "titulo": "Elemental Master - Dominio Elemental",
+      "descripcion": "Guía completa para Elemental Master con builds para diferentes contenidos: PvM, WoE, farming y leveling rápido.",
+      "job": "Elemental Master",
+      "tags": ["pvm", "woe", "exp", "drop"],
+      "actualizacion": "3 May 2025",
+      "url": "/pages/ro/roguiaclases/elemental-master-multi.html"
+    }
+  ]
+}

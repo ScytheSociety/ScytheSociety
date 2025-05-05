@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Miembros de Ragnarok Online | Scythe Society</title>
+    <title>Guías de Clases de Ragnarok Online | Scythe Society</title>
 
     <!-- Favicon -->
     <link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon">
@@ -22,8 +22,7 @@
 
     <!-- CSS personalizado -->
     <link rel="stylesheet" href="/assets/css/style.css">
-    <link rel="stylesheet" href="/assets/css/ro/romiembros.css">
-
+    <link rel="stylesheet" href="/assets/css/ro/roguiaclases.css">
 </head>
 
 <body>
@@ -35,11 +34,11 @@
     <!-- Contenido principal -->
     <main class="main-content">
         <!-- Banner principal -->
-        <section class="banner" style="background-image: url('/assets/images/ro/romiembros/members-banner.jpg');">
+        <section class="banner" style="background-image: url('/assets/images/ro/roguiaclases/classes-banner.jpg');">
             <div class="banner-content">
                 <div class="container">
-                    <h1 class="main-title">MIEMBROS DE RAGNAROK ONLINE</h1>
-                    <p class="sub-title">Conoce a los valientes aventureros de nuestro servidor</p>
+                    <h1 class="main-title">GUÍAS DE CLASES DE RAGNAROK ONLINE</h1>
+                    <p class="sub-title">Estrategias, builds y consejos para todas las clases</p>
                 </div>
             </div>
         </section>
@@ -49,83 +48,69 @@
             <div class="container">
                 <div class="row">
                     <div class="col-12">
-                        <h2 class="section-title">NUESTROS MIEMBROS</h2>
+                        <h2 class="section-title">GUÍAS ESPECIALIZADAS</h2>
                         <p class="description">
-                            Explora los perfiles de todos los aventureros que forman parte de nuestra comunidad.
-                            Conoce sus clases, niveles, clanes y logros en el mundo de Ragnarok Online.
+                            Encuentra guías detalladas para todas las clases de Ragnarok Online. Ya sea que estés
+                            buscando optimizar tu personaje para PvM, WoE, farmeo o experiencia, tenemos la información
+                            que necesitas para llevar tu personaje al siguiente nivel.
                         </p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Filtros de miembros -->
+        <!-- Filtros de guías -->
         <section class="py-3 bg-dark">
             <div class="container">
                 <div class="row">
                     <div class="col-12">
-                        <h3 class="mb-3">Filtrar Miembros</h3>
+                        <h3 class="mb-3">Filtrar Guías</h3>
 
                         <div class="row">
-                            <!-- Filtro por Clanes -->
-                            <div class="col-lg-3 col-md-6 mb-3">
-                                <div class="dropdown w-100">
-                                    <button class="btn btn-gaming dropdown-toggle w-100" type="button" id="clanDropdown"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        Clan
-                                    </button>
-                                    <ul class="dropdown-menu w-100" aria-labelledby="clanDropdown" id="clan-filters">
-                                        <li><a class="dropdown-item active" href="#" data-filter="all">Todos los
-                                                Clanes</a></li>
-                                        <!-- Los clanes se cargarán dinámicamente -->
-                                    </ul>
+                            <!-- Filtro principal (modo de juego) -->
+                            <div class="col-lg-4 col-md-6 mb-3">
+                                <div class="d-flex flex-wrap">
+                                    <button class="btn btn-gaming me-2 mb-2 filter-btn active" data-filter="all"
+                                        data-type="mode">Todos</button>
+                                    <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="pvm"
+                                        data-type="mode">PvM</button>
+                                    <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="woe"
+                                        data-type="mode">WoE</button>
+                                    <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="woete"
+                                        data-type="mode">WoE TE</button>
+                                    <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="exp"
+                                        data-type="mode">EXP</button>
+                                    <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="drop"
+                                        data-type="mode">DROP</button>
+                                    <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="dodge"
+                                        data-type="mode">DODGE</button>
                                 </div>
                             </div>
 
-                            <!-- Filtro por Clases -->
-                            <div class="col-lg-3 col-md-6 mb-3">
+                            <!-- Filtro secundario (clase específica) -->
+                            <div class="col-lg-5 col-md-6 mb-3">
                                 <div class="dropdown w-100">
-                                    <button class="btn btn-gaming dropdown-toggle w-100" type="button"
-                                        id="classDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button class="btn btn-gaming dropdown-toggle w-100" type="button" id="jobDropdown"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
                                         Clase
                                     </button>
-                                    <ul class="dropdown-menu w-100" aria-labelledby="classDropdown" id="class-filters">
-                                        <li><a class="dropdown-item active" href="#" data-filter="all">Todas las
-                                                Clases</a></li>
-                                        <!-- Las clases se cargarán dinámicamente -->
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <!-- Filtro por Nivel -->
-                            <div class="col-lg-3 col-md-6 mb-3">
-                                <div class="dropdown w-100">
-                                    <button class="btn btn-gaming dropdown-toggle w-100" type="button"
-                                        id="levelDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Nivel
-                                    </button>
-                                    <ul class="dropdown-menu w-100" aria-labelledby="levelDropdown">
+                                    <ul class="dropdown-menu w-100" aria-labelledby="jobDropdown" id="job-filters">
                                         <li><a class="dropdown-item active" href="#" data-filter="all"
-                                                data-type="level">Todos los Niveles</a></li>
-                                        <li><a class="dropdown-item" href="#" data-filter="1-99" data-type="level">Nivel
-                                                1-99</a></li>
-                                        <li><a class="dropdown-item" href="#" data-filter="100-200"
-                                                data-type="level">Nivel 100-200</a></li>
-                                        <li><a class="dropdown-item" href="#" data-filter="201-250"
-                                                data-type="level">Nivel 201-250</a></li>
+                                                data-type="job">Todas las Clases</a></li>
+                                        <!-- Las clases se cargarán dinámicamente según el modo seleccionado -->
                                     </ul>
                                 </div>
                             </div>
 
                             <!-- Buscador -->
-                            <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="col-lg-3 col-md-12 mb-3">
                                 <div class="input-group">
                                     <span class="input-group-text bg-dark text-white border-dark">
                                         <i class="fas fa-search"></i>
                                     </span>
-                                    <input type="text" id="search-members"
+                                    <input type="text" id="search-guides"
                                         class="form-control bg-dark text-white border-dark"
-                                        placeholder="Buscar por nombre...">
+                                        placeholder="Buscar guías...">
                                 </div>
                             </div>
                         </div>
@@ -134,16 +119,16 @@
             </div>
         </section>
 
-        <!-- Lista de miembros -->
+        <!-- Lista de guías -->
         <section class="py-5">
             <div class="container">
-                <div class="row" id="members-container">
-                    <!-- El contenido de los miembros se cargará dinámicamente desde JavaScript -->
+                <div class="row" id="guides-container">
+                    <!-- El contenido de las guías se cargará dinámicamente desde JavaScript -->
                     <div class="col-12 text-center">
                         <div class="spinner-border text-light" role="status">
                             <span class="visually-hidden">Cargando...</span>
                         </div>
-                        <p class="mt-2">Cargando miembros...</p>
+                        <p class="mt-2">Cargando guías...</p>
                     </div>
                 </div>
 
@@ -182,7 +167,7 @@
 
     <!-- JavaScript personalizado -->
     <script src="/assets/js/main.js"></script>
-    <script src="/assets/js/ro-members.js"></script>
+    <script src="/assets/js/ro-class-guides.js"></script>
 
     <!-- Script para cargar componentes HTML -->
     <script>

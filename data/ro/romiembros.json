@@ -1,0 +1,243 @@
+{
+  "clans": [
+    {
+      "id": "apocalipsis",
+      "nombre": "Apocalipsis",
+      "descripcion": "Un clan de élite especializado en PvP y GvG, conocidos por su estrategia y coordinación en WoE.",
+      "icon": "/assets/images/ro/romiembros/clan_apocalipsis.png"
+    },
+    {
+      "id": "gardians",
+      "nombre": "Gardians of Light",
+      "descripcion": "Un clan dedicado a ayudar a nuevos jugadores y especializado en misiones y eventos PvE.",
+      "icon": "/assets/images/ro/romiembros/clan_gardians.png"
+    },
+    {
+      "id": "imperial",
+      "nombre": "Imperial Forces",
+      "descripcion": "Un clan militar con estricta jerarquía, reconocidos por su eficiencia en combate organizado.",
+      "icon": "/assets/images/ro/romiembros/clan_imperial.png"
+    },
+    {
+      "id": "phantom",
+      "nombre": "Phantom Troupe",
+      "descripcion": "Un clan de mercenarios y asesinos, especialistas en emboscadas y combate sigiloso.",
+      "icon": "/assets/images/ro/romiembros/clan_phantom.png"
+    },
+    {
+      "id": "celestial",
+      "nombre": "Celestial Order",
+      "descripcion": "Un clan de magos y sacerdotes dedicados al estudio de las artes arcanas y la protección de Rune-Midgard.",
+      "icon": "/assets/images/ro/romiembros/clan_celestial.png"
+    }
+  ],
+  "members": [
+    {
+      "id": "shadow-knight",
+      "nombre": "Carlos Mendoza",
+      "nick": "ShadowKnight",
+      "nivel": "245",
+      "clase": "Lord Knight",
+      "clan": "apocalipsis",
+      "imagen": "/assets/images/ro/romiembros/shadow_knight.jpg"
+    },
+    {
+      "id": "arcane-wizard",
+      "nombre": "Laura Gómez",
+      "nick": "ArcaneWizard",
+      "nivel": "230",
+      "clase": "High Wizard",
+      "clan": "celestial",
+      "imagen": "/assets/images/ro/romiembros/arcane_wizard.jpg"
+    },
+    {
+      "id": "holy-priest",
+      "nombre": "Ana Martínez",
+      "nick": "HolyPriest",
+      "nivel": "227",
+      "clase": "High Priest",
+      "clan": "celestial",
+      "imagen": "/assets/images/ro/romiembros/holy_priest.jpg"
+    },
+    {
+      "id": "silent-shadow",
+      "nombre": "Miguel Torres",
+      "nick": "SilentShadow",
+      "nivel": "235",
+      "clase": "Assassin Cross",
+      "clan": "phantom",
+      "imagen": "/assets/images/ro/romiembros/silent_shadow.jpg"
+    },
+    {
+      "id": "iron-hammer",
+      "nombre": "Diego Ruiz",
+      "nick": "IronHammer",
+      "nivel": "240",
+      "clase": "Mastersmith",
+      "clan": "imperial",
+      "imagen": "/assets/images/ro/romiembros/iron_hammer.jpg"
+    },
+    {
+      "id": "swift-arrow",
+      "nombre": "Sofía Vargas",
+      "nick": "SwiftArrow",
+      "nivel": "225",
+      "clase": "Sniper",
+      "clan": "gardians",
+      "imagen": "/assets/images/ro/romiembros/swift_arrow.jpg"
+    },
+    {
+      "id": "battle-dancer",
+      "nombre": "Elena Castro",
+      "nick": "BattleDancer",
+      "nivel": "215",
+      "clase": "Gypsy",
+      "clan": "gardians",
+      "imagen": "/assets/images/ro/romiembros/battle_dancer.jpg"
+    },
+    {
+      "id": "toxic-maker",
+      "nombre": "Javier López",
+      "nick": "ToxicMaker",
+      "nivel": "220",
+      "clase": "Biochemist",
+      "clan": "phantom",
+      "imagen": "/assets/images/ro/romiembros/toxic_maker.jpg"
+    },
+    {
+      "id": "royal-guard",
+      "nombre": "Roberto Herrera",
+      "nick": "RoyalGuard",
+      "nivel": "238",
+      "clase": "Paladin",
+      "clan": "imperial",
+      "imagen": "/assets/images/ro/romiembros/royal_guard.jpg"
+    },
+    {
+      "id": "steel-fighter",
+      "nombre": "Fernando Díaz",
+      "nick": "SteelFighter",
+      "nivel": "180",
+      "clase": "Lord Knight",
+      "clan": "apocalipsis",
+      "imagen": "/assets/images/ro/romiembros/steel_fighter.jpg"
+    },
+    {
+      "id": "mist-walker",
+      "nombre": "Isabella Navarro",
+      "nick": "MistWalker",
+      "nivel": "175",
+      "clase": "Stalker",
+      "clan": "phantom",
+      "imagen": "/assets/images/ro/romiembros/mist_walker.jpg"
+    },
+    {
+      "id": "thunder-caster",
+      "nombre": "Andrés Morales",
+      "nick": "ThunderCaster",
+      "nivel": "190",
+      "clase": "Scholar",
+      "clan": "celestial",
+      "imagen": "/assets/images/ro/romiembros/thunder_caster.jpg"
+    },
+    {
+      "id": "healing-hand",
+      "nombre": "Marina Flores",
+      "nick": "HealingHand",
+      "nivel": "170",
+      "clase": "High Priest",
+      "clan": "gardians",
+      "imagen": "/assets/images/ro/romiembros/healing_hand.jpg"
+    },
+    {
+      "id": "iron-fist",
+      "nombre": "Ricardo Soto",
+      "nick": "IronFist",
+      "nivel": "185",
+      "clase": "Champion",
+      "clan": "imperial",
+      "imagen": "/assets/images/ro/romiembros/iron_fist.jpg"
+    },
+    {
+      "id": "death-whisper",
+      "nombre": "Valentina Reyes",
+      "nick": "DeathWhisper",
+      "nivel": "195",
+      "clase": "Assassin Cross",
+      "clan": "apocalipsis",
+      "imagen": "/assets/images/ro/romiembros/death_whisper.jpg"
+    },
+    {
+      "id": "melody-master",
+      "nombre": "Gabriel Ortiz",
+      "nick": "MelodyMaster",
+      "nivel": "160",
+      "clase": "Minstrel",
+      "clan": "gardians",
+      "imagen": "/assets/images/ro/romiembros/melody_master.jpg"
+    },
+    {
+      "id": "fierce-hunter",
+      "nombre": "Daniela Cruz",
+      "nick": "FierceHunter",
+      "nivel": "165",
+      "clase": "Sniper",
+      "clan": "phantom",
+      "imagen": "/assets/images/ro/romiembros/fierce_hunter.jpg"
+    },
+    {
+      "id": "flame-wizard",
+      "nombre": "Alejandro Ramos",
+      "nick": "FlameWizard",
+      "nivel": "150",
+      "clase": "High Wizard",
+      "clan": "celestial",
+      "imagen": "/assets/images/ro/romiembros/flame_wizard.jpg"
+    },
+    {
+      "id": "young-warrior",
+      "nombre": "Lucas Gutiérrez",
+      "nick": "YoungWarrior",
+      "nivel": "85",
+      "clase": "Knight",
+      "clan": "imperial",
+      "imagen": "/assets/images/ro/romiembros/young_warrior.jpg"
+    },
+    {
+      "id": "rookie-archer",
+      "nombre": "Camila Vega",
+      "nick": "RookieArcher",
+      "nivel": "75",
+      "clase": "Hunter",
+      "clan": "gardians",
+      "imagen": "/assets/images/ro/romiembros/rookie_archer.jpg"
+    },
+    {
+      "id": "learning-mage",
+      "nombre": "Sebastián Mendoza",
+      "nick": "LearningMage",
+      "nivel": "60",
+      "clase": "Wizard",
+      "clan": "celestial",
+      "imagen": "/assets/images/ro/romiembros/learning_mage.jpg"
+    },
+    {
+      "id": "shadow-trainee",
+      "nombre": "Natalia Campos",
+      "nick": "ShadowTrainee",
+      "nivel": "50",
+      "clase": "Assassin",
+      "clan": "phantom",
+      "imagen": "/assets/images/ro/romiembros/shadow_trainee.jpg"
+    },
+    {
+      "id": "novice-hero",
+      "nombre": "Mateo Silva",
+      "nick": "NoviceHero",
+      "nivel": "35",
+      "clase": "Swordman",
+      "clan": "apocalipsis",
+      "imagen": "/assets/images/ro/romiembros/novice_hero.jpg"
+    }
+  ]
+}

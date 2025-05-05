@@ -1,0 +1,89 @@
+.member-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.member-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.member-avatar {
+  width: 120px;
+  height: 240px;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.member-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.member-info {
+  flex-grow: 1;
+  padding-left: 20px;
+}
+
+.member-level {
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.clan-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+.clan-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.filter-btn.active {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.dropdown-menu {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+/* Estilos para la paginación */
+.pagination .page-item .page-link {
+  background-color: #222;
+  color: #fff;
+  border-color: #333;
+  transition: all 0.3s ease;
+}
+
+.pagination .page-item .page-link:hover {
+  background-color: #333;
+  border-color: #444;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #fff;
+}
+
+.pagination .page-item.disabled .page-link {
+  background-color: #1a1a1a;
+  color: #666;
+  border-color: #333;
+}
+
+/* Si quieres asegurarte de que el color rojo coincida exactamente con la imagen */
+:root {
+  --accent-color: #c83232; /* Ajustar este color para que coincida con el rojo de la imagen */
+}

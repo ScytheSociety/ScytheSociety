@@ -1,0 +1,90 @@
+[
+  {
+    "id": "anniversary-2025",
+    "titulo": "20° Aniversario",
+    "descripcion": "Celebra con nosotros el 20° aniversario de Ragnarok Online con eventos especiales, misiones exclusivas y recompensas únicas que conmemoran dos décadas de aventuras.",
+    "fecha": "25 Mar - 25 Abr 2025",
+    "duracion": "30 días",
+    "estado": "active",
+    "imagen": "/assets/images/ro/roeventos/anniversary_2025.jpg",
+    "url": "/pages/ro/roeventos/aniversario-2025.html",
+    "tags": ["seasonal", "special"]
+  },
+  {
+    "id": "mvp-madness",
+    "titulo": "MVP Madness",
+    "descripcion": "Los MVPs están más furiosos que nunca y ofrecen el doble de drops. ¡Reúne a tu grupo y enfréntate a los jefes más difíciles para obtener recompensas legendarias!",
+    "fecha": "1 May - 7 May 2025",
+    "duracion": "7 días",
+    "estado": "upcoming",
+    "imagen": "/assets/images/ro/roeventos/mvp_madness.jpg",
+    "url": "/pages/ro/roeventos/mvp-madness.html",
+    "tags": ["special"]
+  },
+  {
+    "id": "easter-event",
+    "titulo": "Evento de Pascua",
+    "descripcion": "Ayuda al Conejo de Pascua a encontrar sus huevos perdidos por todo Rune-Midgard. Completa la colección para obtener objetos exclusivos y buffs especiales.",
+    "fecha": "10 Abr - 17 Abr 2025",
+    "duracion": "7 días",
+    "estado": "active",
+    "imagen": "/assets/images/ro/roeventos/easter_event.jpg",
+    "url": "/pages/ro/roeventos/pascua-2025.html",
+    "tags": ["seasonal"]
+  },
+  {
+    "id": "woe-tournament",
+    "titulo": "Torneo WoE",
+    "descripcion": "Demuestra el poder de tu guild en este torneo especial de Guerra del Emperium. Las mejores guilds competirán por premios exclusivos y el título de campeón.",
+    "fecha": "15 May - 22 May 2025",
+    "duracion": "7 días",
+    "estado": "upcoming",
+    "imagen": "/assets/images/ro/roeventos/woe_tournament.jpg",
+    "url": "/pages/ro/roeventos/torneo-woe.html",
+    "tags": ["special"]
+  },
+  {
+    "id": "summer-festival",
+    "titulo": "Festival de Verano",
+    "descripcion": "Disfruta del sol y la diversión en el Festival de Verano de Comodo. Participa en minijuegos, consigue trajes de baño exclusivos y refréscate con buffs especiales.",
+    "fecha": "1 Jun - 30 Jun 2025",
+    "duracion": "30 días",
+    "estado": "upcoming",
+    "imagen": "/assets/images/ro/roeventos/summer_festival.jpg",
+    "url": "/pages/ro/roeventos/festival-verano.html",
+    "tags": ["seasonal"]
+  },
+  {
+    "id": "lunar-new-year",
+    "titulo": "Año Nuevo Lunar",
+    "descripcion": "Celebra el Año Nuevo Lunar con decoraciones festivas, fuegos artificiales y misiones especiales que te permitirán obtener mascotas y objetos temáticos.",
+    "fecha": "1 Feb - 15 Feb 2025",
+    "duracion": "15 días",
+    "estado": "expired",
+    "imagen": "/assets/images/ro/roeventos/lunar_new_year.jpg",
+    "url": "/pages/ro/roeventos/ano-nuevo-lunar.html",
+    "tags": ["seasonal"]
+  },
+  {
+    "id": "double-exp",
+    "titulo": "Doble EXP y Drop",
+    "descripcion": "¡Aprovecha este fin de semana especial con tasas dobles de experiencia y drop en todos los servidores! Perfecto para subir de nivel y conseguir esos items difíciles.",
+    "fecha": "26 Abr - 28 Abr 2025",
+    "duracion": "3 días",
+    "estado": "upcoming",
+    "imagen": "/assets/images/ro/roeventos/double_exp.jpg",
+    "url": "/pages/ro/roeventos/doble-exp-drop.html",
+    "tags": ["special"]
+  },
+  {
+    "id": "halloween-2024",
+    "titulo": "Halloween 2024",
+    "descripcion": "El terror se apodera de Rune-Midgard con decoraciones espeluznantes, monstruos especiales y misiones que pondrán a prueba tu valentía a cambio de recompensas exclusivas.",
+    "fecha": "24 Oct - 7 Nov 2024",
+    "duracion": "14 días",
+    "estado": "expired",
+    "imagen": "/assets/images/ro/roeventos/halloween_2024.jpg",
+    "url": "/pages/ro/roeventos/halloween-2024.html",
+    "tags": ["seasonal"]
+  }
+]

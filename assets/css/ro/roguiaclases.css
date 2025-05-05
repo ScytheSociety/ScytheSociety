@@ -1,0 +1,100 @@
+.guide-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.guide-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.job-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.mode-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.mode-woe {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.mode-woete {
+  background-color: #8e44ad;
+  color: white;
+}
+
+.mode-pvm {
+  background-color: #3498db;
+  color: white;
+}
+
+.mode-exp {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.mode-drop {
+  background-color: #f1c40f;
+  color: #333;
+}
+
+.mode-dodge {
+  background-color: #1abc9c;
+  color: white;
+}
+
+.filter-btn.active {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.dropdown-menu {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+/* Estilos para la paginación */
+.pagination .page-item .page-link {
+  background-color: #222;
+  color: #fff;
+  border-color: #333;
+  transition: all 0.3s ease;
+}
+
+.pagination .page-item .page-link:hover {
+  background-color: #333;
+  border-color: #444;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #fff;
+}
+
+.pagination .page-item.disabled .page-link {
+  background-color: #1a1a1a;
+  color: #666;
+  border-color: #333;
+}
+
+/* Si quieres asegurarte de que el color rojo coincida exactamente con la imagen */
+:root {
+  --accent-color: #c83232; /* Ajustar este color para que coincida con el rojo de la imagen */
+}

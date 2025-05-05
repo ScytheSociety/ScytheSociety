@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Misiones de Ragnarok Online | Scythe Society</title>
+    <title>Eventos de Ragnarok Online | Scythe Society</title>
 
     <!-- Favicon -->
     <link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon">
@@ -22,9 +22,12 @@
 
     <!-- CSS personalizado -->
     <link rel="stylesheet" href="/assets/css/style.css">
-    <link rel="stylesheet" href="/assets/css/ro/romisiones.css">
+    <link rel="stylesheet" href="/assets/css/ro/roeventos.css">
 
+    <!-- CSS adicional para esta página -->
+    <style>
 
+    </style>
 </head>
 
 <body>
@@ -36,11 +39,11 @@
     <!-- Contenido principal -->
     <main class="main-content">
         <!-- Banner principal -->
-        <section class="banner" style="background-image: url('/assets/images/missions/ro-missions-banner.jpg');">
+        <section class="banner" style="background-image: url('/assets/images/ro/roeventos/events-banner.jpg');">
             <div class="banner-content">
                 <div class="container">
-                    <h1 class="main-title">MISIONES DE RAGNAROK ONLINE</h1>
-                    <p class="sub-title">Guías detalladas para todas las quests</p>
+                    <h1 class="main-title">EVENTOS DE RAGNAROK ONLINE</h1>
+                    <p class="sub-title">Descubre todos los eventos actuales y próximos</p>
                 </div>
             </div>
         </section>
@@ -50,57 +53,56 @@
             <div class="container">
                 <div class="row">
                     <div class="col-12">
-                        <h2 class="section-title">GUÍA DE MISIONES</h2>
+                        <h2 class="section-title">EVENTOS DEL SERVIDOR</h2>
                         <p class="description">
-                            Descubre todas las misiones disponibles en Ragnarok Online con nuestras guías detalladas.
-                            Desde las más básicas para principiantes hasta las más desafiantes para jugadores
-                            experimentados,
-                            te proporcionamos toda la información que necesitas para completarlas con éxito.
+                            Mantente al día con todos los eventos de Ragnarok Online. Participa en eventos especiales,
+                            desafíos temporales y celebraciones que ofrecen recompensas únicas y experiencias
+                            inolvidables para todos los jugadores.
                         </p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Filtros de misiones -->
+        <!-- Filtros de eventos -->
         <section class="py-3 bg-dark">
             <div class="container">
                 <div class="row">
                     <div class="col-12">
-                        <h3 class="mb-3">Filtrar Misiones</h3>
+                        <h3 class="mb-3">Filtrar Eventos</h3>
                         <div class="d-flex flex-wrap">
-                            <button class="btn btn-gaming me-2 mb-2 filter-btn active" data-filter="all">Todas</button>
+                            <button class="btn btn-gaming me-2 mb-2 filter-btn active" data-filter="all">Todos</button>
+                            <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="active">Activos</button>
+                            <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="upcoming">Próximos</button>
                             <button class="btn btn-gaming me-2 mb-2 filter-btn"
-                                data-filter="principiante">Principiante</button>
+                                data-filter="seasonal">Temporada</button>
                             <button class="btn btn-gaming me-2 mb-2 filter-btn"
-                                data-filter="intermedio">Intermedio</button>
-                            <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="avanzado">Avanzado</button>
-                            <button class="btn btn-gaming me-2 mb-2 filter-btn" data-filter="evento">Eventos</button>
+                                data-filter="special">Especiales</button>
                         </div>
 
-                        <!-- Buscador de misiones -->
+                        <!-- Buscador de eventos -->
                         <div class="input-group mt-3">
                             <span class="input-group-text bg-dark text-white border-dark">
                                 <i class="fas fa-search"></i>
                             </span>
-                            <input type="text" id="search-missions" class="form-control bg-dark text-white border-dark"
-                                placeholder="Buscar misiones...">
+                            <input type="text" id="search-events" class="form-control bg-dark text-white border-dark"
+                                placeholder="Buscar eventos...">
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Lista de misiones -->
+        <!-- Lista de eventos -->
         <section class="py-5">
             <div class="container">
-                <div class="row" id="missions-container">
-                    <!-- El contenido de las misiones se cargará dinámicamente desde JavaScript -->
+                <div class="row" id="events-container">
+                    <!-- El contenido de los eventos se cargará dinámicamente desde JavaScript -->
                     <div class="col-12 text-center">
                         <div class="spinner-border text-light" role="status">
                             <span class="visually-hidden">Cargando...</span>
                         </div>
-                        <p class="mt-2">Cargando misiones...</p>
+                        <p class="mt-2">Cargando eventos...</p>
                     </div>
                 </div>
 
@@ -139,7 +141,7 @@
 
     <!-- JavaScript personalizado -->
     <script src="/assets/js/main.js"></script>
-    <script src="/assets/js/ro-missions.js"></script>
+    <script src="/assets/js/ro-events.js"></script>
 
     <!-- Script para cargar componentes HTML -->
     <script>
