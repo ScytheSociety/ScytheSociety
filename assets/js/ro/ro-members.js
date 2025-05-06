@@ -12,6 +12,7 @@ let currentFilters = {
   clan: "all",
   clase: "all",
   nivel: "all",
+  rango: "all",
   search: "",
 };
 
@@ -31,6 +32,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   if (urlParams.has("nivel")) {
     currentFilters.nivel = urlParams.get("nivel");
+  }
+  if (urlParams.has("rango")) {
+    currentFilters.rango = urlParams.get("rango");
   }
   if (urlParams.has("search")) {
     currentFilters.search = urlParams.get("search");
@@ -173,6 +177,22 @@ function activateFiltersFromURL() {
       }
     });
   }
+
+  // Activar filtro de rango
+  if (currentFilters.rango !== "all") {
+    const rangoItems = document.querySelectorAll('[data-type="rango"]');
+    rangoItems.forEach((item) => {
+      if (item.getAttribute("data-filter") === currentFilters.rango) {
+        item.classList.add("active");
+        const dropdownToggle = item
+          .closest(".dropdown")
+          .querySelector(".dropdown-toggle");
+        dropdownToggle.textContent = item.textContent.trim();
+      } else if (item.getAttribute("data-filter") === "all") {
+        item.classList.remove("active");
+      }
+    });
+  }
 }
 
 /**
@@ -250,33 +270,46 @@ function handleFilterClick(e) {
   });
   this.classList.add("active");
 
-  // Actualizar texto del botón
-  const dropdownToggle =
-    this.closest(".dropdown").querySelector(".dropdown-toggle");
+  // Obtener tipo y valor del filtro
   const filterType = this.getAttribute("data-type");
   const filterValue = this.getAttribute("data-filter");
+
+  // Actualizar texto del botón y filtros
+  const dropdownToggle =
+    this.closest(".dropdown").querySelector(".dropdown-toggle");
 
   if (filterType === "clan") {
     if (filterValue === "all") {
       dropdownToggle.textContent = "Clan";
+      currentFilters.clan = "all";
     } else {
       dropdownToggle.textContent = this.textContent.trim();
+      currentFilters.clan = filterValue;
     }
-    currentFilters.clan = filterValue;
   } else if (filterType === "clase") {
     if (filterValue === "all") {
       dropdownToggle.textContent = "Clase";
+      currentFilters.clase = "all";
     } else {
       dropdownToggle.textContent = filterValue;
+      currentFilters.clase = filterValue;
     }
-    currentFilters.clase = filterValue;
   } else if (filterType === "level") {
     if (filterValue === "all") {
       dropdownToggle.textContent = "Nivel";
+      currentFilters.nivel = "all";
     } else {
       dropdownToggle.textContent = `Nivel ${filterValue}`;
+      currentFilters.nivel = filterValue;
     }
-    currentFilters.nivel = filterValue;
+  } else if (filterType === "rango") {
+    if (filterValue === "all") {
+      dropdownToggle.textContent = "Rango";
+      currentFilters.rango = "all";
+    } else {
+      dropdownToggle.textContent = this.textContent.trim();
+      currentFilters.rango = filterValue;
+    }
   }
 
   // Resetear a la primera página
@@ -387,6 +420,39 @@ function applyFilters() {
     );
   }
 
+  // Filtrar por rango
+  if (currentFilters.rango !== "all") {
+    filteredMembers = filteredMembers.filter(
+      (member) => member.rango === currentFilters.rango
+    );
+  }
+
+  // Ordenar por rango y luego alfabéticamente
+  filteredMembers.sort((a, b) => {
+    // Definir el orden de prioridad de los rangos
+    const rangoPrioridad = {
+      lider: 1,
+      sublider: 2,
+      oficial: 3,
+      veterano: 4,
+      miembro: 5,
+      nuevo: 6,
+      "": 7, // Para miembros sin rango definido
+    };
+
+    // Obtener la prioridad de los rangos
+    const aPrioridad = rangoPrioridad[a.rango || ""];
+    const bPrioridad = rangoPrioridad[b.rango || ""];
+
+    // Comparar primero por rango
+    if (aPrioridad !== bPrioridad) {
+      return aPrioridad - bPrioridad;
+    }
+
+    // Si los rangos son iguales, ordenar alfabéticamente por nick
+    return a.nick.localeCompare(b.nick);
+  });
+
   // Calcular el total de páginas
   totalPages = Math.ceil(filteredMembers.length / membersPerPage);
 
@@ -480,6 +546,10 @@ function updateURL() {
     searchParams.set("nivel", currentFilters.nivel);
   }
 
+  if (currentFilters.rango !== "all") {
+    searchParams.set("rango", currentFilters.rango);
+  }
+
   // Añadir término de búsqueda
   if (currentFilters.search) {
     searchParams.set("search", currentFilters.search);
@@ -543,6 +613,47 @@ function displayMembers(members) {
           clanHTML = `<span class="clan-badge"><img src="${iconPath}" alt="${clan.nombre}"></span> ${clan.nombre}`;
         }
 
+        // Preparar HTML para el rango
+        let rangoHTML = "";
+        if (member.rango) {
+          let rangoNombre = "";
+          let rangoIcon = "";
+
+          switch (member.rango) {
+            case "lider":
+              rangoNombre = "Líder Ragnarok Online";
+              rangoIcon = "🥇";
+              break;
+            case "sublider":
+              rangoNombre = "Sub-Líder Ragnarok Online";
+              rangoIcon = "🥈";
+              break;
+            case "oficial":
+              rangoNombre = "Oficial Ragnarok Online";
+              rangoIcon = "🥉";
+              break;
+            case "veterano":
+              rangoNombre = "Veterano";
+              rangoIcon = "";
+              break;
+            case "miembro":
+              rangoNombre = "Miembro";
+              rangoIcon = "";
+              break;
+            case "nuevo":
+              rangoNombre = "Nuevo";
+              rangoIcon = "";
+              break;
+            default:
+              rangoNombre = "";
+              rangoIcon = "";
+          }
+
+          if (rangoNombre) {
+            rangoHTML = `<p><strong>Rango:</strong> <span class="rango-${member.rango}"><span class="rango-icon">${rangoIcon}</span>${rangoNombre}</span></p>`;
+          }
+        }
+
         // Asegurarnos de que la ruta de la imagen sea correcta
         const imagePath =
           baseUrl +
@@ -578,6 +689,7 @@ function displayMembers(members) {
                           <p><strong>Clan:</strong> <span class="clan-info text-white">${
                             clanHTML || member.clan
                           }</span></p>
+                          ${rangoHTML}
                           <div class="mt-3">
                               <a href="${profileUrl}" class="btn btn-sm btn-gaming">Ver Perfil</a>
                           </div>
@@ -610,6 +722,47 @@ function displayMembersWithoutClanInfo(members, baseUrl) {
 
   // Mostrar cada miembro con información básica
   members.forEach((member) => {
+    // Preparar HTML para el rango
+    let rangoHTML = "";
+    if (member.rango) {
+      let rangoNombre = "";
+      let rangoIcon = "";
+
+      switch (member.rango) {
+        case "lider":
+          rangoNombre = "Líder Ragnarok Online";
+          rangoIcon = "🥇";
+          break;
+        case "sublider":
+          rangoNombre = "Sub-Líder Ragnarok Online";
+          rangoIcon = "🥈";
+          break;
+        case "oficial":
+          rangoNombre = "Oficial Ragnarok Online";
+          rangoIcon = "🥉";
+          break;
+        case "veterano":
+          rangoNombre = "Veterano";
+          rangoIcon = "";
+          break;
+        case "miembro":
+          rangoNombre = "Miembro";
+          rangoIcon = "";
+          break;
+        case "nuevo":
+          rangoNombre = "Nuevo";
+          rangoIcon = "";
+          break;
+        default:
+          rangoNombre = "";
+          rangoIcon = "";
+      }
+
+      if (rangoNombre) {
+        rangoHTML = `<p><strong>Rango:</strong> <span class="rango-${member.rango}"><span class="rango-icon">${rangoIcon}</span>${rangoNombre}</span></p>`;
+      }
+    }
+
     // Asegurarnos de que la ruta de la imagen sea correcta
     const imagePath =
       baseUrl +
@@ -644,6 +797,7 @@ function displayMembersWithoutClanInfo(members, baseUrl) {
                       <p><strong>Clan:</strong> <span class="text-white">${
                         member.clan
                       }</span></p>
+                      ${rangoHTML}
                       <div class="mt-3">
                           <a href="${profileUrl}" class="btn btn-sm btn-gaming">Ver Perfil</a>
                       </div>

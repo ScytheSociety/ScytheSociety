@@ -83,6 +83,42 @@
   border-color: #333;
 }
 
+/* Estilos para rangos */
+.rango-lider {
+  color: #ff3333; /* Rojo */
+  font-weight: bold;
+}
+
+.rango-sublider {
+  color: #4d8bf5; /* Azul claro */
+  font-weight: bold;
+}
+
+.rango-oficial {
+  color: #4caf50; /* Verde */
+  font-weight: bold;
+}
+
+.rango-veterano {
+  color: #ffc107; /* Amarillo */
+  font-weight: bold;
+}
+
+.rango-miembro {
+  color: #b388ff; /* Morado claro */
+  font-weight: bold;
+}
+
+.rango-nuevo {
+  color: #00e5ff; /* Turquesa */
+  font-weight: bold;
+}
+
+/* Estilo para el icono del rango */
+.rango-icon {
+  margin-right: 5px;
+}
+
 /* Si quieres asegurarte de que el color rojo coincida exactamente con la imagen */
 :root {
   --accent-color: #c83232; /* Ajustar este color para que coincida con el rojo de la imagen */
