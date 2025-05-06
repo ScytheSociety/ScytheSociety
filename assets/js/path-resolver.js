@@ -1,45 +1,51 @@
 /**
  * Path Resolver - Detecta el nivel de la URL actual y ajusta las rutas
- * Scythe Society
+ * Scythe Society - Versión mejorada
  */
 
 // Función para ajustar las rutas según el nivel de directorios
 function adjustPaths() {
-  // Detectar el nivel del directorio actual
-  const path = window.location.pathname;
-  const pathParts = path.split("/").filter((part) => part !== "");
+  console.log("Ejecutando adjustPaths...");
 
-  // Determinar el nivel de profundidad
-  let depth = pathParts.length;
-
-  // Si estamos en GitHub Pages, ajustar el nivel
+  // Determinar si estamos en GitHub Pages
   const isGitHubPages = window.location.hostname.includes("github.io");
-  if (isGitHubPages && pathParts[0] === "ScytheSociety") {
-    depth = pathParts.length - 1; // Restar el nombre del repositorio
-  }
 
-  // Prefijo para subir al directorio raíz
+  // Calcular ruta base según si estamos en GitHub Pages o desarrollo local
   let rootPrefix = "";
-  for (let i = 0; i < depth; i++) {
-    rootPrefix += "../";
+
+  if (isGitHubPages) {
+    // En GitHub Pages, siempre usamos la ruta absoluta al repositorio
+    rootPrefix = "/ScytheSociety/";
+    console.log("Entorno GitHub Pages detectado, usando prefijo:", rootPrefix);
+  } else {
+    // En desarrollo local, calculamos la profundidad del directorio
+    const path = window.location.pathname;
+    const pathParts = path.split("/").filter((part) => part !== "");
+    const depth = pathParts.length;
+
+    // Construir el prefijo para subir al nivel raíz
+    for (let i = 0; i < depth; i++) {
+      rootPrefix += "../";
+    }
+
+    // Si estamos en la raíz, el prefijo es './'
+    if (rootPrefix === "") {
+      rootPrefix = "./";
+    }
+
+    console.log(
+      "Entorno local detectado, nivel:",
+      depth,
+      "prefijo:",
+      rootPrefix
+    );
   }
 
-  // Si estamos en la raíz, el prefijo es './'
-  if (rootPrefix === "") {
-    rootPrefix = "./";
-  }
-
-  console.log("Path resolver: Nivel detectado:", depth, "Prefijo:", rootPrefix);
-
-  // Ajustar logo - Caso especial que necesita atención particular
+  // Ajustar logo
   const logoImg = document.getElementById("logo-img");
   if (logoImg) {
-    // Guardar la ruta original para depuración
     const originalSrc = logoImg.getAttribute("src");
-
-    // Usar una ruta absoluta desde la raíz del sitio
     logoImg.src = rootPrefix + "assets/images/logos/logosss.png";
-
     console.log("Logo ajustado de:", originalSrc, "a:", logoImg.src);
   }
 
@@ -105,55 +111,47 @@ function adjustPaths() {
   }
 }
 
-// Función para verificar si el elemento está completamente cargado
-function checkElementLoaded(elementId, callback, maxAttempts = 10) {
-  let attempts = 0;
-
-  const checkElement = () => {
-    const element = document.getElementById(elementId);
-    if (element) {
-      console.log(`Elemento ${elementId} encontrado, aplicando ajustes`);
-      callback();
-      return;
-    }
-
-    attempts++;
-    if (attempts < maxAttempts) {
-      console.log(`Esperando elemento ${elementId}, intento ${attempts}`);
-      setTimeout(checkElement, 100);
-    } else {
-      console.warn(
-        `Elemento ${elementId} no encontrado después de ${maxAttempts} intentos`
-      );
-    }
-  };
-
-  checkElement();
-}
-
-// Ejecutar después de que se haya cargado el documento
+// Asegurarse de que el ajuste de rutas se ejecute después de cargar navbar y footer
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("DOM cargado, esperando navbar y footer");
+  console.log("DOM cargado, configurando observadores para componentes");
 
-  // Esperar a que el navbar y footer se carguen antes de ajustar las rutas
-  const checkNavbarAndFooter = () => {
+  // Verificar periódicamente si ya se cargaron navbar y footer
+  const componentsCheck = setInterval(() => {
     const navbar = document.getElementById("navbar-container");
     const footer = document.getElementById("footer-container");
 
-    // Verificar si tanto el navbar como el footer tienen contenido
-    if (
-      navbar &&
-      navbar.children.length > 0 &&
-      footer &&
-      footer.children.length > 0
-    ) {
-      console.log("Navbar y footer cargados, aplicando ajustes de rutas");
-      setTimeout(adjustPaths, 100);
-    } else {
-      console.log("Esperando carga completa de navbar y footer");
-      setTimeout(checkNavbarAndFooter, 200);
-    }
-  };
+    const navbarLoaded = navbar && navbar.children.length > 0;
+    const footerLoaded = footer && footer.children.length > 0;
 
-  checkNavbarAndFooter();
+    if (navbarLoaded && footerLoaded) {
+      console.log("Navbar y footer detectados, aplicando ajustes de rutas");
+      clearInterval(componentsCheck);
+
+      // Darle tiempo a que los componentes se inicialicen completamente
+      setTimeout(adjustPaths, 200);
+    }
+  }, 100);
+
+  // Establecer un tiempo máximo de espera (5 segundos)
+  setTimeout(() => {
+    clearInterval(componentsCheck);
+    console.log(
+      "Tiempo de espera agotado. Aplicando ajustes de rutas de todas formas"
+    );
+    adjustPaths();
+  }, 5000);
+});
+
+// Ejecutar también cuando la ventana termina de cargar (como respaldo)
+window.addEventListener("load", function () {
+  console.log(
+    "Ventana completamente cargada, verificando si hay que ajustar rutas"
+  );
+
+  // Verificar si el navbar tiene enlaces activos
+  const activeLinks = document.querySelectorAll(".navbar-nav .nav-link.active");
+  if (activeLinks.length === 0) {
+    console.log("No se detectaron enlaces activos, aplicando ajustes de rutas");
+    adjustPaths();
+  }
 });

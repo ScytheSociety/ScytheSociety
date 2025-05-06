@@ -173,108 +173,66 @@
 
     <!-- Script para cargar componentes HTML -->
     <script>
-        // Determinar la ruta base para cargar los componentes
+        // Determinar si estamos en GitHub Pages
         const isGitHubPages = window.location.hostname.includes('github.io');
-        let templatePath = '../../';
+        let templatePath = '';
 
         if (isGitHubPages) {
-            // Ruta específica para GitHub Pages - asegurando que incluya el nombre del repositorio
-            templatePath = '/ScytheSociety'; // Sin slash al final
-            if (window.location.pathname.includes('/pages/')) {
-                templatePath += '/..'; // Subir un nivel si estamos en /pages/
-            }
+            // En GitHub Pages, siempre usamos la ruta absoluta
+            templatePath = '/ScytheSociety';
+        } else {
+            // Para desarrollo local, usamos la ruta relativa
+            templatePath = '../../';
         }
 
         console.log("Ruta base calculada:", templatePath);
 
-        // Cargar navbar con un enfoque más robusto
-        let navbarUrl = templatePath + '/templates/navbar.html';
+        // Función para cargar un componente HTML
+        function loadComponent(containerId, componentPath, maxRetries = 3) {
+            let retries = 0;
+            const container = document.getElementById(containerId);
 
-        // Intentar cargar el navbar
-        fetch(navbarUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Error HTTP: ${response.status}`);
-                }
-                return response.text();
-            })
-            .then(data => {
-                document.getElementById('navbar-container').innerHTML = data;
-                if (typeof adjustPaths === 'function') {
-                    setTimeout(adjustPaths, 50);
-                }
-            })
-            .catch(error => {
-                console.error('Error cargando el navbar desde ' + navbarUrl, error);
+            if (!container) {
+                console.error(`Contenedor #${containerId} no encontrado`);
+                return;
+            }
 
-                // Si falló la primera ruta, intentar una alternativa
-                if (isGitHubPages) {
-                    const altNavbarUrl = '/ScytheSociety/templates/navbar.html';
-                    console.log("Intentando ruta alternativa:", altNavbarUrl);
+            function attemptLoad() {
+                fetch(componentPath)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Error HTTP: ${response.status}`);
+                        }
+                        return response.text();
+                    })
+                    .then(data => {
+                        container.innerHTML = data;
+                        console.log(`Componente ${componentPath} cargado con éxito`);
+                        // Ejecutar adjustPaths si está disponible
+                        if (typeof adjustPaths === 'function') {
+                            setTimeout(adjustPaths, 100);
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Error cargando ${componentPath}:`, error);
+                        retries++;
 
-                    fetch(altNavbarUrl)
-                        .then(response => response.text())
-                        .then(data => {
-                            document.getElementById('navbar-container').innerHTML = data;
-                            if (typeof adjustPaths === 'function') {
-                                setTimeout(adjustPaths, 50);
-                            }
-                        })
-                        .catch(altError => {
-                            console.error('También falló la ruta alternativa:', altError);
-                            document.getElementById('navbar-container').innerHTML =
-                                '<p class="text-center p-3">Error al cargar el navbar. Ruta intentada: ' +
-                                navbarUrl + '</p>';
-                        });
-                } else {
-                    document.getElementById('navbar-container').innerHTML =
-                        '<p class="text-center p-3">Error al cargar el navbar: ' + error.message + '</p>';
-                }
-            });
+                        if (retries < maxRetries) {
+                            console.log(`Reintentando (${retries}/${maxRetries})...`);
+                            setTimeout(attemptLoad, 500);
+                        } else {
+                            container.innerHTML =
+                                `<p class="text-center p-3">Error al cargar el componente: ${error.message}</p>`;
+                        }
+                    });
+            }
 
-        // Cargar footer con el mismo enfoque
-        let footerUrl = templatePath + '/templates/footer.html';
+            attemptLoad();
+        }
 
-        fetch(footerUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Error HTTP: ${response.status}`);
-                }
-                return response.text();
-            })
-            .then(data => {
-                document.getElementById('footer-container').innerHTML = data;
-                if (typeof adjustPaths === 'function') {
-                    setTimeout(adjustPaths, 50);
-                }
-            })
-            .catch(error => {
-                console.error('Error cargando el footer desde ' + footerUrl, error);
-
-                // Si falló la primera ruta, intentar una alternativa
-                if (isGitHubPages) {
-                    const altFooterUrl = '/ScytheSociety/templates/footer.html';
-                    console.log("Intentando ruta alternativa:", altFooterUrl);
-
-                    fetch(altFooterUrl)
-                        .then(response => response.text())
-                        .then(data => {
-                            document.getElementById('footer-container').innerHTML = data;
-                            if (typeof adjustPaths === 'function') {
-                                setTimeout(adjustPaths, 50);
-                            }
-                        })
-                        .catch(altError => {
-                            console.error('También falló la ruta alternativa:', altError);
-                            document.getElementById('footer-container').innerHTML =
-                                '<p class="text-center p-3">Error al cargar el footer. Ruta intentada: ' +
-                                footerUrl + '</p>';
-                        });
-                } else {
-                    document.getElementById('footer-container').innerHTML =
-                        '<p class="text-center p-3">Error al cargar el footer: ' + error.message + '</p>';
-                }
-            });
+        // Cargar navbar y footer
+        loadComponent('navbar-container', templatePath + '/templates/navbar.html');
+        loadComponent('footer-container', templatePath + '/templates/footer.html');
     </script>
 </body>
 

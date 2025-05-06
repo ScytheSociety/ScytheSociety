@@ -144,38 +144,66 @@
 
     <!-- Script para cargar componentes HTML -->
     <script>
-        // Determinar la ruta base para cargar los componentes
+        // Determinar si estamos en GitHub Pages
         const isGitHubPages = window.location.hostname.includes('github.io');
-        let templatePath = '../../';
+        let templatePath = '';
+
+        if (isGitHubPages) {
+            // En GitHub Pages, siempre usamos la ruta absoluta
+            templatePath = '/ScytheSociety';
+        } else {
+            // Para desarrollo local, usamos la ruta relativa
+            templatePath = '../../';
+        }
 
         console.log("Ruta base calculada:", templatePath);
 
-        // Cargar navbar
-        fetch(templatePath + 'templates/navbar.html')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('navbar-container').innerHTML = data;
-                // No llamamos a adjustPaths aquí, se llamará automáticamente
-                // cuando se detecte que navbar y footer están cargados
-            })
-            .catch(error => {
-                console.error('Error cargando el navbar:', error);
-                document.getElementById('navbar-container').innerHTML =
-                    '<p class="text-center p-3">Error al cargar el navbar</p>';
-            });
+        // Función para cargar un componente HTML
+        function loadComponent(containerId, componentPath, maxRetries = 3) {
+            let retries = 0;
+            const container = document.getElementById(containerId);
 
-        // Cargar footer
-        fetch(templatePath + 'templates/footer.html')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('footer-container').innerHTML = data;
-                // No llamamos a adjustPaths aquí, se llamará automáticamente
-            })
-            .catch(error => {
-                console.error('Error cargando el footer:', error);
-                document.getElementById('footer-container').innerHTML =
-                    '<p class="text-center p-3">Error al cargar el footer</p>';
-            });
+            if (!container) {
+                console.error(`Contenedor #${containerId} no encontrado`);
+                return;
+            }
+
+            function attemptLoad() {
+                fetch(componentPath)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Error HTTP: ${response.status}`);
+                        }
+                        return response.text();
+                    })
+                    .then(data => {
+                        container.innerHTML = data;
+                        console.log(`Componente ${componentPath} cargado con éxito`);
+                        // Ejecutar adjustPaths si está disponible
+                        if (typeof adjustPaths === 'function') {
+                            setTimeout(adjustPaths, 100);
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Error cargando ${componentPath}:`, error);
+                        retries++;
+
+                        if (retries < maxRetries) {
+                            console.log(`Reintentando (${retries}/${maxRetries})...`);
+                            setTimeout(attemptLoad, 500);
+                        } else {
+                            container.innerHTML =
+                                `<p class="text-center p-3">Error al cargar el componente: ${error.message}</p>`;
+                        }
+                    });
+            }
+
+            attemptLoad();
+        }
+
+        // Cargar navbar y footer
+        loadComponent('navbar-container', templatePath + '/templates/navbar.html');
+        loadComponent('footer-container', templatePath + '/templates/footer.html');
     </script>
 </body>
 
