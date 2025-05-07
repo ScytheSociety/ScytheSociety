@@ -2,7 +2,7 @@
 const firebaseConfig = {
   apiKey: "AIzaSyCCjMaOnleBTXVwNuCZ4ktW54JL0GXbxRE",
   authDomain: "scythe-society-admin.firebaseapp.com",
-  databaseURL: "https://tu-proyecto.firebaseio.com",
+  databaseURL: "https://scythe-society-admin-default-rtdb.firebaseio.com/",
   projectId: "scythe-society-admin",
   storageBucket: "scythe-society-admin.firebasestorage.app",
   messagingSenderId: "153277490974",
