@@ -1,0 +1,53 @@
+{
+  "users": [
+    {
+      "uid": "admin123",
+      "email": "admin@scythesociety.com",
+      "displayName": "Administrador",
+      "role": "administrator",
+      "active": true,
+      "lastLogin": "2025-05-05T20:30:45Z",
+      "createdAt": "2025-01-01T12:00:00Z"
+    },
+    {
+      "uid": "editor456",
+      "email": "editor@scythesociety.com",
+      "displayName": "Editor Principal",
+      "role": "editor",
+      "sections": ["ro", "wow"],
+      "active": true,
+      "lastLogin": "2025-05-04T15:20:10Z",
+      "createdAt": "2025-01-15T10:30:00Z"
+    },
+    {
+      "uid": "mod789",
+      "email": "moderador@scythesociety.com",
+      "displayName": "Moderador RO",
+      "role": "moderator",
+      "sections": ["ro"],
+      "active": true,
+      "lastLogin": "2025-05-03T18:45:30Z",
+      "createdAt": "2025-02-10T09:15:00Z"
+    },
+    {
+      "uid": "contrib101",
+      "email": "contribuidor@scythesociety.com",
+      "displayName": "Creador de Guías",
+      "role": "contributor",
+      "sections": ["ro", "wow"],
+      "active": true,
+      "lastLogin": "2025-05-01T12:10:25Z",
+      "createdAt": "2025-03-05T14:20:00Z"
+    },
+    {
+      "uid": "editor789",
+      "email": "wow-editor@scythesociety.com",
+      "displayName": "Editor WoW",
+      "role": "editor",
+      "sections": ["wow"],
+      "active": true,
+      "lastLogin": "2025-05-02T10:30:15Z",
+      "createdAt": "2025-02-20T16:45:00Z"
+    }
+  ]
+}

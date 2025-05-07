@@ -1,0 +1,392 @@
+/* Estilos para los editores (misiones, guías, etc.) */
+.editor-container {
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  margin-bottom: 30px;
+}
+
+.editor-toolbar {
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.editor-toolbar h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.editor-content {
+  padding: 20px;
+}
+
+/* Formularios del editor */
+.editor-form {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-control {
+  background-color: rgba(30, 30, 30, 0.7);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 10px 15px;
+  border-radius: 4px;
+  width: 100%;
+  transition: all 0.3s;
+}
+
+.form-control:focus {
+  background-color: rgba(40, 40, 40, 0.7);
+  border-color: var(--accent-color);
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(202, 57, 57, 0.25);
+}
+
+textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* CodeMirror (para JSON Editor) */
+.CodeMirror {
+  height: auto !important;
+  min-height: 300px;
+  border-radius: 4px;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 14px;
+}
+
+.cm-s-monokai.CodeMirror {
+  background: #272822;
+}
+
+/* Editor SimpleMDE (para guías) */
+.CodeMirror.cm-s-paper {
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.editor-toolbar {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--secondary-bg);
+}
+
+.editor-toolbar button {
+  color: var(--text-color) !important;
+}
+
+.editor-toolbar button:hover,
+.editor-toolbar button.active {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: transparent;
+}
+
+.editor-toolbar i.separator {
+  border-left: 1px solid var(--border-color);
+}
+
+/* Lista de elementos editables */
+.item-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item-card {
+  background-color: var(--secondary-bg);
+  border-radius: 6px;
+  margin-bottom: 10px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s;
+}
+
+.item-card:hover {
+  background-color: var(--hover-bg);
+  transform: translateX(5px);
+}
+
+.item-thumbnail {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.item-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-details {
+  flex: 1;
+}
+
+.item-title {
+  font-weight: 500;
+  margin: 0 0 5px;
+  color: var(--accent-color);
+}
+
+.item-description {
+  font-size: 0.9rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.item-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.item-actions button {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.item-actions button:hover {
+  color: var(--accent-color);
+}
+
+/* Vista previa */
+.preview-container {
+  background-color: var(--secondary-bg);
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.preview-header {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Input para comandos del juego */
+.game-command {
+  background-color: #3a3a3a;
+  color: #75c8ff;
+  font-family: "Consolas", "Monaco", monospace;
+  padding: 5px 10px;
+  border-radius: 4px;
+  display: inline-block;
+  margin: 5px 0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.game-command:hover {
+  background-color: #4a4a4a;
+}
+
+.game-command::before {
+  content: "\f0c5";
+  font-family: "Font Awesome 5 Free";
+  font-weight: 400;
+  margin-right: 5px;
+}
+
+/* Selector de NPC */
+.npc-option {
+  background-color: #36454f;
+  color: #ffd700;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin: 5px 0;
+  border-left: 3px solid #ffd700;
+}
+
+/* Botones y alertas */
+.btn-primary {
+  background-color: var(--accent-color);
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-primary:hover {
+  background-color: #b92e2e;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background-color: #555;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-secondary:hover {
+  background-color: #666;
+  transform: translateY(-2px);
+}
+
+.btn-danger {
+  background-color: #e74c3c;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-danger:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+}
+
+.alert {
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.alert-success {
+  background-color: rgba(46, 204, 113, 0.15);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  color: #2ecc71;
+}
+
+.alert-danger {
+  background-color: rgba(231, 76, 60, 0.15);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  color: #e74c3c;
+}
+
+/* Steps editor para guías */
+.steps-container {
+  margin-top: 30px;
+}
+
+.step-item {
+  background-color: var(--secondary-bg);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.step-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.step-number {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--accent-color);
+}
+
+.step-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.step-content {
+  margin-top: 10px;
+}
+
+.add-step-btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px dashed var(--border-color);
+  color: var(--text-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.add-step-btn:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--accent-color);
+}
+
+/* Subida de imágenes */
+.image-upload {
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  margin-bottom: 20px;
+  transition: all 0.3s;
+}
+
+.image-upload:hover {
+  border-color: var(--accent-color);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.image-upload i {
+  font-size: 2rem;
+  color: #777;
+  margin-bottom: 10px;
+}
+
+.image-preview {
+  margin-top: 20px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 4px;
+}
+
+/* Responsividad del editor */
+@media (max-width: 768px) {
+  .editor-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .editor-actions {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .editor-actions .btn {
+    flex: 1;
+    text-align: center;
+  }
+}

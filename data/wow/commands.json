@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Teletransporte a Ventormenta",
+    "command": "/tp stormwind",
+    "description": "Te teletransporta a la ciudad de Ventormenta"
+  },
+  {
+    "name": "Teletransporte a Orgrimmar",
+    "command": "/tp orgrimmar",
+    "description": "Te teletransporta a la ciudad de Orgrimmar"
+  },
+  {
+    "name": "Teletransporte a Dalaran",
+    "command": "/tp dalaran",
+    "description": "Te teletransporta a la ciudad flotante de Dalaran"
+  },
+  {
+    "name": "Teletransporte a Oribos",
+    "command": "/tp oribos",
+    "description": "Te teletransporta al hub de las Tierras de las Sombras"
+  },
+  {
+    "name": "Teletransporte a Valdrakken",
+    "command": "/tp valdrakken",
+    "description": "Te teletransporta a la ciudad principal de Dragonflight"
+  },
+  {
+    "name": "Buscar Item",
+    "command": "/item [nombre]",
+    "description": "Busca información sobre un ítem específico"
+  },
+  {
+    "name": "Buscar NPC",
+    "command": "/npc [nombre]",
+    "description": "Busca información sobre un NPC específico"
+  },
+  {
+    "name": "Mostrar Mapa",
+    "command": "/map",
+    "description": "Abre el mapa del mundo"
+  },
+  {
+    "name": "Activar modo PvP",
+    "command": "/pvp",
+    "description": "Activa o desactiva el modo PvP"
+  },
+  {
+    "name": "Enviar Mensaje a Guild",
+    "command": "/g [mensaje]",
+    "description": "Envía un mensaje al chat de la guild"
+  },
+  {
+    "name": "Emote /dance",
+    "command": "/dance",
+    "description": "Tu personaje comienza a bailar"
+  },
+  {
+    "name": "Emote /laugh",
+    "command": "/laugh",
+    "description": "Tu personaje se ríe"
+  },
+  {
+    "name": "Emote /cry",
+    "command": "/cry",
+    "description": "Tu personaje llora"
+  },
+  {
+    "name": "Macro para Curación",
+    "command": "/cast Healing Touch",
+    "description": "Lanza el hechizo Healing Touch (para druidas)"
+  },
+  {
+    "name": "Macro para Daño",
+    "command": "/cast Fireball",
+    "description": "Lanza el hechizo Fireball (para magos)"
+  },
+  {
+    "name": "Abrir Book de Vuelo",
+    "command": "/fly",
+    "description": "Abre tu libro de vuelo para viajar entre localizaciones"
+  },
+  {
+    "name": "Montar",
+    "command": "/mount",
+    "description": "Invoca tu montura actual"
+  },
+  {
+    "name": "Abrir Talentos",
+    "command": "/talents",
+    "description": "Abre tu árbol de talentos"
+  },
+  {
+    "name": "Abrir Inventario",
+    "command": "/bag",
+    "description": "Abre tu inventario"
+  },
+  {
+    "name": "Abrir Misiones",
+    "command": "/quests",
+    "description": "Abre tu registro de misiones"
+  }
+]

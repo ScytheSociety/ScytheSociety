@@ -1,0 +1,97 @@
+[
+  {
+    "name": "Navegar a Prontera",
+    "command": "/navi prontera 150/150",
+    "description": "Navega hacia el centro de la ciudad de Prontera"
+  },
+  {
+    "name": "Navegar a Geffen",
+    "command": "/navi geffen 120/110",
+    "description": "Navega hacia el centro de la ciudad de Geffen"
+  },
+  {
+    "name": "Navegar a Alberta",
+    "command": "/navi alberta 100/195",
+    "description": "Navega hacia el puerto de Alberta"
+  },
+  {
+    "name": "Navegar a Payon",
+    "command": "/navi payon 180/104",
+    "description": "Navega hacia el centro de la ciudad de Payon"
+  },
+  {
+    "name": "Navegar a Morroc",
+    "command": "/navi morocc 150/100",
+    "description": "Navega hacia el centro de la ciudad de Morroc"
+  },
+  {
+    "name": "Abrir Almacén",
+    "command": "/storage",
+    "description": "Abre tu almacén personal (debes estar cerca de un NPC kafra)"
+  },
+  {
+    "name": "Abrir Comercio",
+    "command": "/shop",
+    "description": "Abre una tienda de venta personal"
+  },
+  {
+    "name": "Buscar Item",
+    "command": "/iteminfo [nombre]",
+    "description": "Busca información sobre un ítem específico"
+  },
+  {
+    "name": "Buscar Monster",
+    "command": "/monsterinfo [nombre]",
+    "description": "Busca información sobre un monstruo específico"
+  },
+  {
+    "name": "Sentarse",
+    "command": "/sit",
+    "description": "Tu personaje se sienta para recuperar HP/SP más rápido"
+  },
+  {
+    "name": "Pararse",
+    "command": "/stand",
+    "description": "Tu personaje se levanta si estaba sentado"
+  },
+  {
+    "name": "Emote Feliz",
+    "command": "/happy",
+    "description": "Tu personaje muestra un emote feliz"
+  },
+  {
+    "name": "Emote Triste",
+    "command": "/sad",
+    "description": "Tu personaje muestra un emote triste"
+  },
+  {
+    "name": "Emote Enojado",
+    "command": "/angry",
+    "description": "Tu personaje muestra un emote enojado"
+  },
+  {
+    "name": "Navegar a NPC Kafra",
+    "command": "/navi prontera 146/89",
+    "description": "Navega hacia el NPC Kafra en Prontera"
+  },
+  {
+    "name": "Navegar a Guild Castle",
+    "command": "/navi prt_gld 134/65",
+    "description": "Navega hacia el castillo de guild en Prontera"
+  },
+  {
+    "name": "Abrir Inventario",
+    "command": "/inven",
+    "description": "Abre tu inventario de items"
+  },
+  {
+    "name": "Abrir Equipamiento",
+    "command": "/equip",
+    "description": "Abre tu ventana de equipamiento"
+  },
+  {
+    "name": "Mostrar Estadísticas",
+    "command": "/stats",
+    "description": "Muestra tus estadísticas actuales"
+  }
+]

@@ -1,32 +1,8 @@
 [
   {
-    "titulo": "Hell Shooter [Beta]",
+    "titulo": "Hell Shoddddddddddoter [Beta]",
     "link": "https://scythesociety.github.io/ScytheSociety/juegosss/juegosss.html",
     "imagen": "imagenes/index/hellshooter_logo.png",
     "descripcion": "Descripción de la imagen 1"
-  },
-  {
-    "titulo": "Ganador Hell Game",
-    "link": "https://scythesociety.github.io/ScytheSociety/hellgame/hellgame.html",
-    "imagen": "imagenes/index/hellgame_logo.png",
-    "descripcion": "Descripción de la imagen 1"
-  },
-  {
-    "titulo": "Título de la Misión 2",
-    "link": "pagina2.html",
-    "imagen": "https://kaleoz-media.seagmcdn.com/kaleoz-store/202308/oss-7b2b3a319665682eb5f3fbf5f79f1e9b.jpg",
-    "descripcion": "Descripción de la imagen 2"
-  },
-  {
-    "titulo": "Testeando con Hell",
-    "link": "pagina3.html",
-    "imagen": "https://kaleoz-media.seagmcdn.com/kaleoz-store/202308/oss-7b2b3a319665682eb5f3fbf5f79f1e9b.jpg",
-    "descripcion": "Descripción de la imagen 3"
-  },
-  {
-    "titulo": "Título de la Misión 4",
-    "link": "pagina4.html",
-    "imagen": "https://kaleoz-media.seagmcdn.com/kaleoz-store/202308/oss-7b2b3a319665682eb5f3fbf5f79f1e9b.jpg",
-    "descripcion": "Descripción de la imagen 4"
   }
 ]
