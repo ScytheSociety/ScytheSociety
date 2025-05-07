@@ -10,10 +10,38 @@ let currentUser = null;
 document.addEventListener("DOMContentLoaded", function () {
   // Comprobar si estamos en la página de login
   const isLoginPage = window.location.pathname.includes("/admin/login.html");
+  console.log(
+    "DOM cargado, inicializando autenticación. Página de login:",
+    isLoginPage
+  );
 
   // Configurar el formulario de login si estamos en esa página
   if (isLoginPage) {
     setupLoginForm();
+
+    // Comprobar si hay un usuario ya autenticado
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        console.log("Usuario ya autenticado, verificando permisos");
+        checkAdminPermissions(user.uid).then((hasPermission) => {
+          if (hasPermission) {
+            // Redirigir al dashboard si el usuario ya está autenticado
+            console.log(
+              "Usuario autenticado con permisos, redirigiendo al dashboard"
+            );
+            window.location.href = "../admin/dashboard.html";
+          } else {
+            console.log("Usuario sin permisos de administrador");
+            // Permitir que intente iniciar sesión de nuevo
+            auth.signOut();
+          }
+        });
+      } else {
+        console.log(
+          "No hay usuario autenticado, mostrando formulario de login"
+        );
+      }
+    });
   } else {
     // En cualquier otra página del admin, verificar autenticación
     checkAuthentication();
@@ -35,8 +63,12 @@ function setupLoginForm() {
   const loadingSpinner = document.getElementById("loading-spinner");
 
   if (loginForm) {
+    // Ocultar error inicialmente
+    if (loginError) loginError.style.display = "none";
+
     loginForm.addEventListener("submit", function (e) {
       e.preventDefault();
+      console.log("Formulario de login enviado");
 
       // Mostrar spinner de carga
       if (loadingSpinner) loadingSpinner.style.display = "inline-block";
@@ -48,31 +80,27 @@ function setupLoginForm() {
       const password = document.getElementById("password").value;
 
       // Intentar login con Firebase
-      firebase
-        .auth()
+      auth
         .signInWithEmailAndPassword(userId, password)
         .then((userCredential) => {
           // Login exitoso
           currentUser = userCredential.user;
-
-          // Guardar estado de login en localStorage (NO guardar la contraseña)
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              uid: currentUser.uid,
-              email: currentUser.email,
-              lastLogin: new Date().toISOString(),
-            })
-          );
+          console.log("Login exitoso, obteniendo datos del usuario");
 
           // Verificar si el usuario tiene permisos de administrador
           return checkAdminPermissions(currentUser.uid);
         })
         .then((hasPermission) => {
           if (hasPermission) {
+            console.log("Usuario verificado como administrador");
+
+            // Registrar actividad de login
+            logActivity(currentUser.uid, "login");
+
             // Redirigir al dashboard
             window.location.href = "../admin/dashboard.html";
           } else {
+            console.log("Usuario sin permisos de administrador");
             throw new Error(
               "No tienes permisos para acceder al panel de administración."
             );
@@ -89,6 +117,9 @@ function setupLoginForm() {
             loginError.textContent = getErrorMessage(error);
             loginError.style.display = "block";
           }
+
+          // Cerrar sesión en caso de error
+          auth.signOut();
         });
     });
   }
@@ -100,55 +131,47 @@ function setupLoginForm() {
  * @returns {Promise<boolean>} - Promesa que resuelve a true si tiene permisos
  */
 function checkAdminPermissions(uid) {
-  return new Promise((resolve, reject) => {
-    // Consultar la base de datos para verificar permisos
-    firebase
-      .database()
-      .ref(`/users/${uid}`)
-      .once("value")
-      .then((snapshot) => {
-        const userData = snapshot.val();
-        if (userData && userData.role) {
-          // Verificar si el rol tiene permisos de administrador
-          return firebase
-            .database()
-            .ref(`/roles/${userData.role}`)
-            .once("value");
-        } else {
-          resolve(false);
-        }
-      })
-      .then((snapshot) => {
-        if (snapshot) {
-          const roleData = snapshot.val();
-          resolve(roleData && (roleData.isAdmin || roleData.canAccessAdmin));
-        } else {
-          resolve(false);
-        }
-      })
-      .catch((error) => {
-        console.error("Error al verificar permisos:", error);
-        reject(error);
-      });
-  });
+  console.log("Verificando permisos de administrador para:", uid);
+
+  return database
+    .ref(`/users/${uid}`)
+    .once("value")
+    .then((snapshot) => {
+      const userData = snapshot.val();
+      console.log("Datos del usuario:", userData);
+
+      // Verificar rol directamente
+      return userData && userData.role === "administrador";
+    })
+    .catch((error) => {
+      console.error("Error al verificar permisos:", error);
+      return false;
+    });
 }
 
 /**
  * Verifica la autenticación del usuario en páginas admin
  */
 function checkAuthentication() {
-  firebase.auth().onAuthStateChanged((user) => {
+  auth.onAuthStateChanged((user) => {
     if (user) {
       // Usuario autenticado
       currentUser = user;
+      console.log("Usuario autenticado en checkAuthentication:", user.email);
 
       // Verificar permisos
       checkAdminPermissions(user.uid)
         .then((hasPermission) => {
           if (!hasPermission) {
+            console.log(
+              "Usuario sin permisos de administrador, redirigiendo a login"
+            );
             // No tiene permisos, redirigir a login
             handleLogout();
           } else {
+            console.log(
+              "Usuario con permisos de administrador, actualizando UI"
+            );
             // Actualizar UI con información del usuario
             updateUserUI(user);
           }
@@ -159,6 +182,7 @@ function checkAuthentication() {
           handleLogout();
         });
     } else {
+      console.log("No hay usuario autenticado, redirigiendo a login");
       // No hay usuario autenticado, redirigir a login
       window.location.href = "../admin/login.html";
     }
@@ -175,8 +199,7 @@ function updateUserUI(user) {
   const userAvatarElements = document.querySelectorAll(".user-avatar");
 
   // Obtener datos adicionales del usuario
-  firebase
-    .database()
+  database
     .ref(`/users/${user.uid}`)
     .once("value")
     .then((snapshot) => {
@@ -215,18 +238,43 @@ function updateUserUI(user) {
  * Maneja el cierre de sesión
  */
 function handleLogout() {
-  firebase
-    .auth()
+  // Registrar actividad de logout si hay un usuario autenticado
+  if (auth.currentUser) {
+    logActivity(auth.currentUser.uid, "logout");
+  }
+
+  auth
     .signOut()
     .then(() => {
-      // Borrar datos de sesión
-      localStorage.removeItem("user");
-
-      // Redirigir a login
+      console.log("Sesión cerrada correctamente");
       window.location.href = "../admin/login.html";
     })
     .catch((error) => {
       console.error("Error al cerrar sesión:", error);
+    });
+}
+
+/**
+ * Registra una actividad en el sistema
+ * @param {string} userId - ID del usuario
+ * @param {string} type - Tipo de actividad (login, logout, create, update, delete)
+ * @param {Object} details - Detalles adicionales de la actividad
+ */
+function logActivity(userId, type, details = {}) {
+  const activityData = {
+    userId: userId,
+    user: auth.currentUser ? auth.currentUser.email : null,
+    type: type,
+    timestamp: firebase.database.ServerValue.TIMESTAMP,
+    ...details,
+  };
+
+  // Almacenar en Firebase
+  database
+    .ref("/activity")
+    .push(activityData)
+    .catch((error) => {
+      console.error("Error al registrar actividad:", error);
     });
 }
 
@@ -248,51 +296,4 @@ function getErrorMessage(error) {
     default:
       return error.message || "Ha ocurrido un error al iniciar sesión.";
   }
-}
-
-/**
- * Verifica si el usuario actual tiene un permiso específico
- * @param {string} permission - Nombre del permiso a verificar
- * @returns {Promise<boolean>} - Promesa que resuelve a true si tiene el permiso
- */
-function hasPermission(permission) {
-  return new Promise((resolve, reject) => {
-    if (!currentUser) {
-      resolve(false);
-      return;
-    }
-
-    firebase
-      .database()
-      .ref(`/users/${currentUser.uid}`)
-      .once("value")
-      .then((snapshot) => {
-        const userData = snapshot.val();
-        if (userData && userData.role) {
-          return firebase
-            .database()
-            .ref(`/roles/${userData.role}`)
-            .once("value");
-        } else {
-          resolve(false);
-        }
-      })
-      .then((snapshot) => {
-        if (snapshot) {
-          const roleData = snapshot.val();
-          // Verificar si el rol tiene el permiso específico o es administrador
-          resolve(
-            roleData &&
-              (roleData.isAdmin ||
-                (roleData.permissions && roleData.permissions[permission]))
-          );
-        } else {
-          resolve(false);
-        }
-      })
-      .catch((error) => {
-        console.error("Error al verificar permiso:", error);
-        reject(error);
-      });
-  });
 }
