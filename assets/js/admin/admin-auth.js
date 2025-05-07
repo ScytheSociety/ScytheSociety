@@ -140,8 +140,16 @@ function checkAdminPermissions(uid) {
       const userData = snapshot.val();
       console.log("Datos del usuario:", userData);
 
+      // Verificar si el usuario existe y tiene el rol adecuado
+      if (!userData) {
+        console.error("No se encontraron datos para el usuario con UID:", uid);
+        return false;
+      }
+
       // Verificar rol directamente
-      return userData && userData.role === "administrador";
+      const hasAdminRole = userData.role === "administrador";
+      console.log("¿Usuario es administrador?", hasAdminRole);
+      return hasAdminRole;
     })
     .catch((error) => {
       console.error("Error al verificar permisos:", error);
@@ -157,21 +165,50 @@ function checkAuthentication() {
     if (user) {
       // Usuario autenticado
       currentUser = user;
-      console.log("Usuario autenticado en checkAuthentication:", user.email);
+      console.log("Usuario autenticado:", user.email);
 
-      // Verificar permisos
+      // Verificar permisos - AÑADE ESTE CONSOLE.LOG PARA DEPURAR
+      console.log("Verificando permisos para UID:", user.uid);
+
+      // Comprobación adicional para evitar bucles
+      let redirectAttempts = parseInt(
+        sessionStorage.getItem("redirectAttempts") || "0"
+      );
+      if (redirectAttempts > 3) {
+        console.error(
+          "Demasiados intentos de redirección detectados. Posible bucle."
+        );
+        sessionStorage.removeItem("redirectAttempts");
+        // Mostrar mensaje de error en la página
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "alert alert-danger";
+        errorDiv.innerHTML = `
+          <i class="fas fa-exclamation-circle me-2"></i>
+          Se ha detectado un bucle de redirección. Por favor, comprueba la consola para más detalles.
+          <button class="btn btn-danger ms-3" onclick="firebase.auth().signOut()">Cerrar sesión</button>
+        `;
+        document.body.prepend(errorDiv);
+        return;
+      }
+
+      // Incrementar contador de redirecciones
+      sessionStorage.setItem(
+        "redirectAttempts",
+        (redirectAttempts + 1).toString()
+      );
+
       checkAdminPermissions(user.uid)
         .then((hasPermission) => {
+          // Resetear contador si la verificación es exitosa
+          sessionStorage.removeItem("redirectAttempts");
+
           if (!hasPermission) {
-            console.log(
-              "Usuario sin permisos de administrador, redirigiendo a login"
-            );
+            console.error("Usuario sin permisos de administrador:", user.email);
             // No tiene permisos, redirigir a login
+            showToast("No tienes permisos de administrador.", "error");
             handleLogout();
           } else {
-            console.log(
-              "Usuario con permisos de administrador, actualizando UI"
-            );
+            console.log("Usuario con permisos de administrador:", user.email);
             // Actualizar UI con información del usuario
             updateUserUI(user);
           }
@@ -183,8 +220,12 @@ function checkAuthentication() {
         });
     } else {
       console.log("No hay usuario autenticado, redirigiendo a login");
+      // Resetear contador al cerrar sesión
+      sessionStorage.removeItem("redirectAttempts");
       // No hay usuario autenticado, redirigir a login
-      window.location.href = "../admin/login.html";
+      if (!window.location.pathname.includes("/login.html")) {
+        window.location.href = "../admin/login.html";
+      }
     }
   });
 }

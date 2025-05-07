@@ -14,7 +14,7 @@ function logActivity(type, details = {}) {
   if (!user) return;
 
   const activityData = {
-    type,
+    type: String(type), // Asegurarse de que sea una cadena
     userId: user.uid,
     user: user.email,
     timestamp: firebase.database.ServerValue.TIMESTAMP,
@@ -26,11 +26,12 @@ function logActivity(type, details = {}) {
     .database()
     .ref("/activity")
     .push(activityData)
+    .then(() => {
+      console.log("Actividad registrada correctamente:", type);
+    })
     .catch((error) => {
       console.error("Error al registrar actividad:", error);
     });
-
-  // También podría enviar esta información a un servicio de analytics o logs externos
 }
 
 /**
@@ -224,7 +225,7 @@ function fetchJSON(path) {
 }
 
 /**
- * Guarda un archivo JSON en el servidor usando GitHub API
+ * Guarda un archivo JSON en el repositorio usando GitHub API
  * @param {string} path - Ruta del archivo en el repositorio
  * @param {Object} content - Contenido a guardar
  * @param {string} commitMessage - Mensaje del commit
@@ -234,14 +235,24 @@ function saveJSON(path, content, commitMessage) {
   // Verificar token de GitHub
   const githubToken = localStorage.getItem("github-token");
   if (!githubToken) {
+    // Si no hay token guardado, pedir al usuario
+    showGitHubTokenDialog()
+      .then((token) => {
+        localStorage.setItem("github-token", token);
+        return saveJSON(path, content, commitMessage);
+      })
+      .catch((error) => {
+        showToast("No se pudo guardar en GitHub: " + error.message, "error");
+        return Promise.reject(error);
+      });
     return Promise.reject(
-      new Error("No se ha configurado el token de GitHub.")
+      new Error("Se requiere configurar el token de GitHub.")
     );
   }
 
   // Parámetros del repositorio
-  const owner = "tu-usuario"; // Cambiar por tu usuario de GitHub
-  const repo = "ScytheSociety"; // Cambiar por el nombre de tu repositorio
+  const owner = "ScytheSociety"; // Tu usuario de GitHub
+  const repo = "ScytheSociety"; // Tu repositorio
 
   // URL de la API de GitHub
   const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
@@ -253,15 +264,28 @@ function saveJSON(path, content, commitMessage) {
       Accept: "application/vnd.github.v3+json",
     },
   })
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        if (response.status === 404) {
+          // El archivo no existe, crearlo
+          return { sha: null };
+        }
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      return response.json();
+    })
     .then((data) => {
       // Preparar el contenido para la API de GitHub
       const payload = {
         message: commitMessage,
         content: btoa(JSON.stringify(content, null, 2)), // Convertir a base64
-        sha: data.sha, // SHA del archivo existente
         branch: "main", // O la rama que uses
       };
+
+      // Si el archivo existe, incluir su SHA
+      if (data.sha) {
+        payload.sha = data.sha;
+      }
 
       // Actualizar el archivo
       return fetch(apiUrl, {
@@ -284,6 +308,87 @@ function saveJSON(path, content, commitMessage) {
       console.error(`Error al guardar ${path}:`, error);
       throw error;
     });
+}
+
+/**
+ * Muestra un diálogo para introducir el token de GitHub
+ * @returns {Promise<string>} - Promesa que resuelve al token introducido
+ */
+function showGitHubTokenDialog() {
+  return new Promise((resolve, reject) => {
+    // Crear modal
+    const modalId = "github-token-modal";
+    const modal = document.createElement("div");
+    modal.id = modalId;
+    modal.className = "modal-backdrop";
+    modal.innerHTML = `
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3>Configurar Token de GitHub</h3>
+          <button type="button" class="modal-close" data-dismiss="modal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Para guardar cambios en el repositorio, necesitas proporcionar un token de acceso personal de GitHub con permisos <code>repo</code>.</p>
+          <p>Puedes crear uno en: <a href="https://github.com/settings/tokens" target="_blank">https://github.com/settings/tokens</a></p>
+          
+          <div class="form-group mt-3">
+            <label for="github-token">Token de GitHub:</label>
+            <input type="password" class="form-control" id="github-token" placeholder="ghp_...">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn-primary" id="save-token-btn">Guardar</button>
+        </div>
+      </div>
+    `;
+
+    // Añadir al body
+    document.body.appendChild(modal);
+
+    // Mostrar modal
+    setTimeout(() => {
+      modal.classList.add("show");
+    }, 10);
+
+    // Configurar eventos
+    const closeButtons = modal.querySelectorAll("[data-dismiss=modal]");
+    closeButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        modal.classList.remove("show");
+        setTimeout(() => {
+          modal.remove();
+          reject(new Error("Configuración cancelada por el usuario."));
+        }, 300);
+      });
+    });
+
+    const saveButton = modal.querySelector("#save-token-btn");
+    const tokenInput = modal.querySelector("#github-token");
+
+    saveButton.addEventListener("click", () => {
+      const token = tokenInput.value.trim();
+      if (!token) {
+        showToast("Por favor, introduce un token válido.", "error");
+        return;
+      }
+
+      modal.classList.remove("show");
+      setTimeout(() => {
+        modal.remove();
+        resolve(token);
+      }, 300);
+    });
+
+    // También permitir Enter
+    tokenInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        saveButton.click();
+      }
+    });
+  });
 }
 
 /**

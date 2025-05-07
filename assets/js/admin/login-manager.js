@@ -127,16 +127,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Registrar actividad
             const activityData = {
+              type: "login", // CAMBIADO - ahora es solo "login" (string)
               userId: auth.currentUser.uid,
               user: auth.currentUser.email,
-              type: "login",
               timestamp: firebase.database.ServerValue.TIMESTAMP,
             };
 
-            firebase.database().ref("/activity").push(activityData);
-
-            // Redirigir
-            safeRedirect("../admin/dashboard.html");
+            firebase
+              .database()
+              .ref("/activity")
+              .push(activityData)
+              .then(() => {
+                console.log("Actividad de login registrada correctamente");
+                // Redirigir
+                safeRedirect("../admin/dashboard.html");
+              })
+              .catch((error) => {
+                console.error("Error al registrar actividad:", error);
+                // Redirigir de todos modos
+                safeRedirect("../admin/dashboard.html");
+              });
           } else {
             console.log("Login Manager: Usuario no es administrador");
             throw new Error("No tienes permisos de administrador");

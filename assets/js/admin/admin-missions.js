@@ -714,26 +714,39 @@ function discardChanges() {
  * @returns {Promise} - Promesa que resuelve cuando se completa el guardado
  */
 function saveMissions() {
-  return new Promise((resolve, reject) => {
-    // Por ahora, simularemos un guardado exitoso con setTimeout
-    // En un entorno real, usaríamos la API de GitHub o Firebase
-    setTimeout(() => {
+  // Ruta al archivo JSON
+  const jsonPath = `data/${gamePrefix}/${gamePrefix}misiones.json`;
+
+  // Usar saveJSON para guardar en GitHub
+  return saveJSON(
+    jsonPath,
+    currentMissions,
+    `Actualización de misiones de ${gamePrefix}`
+  )
+    .then(() => {
+      showToast("Misiones guardadas correctamente en GitHub.", "success");
+      return Promise.resolve();
+    })
+    .catch((error) => {
+      console.error("Error al guardar en GitHub:", error);
+      showToast(
+        "Error al guardar en GitHub. Se intentará guardar localmente.",
+        "warning"
+      );
+
+      // Intentar guardar en localStorage como respaldo
       try {
-        // Podríamos usar localStorage para guardar temporalmente
         localStorage.setItem(
           `${gamePrefix}-missions`,
           JSON.stringify(currentMissions)
         );
-
-        // En implementación real:
-        // return saveJSON(missionsJsonPath, currentMissions, `Actualización de misiones de ${gamePrefix}`);
-
-        resolve();
-      } catch (error) {
-        reject(error);
+        showToast("Guardado localmente como respaldo.", "info");
+      } catch (storageError) {
+        console.error("Error al guardar localmente:", storageError);
       }
-    }, 1000);
-  });
+
+      return Promise.reject(error);
+    });
 }
 
 /**

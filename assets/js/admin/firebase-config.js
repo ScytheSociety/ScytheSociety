@@ -1,6 +1,6 @@
 // Configuración de Firebase para la autenticación
 const firebaseConfig = {
-  apiKey: "AIzaSyCCjMaOnleBTXVwNuCZ4ktW54JL0GXbxRE",
+  apiKey: "AIzaSyCCjMaOnleBTXVwNuCZ4ktW54JL0GXbxRE", // Protegida por restricción de dominio
   authDomain: "scythe-society-admin.firebaseapp.com",
   databaseURL: "https://scythe-society-admin-default-rtdb.firebaseio.com",
   projectId: "scythe-society-admin",
