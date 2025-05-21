@@ -42,13 +42,19 @@ document.addEventListener("DOMContentLoaded", function () {
 function initMembersEditor() {
   console.log("Inicializando editor de miembros...");
 
+  // MODIFICACIÓN: Comentar la verificación para pruebas
   // Verificar autenticación
   const user = firebase.auth().currentUser;
+  /* Comentamos esto para pruebas
   if (!user) {
     // Si no hay usuario, redirigir a login
     window.location.href = "../admin/login.html";
     return;
   }
+  */
+
+  // Continuar con la inicialización aunque no haya usuario
+  console.log("Continuando inicialización del editor de miembros");
 }
 
 /**
@@ -113,7 +119,7 @@ function loadMembers() {
   `;
 
   // Ruta al archivo JSON según el juego seleccionado
-  const dataJsonPath = `/data/${gamePrefix}/${gamePrefix}miembros.json`;
+  const dataJsonPath = `../../data/${gamePrefix}/${gamePrefix}miembros.json`;
 
   // Cargar archivo JSON
   fetch(dataJsonPath)
@@ -930,30 +936,28 @@ function discardChanges() {
  */
 function saveChanges() {
   return new Promise((resolve, reject) => {
-    // Por ahora, simularemos un guardado exitoso con setTimeout
-    // En un entorno real, usaríamos la API de GitHub o Firebase
-    setTimeout(() => {
-      try {
-        // Crear objeto con los datos actualizados
-        const updatedData = {
-          members: currentMembers,
-          clans: currentClans,
-        };
+    // MODIFICACIÓN: Simplificar para pruebas
+    try {
+      // Crear objeto con los datos actualizados
+      const updatedData = {
+        members: currentMembers,
+        clans: currentClans,
+      };
 
-        // Podríamos usar localStorage para guardar temporalmente
-        localStorage.setItem(
-          `${gamePrefix}-members`,
-          JSON.stringify(updatedData)
-        );
+      // Guardar en localStorage
+      localStorage.setItem(
+        `${gamePrefix}-members`,
+        JSON.stringify(updatedData)
+      );
 
-        // En implementación real:
-        // return saveJSON(`/data/${gamePrefix}/${gamePrefix}miembros.json`, updatedData, `Actualización de miembros y clanes de ${gamePrefix}`);
+      console.log("Cambios guardados en localStorage temporalmente");
 
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
-    }, 1000);
+      // Resolver inmediatamente sin esperar
+      resolve();
+    } catch (error) {
+      console.error("Error al guardar cambios:", error);
+      reject(error);
+    }
   });
 }
 
