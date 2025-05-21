@@ -4,8 +4,28 @@
  */
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Inicializar el dashboard
-  initDashboard();
+  // Esperamos a que la autenticación esté lista
+  firebase.auth().onAuthStateChanged(function (user) {
+    if (user) {
+      // Usuario autenticado, inicializar el dashboard
+      console.log("Dashboard inicializado para:", user.email);
+
+      // Inicializar componentes del dashboard
+      setupDashboard();
+    } else {
+      // No hay usuario autenticado, redirigir a login
+      console.log("No hay usuario autenticado, redirigiendo a login");
+      window.location.href = "./login.html";
+    }
+  });
+});
+
+/**
+ * Configura todos los componentes del dashboard
+ */
+function setupDashboard() {
+  // Actualizar fecha actual
+  updateCurrentDate();
 
   // Configurar el toggle del sidebar
   setupSidebarToggle();
@@ -18,24 +38,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Cargar actividad reciente
   loadRecentActivity();
-});
+
+  // Configurar botón de actualizar
+  setupRefreshButton();
+}
 
 /**
- * Inicializa el dashboard
+ * Configura el botón de actualizar
  */
-function initDashboard() {
-  // Verificar si hay usuario autenticado
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    // Si no hay usuario, redirigir a login
-    window.location.href = "../admin/login.html";
-    return;
+function setupRefreshButton() {
+  const refreshButton = document.querySelector(".content-actions .btn-primary");
+  if (refreshButton) {
+    refreshButton.addEventListener("click", function () {
+      // Actualizar contenido
+      loadStatistics();
+      loadRecentActivity();
+      updateCurrentDate();
+
+      // Mostrar feedback
+      showToast("Contenido actualizado", "success");
+    });
   }
-
-  console.log("Dashboard inicializado para:", user.email);
-
-  // Actualizar fecha actual
-  updateCurrentDate();
 }
 
 /**
@@ -168,18 +191,25 @@ function loadStatistics() {
   // Array para almacenar todas las promesas
   const fetchPromises = statsToFetch.map((stat) => {
     return fetch(stat.endpoint)
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          // Si el archivo no existe, devolver un objeto/array vacío
+          console.log(`Archivo no encontrado: ${stat.endpoint}`);
+          return stat.endpoint.includes("misiones") ? [] : {};
+        }
+        return response.json();
+      })
       .then((data) => {
         // Calcular el número según la estructura del JSON
         let count = 0;
 
         if (Array.isArray(data)) {
           count = data.length;
-        } else if (data.members) {
+        } else if (data && data.members) {
           count = data.members.length;
-        } else if (data.guides) {
+        } else if (data && data.guides) {
           count = data.guides.length;
-        } else if (Object.keys(data).length > 0) {
+        } else if (data && Object.keys(data).length > 0) {
           // Contar elementos en el primer nivel
           count = Object.keys(data).length;
         }
@@ -348,6 +378,54 @@ function loadRecentActivity() {
           </div>
         `;
     });
+}
+
+/**
+ * Muestra un toast de notificación
+ * @param {string} message - Mensaje a mostrar
+ * @param {string} type - Tipo de toast (success, error, warning, info)
+ */
+function showToast(message, type = "info") {
+  // Crear elemento de toast
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type} show`;
+  toast.innerHTML = `
+    <div class="toast-header">
+      <i class="fas fa-${
+        type === "success" ? "check" : type === "error" ? "exclamation" : "info"
+      }-circle me-2"></i>
+      <strong class="me-auto">${
+        type === "success"
+          ? "Éxito"
+          : type === "error"
+          ? "Error"
+          : "Información"
+      }</strong>
+      <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+    </div>
+    <div class="toast-body">
+      ${message}
+    </div>
+  `;
+
+  // Añadir a la página
+  const toastContainer =
+    document.querySelector(".toast-container") || document.createElement("div");
+  if (!toastContainer.classList.contains("toast-container")) {
+    toastContainer.className =
+      "toast-container position-fixed bottom-0 end-0 p-3";
+    document.body.appendChild(toastContainer);
+  }
+
+  toastContainer.appendChild(toast);
+
+  // Eliminar después de 3 segundos
+  setTimeout(() => {
+    toast.remove();
+    if (toastContainer.children.length === 0) {
+      toastContainer.remove();
+    }
+  }, 3000);
 }
 
 /**
