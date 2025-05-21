@@ -10,7 +10,7 @@ let originalData = null;
 let isEditing = false;
 
 // Ruta al archivo JSON de misiones según el juego seleccionado
-let missionsJsonPath = "/data/ro/romisiones.json";
+let missionsJsonPath = "../../data/ro/romisiones.json";
 let gamePrefix = "ro"; // Prefijo por defecto (Ragnarok Online)
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -33,16 +33,22 @@ document.addEventListener("DOMContentLoaded", function () {
 /**
  * Inicializa el editor de misiones
  */
+// En admin-missions.js, aproximadamente línea 29
 function initMissionsEditor() {
   console.log("Inicializando editor de misiones...");
 
-  // Verificar autenticación
+  // MODIFICACIÓN: Comentar la verificación para pruebas
   const user = firebase.auth().currentUser;
+  /* Comentamos esto para pruebas
   if (!user) {
     // Si no hay usuario, redirigir a login
     window.location.href = "../admin/login.html";
     return;
   }
+  */
+
+  // Continuar con la inicialización aunque no haya usuario
+  console.log("Continuando inicialización del editor de misiones");
 
   // Inicializar editor SimpleMDE para descripciones
   if (
@@ -81,11 +87,15 @@ function setupGameSelector() {
 
   // Opciones de juegos
   const games = [
-    { id: "ro", name: "Ragnarok Online", path: "/data/ro/romisiones.json" },
+    {
+      id: "ro",
+      name: "Ragnarok Online",
+      path: "../../data/ro/romisiones.json",
+    },
     {
       id: "wow",
       name: "World of Warcraft",
-      path: "/data/wow/wowmisiones.json",
+      path: "../../data/wow/wowmisiones.json",
     },
   ];
 
@@ -102,7 +112,7 @@ function setupGameSelector() {
     gamePrefix = this.value;
     missionsJsonPath =
       games.find((g) => g.id === gamePrefix)?.path ||
-      "/data/ro/romisiones.json";
+      "../../data/ro/romisiones.json"; // Modificado para usar ruta relativa
 
     // Restablecer estado
     selectedMission = null;

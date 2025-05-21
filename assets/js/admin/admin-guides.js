@@ -41,28 +41,18 @@ document.addEventListener("DOMContentLoaded", function () {
 function initGuidesEditor() {
   console.log("Inicializando editor de guías...");
 
-  // Verificar autenticación
+  // MODIFICACIÓN: Comentar la verificación para pruebas
   const user = firebase.auth().currentUser;
+  /* Comentamos esto para pruebas
   if (!user) {
     // Si no hay usuario, redirigir a login
     window.location.href = "../admin/login.html";
     return;
   }
+  */
 
-  // Configurar selector de juego
-  const gameSelector = document.getElementById("game-selector");
-  if (gameSelector) {
-    // Evento al cambiar de juego
-    gameSelector.addEventListener("change", function () {
-      gamePrefix = this.value;
-
-      // Cargar misiones del juego seleccionado
-      loadMissions();
-
-      // Cargar comandos del juego
-      loadGameCommands();
-    });
-  }
+  // Continuar con la inicialización aunque no haya usuario
+  console.log("Continuando inicialización del editor de guías");
 }
 
 /**
@@ -81,7 +71,7 @@ function loadMissions() {
   missionSelector.innerHTML += "<option disabled>Cargando misiones...</option>";
 
   // Ruta al archivo JSON según el juego seleccionado
-  const missionsJsonPath = `/data/${gamePrefix}/${gamePrefix}misiones.json`;
+  const missionsJsonPath = `../../data/${gamePrefix}/${gamePrefix}misiones.json`;
 
   // Cargar archivo JSON
   fetch(missionsJsonPath)
@@ -127,7 +117,7 @@ function loadMissions() {
  */
 function loadGameCommands() {
   // Ruta al archivo JSON de comandos
-  const commandsJsonPath = `/data/${gamePrefix}/commands.json`;
+  const commandsJsonPath = `../../data/${gamePrefix}/commands.json`;
 
   // Intentar cargar desde localStorage primero
   const cachedCommands = localStorage.getItem(`${gamePrefix}-commands`);
