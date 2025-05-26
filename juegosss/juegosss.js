@@ -118,49 +118,108 @@ const sounds = {
 // ======================================================
 
 const GAME_CONFIG = {
-  // Dificultad General
-  difficulty: 0.8, // Multiplicador general de dificultad (1.0 = normal)
+  // Dificultad General - AUMENTADA PARA MÁS INTENSIDAD
+  difficulty: 1.2, // Aumentado de 0.8 a 1.2 (más difícil y emocionante)
 
-  // Enemigos
+  // Enemigos - MÁS FRECUENTES Y AGRESIVOS
   enemies: {
-    baseSpeed: 0.001, // Reducido de 0.002 a 0.001 (velocidad base más lenta)
-    levelSpeedIncrease: 0.1, // Reducido de 0.2 a 0.1 (menor incremento por nivel)
-    sizeReduction: 0.03, // Reducido de 0.05 a 0.03 (los enemigos se reducen menos)
-    maxSpeedFactor: 0.3, // Reducido de 0.5 a 0.3 (velocidad máxima menor tras rebotes)
-    spawnRateBase: 90, // Aumentado de 60 a 90 (más tiempo entre apariciones)
-    spawnRateReduction: 2, // Reducido de 4 a 2 (menor reducción por nivel)
-    minSpawnRate: 40, // Aumentado de 20 a 40 (mínimo tiempo mayor)
-    extraEnemiesThreshold: 3, // Aumentado de 2 a 3 (enemigos extra aparecen en nivel más alto)
-    extraEnemyChancePerLevel: 0.03, // Reducido de 0.05 a 0.03 (menor probabilidad)
-    maxExtraEnemyChance: 0.2, // Reducido de 0.4 a 0.2 (probabilidad máxima menor)
+    baseSpeed: 0.003, // Aumentado de 0.001 a 0.003 (3x más rápido)
+    levelSpeedIncrease: 0.15, // Aumentado de 0.1 a 0.15 (más incremento por nivel)
+    sizeReduction: 0.02, // Reducido de 0.03 a 0.02 (enemigos se mantienen más grandes)
+    maxSpeedFactor: 0.6, // Aumentado de 0.3 a 0.6 (velocidad máxima tras rebotes)
+
+    // SPAWN MEJORADO - MÁS ENEMIGOS MÁS FRECUENTEMENTE
+    spawnRateBase: 45, // Reducido de 90 a 45 (aparecen 2x más frecuente)
+    spawnRateReduction: 3, // Aumentado de 2 a 3 (reducción más agresiva por nivel)
+    minSpawnRate: 15, // Reducido de 40 a 15 (spawn mínimo muy frecuente)
+
+    // OLEADAS DE ENEMIGOS
+    extraEnemiesThreshold: 2, // Reducido de 3 a 2 (desde nivel 2)
+    extraEnemyChancePerLevel: 0.08, // Aumentado de 0.03 a 0.08 (más probabilidad)
+    maxExtraEnemyChance: 0.5, // Aumentado de 0.2 a 0.5 (hasta 50% de enemigos extra)
+
+    // NUEVAS MECÁNICAS DE OLEADAS
+    waveSpawnChance: 0.003, // Probabilidad de oleada por frame
+    waveSize: 5, // Enemigos por oleada
+    bossSpawnLevel: 5, // Nivel donde aparecen "mini-bosses"
+    bossHealthMultiplier: 3, // Vida extra para mini-bosses
   },
 
-  // Power-ups y corazones
+  // Power-ups y corazones - MÁS FRECUENTES Y DURADEROS
   items: {
-    heartSpawnChance: 0.0002, // Probabilidad por frame de aparición de corazón
-    powerUpSpawnChance: 0.00015, // Probabilidad por frame de aparición de power-up
-    maxPowerUpDuration: 600, // Duración máxima de power-ups (en frames)
-    minPowerUpDuration: 450, // Duración mínima de power-ups (en frames)
-    explosionRadius: 80, // Radio de explosión (píxeles)
+    // APARICIÓN MÁS FRECUENTE
+    heartSpawnChance: 0.0008, // Aumentado de 0.0002 a 0.0008 (4x más frecuente)
+    powerUpSpawnChance: 0.0006, // Aumentado de 0.00015 a 0.0006 (4x más frecuente)
+
+    // DURACIÓN AUMENTADA
+    maxPowerUpDuration: 900, // Aumentado de 600 a 900 frames (15 segundos)
+    minPowerUpDuration: 600, // Aumentado de 450 a 600 frames (10 segundos)
+
+    // MECÁNICAS MEJORADAS
+    explosionRadius: 120, // Aumentado de 80 a 120 (explosiones más grandes)
+    multiHeartChance: 0.3, // 30% de que aparezcan 2 corazones juntos
+    rarePowerUpChance: 0.1, // 10% de power-ups "raros" con efectos especiales
+
+    // NUEVOS POWER-UPS
+    comboMultiplier: 1.5, // Multiplicador de puntos por combos
+    shieldDuration: 300, // Duración del escudo temporal (5 segundos)
   },
 
-  // Jugador
+  // Jugador - MÁS PODER PERO MÁS DESAFÍO
   player: {
-    lives: 5, // Vidas iniciales
-    invulnerabilityTime: 120, // Tiempo de invulnerabilidad tras daño (frames)
-    autoShootDelayBase: 200, // Delay base entre disparos automáticos (ms)
-    autoShootDelayReduction: 12, // Reducción de delay por nivel (ms)
-    autoShootDelayMin: 80, // Delay mínimo entre disparos (ms)
-    bulletSpeedBase: 0.015, // Velocidad base de balas
-    bulletSpeedIncrease: 0.002, // Aumento de velocidad de balas por nivel
-    specialPowerCost: 25, // Enemigos necesarios para poder especial
-    specialPowerDuration: 3000, // Duración del poder especial (ms)
-    specialBulletCount: 16, // Número de balas del poder especial
+    lives: 7, // Aumentado de 5 a 7 (más vidas para mayor intensidad)
+    invulnerabilityTime: 90, // Reducido de 120 a 90 (menos tiempo invulnerable)
+
+    // DISPARO MÁS RÁPIDO
+    autoShootDelayBase: 120, // Reducido de 200 a 120ms (más rápido)
+    autoShootDelayReduction: 15, // Aumentado de 12 a 15ms (mejora más por nivel)
+    autoShootDelayMin: 40, // Reducido de 80 a 40ms (disparo súper rápido)
+
+    // BALAS MEJORADAS
+    bulletSpeedBase: 0.02, // Aumentado de 0.015 a 0.020 (balas más rápidas)
+    bulletSpeedIncrease: 0.003, // Aumentado de 0.002 a 0.003 (más incremento por nivel)
+
+    // PODER ESPECIAL MÁS FRECUENTE
+    specialPowerCost: 15, // Reducido de 25 a 15 (se carga más rápido)
+    specialPowerDuration: 4000, // Aumentado de 3000 a 4000ms (dura más)
+    specialBulletCount: 24, // Aumentado de 16 a 24 (más balas)
+
+    // NUEVAS MECÁNICAS
+    comboCounter: 0, // Contador de enemigos eliminados seguidos
+    maxCombo: 50, // Combo máximo para bonificaciones
+    adrenalineMode: false, // Modo adrenalina cuando vida baja
   },
 
-  // Niveles
+  // Niveles - PROGRESIÓN MÁS INTENSA
   levels: {
-    enemiesPerLevel: [30, 70, 110, 150, 190, 230, 270, 210, 250], // Enemigos para pasar de nivel
+    // MÁS ENEMIGOS POR NIVEL
+    enemiesPerLevel: [25, 50, 80, 120, 170, 230, 300, 380, 470, 600], // Progresión más intensa
+    bossLevels: [3, 6, 9], // Niveles con mini-bosses
+    bonusLevels: [5, 10], // Niveles bonus con recompensas especiales
+  },
+
+  // NUEVAS MECÁNICAS DE JUEGO
+  special: {
+    // MODO SUPERVIVENCIA
+    survivalModeAfter: 10, // Activar modo supervivencia después del nivel 10
+    survivalSpawnRate: 0.5, // Spawn rate en modo supervivencia
+
+    // EVENTOS ESPECIALES
+    meteorShowerChance: 0.001, // Lluvia de meteoritos ocasional
+    timeSlowChance: 0.0005, // Slow motion temporal
+    doublePointsChance: 0.0008, // Puntos dobles temporales
+
+    // ACHIEVEMENTS/LOGROS
+    achievements: [
+      { id: "combo_10", name: "Combo x10", requirement: 10 },
+      { id: "level_5", name: "Sobreviviente", requirement: 5 },
+      { id: "no_damage", name: "Intocable", requirement: "no_damage_level" },
+      {
+        id: "speed_demon",
+        name: "Demonio Veloz",
+        requirement: "fast_completion",
+      },
+    ],
   },
 };
 
@@ -929,6 +988,10 @@ function startGame() {
   activePowerUp = null;
   powerUpTimeLeft = 0;
 
+  // RESETEAR NUEVOS SISTEMAS:
+  GAME_CONFIG.player.comboCounter = 0;
+  GAME_CONFIG.player.adrenalineMode = false;
+
   // Inicializar arrays
   hearts = [];
   powerUps = [];
@@ -1033,14 +1096,14 @@ function showInstructions() {
     
     <div style="margin-bottom: 15px;">
       <h3 style="color: #FF0000; margin-bottom: 5px;">VIDAS:</h3>
-      <p>• Tienes 5 vidas (💀💀💀💀💀) al comenzar.</p>
+       <p>• Tienes 7 vidas (💀💀💀💀💀💀💀) al comenzar.</p>
       <p>• Pierdes una vida al ser golpeado por un enemigo.</p>
       <p>• Después de ser golpeado, eres invulnerable por unos segundos.</p>
     </div>
     
     <div style="margin-bottom: 15px;">
       <h3 style="color: #FF0000; margin-bottom: 5px;">PODER ESPECIAL:</h3>
-      <p>• Por cada 25 enemigos eliminados, se carga tu poder especial (indicador inferior derecho).</p>
+      <p>• Por cada 15 enemigos eliminados, se carga tu poder especial (indicador inferior derecho).</p>
       <p>• Actívalo con ESPACIO (PC) o tocando el indicador (móvil).</p>
       <p>• Dispara balas en todas direcciones durante unos segundos.</p>
     </div>
@@ -1431,16 +1494,27 @@ function drawPlayer() {
 // ======================================================
 
 /**
- * Intenta crear un corazón de recuperación aleatoriamente
+ * Sistema de oleadas de enemigos para mayor intensidad
  */
-function trySpawnHeart() {
-  // Si ya apareció un corazón en este nivel, no crear otro
-  if (heartSpawned) return;
+function trySpawnWave() {
+  if (Math.random() < GAME_CONFIG.enemies.waveSpawnChance) {
+    console.log("¡Oleada de enemigos incoming!");
+    showScreenMessage("¡OLEADA ENEMIGA!", "#FF4444");
 
-  // Probabilidad baja de aparición (0.02% por frame)
-  if (Math.random() < GAME_CONFIG.items.heartSpawnChance) {
-    spawnHeart();
-    heartSpawned = true;
+    // Spawnar múltiples enemigos con delay
+    for (let i = 0; i < GAME_CONFIG.enemies.waveSize; i++) {
+      setTimeout(() => {
+        spawnEnemy();
+        // Enemigos de oleada son más agresivos
+        if (enemies.length > 0) {
+          const lastEnemy = enemies[enemies.length - 1];
+          lastEnemy.speedFactor = 1.5; // Más rápidos
+          lastEnemy.waveEnemy = true; // Marca especial
+        }
+      }, i * 200); // 200ms entre cada enemigo
+    }
+
+    playSound("special"); // Sonido de alerta
   }
 }
 
@@ -1466,6 +1540,174 @@ function spawnHeart() {
     velocityY: speed,
     velocityX: (Math.random() - 0.5) * speed * 0.5, // Ligero movimiento horizontal
   });
+}
+
+/**
+ * Sistema de combos para mayor puntuación
+ */
+function updateComboSystem() {
+  if (GAME_CONFIG.player.comboCounter > 0) {
+    // Decay del combo si no se elimina enemigo en un tiempo
+    if (gameTime % 120 === 0) {
+      // Cada 2 segundos
+      GAME_CONFIG.player.comboCounter = Math.max(
+        0,
+        GAME_CONFIG.player.comboCounter - 1
+      );
+    }
+
+    // Mostrar combo actual si es significativo
+    if (GAME_CONFIG.player.comboCounter >= 5 && gameTime % 60 === 0) {
+      showScreenMessage(
+        `COMBO x${GAME_CONFIG.player.comboCounter}!`,
+        "#FFFF00"
+      );
+    }
+  }
+}
+
+/**
+ * Modo adrenalina cuando las vidas están bajas
+ */
+function checkAdrenalineMode() {
+  const lowHealth = playerLives <= 2;
+
+  if (lowHealth && !GAME_CONFIG.player.adrenalineMode) {
+    GAME_CONFIG.player.adrenalineMode = true;
+    showScreenMessage("¡MODO ADRENALINA!", "#FF0000");
+
+    // Beneficios del modo adrenalina
+    AUTO_SHOOT_DELAY = Math.max(30, AUTO_SHOOT_DELAY * 0.7); // Disparo más rápido
+
+    // Efecto visual (pantalla con tinte rojo)
+    createScreenEffect("adrenaline");
+  } else if (!lowHealth && GAME_CONFIG.player.adrenalineMode) {
+    GAME_CONFIG.player.adrenalineMode = false;
+    // Restaurar velocidad normal
+    updateShootingSpeed();
+  }
+}
+
+/**
+ * Efectos visuales para la pantalla
+ */
+function createScreenEffect(type) {
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100%";
+  overlay.style.height = "100%";
+  overlay.style.pointerEvents = "none";
+  overlay.style.zIndex = "999";
+
+  switch (type) {
+    case "adrenaline":
+      overlay.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
+      overlay.style.animation = "pulse 0.5s infinite alternate";
+      break;
+    case "slowmo":
+      overlay.style.backgroundColor = "rgba(0, 100, 255, 0.1)";
+      overlay.style.filter = "blur(1px)";
+      break;
+    case "doublepoints":
+      overlay.style.backgroundColor = "rgba(255, 215, 0, 0.1)";
+      overlay.style.animation = "sparkle 1s infinite";
+      break;
+  }
+
+  document.body.appendChild(overlay);
+
+  // Remover después de un tiempo
+  setTimeout(
+    () => {
+      if (overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
+    },
+    type === "adrenaline" ? 10000 : 3000
+  );
+}
+
+/**
+ * Spawns múltiples corazones para mayor recovery
+ */
+function spawnMultipleHearts() {
+  if (Math.random() < GAME_CONFIG.items.multiHeartChance) {
+    // Spawnar 2-3 corazones cerca uno del otro
+    const baseX = Math.random() * (canvas.width - 200) + 100;
+    const heartCount = 2 + Math.floor(Math.random() * 2); // 2-3 corazones
+
+    for (let i = 0; i < heartCount; i++) {
+      const heartSize = PLAYER_WIDTH * 0.8;
+      hearts.push({
+        x: baseX + i * 80 - 40, // Espaciados
+        y: -heartSize,
+        width: heartSize,
+        height: heartSize,
+        velocityY: canvas.height * 0.002, // Más lento para ser más fácil de agarrar
+        velocityX: (Math.random() - 0.5) * 0.001 * canvas.height,
+        multiHeart: true, // Marca especial
+      });
+    }
+
+    showScreenMessage("¡CORAZONES MÚLTIPLES!", "#FF69B4");
+  }
+}
+
+/**
+ * Power-ups raros con efectos especiales
+ */
+function spawnRarePowerUp() {
+  if (Math.random() < GAME_CONFIG.items.rarePowerUpChance) {
+    const size = PLAYER_WIDTH * 0.8; // Más grandes que los normales
+    const x = size + Math.random() * (canvas.width - size * 2);
+    const y = -size;
+
+    // Power-ups raros (nuevos tipos)
+    const rareTypes = [
+      { id: 4, color: "#9400D3", name: "Escudo Temporal", duration: 300 },
+      { id: 5, color: "#00FF7F", name: "Puntos Dobles", duration: 450 },
+      { id: 6, color: "#FF1493", name: "Tiempo Lento", duration: 360 },
+      { id: 7, color: "#FFD700", name: "Imán de Items", duration: 600 },
+    ];
+
+    const rareType = rareTypes[Math.floor(Math.random() * rareTypes.length)];
+
+    powerUps.push({
+      x: x,
+      y: y,
+      width: size,
+      height: size,
+      velocityY: canvas.height * 0.002, // Más lento
+      velocityX: 0, // Sin movimiento horizontal
+      type: rareType,
+      rare: true, // Marca especial
+      pulseEffect: 0, // Para efecto de pulsación
+    });
+
+    showScreenMessage("¡POWER-UP RARO!", rareType.color);
+  }
+}
+
+/**
+ * Eventos especiales aleatorios
+ */
+function checkSpecialEvents() {
+  // Lluvia de meteoritos
+  if (Math.random() < GAME_CONFIG.special.meteorShowerChance) {
+    meteorShower();
+  }
+
+  // Slow motion temporal
+  if (Math.random() < GAME_CONFIG.special.timeSlowChance) {
+    activateSlowMotion();
+  }
+
+  // Puntos dobles
+  if (Math.random() < GAME_CONFIG.special.doublePointsChance) {
+    activateDoublePoints();
+  }
 }
 
 /**
@@ -1755,6 +1997,54 @@ function checkCollisionBetweenObjects(obj1, obj2) {
     obj1.y < obj2.y + obj2.height &&
     obj1.y + obj1.height > obj2.y
   );
+}
+
+/**
+ * Intenta crear un corazón de recuperación aleatoriamente
+ */
+function trySpawnHeart() {
+  // Si ya apareció un corazón en este nivel, no crear otro
+  if (heartSpawned) return;
+
+  // Probabilidad baja de aparición usando nueva configuración
+  if (Math.random() < GAME_CONFIG.items.heartSpawnChance) {
+    spawnHeart();
+    heartSpawned = true;
+  }
+}
+
+/**
+ * Eventos especiales aleatorios (NUEVOS)
+ */
+function meteorShower() {
+  showScreenMessage("¡LLUVIA DE METEORITOS!", "#FF8800");
+  // Crear múltiples enemigos desde arriba
+  for (let i = 0; i < 8; i++) {
+    setTimeout(() => {
+      spawnEnemy();
+    }, i * 150);
+  }
+  playSound("special");
+}
+
+function activateSlowMotion() {
+  showScreenMessage("¡TIEMPO LENTO!", "#00BBFF");
+  createScreenEffect("slowmo");
+
+  // Reducir velocidad de enemigos temporalmente
+  setTimeout(() => {
+    showScreenMessage("Tiempo normal restaurado", "#FFFFFF");
+  }, 3000);
+}
+
+function activateDoublePoints() {
+  showScreenMessage("¡PUNTOS DOBLES!", "#FFD700");
+  createScreenEffect("doublepoints");
+
+  // El efecto se maneja en enhancedEnemyKill
+  setTimeout(() => {
+    showScreenMessage("Puntos normales", "#FFFFFF");
+  }, 5000);
 }
 
 // ======================================================
@@ -2258,10 +2548,32 @@ function checkBulletEnemyCollisions() {
       // Remove enemy
       enemies.splice(i, 1);
 
-      // Update game stats
+      // SISTEMA DE COMBOS Y PUNTOS MEJORADO:
       enemiesKilled++;
       enemiesForSpecialPower++;
-      score += 10 * level; // Score increases with level
+
+      // Incrementar combo
+      GAME_CONFIG.player.comboCounter++;
+
+      // Puntos base con multiplicador de combo
+      let basePoints = 10 * level;
+      let comboMultiplier = 1 + GAME_CONFIG.player.comboCounter * 0.1;
+      let finalPoints = Math.floor(basePoints * comboMultiplier);
+
+      // Bonus por modo adrenalina
+      if (GAME_CONFIG.player.adrenalineMode) {
+        finalPoints *= 1.5;
+      }
+
+      score += finalPoints;
+
+      // Mostrar puntos si es combo alto
+      if (GAME_CONFIG.player.comboCounter >= 3) {
+        showScreenMessage(
+          `+${finalPoints} (x${GAME_CONFIG.player.comboCounter.toFixed(1)})`,
+          "#FFFF00"
+        );
+      }
 
       // Check if special power is ready
       if (enemiesForSpecialPower >= ENEMIES_FOR_SPECIAL) {
@@ -2390,9 +2702,21 @@ function gameLoop() {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Intentar generar un corazón o power-up aleatoriamente
+    // NUEVAS MECÁNICAS INTENSAS - AÑADIR ESTAS LÍNEAS:
+    trySpawnWave(); // Oleadas de enemigos
+    updateComboSystem(); // Sistema de combos
+    checkAdrenalineMode(); // Modo adrenalina
+    checkSpecialEvents(); // Eventos especiales
+
+    // Spawn mejorado de items (ocasionalmente múltiples)
     trySpawnHeart();
     trySpawnPowerUp();
+
+    if (Math.random() < 0.001) {
+      // Ocasionalmente
+      spawnMultipleHearts();
+      spawnRarePowerUp();
+    }
 
     // Spawn enemies if needed
     spawnTimer++;
