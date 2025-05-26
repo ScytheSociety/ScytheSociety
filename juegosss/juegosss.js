@@ -2530,81 +2530,48 @@ async function saveAndViewRanking() {
 
 // URL de tu Web App (CAMBIAR POR LA QUE COPIASTE)
 const WEBAPP_URL =
-  "https://script.google.com/macros/s/AKfycbzcBMcYnf3EvWdmUZMHqa1uBO8gmSOLExJcgy94P5AyLplVB29GaFjtjiK5ITU2zNX9/exec";
+  "https://script.google.com/macros/s/AKfycby4EeSEWs_IYpIDC1dQCGGuWemC7U8O6yhgaACcxnqxIqXc4wFvclHjkiOyqbj9FwOG/exec";
 
 /**
  * Guarda la puntuación usando el formato EXACTO de tu Excel (8 columnas)
  */
 async function saveScore() {
-  console.log("🚀 Iniciando saveScore...");
-
-  // Datos en el formato EXACTO de tu Excel
-  const playerData = {
-    date: new Date().toISOString(), // 2025-03-24T22:28:59.509Z (igual que tienes)
-    avatar: playerAvatar, // 👹
-    name: playerName, // ROJO
-    level: level, // 10
-    enemiesKilled: enemiesKilled, // 282
-    time: Math.floor(gameTime / 60), // 237
-    score: score, // 10355
-    status: document
-      .getElementById("game-over-text")
-      .textContent.includes("Victoria")
-      ? "Victoria"
-      : "Derrota",
-  };
-
-  console.log("📊 Datos a enviar (formato exacto de tu Excel):", playerData);
-  console.log("🌐 URL:", WEBAPP_URL);
+  console.log("🚀 Guardando puntuación...");
 
   try {
-    console.log("📤 Enviando datos...");
+    // Crear URL con parámetros
+    const params = new URLSearchParams();
+    params.append("action", "save");
+    params.append("date", new Date().toISOString());
+    params.append("avatar", playerAvatar);
+    params.append("name", playerName);
+    params.append("level", level);
+    params.append("enemiesKilled", enemiesKilled);
+    params.append("time", Math.floor(gameTime / 60));
+    params.append("score", score);
+    params.append(
+      "status",
+      document.getElementById("game-over-text").textContent.includes("Victoria")
+        ? "Victoria"
+        : "Derrota"
+    );
 
-    const response = await fetch(WEBAPP_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(playerData),
-    });
+    const urlWithParams = `${WEBAPP_URL}?${params.toString()}`;
+    console.log("📡 Enviando a:", urlWithParams);
 
-    console.log("📥 Respuesta recibida. Status:", response.status);
-
-    let result;
-    try {
-      const textResponse = await response.text();
-      console.log("📝 Respuesta cruda:", textResponse);
-      result = JSON.parse(textResponse);
-    } catch (parseError) {
-      console.error("❌ Error al parsear respuesta:", parseError);
-      throw new Error("La respuesta del servidor no es JSON válido");
-    }
-
-    console.log("✅ Resultado parseado:", result);
+    const response = await fetch(urlWithParams);
+    const result = await response.json();
 
     if (result.success) {
-      console.log("✅ Datos guardados exitosamente en tu Excel");
+      console.log("✅ Guardado exitoso");
       alert("¡Puntuación guardada con éxito! 🎉");
       return true;
     } else {
-      throw new Error(result.message || "Error desconocido del servidor");
+      throw new Error(result.message);
     }
   } catch (error) {
-    console.error("❌ Error completo:", error);
-
-    let errorMessage = "Error al guardar la puntuación: ";
-
-    if (error.message.includes("Failed to fetch")) {
-      errorMessage += "Problema de conexión con Google Apps Script.";
-    } else if (error.message.includes("CORS")) {
-      errorMessage +=
-        "Problema de permisos CORS. Verifica la configuración del Web App.";
-    } else {
-      errorMessage += error.message;
-    }
-
-    alert(errorMessage);
-    console.log("🔧 Para depurar, revisa la consola del navegador (F12)");
+    console.error("❌ Error:", error);
+    alert("Error al guardar: " + error.message);
     return false;
   }
 }
