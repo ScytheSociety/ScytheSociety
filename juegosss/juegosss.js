@@ -2533,9 +2533,11 @@ const WEBAPP_URL =
   "https://script.google.com/macros/s/AKfycbwCVTqMD33ra2_HE1FGW6xAnZGRbJfbuRikwexxWF-CPtJi0t7QSxVxLUlxVRB66Exs/exec";
 
 /**
- * Guarda la puntuación usando Google Apps Script
+ * Guarda la puntuación usando Google Apps Script (VERSIÓN CORREGIDA)
  */
 async function saveScore() {
+  console.log("🚀 Iniciando saveScore...");
+
   const playerData = {
     date: new Date().toISOString().split("T")[0],
     time: new Date().toLocaleTimeString(),
@@ -2553,7 +2555,12 @@ async function saveScore() {
       : "Derrota",
   };
 
+  console.log("📊 Datos a enviar:", playerData);
+  console.log("🌐 URL:", WEBAPP_URL);
+
   try {
+    console.log("📤 Enviando datos...");
+
     const response = await fetch(WEBAPP_URL, {
       method: "POST",
       headers: {
@@ -2562,18 +2569,53 @@ async function saveScore() {
       body: JSON.stringify(playerData),
     });
 
-    const result = await response.json();
+    console.log("📥 Respuesta recibida. Status:", response.status);
+    console.log("📥 Response OK:", response.ok);
+
+    // IMPORTANTE: Apps Script siempre devuelve status 200, incluso con errores
+    // Necesitamos leer el contenido para ver si hubo error
+
+    let result;
+    try {
+      const textResponse = await response.text();
+      console.log("📝 Respuesta cruda:", textResponse);
+      result = JSON.parse(textResponse);
+    } catch (parseError) {
+      console.error("❌ Error al parsear respuesta:", parseError);
+      throw new Error("La respuesta del servidor no es JSON válido");
+    }
+
+    console.log("✅ Resultado parseado:", result);
 
     if (result.success) {
-      console.log("Datos guardados exitosamente");
+      console.log("✅ Datos guardados exitosamente");
       alert("¡Puntuación guardada con éxito! 🎉");
       return true;
     } else {
-      throw new Error(result.message || "Error desconocido");
+      throw new Error(result.message || "Error desconocido del servidor");
     }
   } catch (error) {
-    console.error("Error al guardar puntuación:", error);
-    alert("Error al guardar la puntuación. Por favor, inténtalo de nuevo.");
+    console.error("❌ Error completo:", error);
+    console.error("❌ Error name:", error.name);
+    console.error("❌ Error message:", error.message);
+
+    // Mensajes de error más específicos
+    let errorMessage = "Error al guardar la puntuación: ";
+
+    if (error.message.includes("Failed to fetch")) {
+      errorMessage +=
+        "No se puede conectar con Google Apps Script. Verifica tu conexión a internet.";
+    } else if (error.message.includes("NetworkError")) {
+      errorMessage += "Error de red. Verifica tu conexión a internet.";
+    } else if (error.message.includes("JSON")) {
+      errorMessage +=
+        "Error en la respuesta del servidor. El Apps Script puede tener un problema.";
+    } else {
+      errorMessage += error.message;
+    }
+
+    alert(errorMessage);
+    console.log("🔧 Para depurar, revisa la consola del navegador (F12)");
     return false;
   }
 }
