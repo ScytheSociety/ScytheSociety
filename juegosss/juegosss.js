@@ -2533,21 +2533,20 @@ const WEBAPP_URL =
   "https://script.google.com/macros/s/AKfycbz-KYfy6WWv006r6xvy0meW9If5kWHiFZiDFPsz6AFr57l8rLS1LkfnUWsNV1i5Eeu2/exec";
 
 /**
- * Guarda la puntuación usando Google Apps Script (VERSIÓN CORREGIDA)
+ * Guarda la puntuación usando el formato EXACTO de tu Excel (8 columnas)
  */
 async function saveScore() {
   console.log("🚀 Iniciando saveScore...");
 
+  // Datos en el formato EXACTO de tu Excel
   const playerData = {
-    date: new Date().toISOString().split("T")[0],
-    time: new Date().toLocaleTimeString(),
-    avatar: playerAvatar,
-    name: playerName,
-    level: level,
-    enemiesKilled: enemiesKilled,
-    gameTime: Math.floor(gameTime / 60),
-    score: score,
-    livesLeft: playerLives,
+    date: new Date().toISOString(), // 2025-03-24T22:28:59.509Z (igual que tienes)
+    avatar: playerAvatar, // 👹
+    name: playerName, // ROJO
+    level: level, // 10
+    enemiesKilled: enemiesKilled, // 282
+    time: Math.floor(gameTime / 60), // 237
+    score: score, // 10355
     status: document
       .getElementById("game-over-text")
       .textContent.includes("Victoria")
@@ -2555,7 +2554,7 @@ async function saveScore() {
       : "Derrota",
   };
 
-  console.log("📊 Datos a enviar:", playerData);
+  console.log("📊 Datos a enviar (formato exacto de tu Excel):", playerData);
   console.log("🌐 URL:", WEBAPP_URL);
 
   try {
@@ -2570,10 +2569,6 @@ async function saveScore() {
     });
 
     console.log("📥 Respuesta recibida. Status:", response.status);
-    console.log("📥 Response OK:", response.ok);
-
-    // IMPORTANTE: Apps Script siempre devuelve status 200, incluso con errores
-    // Necesitamos leer el contenido para ver si hubo error
 
     let result;
     try {
@@ -2588,7 +2583,7 @@ async function saveScore() {
     console.log("✅ Resultado parseado:", result);
 
     if (result.success) {
-      console.log("✅ Datos guardados exitosamente");
+      console.log("✅ Datos guardados exitosamente en tu Excel");
       alert("¡Puntuación guardada con éxito! 🎉");
       return true;
     } else {
@@ -2596,20 +2591,14 @@ async function saveScore() {
     }
   } catch (error) {
     console.error("❌ Error completo:", error);
-    console.error("❌ Error name:", error.name);
-    console.error("❌ Error message:", error.message);
 
-    // Mensajes de error más específicos
     let errorMessage = "Error al guardar la puntuación: ";
 
     if (error.message.includes("Failed to fetch")) {
+      errorMessage += "Problema de conexión con Google Apps Script.";
+    } else if (error.message.includes("CORS")) {
       errorMessage +=
-        "No se puede conectar con Google Apps Script. Verifica tu conexión a internet.";
-    } else if (error.message.includes("NetworkError")) {
-      errorMessage += "Error de red. Verifica tu conexión a internet.";
-    } else if (error.message.includes("JSON")) {
-      errorMessage +=
-        "Error en la respuesta del servidor. El Apps Script puede tener un problema.";
+        "Problema de permisos CORS. Verifica la configuración del Web App.";
     } else {
       errorMessage += error.message;
     }
@@ -2636,7 +2625,7 @@ function victory() {
 }
 
 /**
- * Lee el ranking usando Google Apps Script
+ * Lee el ranking usando el formato EXACTO de tu Excel (8 columnas)
  */
 async function viewRanking() {
   try {
@@ -2665,28 +2654,30 @@ async function viewRanking() {
       return;
     }
 
+    // Procesar datos usando TUS nombres de columnas exactos
     const processedPlayers = players.map((player) => ({
-      date: player.fecha || "",
-      time: player.hora || "",
-      avatar: player.avatar || "👤",
-      name: player.nombre || "Anónimo",
-      level: parseInt(player.nivel) || 1,
-      enemiesKilled: parseInt(player.enemigos) || 0,
-      gameTime: parseInt(player.tiempo) || 0,
-      score: parseInt(player.puntuación) || 0,
-      livesLeft: parseInt(player.vidas) || 0,
-      status: player.estado || "Derrota",
+      date: player.date || "", // date
+      avatar: player.avatar || "👤", // avatar
+      name: player.name || "Anónimo", // name
+      level: parseInt(player.level) || 1, // level
+      enemiesKilled: parseInt(player.enemiesKilled) || 0, // enemiesKilled
+      time: parseInt(player.time) || 0, // time
+      score: parseInt(player.score) || 0, // score
+      status: player.status || "Derrota", // status
     }));
 
+    // Ordenar por puntuación (descendente) y luego por tiempo (ascendente)
     const sortedPlayers = processedPlayers.sort((a, b) => {
       if (b.score !== a.score) {
         return b.score - a.score;
       }
-      return a.gameTime - b.gameTime;
+      return a.time - b.time;
     });
 
+    // Tomar solo los primeros 10
     const top10 = sortedPlayers.slice(0, 10);
 
+    // Generar HTML del ranking
     rankingContainer.innerHTML = `
       <h2>🏆 Ranking de Jugadores 🏆</h2>
       <table>
@@ -2720,10 +2711,10 @@ async function viewRanking() {
             <td>${player.name}</td>
             <td>${player.level}</td>
             <td>${player.enemiesKilled}</td>
-            <td>${player.gameTime}s</td>
+            <td>${player.time}s</td>
             <td>${player.score}</td>
             <td>${player.status === "Victoria" ? "🏆" : "💀"}</td>
-            <td>${player.date}</td>
+            <td>${new Date(player.date).toLocaleDateString()}</td>
           </tr>
         `
           )
