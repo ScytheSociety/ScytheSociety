@@ -2528,17 +2528,22 @@ async function saveAndViewRanking() {
   document.getElementById("game-over").style.display = "none";
 }
 
+// URL de tu Web App (CAMBIAR POR LA QUE COPIASTE)
+const WEBAPP_URL =
+  "https://script.google.com/macros/s/AKfycbwCVTqMD33ra2_HE1FGW6xAnZGRbJfbuRikwexxWF-CPtJi0t7QSxVxLUlxVRB66Exs/exec";
+
 /**
- * Saves the player's score to the database
+ * Guarda la puntuación usando Google Apps Script
  */
 async function saveScore() {
   const playerData = {
-    date: new Date().toISOString(),
+    date: new Date().toISOString().split("T")[0],
+    time: new Date().toLocaleTimeString(),
     avatar: playerAvatar,
     name: playerName,
     level: level,
     enemiesKilled: enemiesKilled,
-    time: Math.floor(gameTime / 60),
+    gameTime: Math.floor(gameTime / 60),
     score: score,
     livesLeft: playerLives,
     status: document
@@ -2549,24 +2554,27 @@ async function saveScore() {
   };
 
   try {
-    const response = await fetch(SHEET_URL, {
+    const response = await fetch(WEBAPP_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        data: [playerData],
-      }),
+      body: JSON.stringify(playerData),
     });
 
-    if (response.ok) {
+    const result = await response.json();
+
+    if (result.success) {
+      console.log("Datos guardados exitosamente");
       alert("¡Puntuación guardada con éxito! 🎉");
+      return true;
     } else {
-      throw new Error("Error al guardar la puntuación");
+      throw new Error(result.message || "Error desconocido");
     }
   } catch (error) {
-    console.error("Error al guardar:", error);
+    console.error("Error al guardar puntuación:", error);
     alert("Error al guardar la puntuación. Por favor, inténtalo de nuevo.");
+    return false;
   }
 }
 
@@ -2586,7 +2594,7 @@ function victory() {
 }
 
 /**
- * Views the ranking from the database
+ * Lee el ranking usando Google Apps Script
  */
 async function viewRanking() {
   try {
@@ -2597,66 +2605,103 @@ async function viewRanking() {
     rankingContainer.style.display = "block";
     rankingContainer.innerHTML = `<h2>⌛ Cargando ranking... ⌛</h2>`;
 
-    const response = await fetch(SHEET_URL);
-    const data = await response.json();
+    const response = await fetch(WEBAPP_URL);
+    const result = await response.json();
 
-    const sortedData = data.sort((a, b) => {
+    if (!result.success) {
+      throw new Error(result.message || "Error al obtener datos");
+    }
+
+    const players = result.data || [];
+
+    if (players.length === 0) {
+      rankingContainer.innerHTML = `
+        <h2>📊 Ranking de Jugadores</h2>
+        <p>No hay puntuaciones registradas aún.</p>
+        <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
+      `;
+      return;
+    }
+
+    const processedPlayers = players.map((player) => ({
+      date: player.fecha || "",
+      time: player.hora || "",
+      avatar: player.avatar || "👤",
+      name: player.nombre || "Anónimo",
+      level: parseInt(player.nivel) || 1,
+      enemiesKilled: parseInt(player.enemigos) || 0,
+      gameTime: parseInt(player.tiempo) || 0,
+      score: parseInt(player.puntuación) || 0,
+      livesLeft: parseInt(player.vidas) || 0,
+      status: player.estado || "Derrota",
+    }));
+
+    const sortedPlayers = processedPlayers.sort((a, b) => {
       if (b.score !== a.score) {
         return b.score - a.score;
       }
-      return a.time - b.time;
+      return a.gameTime - b.gameTime;
     });
 
-    // Solo tomar los 10 primeros lugares
-    const top10 = sortedData.slice(0, 10);
+    const top10 = sortedPlayers.slice(0, 10);
 
     rankingContainer.innerHTML = `
-        <h2>🏆 Ranking de Jugadores 🏆</h2>
-        <table>
-            <tr>
-                <th>Pos</th>
-                <th>Avatar</th>
-                <th>Nombre</th>
-                <th>Nivel</th>
-                <th>Enemigos</th>
-                <th>Tiempo</th>
-                <th>Score</th>
-                <th>Estado</th>
-            </tr>
-            ${top10
-              .map(
-                (player, index) => `
-                <tr ${index < 3 ? 'class="top-player"' : ""}>
-                    <td>${index + 1}${
-                  index === 0
-                    ? " 🥇"
-                    : index === 1
-                    ? " 🥈"
-                    : index === 2
-                    ? " 🥉"
-                    : ""
-                }</td>
-                    <td>${player.avatar}</td>
-                    <td>${player.name}</td>
-                    <td>${player.level}</td>
-                    <td>${player.enemiesKilled}</td>
-                    <td>${player.time}s</td>
-                    <td>${player.score}</td>
-                    <td>${player.status === "Victoria" ? "🏆" : "💀"}</td>
-                </tr>
-            `
-              )
-              .join("")}
-        </table>
+      <h2>🏆 Ranking de Jugadores 🏆</h2>
+      <table>
+        <tr>
+          <th>Pos</th>
+          <th>Avatar</th>
+          <th>Nombre</th>
+          <th>Nivel</th>
+          <th>Enemigos</th>
+          <th>Tiempo</th>
+          <th>Score</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+        </tr>
+        ${top10
+          .map(
+            (player, index) => `
+          <tr ${
+            index < 3 ? 'style="background-color: rgba(255, 215, 0, 0.2);"' : ""
+          }>
+            <td>${index + 1}${
+              index === 0
+                ? " 🥇"
+                : index === 1
+                ? " 🥈"
+                : index === 2
+                ? " 🥉"
+                : ""
+            }</td>
+            <td>${player.avatar}</td>
+            <td>${player.name}</td>
+            <td>${player.level}</td>
+            <td>${player.enemiesKilled}</td>
+            <td>${player.gameTime}s</td>
+            <td>${player.score}</td>
+            <td>${player.status === "Victoria" ? "🏆" : "💀"}</td>
+            <td>${player.date}</td>
+          </tr>
+        `
+          )
+          .join("")}
+      </table>
+      <div style="margin-top: 20px;">
         <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
+        <button onclick="viewRanking()" class="gothic-button">Actualizar</button>
+      </div>
     `;
   } catch (error) {
-    console.error("Error al cargar el ranking:", error);
+    console.error("Error al cargar ranking:", error);
+
     const rankingContainer = document.getElementById("ranking-container");
     rankingContainer.innerHTML = `
-        <h2>❌ Error al cargar el ranking</h2>
-        <p>No se pudo conectar con el servidor. Por favor, inténtalo de nuevo más tarde.</p>
-        <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
+      <h2>❌ Error al cargar el ranking</h2>
+      <p>No se pudo conectar con Google Sheets.</p>
+      <p>Detalles: ${error.message}</p>
+      <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
+      <button onclick="viewRanking()" class="gothic-button">Reintentar</button>
     `;
   }
 }
