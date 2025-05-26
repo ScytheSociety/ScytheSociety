@@ -2530,7 +2530,7 @@ async function saveAndViewRanking() {
 
 // URL de tu Web App (CAMBIAR POR LA QUE COPIASTE)
 const WEBAPP_URL =
-  "https://script.google.com/macros/s/AKfycbz-KYfy6WWv006r6xvy0meW9If5kWHiFZiDFPsz6AFr57l8rLS1LkfnUWsNV1i5Eeu2/exec";
+  "https://script.google.com/macros/s/AKfycbzcBMcYnf3EvWdmUZMHqa1uBO8gmSOLExJcgy94P5AyLplVB29GaFjtjiK5ITU2zNX9/exec";
 
 /**
  * Guarda la puntuación usando el formato EXACTO de tu Excel (8 columnas)
