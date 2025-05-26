@@ -2530,7 +2530,7 @@ async function saveAndViewRanking() {
 
 // URL de tu Web App (CAMBIAR POR LA QUE COPIASTE)
 const WEBAPP_URL =
-  "https://script.google.com/macros/s/AKfycbwCVTqMD33ra2_HE1FGW6xAnZGRbJfbuRikwexxWF-CPtJi0t7QSxVxLUlxVRB66Exs/exec";
+  "https://script.google.com/macros/s/AKfycbz-KYfy6WWv006r6xvy0meW9If5kWHiFZiDFPsz6AFr57l8rLS1LkfnUWsNV1i5Eeu2/exec";
 
 /**
  * Guarda la puntuación usando Google Apps Script (VERSIÓN CORREGIDA)
