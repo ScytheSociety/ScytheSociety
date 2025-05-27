@@ -200,7 +200,7 @@ const UI = {
     } else {
       indicator.classList.remove("special-power-ready");
       const progress = BulletManager.getSpecialPowerProgress();
-      const required = 25; // ENEMIES_FOR_SPECIAL
+      const required = 15; // 🔥 CAMBIADO: Era 25, ahora 15
       const current = Math.floor(progress * required);
       counter.textContent = `${current}/${required}`;
     }
@@ -412,80 +412,194 @@ const UI = {
   // ======================================================
 
   /**
-   * Muestra las instrucciones del juego - VERSIÓN CORREGIDA Y ELEGANTE
+   * Muestra las instrucciones del juego - VERSIÓN ELEGANTE Y COMPACTA
    */
   showInstructions(callback) {
     const modal = document.createElement("div");
     modal.style.position = "fixed";
     modal.style.top = "50%";
     modal.style.left = "50%";
-    modal.style.width = "80%";
-    modal.style.maxWidth = "600px";
+    modal.style.width = "90%";
+    modal.style.maxWidth = "500px";
+    modal.style.maxHeight = "85vh";
     modal.style.transform = "translate(-50%, -50%)";
     modal.style.backgroundColor = "rgba(0, 0, 0, 0.95)";
     modal.style.border = "3px solid #8B0000";
-    modal.style.borderRadius = "15px";
-    modal.style.padding = "20px";
+    modal.style.borderRadius = "20px";
+    modal.style.padding = "25px";
     modal.style.color = "#FFFFFF";
     modal.style.zIndex = "1000";
     modal.style.fontFamily = '"Arial", sans-serif';
-    modal.style.boxShadow = "0 0 30px #FF0000";
-    modal.style.maxHeight = "80vh";
+    modal.style.boxShadow = "0 0 40px #FF0000";
     modal.style.overflowY = "auto";
+    modal.style.backdropFilter = "blur(10px)";
 
-    // 🔥 CORREGIDO: Instrucciones más concisas y elegantes
     modal.innerHTML = `
-            <h2 style="text-align: center; color: #FF0000; text-shadow: 0 0 15px #FF0000; margin-bottom: 20px; font-size: 24px;">
-                🎮 HELL SHOOTER 🎮
-            </h2>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                <div>
-                    <h3 style="color: #FF0000; margin-bottom: 8px;">🎯 CONTROLES</h3>
-                    <p style="margin: 5px 0; font-size: 14px;">• Movimiento: Ratón/Táctil</p>
-                    <p style="margin: 5px 0; font-size: 14px;">• Disparo: Automático</p>
-                    <p style="margin: 5px 0; font-size: 14px;">• Poder: ESPACIO / 🔥</p>
-                    <p style="margin: 5px 0; font-size: 14px;">• Combos: Elimina enemigos sin parar para multiplicar puntos</p>
-                </div>
-                
-                <div>
-                    <h3 style="color: #FF0000; margin-bottom: 8px;">💀 SUPERVIVENCIA</h3>
-                    <p style="margin: 5px 0; font-size: 14px;">• 7 vidas (máx. 14)</p>
-                    <p style="margin: 5px 0; font-size: 14px;">• 10 niveles intensos</p>
-                    <p style="margin: 5px 0; font-size: 14px;">• Boss final épico</p>
-                </div>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <h3 style="color: #FF0000; margin-bottom: 8px;">⚡ POWER-UPS</h3>
-                <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px;">
-                    <span style="background: rgba(255,255,0,0.2); padding: 2px 6px; border-radius: 4px;">🟡 Penetrantes</span>
-                    <span style="background: rgba(0,255,255,0.2); padding: 2px 6px; border-radius: 4px;">🔵 Amplio (7 balas)</span>
-                    <span style="background: rgba(255,136,0,0.2); padding: 2px 6px; border-radius: 4px;">🟠 Explosivas</span>
-                    <span style="background: rgba(255,0,255,0.2); padding: 2px 6px; border-radius: 4px;">🟣 Súper Rápido</span>
-                    <span style="background: rgba(0,255,0,0.2); padding: 2px 6px; border-radius: 4px;">🟢 Escudo</span>
-                </div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 25px;">
-                <button id="start-game-btn" style="background: linear-gradient(45deg, #8B0000, #FF0000); 
-                color: white; padding: 12px 24px; font-size: 16px; border: none; border-radius: 8px; 
-                cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(255,0,0,0.3);
-                transition: transform 0.2s; font-family: inherit;">
-                    🔥 ¡COMENZAR BATALLA!
-                </button>
-            </div>
-        `;
+    <!-- Título Principal -->
+    <h2 style="
+      text-align: center; 
+      color: #FF0000; 
+      text-shadow: 0 0 20px #FF0000; 
+      margin: 0 0 20px 0; 
+      font-size: 1.8em;
+      letter-spacing: 1px;
+    ">
+      🎮 HELL SHOOTER 🎮
+    </h2>
+    
+    <!-- Grid de Información Compacta -->
+    <div style="
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 15px; 
+      margin-bottom: 20px;
+      font-size: 13px;
+    ">
+      <!-- Controles -->
+      <div style="
+        background: rgba(139, 0, 0, 0.3);
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 0, 0, 0.3);
+      ">
+        <h3 style="color: #FF0000; margin: 0 0 8px 0; font-size: 14px;">🎯 CONTROLES</h3>
+        <div style="line-height: 1.4;">
+          <div>🖱️ <strong>Movimiento:</strong> Mouse/Táctil</div>
+          <div>🔫 <strong>Disparo:</strong> Automático</div>
+          <div>⚡ <strong>Poder:</strong> ESPACIO / 🔥</div>
+          <div>🎯 <strong>Combo:</strong> Elimina sin parar</div>
+        </div>
+      </div>
+      
+      <!-- Supervivencia -->
+      <div style="
+        background: rgba(139, 0, 0, 0.3);
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 0, 0, 0.3);
+      ">
+        <h3 style="color: #FF0000; margin: 0 0 8px 0; font-size: 14px;">💀 SUPERVIVENCIA</h3>
+        <div style="line-height: 1.4;">
+          <div>❤️ <strong>Vidas:</strong> 7 inicial (máx. 14)</div>
+          <div>🎮 <strong>Niveles:</strong> 10 épicos</div>
+          <div>👹 <strong>Boss Final:</strong> Nivel 10</div>
+          <div>⚡ <strong>Poder:</strong> Cada 15 enemigos</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Power-ups Compactos -->
+    <div style="
+      background: rgba(139, 0, 0, 0.2);
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 0, 0, 0.3);
+      margin-bottom: 20px;
+    ">
+      <h3 style="color: #FF0000; margin: 0 0 10px 0; font-size: 14px; text-align: center;">⚡ POWER-UPS ÉPICOS</h3>
+      <div style="
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 8px; 
+        justify-content: center;
+        font-size: 11px;
+      ">
+        <span style="background: rgba(255,255,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,255,0,0.5);">
+          🟡 Penetrantes
+        </span>
+        <span style="background: rgba(0,255,255,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(0,255,255,0.5);">
+          🔵 Amplio (7 balas)
+        </span>
+        <span style="background: rgba(255,136,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,136,0,0.5);">
+          🟠 Explosivas
+        </span>
+        <span style="background: rgba(255,0,255,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,0,255,0.5);">
+          🟣 Súper Rápido
+        </span>
+        <span style="background: rgba(0,255,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(0,255,0,0.5);">
+          🟢 Escudo Total
+        </span>
+      </div>
+    </div>
+
+    <!-- Eventos Especiales -->
+    <div style="
+      background: rgba(139, 0, 0, 0.2);
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 0, 0, 0.3);
+      margin-bottom: 20px;
+    ">
+      <h3 style="color: #FF0000; margin: 0 0 10px 0; font-size: 14px; text-align: center;">🌟 EVENTOS ÚNICOS</h3>
+      <div style="
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 8px; 
+        justify-content: center;
+        font-size: 11px;
+      ">
+        <span style="background: rgba(0,187,255,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(0,187,255,0.5);">
+          🌊 Tiempo Lento
+        </span>
+        <span style="background: rgba(255,100,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,100,0,0.5);">
+          🔥 Modo Frenesí
+        </span>
+        <span style="background: rgba(255,136,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,136,0,0.5);">
+          ☄️ Meteoritos
+        </span>
+        <span style="background: rgba(255,215,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,215,0,0.5);">
+          ✨ Lluvia Items
+        </span>
+      </div>
+    </div>
+    
+    <!-- Botón de Inicio Épico -->
+    <div style="text-align: center; margin-top: 25px;">
+      <button id="start-game-btn" style="
+        background: linear-gradient(45deg, #8B0000, #FF0000, #8B0000); 
+        color: white; 
+        padding: 15px 30px; 
+        font-size: 16px; 
+        border: none; 
+        border-radius: 30px; 
+        cursor: pointer; 
+        font-weight: bold; 
+        box-shadow: 0 6px 20px rgba(255,0,0,0.4);
+        transition: all 0.3s; 
+        font-family: inherit;
+        letter-spacing: 1px;
+        position: relative;
+        overflow: hidden;
+      ">
+        🔥 ¡COMENZAR BATALLA! 🔥
+      </button>
+    </div>
+
+    <!-- Tip Final -->
+    <div style="
+      text-align: center; 
+      margin-top: 15px; 
+      font-size: 11px; 
+      color: #CCCCCC;
+      font-style: italic;
+    ">
+      💡 Tip: Mantén combos altos para multiplicar puntos y desbloquear eventos épicos
+    </div>
+  `;
 
     document.body.appendChild(modal);
 
-    // Efecto hover del botón
+    // Efectos del botón
     const startBtn = document.getElementById("start-game-btn");
+
     startBtn.addEventListener("mouseenter", () => {
       startBtn.style.transform = "scale(1.05)";
+      startBtn.style.boxShadow = "0 8px 25px rgba(255,0,0,0.6)";
     });
+
     startBtn.addEventListener("mouseleave", () => {
       startBtn.style.transform = "scale(1)";
+      startBtn.style.boxShadow = "0 6px 20px rgba(255,0,0,0.4)";
     });
 
     startBtn.addEventListener("click", () => {
@@ -534,17 +648,151 @@ const UI = {
   },
 
   /**
-   * Muestra pantalla de game over
+   * Muestra pantalla de game over mejorada y elegante
    */
   showGameOver(isVictory, finalScore, finalLevel, maxCombo = 0) {
     const gameOverScreen = document.getElementById("game-over");
-    const gameOverText = document.getElementById("game-over-text");
 
-    if (gameOverScreen && gameOverText) {
-      gameOverText.textContent = isVictory ? "¡VICTORIA! 🏆" : "GAME OVER 💀";
-      if (maxCombo > 0) {
-        gameOverText.textContent += ` - Combo Máximo: ${maxCombo}`;
-      }
+    if (gameOverScreen) {
+      // Crear contenido HTML mejorado
+      gameOverScreen.innerHTML = `
+      <div style="
+        background: linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(139,0,0,0.95) 100%);
+        border: 3px solid ${isVictory ? "#FFD700" : "#8B0000"};
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 0 30px ${isVictory ? "#FFD700" : "#FF0000"};
+        backdrop-filter: blur(10px);
+        max-width: 400px;
+        margin: 0 auto;
+      ">
+        <!-- Título Principal -->
+        <h1 style="
+          font-size: 2.2em;
+          margin: 0 0 15px 0;
+          color: ${isVictory ? "#FFD700" : "#FF0000"};
+          text-shadow: 0 0 20px currentColor;
+          font-weight: bold;
+          letter-spacing: 2px;
+        ">
+          ${isVictory ? "🏆 VICTORIA 🏆" : "💀 GAME OVER 💀"}
+        </h1>
+
+        <!-- Información del Juego -->
+        <div style="
+          background: rgba(0,0,0,0.6);
+          border-radius: 12px;
+          padding: 15px;
+          margin: 15px 0;
+          border: 1px solid rgba(255,255,255,0.2);
+        ">
+          <div style="color: #FFFFFF; font-size: 1.1em; margin-bottom: 8px;">
+            <span style="color: #FFD700;">📊 Puntuación:</span> ${finalScore.toLocaleString()}
+          </div>
+          <div style="color: #FFFFFF; font-size: 1.1em; margin-bottom: 8px;">
+            <span style="color: #FFD700;">🎯 Nivel Alcanzado:</span> ${finalLevel}
+          </div>
+          ${
+            maxCombo > 0
+              ? `
+          <div style="color: #FFFFFF; font-size: 1.2em; font-weight: bold;">
+            <span style="color: #FF6B00;">⚡ Combo Máximo:</span> 
+            <span style="color: #FFD700; text-shadow: 0 0 10px #FFD700;">${maxCombo}</span>
+          </div>
+          `
+              : ""
+          }
+        </div>
+
+        <!-- Botones Elegantes -->
+        <div style="
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-top: 20px;
+        ">
+          <button 
+            onclick="restartGame()" 
+            style="
+              background: linear-gradient(45deg, #4CAF50, #45a049);
+              color: white;
+              border: none;
+              padding: 12px 20px;
+              border-radius: 25px;
+              font-size: 1em;
+              font-weight: bold;
+              cursor: pointer;
+              transition: all 0.3s;
+              box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+              font-family: inherit;
+            "
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(76, 175, 80, 0.6)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(76, 175, 80, 0.4)'"
+          >
+            🔄 Jugar de Nuevo
+          </button>
+
+          <button 
+            onclick="saveAndViewRanking()" 
+            style="
+              background: linear-gradient(45deg, #FF9800, #F57C00);
+              color: white;
+              border: none;
+              padding: 12px 20px;
+              border-radius: 25px;
+              font-size: 1em;
+              font-weight: bold;
+              cursor: pointer;
+              transition: all 0.3s;
+              box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+              font-family: inherit;
+            "
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 152, 0, 0.6)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255, 152, 0, 0.4)'"
+          >
+            💾 Guardar en Ranking
+          </button>
+
+          <button 
+            onclick="backToMenu()" 
+            style="
+              background: linear-gradient(45deg, #607D8B, #455A64);
+              color: white;
+              border: none;
+              padding: 12px 20px;
+              border-radius: 25px;
+              font-size: 1em;
+              font-weight: bold;
+              cursor: pointer;
+              transition: all 0.3s;
+              box-shadow: 0 4px 15px rgba(96, 125, 139, 0.4);
+              font-family: inherit;
+            "
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(96, 125, 139, 0.6)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(96, 125, 139, 0.4)'"
+          >
+            🏠 Menú Principal
+          </button>
+        </div>
+
+        ${
+          isVictory
+            ? `
+        <div style="
+          margin-top: 20px;
+          font-size: 0.9em;
+          color: #FFD700;
+          font-style: italic;
+        ">
+          ¡Felicidades por completar Hell Shooter! 🎉
+        </div>
+        `
+            : ""
+        }
+      </div>
+    `;
+
       gameOverScreen.style.display = "block";
     }
   },

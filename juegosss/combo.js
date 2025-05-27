@@ -298,6 +298,9 @@ const ComboSystem = {
   triggerFrenzyMode() {
     UI.showScreenMessage("⚡ ¡MODO FRENESÍ! ⚡", "#FF00FF");
 
+    // 🔥 NUEVO: Activar flag para efectos visuales
+    window.frenzyModeActive = true;
+
     console.log(
       "⚡ Iniciando modo frenesí - disparo súper rápido por 30 segundos"
     );
@@ -317,6 +320,7 @@ const ComboSystem = {
     setTimeout(() => {
       clearInterval(frenzyInterval); // Parar disparo rápido
       BulletManager.startAutoShoot(); // Restaurar disparo normal
+      window.frenzyModeActive = false; // 🔥 NUEVO: Desactivar flag
       UI.showScreenMessage("Frenesí terminado", "#FFFFFF");
       console.log("⚡ Modo frenesí terminado - disparo normal restaurado");
     }, 30000); // 30 segundos
@@ -487,9 +491,6 @@ const ComboSystem = {
     // ===== ACTIVAR MODO LENTO GLOBAL =====
     window.slowMotionActive = true;
     window.slowMotionFactor = 0.3; // 30% de velocidad normal
-
-    // ===== EFECTOS VISUALES ESPECIALES =====
-    this.createSlowMotionEffect();
 
     // ===== DURACIÓN DE 8 SEGUNDOS =====
     setTimeout(() => {

@@ -22,7 +22,7 @@ const BulletManager = {
   enemiesForSpecialPower: 0,
   specialPowerReady: false,
   specialPowerActive: false,
-  ENEMIES_FOR_SPECIAL: 20, // 🔥 REDUCIDO para más acción
+  ENEMIES_FOR_SPECIAL: 15, // 🔥 REDUCIDO para más acción
 
   // ======================================================
   // INICIALIZACIÓN Y CONTROL
@@ -102,8 +102,8 @@ const BulletManager = {
             break;
 
           case 1: // Disparo Amplio
-            bulletCount = 3; // 🔥 MÁXIMO 3 BALAS
-            spreadAngle = Math.PI / 6; // Más dispersión
+            bulletCount = 7; // 🔥 CORREGIDO: Era 3, ahora 7 balas
+            spreadAngle = Math.PI / 4; // Más dispersión para 7 balas
             break;
 
           case 2: // Explosivo

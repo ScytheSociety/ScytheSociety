@@ -308,35 +308,194 @@ function gameLoop() {
 }
 
 /**
- * 🔥 NUEVO: Dibuja efectos especiales en pantalla
+ * 🔥 NUEVO: Dibuja efectos especiales en pantalla con colores temáticos
  */
 function drawSpecialEffects(ctx) {
-  // Efecto de tiempo lento
+  // 🌊 Efecto de tiempo lento - BAJO EL AGUA
   if (slowMotionActive) {
     ctx.save();
-    ctx.fillStyle = "rgba(0, 187, 255, 0.05)";
+
+    // Overlay azul acuático
+    const gradient = ctx.createRadialGradient(
+      canvas.width / 2,
+      canvas.height / 2,
+      0,
+      canvas.width / 2,
+      canvas.height / 2,
+      Math.max(canvas.width, canvas.height)
+    );
+    gradient.addColorStop(0, "rgba(0, 100, 150, 0.15)");
+    gradient.addColorStop(1, "rgba(0, 50, 100, 0.25)");
+    ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Líneas de velocidad
-    for (let i = 0; i < 5; i++) {
-      ctx.strokeStyle = `rgba(0, 187, 255, ${0.1 + Math.random() * 0.1})`;
-      ctx.lineWidth = 2;
+    // Burbujas flotantes
+    for (let i = 0; i < 8; i++) {
+      const bubbleX =
+        Math.sin(window.getGameTime() * 0.02 + i) * canvas.width * 0.3 +
+        canvas.width / 2;
+      const bubbleY =
+        Math.cos(window.getGameTime() * 0.015 + i * 0.7) * canvas.height * 0.3 +
+        canvas.height / 2;
+      const bubbleSize = 20 + Math.sin(window.getGameTime() * 0.03 + i) * 10;
+
       ctx.beginPath();
-      ctx.moveTo(Math.random() * canvas.width, 0);
-      ctx.lineTo(Math.random() * canvas.width, canvas.height);
+      ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(100, 200, 255, 0.3)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(150, 220, 255, 0.5)";
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
+
+    // Ondas acuáticas
+    for (let i = 0; i < 3; i++) {
+      ctx.strokeStyle = `rgba(0, 187, 255, ${0.2 - i * 0.05})`;
+      ctx.lineWidth = 3 - i;
+      ctx.beginPath();
+
+      for (let x = 0; x < canvas.width; x += 10) {
+        const y =
+          canvas.height / 2 +
+          Math.sin((x + window.getGameTime() * 2) * 0.01 + i) * 30;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
     ctx.restore();
   }
 
-  // Efecto de combo alto
+  // 🔥 Efecto de modo frenesí - INFIERNO
+  if (window.frenzyModeActive) {
+    ctx.save();
+
+    // Overlay rojizo ardiente
+    const fireGradient = ctx.createRadialGradient(
+      canvas.width / 2,
+      canvas.height,
+      0,
+      canvas.width / 2,
+      canvas.height,
+      canvas.height
+    );
+    fireGradient.addColorStop(0, "rgba(255, 100, 0, 0.2)");
+    fireGradient.addColorStop(0.5, "rgba(255, 50, 0, 0.15)");
+    fireGradient.addColorStop(1, "rgba(150, 0, 0, 0.1)");
+    ctx.fillStyle = fireGradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Llamas danzantes
+    for (let i = 0; i < 12; i++) {
+      const flameX = (i / 12) * canvas.width;
+      const flameHeight = 80 + Math.sin(window.getGameTime() * 0.1 + i) * 40;
+      const flameIntensity =
+        0.3 + Math.sin(window.getGameTime() * 0.15 + i * 0.5) * 0.2;
+
+      const flameGradient = ctx.createLinearGradient(
+        flameX,
+        canvas.height,
+        flameX,
+        canvas.height - flameHeight
+      );
+      flameGradient.addColorStop(0, `rgba(255, 100, 0, ${flameIntensity})`);
+      flameGradient.addColorStop(
+        0.5,
+        `rgba(255, 200, 0, ${flameIntensity * 0.7})`
+      );
+      flameGradient.addColorStop(1, `rgba(255, 255, 100, 0)`);
+
+      ctx.fillStyle = flameGradient;
+      ctx.fillRect(flameX - 15, canvas.height - flameHeight, 30, flameHeight);
+    }
+
+    // Chispas volando
+    for (let i = 0; i < 15; i++) {
+      const sparkX = Math.random() * canvas.width;
+      const sparkY = Math.random() * canvas.height;
+      const sparkSize = 2 + Math.random() * 3;
+
+      ctx.fillStyle = `rgba(255, ${150 + Math.random() * 105}, 0, ${
+        0.5 + Math.random() * 0.5
+      })`;
+      ctx.fillRect(sparkX, sparkY, sparkSize, sparkSize);
+    }
+
+    ctx.restore();
+  }
+
+  // ⚡ Efecto de combo alto - ENERGÍA DORADA
   if (window.ComboSystem && window.ComboSystem.getCurrentCombo() >= 20) {
     const combo = window.ComboSystem.getCurrentCombo();
-    const intensity = Math.min(combo / 50, 0.1);
+    const intensity = Math.min(combo / 100, 0.3);
 
     ctx.save();
-    ctx.fillStyle = `rgba(255, 215, 0, ${intensity})`;
+
+    // Resplandor dorado
+    const goldGradient = ctx.createRadialGradient(
+      canvas.width / 2,
+      canvas.height / 2,
+      0,
+      canvas.width / 2,
+      canvas.height / 2,
+      Math.max(canvas.width, canvas.height) / 2
+    );
+    goldGradient.addColorStop(0, `rgba(255, 215, 0, 0)`);
+    goldGradient.addColorStop(0.7, `rgba(255, 215, 0, ${intensity * 0.5})`);
+    goldGradient.addColorStop(1, `rgba(255, 165, 0, ${intensity})`);
+    ctx.fillStyle = goldGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Rayos de energía
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2 + window.getGameTime() * 0.02;
+      const rayLength = canvas.width * 0.4;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+
+      ctx.strokeStyle = `rgba(255, 215, 0, ${intensity * 0.8})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.lineTo(
+        centerX + Math.cos(angle) * rayLength,
+        centerY + Math.sin(angle) * rayLength
+      );
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  // 🌟 Efecto de lluvia de power-ups - DESTELLOS MÁGICOS
+  if (window.powerUpRainActive) {
+    ctx.save();
+
+    // Partículas mágicas cayendo
+    for (let i = 0; i < 20; i++) {
+      const starX =
+        Math.sin(window.getGameTime() * 0.01 + i) * canvas.width * 0.8 +
+        canvas.width * 0.1;
+      const starY =
+        ((window.getGameTime() * 2 + i * 50) % (canvas.height + 100)) - 50;
+      const starSize = 3 + Math.sin(window.getGameTime() * 0.05 + i) * 2;
+
+      // Estrella brillante
+      ctx.fillStyle = `rgba(255, 255, 255, ${
+        0.7 + Math.sin(window.getGameTime() * 0.1 + i) * 0.3
+      })`;
+      ctx.beginPath();
+      for (let j = 0; j < 5; j++) {
+        const angle = (j / 5) * Math.PI * 2;
+        const x = starX + Math.cos(angle) * starSize;
+        const y = starY + Math.sin(angle) * starSize;
+        if (j === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.fill();
+    }
+
     ctx.restore();
   }
 }

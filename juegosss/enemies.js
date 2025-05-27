@@ -27,21 +27,30 @@ const EnemyManager = {
   // ======================================================
 
   /**
-   * Configura el nivel actual - MÁS AGRESIVO
+   * Configura el nivel actual - BALANCEADO
    */
   setupLevel(level) {
-    // 🔥 MÁS ENEMIGOS por nivel para más acción
+    // 🔥 ENEMIGOS BALANCEADOS - Menos agresivo
     const levelUpEnemies = [
-      120, 250, 400, 600, 850, 1150, 1500, 1900, 2400, 2900,
+      80,
+      150,
+      250,
+      380,
+      540,
+      720,
+      920,
+      1150,
+      1400,
+      1700, // Reducido considerablemente
     ];
 
     this.enemiesRequired =
       levelUpEnemies[level - 1] || levelUpEnemies[levelUpEnemies.length - 1];
 
-    // 🔥 Spawn más rápido y agresivo
-    const baseSpawnRate = 50; // Era 60, ahora 50
-    const spawnRateReduction = 4; // Era 3, ahora 4 (más agresivo)
-    const minSpawnRate = 12; // Era 15, ahora 12 (más rápido)
+    // 🔥 Spawn BALANCEADO - Menos frecuente
+    const baseSpawnRate = 70; // Era 50, ahora 70 (más lento)
+    const spawnRateReduction = 3; // Era 4, ahora 3 (menos agresivo)
+    const minSpawnRate = 20; // Era 12, ahora 20 (más lento)
     this.currentSpawnDelay = Math.max(
       minSpawnRate,
       baseSpawnRate - level * spawnRateReduction
@@ -50,7 +59,7 @@ const EnemyManager = {
     this.spawnTimer = 0;
 
     console.log(
-      `👹 Nivel ÉPICO ${level}: ${this.enemiesRequired} enemigos, spawn cada ${this.currentSpawnDelay} frames`
+      `👹 Nivel BALANCEADO ${level}: ${this.enemiesRequired} enemigos, spawn cada ${this.currentSpawnDelay} frames`
     );
   },
 
@@ -66,28 +75,28 @@ const EnemyManager = {
   // ======================================================
 
   /**
-   * Crea un enemigo estándar - MÁS AGRESIVO
+   * Crea un enemigo estándar - BALANCEADO
    */
   spawnEnemy() {
     const canvas = window.getCanvas();
     const level = window.getLevel();
 
-    // 🔥 Tamaños más variados
-    const sizeVariation = 0.7 + Math.random() * 0.6; // Más variación
+    // 🔥 Tamaños BALANCEADOS
+    const sizeVariation = 0.8 + Math.random() * 0.4; // Menos variación
     const baseSize =
       GameConfig.ENEMY_MIN_SIZE +
       Math.random() * (GameConfig.ENEMY_MAX_SIZE - GameConfig.ENEMY_MIN_SIZE);
     const enemySize =
-      baseSize * sizeVariation * Math.max(0.5, 1 - level * 0.04); // Más pequeños en niveles altos
+      baseSize * sizeVariation * Math.max(0.7, 1 - level * 0.02); // Menos reducción por nivel
 
     const x = Math.random() * (canvas.width - enemySize);
 
-    // 🔥 Velocidad MÁS AGRESIVA
-    const levelSpeedFactor = 1 + level * 0.25; // Era 0.2, ahora 0.25
-    const baseSpeed = canvas.height * 0.007 * levelSpeedFactor; // Era 0.006, ahora 0.007
+    // 🔥 Velocidad BALANCEADA
+    const levelSpeedFactor = 1 + level * 0.15; // Era 0.25, ahora 0.15
+    const baseSpeed = canvas.height * 0.004 * levelSpeedFactor; // Era 0.007, ahora 0.004
 
     const angle = (Math.random() * Math.PI) / 2 - Math.PI / 4;
-    const speed = baseSpeed * (0.8 + Math.random() * 0.8); // Más rango de velocidad
+    const speed = baseSpeed * (0.7 + Math.random() * 0.6); // Menos rango de velocidad
     const velocityX = Math.sin(angle) * speed;
     const velocityY = Math.abs(Math.cos(angle) * speed);
 
@@ -99,9 +108,9 @@ const EnemyManager = {
       velocityX: velocityX,
       velocityY: velocityY,
       image: this.getEnemyImage(level),
-      speedFactor: 1.0 + Math.random() * 0.3, // 🔥 Factor de velocidad variable
+      speedFactor: 1.0 + Math.random() * 0.2, // Era 0.3, ahora 0.2
       bounceCount: 0,
-      maxBounces: 2 + Math.floor(Math.random() * 4), // 2-5 rebotes
+      maxBounces: 2 + Math.floor(Math.random() * 2), // 2-3 rebotes (era 2-5)
       level: level,
       spawnTime: window.getGameTime(),
       type: "normal",
@@ -109,18 +118,18 @@ const EnemyManager = {
 
     this.enemies.push(enemy);
 
-    // 🔥 Spawn extra MÁS AGRESIVO
-    if (level > 2 && Math.random() < level * 0.08 && this.enemies.length < 50) {
-      // Más enemigos simultáneos
-      const extraEnemies = Math.min(3, Math.floor(level / 3)); // Hasta 3 extra
+    // 🔥 Spawn extra MENOS AGRESIVO
+    if (level > 3 && Math.random() < level * 0.04 && this.enemies.length < 25) {
+      // Era 0.08 y 50, ahora 0.04 y 25
+      const extraEnemies = Math.min(2, Math.floor(level / 4)); // Hasta 2 extra (era 3)
 
       for (let i = 0; i < extraEnemies; i++) {
         setTimeout(() => {
-          if (!window.isGameEnded() && this.enemies.length < 60) {
-            // Límite más alto
+          if (!window.isGameEnded() && this.enemies.length < 30) {
+            // Era 60, ahora 30
             this.spawnSimpleEnemy();
           }
-        }, i * 200); // Spawn más rápido
+        }, i * 400); // Era 200ms, ahora 400ms (más lento)
       }
     }
   },
