@@ -352,7 +352,6 @@ function updateAllSoundVolumes() {
     if (sounds.hasOwnProperty(key)) {
       const sound = sounds[key];
 
-      // Volúmenes base específicos por sonido
       let baseVolume = 0.5;
       switch (key) {
         case "background":
@@ -369,17 +368,90 @@ function updateAllSoundVolumes() {
           break;
         case "shoot":
           baseVolume = 0.3;
-          break; // Más bajo para disparos
+          break;
         case "hit":
           baseVolume = 0.4;
+          break;
+        case "damaged":
+          baseVolume = 0.5;
+          break;
+        case "heart":
+          baseVolume = 0.5;
+          break;
+        case "levelUp":
+          baseVolume = 0.6;
+          break;
+        case "gameOver":
+          baseVolume = 0.7;
+          break;
+        case "victory":
+          baseVolume = 0.8;
           break;
         default:
           baseVolume = 0.5;
           break;
       }
 
-      // Aplicar volumen maestro
       sound.volume = baseVolume * masterVolume;
+    }
+  }
+}
+
+/**
+ * Reproduce un sonido aplicando el volumen maestro
+ */
+function playSound(soundName) {
+  if (sounds[soundName] && masterVolume > 0) {
+    try {
+      const sound = sounds[soundName].cloneNode();
+
+      let baseVolume = 0.5;
+      switch (soundName) {
+        case "background":
+          baseVolume = 0.3;
+          break;
+        case "explosion":
+          baseVolume = 0.6;
+          break;
+        case "special":
+          baseVolume = 0.7;
+          break;
+        case "powerUp":
+          baseVolume = 0.6;
+          break;
+        case "shoot":
+          baseVolume = 0.3;
+          break;
+        case "hit":
+          baseVolume = 0.4;
+          break;
+        case "damaged":
+          baseVolume = 0.5;
+          break;
+        case "heart":
+          baseVolume = 0.5;
+          break;
+        case "levelUp":
+          baseVolume = 0.6;
+          break;
+        case "gameOver":
+          baseVolume = 0.7;
+          break;
+        case "victory":
+          baseVolume = 0.8;
+          break;
+        default:
+          baseVolume = 0.5;
+          break;
+      }
+
+      sound.volume = baseVolume * masterVolume;
+
+      sound.play().catch((error) => {
+        console.warn(`Error playing sound ${soundName}:`, error);
+      });
+    } catch (error) {
+      console.warn(`Error creating sound ${soundName}:`, error);
     }
   }
 }
@@ -519,17 +591,13 @@ function centerMainMenu() {
  * Plays a sound effect
  * @param {string} soundName - The name of the sound to play
  */
-function playSound(soundName) {
-  if (sounds[soundName]) {
-    // Clonar el sonido para permitir múltiples instancias superpuestas
-    const sound = sounds[soundName].cloneNode();
+// ======================================================
+// CORRECCIÓN 1: PROBLEMA DEL PERSONAJE QUE DESAPARECE
+// ======================================================
 
-    // Intentar reproducir el sonido, manejando errores silenciosamente
-    sound.play().catch((error) => {
-      console.warn(`Error playing sound ${soundName}:`, error);
-    });
-  }
-}
+// ======================================================
+// CORRECCIÓN 2: CONTROL DE VOLUMEN PARA TODOS LOS SONIDOS
+// ======================================================
 
 /**
  * Starts playing the background music
@@ -656,24 +724,39 @@ function setupResponsiveCanvas() {
   canvas = document.getElementById("game-canvas");
   if (!canvas) return;
 
+  // CORRECCIÓN: Usar dimensiones exactas de la ventana
+  const rect = canvas.getBoundingClientRect();
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  // Adjust sizes proportionally to screen size
-  PLAYER_WIDTH = Math.min(canvas.width * 0.08, 60);
+  // CORRECCIÓN: Asegurar que el canvas cubra toda la pantalla
+  canvas.style.width = "100vw";
+  canvas.style.height = "100vh";
+  canvas.style.position = "absolute";
+  canvas.style.top = "0";
+  canvas.style.left = "0";
+
+  // Ajustar tamaños proporcionalmente a la pantalla
+  const baseSize = Math.min(canvas.width, canvas.height) / 20;
+
+  PLAYER_WIDTH = Math.max(40, Math.min(baseSize, 80));
   PLAYER_HEIGHT = PLAYER_WIDTH;
   BULLET_WIDTH = PLAYER_WIDTH * 0.25;
   BULLET_HEIGHT = BULLET_WIDTH * 2;
 
-  // Enemy sizes based on screen size
-  ENEMY_MIN_SIZE = Math.min(canvas.width * 0.05, 30);
-  ENEMY_MAX_SIZE = Math.min(canvas.width * 0.1, 60);
+  // Tamaños de enemigos basados en pantalla
+  ENEMY_MIN_SIZE = Math.max(25, Math.min(baseSize * 0.8, 50));
+  ENEMY_MAX_SIZE = Math.max(40, Math.min(baseSize * 1.2, 80));
 
-  // Create or update player object
+  // Actualizar jugador si existe
   if (player) {
     player.width = PLAYER_WIDTH;
     player.height = PLAYER_HEIGHT;
   }
+
+  console.log(
+    `Canvas setup: ${canvas.width}x${canvas.height}, Player size: ${PLAYER_WIDTH}`
+  );
 }
 
 /**
@@ -1420,31 +1503,44 @@ function showInstructions() {
  * Función para iniciar el juego real después de las instrucciones
  */
 function startRealGame() {
-  // Make sure player image is fully loaded before starting game
+  // CORRECCIÓN: Verificar que el canvas esté listo
+  if (!canvas || !ctx) {
+    console.error("Canvas no está listo");
+    return;
+  }
+
+  // CORRECCIÓN: Asegurar que el jugador sea visible desde el inicio
+  if (player) {
+    player.visible = true;
+    player.damaged = false;
+  }
+
+  // Asegurar que la imagen del jugador esté cargada
   if (playerImage && !playerImage.complete) {
     playerImage.onload = function () {
       console.log("Player image loaded successfully");
+      player.visible = true; // ASEGURAR VISIBILIDAD
       initializeGameLoop();
     };
 
-    // Add error handling for image loading
     playerImage.onerror = function () {
       console.error("Error loading player image, using fallback");
-      // Continue anyway after a brief delay
+      player.visible = true; // ASEGURAR VISIBILIDAD INCLUSO CON FALLBACK
       setTimeout(initializeGameLoop, 500);
     };
 
-    // If image takes too long, start anyway after 2 seconds
     setTimeout(function () {
       if (!playerImage.complete) {
-        console.warn(
-          "Player image taking too long to load, starting game anyway"
-        );
+        console.warn("Player image taking too long, starting anyway");
+        player.visible = true; // ASEGURAR VISIBILIDAD
         initializeGameLoop();
       }
     }, 2000);
   } else {
-    // Image already loaded or doesn't exist, start immediately
+    // Imagen ya cargada o no existe
+    if (player) {
+      player.visible = true; // ASEGURAR VISIBILIDAD
+    }
     initializeGameLoop();
   }
 }
@@ -1453,19 +1549,23 @@ function startRealGame() {
  * Helper function to actually start the game loop
  */
 function initializeGameLoop() {
-  // Ensure player is visible
-  player.visible = true;
+  // CORRECCIÓN: Asegurar que el jugador sea visible
+  if (player) {
+    player.visible = true;
+    player.damaged = false;
+  }
 
-  // Now start auto-shooting
+  console.log("Player visibility:", player ? player.visible : "No player");
+
+  // Iniciar disparo automático
   startAutoShoot();
 
-  // Start the game loop
+  // Iniciar el game loop
   gameInterval = setInterval(gameLoop, 1000 / 60);
 
-  // Start the level (without sound in level 1)
+  // Iniciar el nivel
   startLevel();
 
-  // Log successful game start
   console.log("Game loop initialized successfully");
 }
 
@@ -1675,82 +1775,94 @@ function drawPlayer() {
   player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
   player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
 
-  // Ensure player is visible during gameplay
+  // CORRECCIÓN: Asegurar que el jugador SIEMPRE sea visible durante el juego
   if (gameInterval && !isLevelTransition) {
-    player.visible = invulnerableTime <= 0 || gameTime % 10 < 5;
+    // Durante el juego, solo parpadear si es invulnerable
+    if (invulnerableTime > 0) {
+      player.visible = gameTime % 10 < 5; // Parpadeo cada 10 frames
+    } else {
+      player.visible = true; // SIEMPRE visible si no es invulnerable
+    }
   } else {
-    player.visible = true;
+    player.visible = true; // Visible en menús y transiciones
   }
 
-  // If the player is invulnerable and in an invisibility frame, don't draw
-  if (invulnerableTime > 0 && !player.visible) {
-    return;
-  }
+  // CORRECCIÓN: No salir temprano, SIEMPRE dibujar algo
+  // if (invulnerableTime > 0 && !player.visible) {
+  //   return; // QUITAR ESTA LÍNEA PROBLEMÁTICA
+  // }
 
-  // Draw player fallback if image not loaded
-  if (
-    !player.image ||
-    !player.image.complete ||
-    player.image.naturalWidth === 0
-  ) {
-    ctx.fillStyle = "#FF0000";
-    ctx.fillRect(player.x, player.y, player.width, player.height);
+  // Dibujar el jugador SIEMPRE, incluso si es invulnerable
+  if (player.visible) {
+    // Draw player fallback if image not loaded
+    if (
+      !player.image ||
+      !player.image.complete ||
+      player.image.naturalWidth === 0
+    ) {
+      // Fallback: rectángulo rojo visible
+      ctx.fillStyle = "#FF0000";
+      ctx.fillRect(player.x, player.y, player.width, player.height);
 
-    // Draw a crosshair to make sure player is visible
-    const centerX = player.x + player.width / 2;
-    const centerY = player.y + player.height / 2;
+      const centerX = player.x + player.width / 2;
+      const centerY = player.y + player.height / 2;
 
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, player.width * 0.6, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(255, 0, 0, 0.8)";
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, player.width * 0.6, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else {
+      // Dibujar imagen del jugador
+      if (invulnerableTime > 0) {
+        ctx.globalAlpha = 0.7; // Semi-transparente si es invulnerable
+      }
+
+      ctx.drawImage(
+        player.image,
+        player.x,
+        player.y,
+        player.width,
+        player.height
+      );
+      ctx.globalAlpha = 1.0;
+    }
+  } else {
+    // Incluso cuando es "invisible", dibujar un contorno para debugging
+    ctx.strokeStyle = "rgba(255, 0, 0, 0.3)";
     ctx.lineWidth = 2;
-    ctx.stroke();
-    return;
+    ctx.strokeRect(player.x, player.y, player.width, player.height);
   }
 
-  // Visual effect during invulnerability
-  if (invulnerableTime > 0) {
-    ctx.globalAlpha = 0.7;
-  }
+  // Dibujar cursor/indicador SIEMPRE
+  const centerX = player.x + player.width / 2;
+  const centerY = player.y + player.height / 2;
 
-  // Draw the player image
-  ctx.drawImage(player.image, player.x, player.y, player.width, player.height);
-  ctx.globalAlpha = 1.0; // Restore alpha
-
-  // Draw a cursor/target indicator
+  // Círculo exterior
   ctx.beginPath();
-  ctx.arc(
-    player.x + player.width / 2,
-    player.y + player.height / 2,
-    player.width * 0.6,
-    0,
-    Math.PI * 2
-  );
+  ctx.arc(centerX, centerY, player.width * 0.6, 0, Math.PI * 2);
   ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Draw crosshair
-  const centerX = player.x + player.width / 2;
-  const centerY = player.y + player.height / 2;
+  // Crosshair
   const size = player.width * 0.3;
-
   ctx.strokeStyle = "rgba(255, 0, 0, 0.8)";
   ctx.lineWidth = 1;
 
-  // Horizontal line
+  // Línea horizontal
   ctx.beginPath();
   ctx.moveTo(centerX - size, centerY);
   ctx.lineTo(centerX + size, centerY);
   ctx.stroke();
 
-  // Vertical line
+  // Línea vertical
   ctx.beginPath();
   ctx.moveTo(centerX, centerY - size);
   ctx.lineTo(centerX, centerY + size);
   ctx.stroke();
 
-  // Draw shield effect when invulnerable
+  // Escudo si es invulnerable
   if (invulnerableTime > 0) {
     const shieldSize = player.width * 0.7;
     ctx.beginPath();
@@ -1762,12 +1874,12 @@ function drawPlayer() {
     ctx.stroke();
   }
 
-  // Draw aura if power-up is active
+  // Aura de power-up
   if (activePowerUp) {
     const auraSize = player.width * 0.8;
     ctx.beginPath();
     ctx.arc(centerX, centerY, auraSize, 0, Math.PI * 2);
-    ctx.strokeStyle = `${activePowerUp.color}80`; // With 50% opacity
+    ctx.strokeStyle = `${activePowerUp.color}80`;
     ctx.lineWidth = 3;
     ctx.stroke();
   }
@@ -2048,7 +2160,7 @@ function spawnMultipleHearts() {
  */
 function spawnRarePowerUp() {
   // PROBABILIDAD AUMENTADA significativamente
-  if (Math.random() < GAME_CONFIG_UPDATED.items.rarePowerUpChance) {
+  if (Math.random() < GAME_CONFIG.items.rarePowerUpChance) {
     const size = PLAYER_WIDTH * 0.8;
     const x = size + Math.random() * (canvas.width - size * 2);
     const y = -size;
@@ -2187,7 +2299,7 @@ function trySpawnPowerUp() {
   if (powerUps.length >= 2) return;
 
   // PROBABILIDAD AUMENTADA y sin restricción de "uno por nivel"
-  if (Math.random() < GAME_CONFIG_UPDATED.items.powerUpSpawnChance) {
+  if (Math.random() < GAME_CONFIG.items.powerUpSpawnChance) {
     spawnRandomPowerUp();
 
     // CAMBIO: No marcar powerUpsSpawned = true
@@ -2408,7 +2520,7 @@ function trySpawnHeart() {
   if (hearts.length >= 3) return;
 
   // PROBABILIDAD AUMENTADA y sin restricción de "uno por nivel"
-  if (Math.random() < GAME_CONFIG_UPDATED.items.heartSpawnChance) {
+  if (Math.random() < GAME_CONFIG.items.heartSpawnChance) {
     spawnHeart();
 
     // CAMBIO: No marcar heartSpawned = true
@@ -3139,7 +3251,7 @@ function gameLoop() {
     // VERIFICACIÓN: Si el juego terminó, limpiar todo y salir
     if (gameEnded) {
       console.log("Juego terminado, limpiando y deteniendo game loop");
-      clearComboDisplay(); // Limpiar combo display
+      clearComboDisplay();
       clearInterval(gameInterval);
       gameInterval = null;
       return;
@@ -3147,6 +3259,16 @@ function gameLoop() {
 
     // Skip update during level transition
     if (isLevelTransition) return;
+
+    // DEBUGGING: Verificar estado del jugador cada 60 frames
+    if (gameTime % 60 === 0) {
+      console.log("Player state:", {
+        visible: player ? player.visible : "No player",
+        position: player ? `(${player.x}, ${player.y})` : "No player",
+        invulnerable: invulnerableTime,
+        gameTime: gameTime,
+      });
+    }
 
     // Update game time
     gameTime++;
@@ -3160,18 +3282,7 @@ function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw background
-    if (backgroundImages[level - 1] && backgroundImages[level - 1].complete) {
-      ctx.drawImage(
-        backgroundImages[level - 1],
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-    } else {
-      ctx.fillStyle = "#111";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
+    drawBackground();
 
     // MECÁNICAS MEJORADAS con nuevas frecuencias
     trySpawnWave();
@@ -3229,6 +3340,11 @@ function gameLoop() {
     drawGameInfo();
   } catch (error) {
     console.error("Error in game loop:", error);
+
+    // Si hay error, asegurar que el jugador sea visible
+    if (player) {
+      player.visible = true;
+    }
 
     if (!gameInterval && !gameEnded) {
       gameInterval = setInterval(gameLoop, 1000 / 60);
@@ -3626,33 +3742,40 @@ function drawBackground() {
     const img = backgroundImages[level - 1];
     const canvas = document.getElementById("game-canvas");
 
-    // Calculate proportions
+    // CORRECCIÓN: Cálculo mejorado para mantener proporciones
     const imgRatio = img.width / img.height;
     const canvasRatio = canvas.width / canvas.height;
 
     let drawWidth, drawHeight, x, y;
 
+    // ESTRATEGIA: Siempre cubrir completamente el canvas (como background-size: cover)
     if (canvasRatio > imgRatio) {
-      // If canvas is wider than the image
+      // Canvas es más ancho que la imagen - ajustar por ancho
       drawWidth = canvas.width;
-      drawHeight = canvas.width / imgRatio;
+      drawHeight = drawWidth / imgRatio;
       x = 0;
-      y = (canvas.height - drawHeight) / 2;
+      y = (canvas.height - drawHeight) / 2; // Centrar verticalmente
     } else {
-      // If canvas is taller than the image
+      // Canvas es más alto que la imagen - ajustar por alto
       drawHeight = canvas.height;
-      drawWidth = canvas.height * imgRatio;
-      x = (canvas.width - drawWidth) / 2;
+      drawWidth = drawHeight * imgRatio;
+      x = (canvas.width - drawWidth) / 2; // Centrar horizontalmente
       y = 0;
     }
 
-    // Ensure background covers the entire canvas
-    if (drawWidth < canvas.width) drawWidth = canvas.width;
-    if (drawHeight < canvas.height) drawHeight = canvas.height;
-
-    // Center and crop the background
+    // CORRECCIÓN: Dibujar la imagen centrada y recortada (no deformada)
     const ctx = canvas.getContext("2d");
+
+    // Limpiar canvas primero
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Dibujar background
     ctx.drawImage(img, x, y, drawWidth, drawHeight);
+  } else {
+    // Fallback si no hay imagen
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 }
 

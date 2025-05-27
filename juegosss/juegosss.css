@@ -28,9 +28,13 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-image: url("/api/placeholder/800/600"); /* Replace with a gothic background image */
-  background-size: cover;
-  background-position: center;
+
+  /* CORRECCIÓN: Background que se adapta correctamente */
+  background-image: url("/api/placeholder/800/600");
+  background-size: cover; /* Mantiene proporciones, recorta si es necesario */
+  background-position: center; /* Centra la imagen */
+  background-repeat: no-repeat; /* No repetir */
+  background-attachment: fixed; /* Fijo durante scroll */
 }
 
 /* Main Menu Styles */
@@ -172,6 +176,10 @@ button:hover,
   background-color: #111;
   touch-action: none;
   cursor: none;
+
+  /* CORRECCIÓN: Asegurar que el canvas mantenga proporciones */
+  object-fit: cover;
+  image-rendering: pixelated; /* Para mejor rendimiento en móviles */
 }
 
 #game-info {
@@ -394,7 +402,7 @@ button:hover,
 /* Estilos para el control de volumen */
 #volume-control {
   position: fixed;
-  top: 10px;
+  top: 80px; /* 👈 ÚNICA CORRECCIÓN: Movido más abajo para no tapar las vidas */
   right: 10px;
   background-color: rgba(0, 0, 0, 0.8);
   padding: 10px;
@@ -535,9 +543,22 @@ button:hover,
     font-size: 2em;
   }
 
+  /* En móviles, ajustar el background para mejor visualización */
+  body {
+    background-size: cover;
+    background-position: center center;
+  }
+
+  #game-canvas {
+    /* Optimizar canvas para móviles */
+    image-rendering: auto;
+    width: 100vw;
+    height: 100vh;
+  }
+
   /* Responsive para el control de volumen */
   #volume-control {
-    top: 5px;
+    top: 60px; /* Más abajo en móviles para no tapar las vidas */
     right: 5px;
     padding: 8px;
     font-size: 12px;
@@ -546,18 +567,6 @@ button:hover,
 
   #volume-control input[type="range"] {
     width: 60px;
-  }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
   }
 }
 
@@ -596,8 +605,22 @@ button:hover,
     font-size: 1.5em;
   }
 
+  /* En pantallas muy pequeñas */
+  body {
+    background-size: cover;
+    background-position: center center;
+  }
+
+  #game-canvas {
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+  }
+
   /* Responsive para dispositivos muy pequeños */
   #volume-control {
+    top: 60px; /* Mantenido más abajo */
     padding: 6px;
     gap: 6px;
   }
@@ -614,5 +637,20 @@ button:hover,
   #volume-control input[type="range"]::-moz-range-thumb {
     height: 14px;
     width: 14px;
+  }
+}
+
+/* CORRECCIÓN: Asegurar que el canvas siempre llene la pantalla correctamente */
+@media screen and (orientation: landscape) {
+  #game-canvas {
+    width: 100vw;
+    height: 100vh;
+  }
+}
+
+@media screen and (orientation: portrait) {
+  #game-canvas {
+    width: 100vw;
+    height: 100vh;
   }
 }
