@@ -1,6 +1,6 @@
 /**
- * Hell Shooter - Bullet Management
- * Sistema de balas balanceado y corregido - PARTE 1
+ * Hell Shooter - Bullet Management CORREGIDO
+ * Sistema de balas basado en el código original funcional
  */
 
 const BulletManager = {
@@ -17,16 +17,12 @@ const BulletManager = {
 
   autoShootInterval: null,
   lastShootTime: 0,
-  currentShootDelay: 200,
 
   // Sistema de poder especial
-  enemiesKilledForSpecial: 0,
+  enemiesForSpecialPower: 0,
   specialPowerReady: false,
   specialPowerActive: false,
-
-  // Rapid Fire temporal
-  rapidFireActive: false,
-  rapidFireDelay: 30,
+  ENEMIES_FOR_SPECIAL: 25,
 
   // ======================================================
   // INICIALIZACIÓN Y CONTROL
@@ -39,12 +35,15 @@ const BulletManager = {
     this.stopAutoShoot(); // Limpiar intervalo anterior
 
     const level = window.getLevel();
-    this.currentShootDelay = GameConfig.getLevelConfig(level).shootDelay;
 
-    // Si rapid fire está activo, usar su delay
-    const shootDelay = this.rapidFireActive
-      ? this.rapidFireDelay
-      : this.currentShootDelay;
+    // 🔥 CORREGIDO: Cálculo de delay como en el código original
+    const baseDelay = 200;
+    const reductionPerLevel = 15;
+    const minDelay = 80;
+    const shootDelay = Math.max(
+      minDelay,
+      baseDelay - level * reductionPerLevel
+    );
 
     this.autoShootInterval = setInterval(() => {
       this.shootBullet();
@@ -63,151 +62,121 @@ const BulletManager = {
     }
   },
 
-  /**
-   * Actualiza la velocidad de disparo
-   */
-  updateShootSpeed() {
-    if (this.autoShootInterval) {
-      this.startAutoShoot(); // Reiniciar con nueva velocidad
-    }
-  },
-
-  /**
-   * Activa/desactiva rapid fire
-   */
-  setRapidFire(active, customDelay = null) {
-    this.rapidFireActive = active;
-
-    if (active && customDelay) {
-      this.rapidFireDelay = customDelay;
-    }
-
-    // Actualizar velocidad de disparo
-    this.updateShootSpeed();
-
-    console.log(`⚡ Rapid Fire: ${active ? "ON" : "OFF"}`);
-  },
-
   // ======================================================
-  // CREACIÓN DE BALAS
+  // CREACIÓN DE BALAS - CORREGIDO SEGÚN CÓDIGO ORIGINAL
   // ======================================================
 
   /**
-   * Dispara una bala normal
+   * Dispara una bala normal - BASADO EN EL CÓDIGO ORIGINAL
    */
   shootBullet() {
-    const player = Player;
+    const currentTime = Date.now();
     const level = window.getLevel();
     const canvas = window.getCanvas();
 
-    // Velocidad de bala aumenta con nivel
-    const bulletSpeed =
-      GameConfig.PLAYER_CONFIG.shooting.bulletSpeed + level * 0.002;
+    // 🔥 CORREGIDO: Cooldown como en el original
+    const cooldownTime = Math.max(80, 200 - level * 12);
 
-    // Obtener power-up activo
-    const activePowerUp = player.getActivePowerUp();
+    if (currentTime - this.lastShootTime > cooldownTime) {
+      // 🔥 CORREGIDO: Velocidad de bala como en el original
+      const bulletSpeed = canvas.height * (0.015 + level * 0.002);
 
-    // Determinar número de balas y configuración
-    let bulletCount = 1;
-    let spreadAngle = 0;
-    let bulletConfig = {
-      penetrating: false,
-      explosive: false,
-      size: {
-        width: GameConfig.BULLET_WIDTH,
-        height: GameConfig.BULLET_HEIGHT,
-      },
-    };
+      // Obtener power-up activo
+      const activePowerUp = Player.getActivePowerUp();
 
-    // Configurar según power-up activo
-    if (activePowerUp) {
-      switch (activePowerUp.id) {
-        case 0: // Penetrante
-          bulletConfig.penetrating = true;
-          bulletConfig.penetrationCount = 3;
-          break;
-
-        case 1: // Disparo Amplio - SOLO 3 BALAS
-          bulletCount = 7; // 🔥 CAMBIAR DE 3 A 7
-          spreadAngle = Math.PI / 6; // 🔥 CAMBIAR ÁNGULO: de Math.PI / 8 a Math.PI / 6 (30 grados para mejor distribución)
-          break;
-
-        case 2: // Explosivo
-          bulletConfig.explosive = true;
-          break;
-
-        case 3: // Rapid Fire - Balas más grandes
-          bulletConfig.size.width *=
-            GameConfig.POWERUP_CONFIG.types.RAPID_FIRE.bulletSizeMultiplier;
-          bulletConfig.size.height *=
-            GameConfig.POWERUP_CONFIG.types.RAPID_FIRE.bulletSizeMultiplier;
-          break;
-      }
-    } else {
-      // SIN POWER-UP: Máximo 2 balas normales según nivel
-      bulletCount = Math.min(2, Math.floor(level / 3) + 1);
-      if (bulletCount > 1) {
-        spreadAngle = Math.PI / 16; // Separación pequeña
-      }
-    }
-
-    // Crear las balas
-    const playerPos = player.getPosition();
-    const playerSize = player.getSize();
-
-    for (let i = 0; i < bulletCount; i++) {
-      const offset = i - Math.floor(bulletCount / 2);
-      const angle = offset * spreadAngle;
-
-      const bullet = {
-        x: playerPos.x + playerSize.width / 2 - bulletConfig.size.width / 2,
-        y: playerPos.y - bulletConfig.size.height,
-        width: bulletConfig.size.width,
-        height: bulletConfig.size.height,
-        velocityX: Math.sin(angle) * bulletSpeed,
-        velocityY: -Math.cos(angle) * bulletSpeed,
-
-        // Propiedades especiales
-        penetrating: bulletConfig.penetrating,
-        penetrationCount: bulletConfig.penetrationCount || 0,
-        explosive: bulletConfig.explosive,
-
-        // Metadatos
-        fromSpecialPower: false,
-        level: level,
+      // 🔥 CORREGIDO: Configuración como en el original
+      let bulletCount = 1;
+      let spreadAngle = Math.PI / 12;
+      let bulletConfig = {
+        penetrating: false,
+        explosive: false,
+        penetrationCount: 0,
       };
 
-      this.bullets.push(bullet);
-    }
+      // Configurar según power-up activo
+      if (activePowerUp) {
+        switch (activePowerUp.id) {
+          case 0: // Penetrante
+            bulletConfig.penetrating = true;
+            bulletConfig.penetrationCount = 3;
+            break;
 
-    // Sonido de disparo (solo si el juego está activo)
-    if (!window.isGameEnded()) {
-      AudioManager.playSound("shoot");
+          case 1: // Disparo Amplio
+            bulletCount = 7; // 🔥 Como en el original
+            spreadAngle = Math.PI / 8; // 🔥 Como en el original
+            break;
+
+          case 2: // Explosivo
+            bulletConfig.explosive = true;
+            break;
+
+          case 3: // Rapid Fire - manejado por el intervalo
+            break;
+        }
+      } else if (level >= 3) {
+        // 🔥 CORREGIDO: Sin power-up, máximo 5 balas como en el original
+        bulletCount = Math.min(1 + Math.floor(level / 3), 5);
+      }
+
+      // 🔥 CORREGIDO: Crear balas exactamente como en el original
+      const playerPos = Player.getPosition();
+      const playerSize = Player.getSize();
+
+      for (let i = 0; i < bulletCount; i++) {
+        const offset = i - Math.floor(bulletCount / 2);
+        const angle = offset * spreadAngle;
+
+        const bullet = {
+          x: playerPos.x + playerSize.width / 2 - GameConfig.BULLET_WIDTH / 2,
+          y: playerPos.y - GameConfig.BULLET_HEIGHT,
+          width: GameConfig.BULLET_WIDTH,
+          height: GameConfig.BULLET_HEIGHT,
+          velocityX: Math.sin(angle) * bulletSpeed,
+          velocityY: -Math.cos(angle) * bulletSpeed, // 🔥 CORREGIDO: Hacia arriba
+
+          // Propiedades especiales
+          penetrating: bulletConfig.penetrating,
+          penetrationCount: bulletConfig.penetrationCount,
+          explosive: bulletConfig.explosive,
+
+          // Metadatos
+          fromSpecialPower: false,
+          level: level,
+        };
+
+        this.bullets.push(bullet);
+      }
+
+      this.lastShootTime = currentTime;
+
+      // Sonido solo si el juego está activo
+      if (!window.isGameEnded()) {
+        AudioManager.playSound("shoot");
+      }
     }
   },
 
   /**
-   * Activa el poder especial
+   * Activa el poder especial - CORREGIDO
    */
   activateSpecialPower() {
     if (!this.specialPowerReady || this.specialPowerActive) return;
 
     this.specialPowerActive = true;
     this.specialPowerReady = false;
-    this.enemiesKilledForSpecial = 0;
+    this.enemiesForSpecialPower = 0;
 
-    const player = Player;
-    const playerPos = player.getPosition();
-    const playerSize = player.getSize();
+    const playerPos = Player.getPosition();
+    const playerSize = Player.getSize();
     const canvas = window.getCanvas();
 
-    // Configuración del poder especial
-    const config = GameConfig.PLAYER_CONFIG.specialPower;
-    const bulletSpeed = canvas.height * 0.012;
+    // 🔥 CORREGIDO: Configuración como en el original
+    const bulletCount = 16;
+    const bulletSpeed = canvas.height * 0.01;
 
     // Crear balas en círculo
-    for (let i = 0; i < config.bulletCount; i++) {
-      const angle = (i / config.bulletCount) * Math.PI * 2;
+    for (let i = 0; i < bulletCount; i++) {
+      const angle = (i / bulletCount) * Math.PI * 2;
 
       const specialBullet = {
         x: playerPos.x + playerSize.width / 2 - GameConfig.BULLET_WIDTH / 2,
@@ -220,7 +189,7 @@ const BulletManager = {
         // Propiedades especiales
         explosive: true,
         fromSpecialPower: true,
-        life: config.duration / 16.67, // Convertir ms a frames (60fps)
+        life: 3000 / 16.67, // 3 segundos en frames
 
         level: window.getLevel(),
       };
@@ -228,7 +197,7 @@ const BulletManager = {
       this.specialBullets.push(specialBullet);
     }
 
-    // Efectos visuales y sonoros
+    // Efectos
     UI.createParticleEffect(
       playerPos.x + playerSize.width / 2,
       playerPos.y + playerSize.height / 2,
@@ -237,18 +206,18 @@ const BulletManager = {
     );
 
     AudioManager.playSound("special");
-    UI.showScreenMessage("¡PODER ESPECIAL!", "#FF0000");
+    UI.showScreenMessage("🔥 PODER ESPECIAL", "#FF0000");
 
-    // Resetear estado después de la duración
+    // Resetear estado
     setTimeout(() => {
       this.specialPowerActive = false;
-    }, config.duration);
+    }, 3000);
 
     console.log("🔥 Poder especial activado");
   },
 
   // ======================================================
-  // ACTUALIZACIÓN Y MOVIMIENTO
+  // ACTUALIZACIÓN Y MOVIMIENTO - CORREGIDO
   // ======================================================
 
   /**
@@ -267,7 +236,7 @@ const BulletManager = {
     for (let i = 0; i < this.bullets.length; i++) {
       const bullet = this.bullets[i];
 
-      // Mover bala
+      // 🔥 CORREGIDO: Movimiento simple y directo
       bullet.x += bullet.velocityX;
       bullet.y += bullet.velocityY;
     }
@@ -290,7 +259,7 @@ const BulletManager = {
   },
 
   /**
-   * Limpia balas fuera de pantalla o sin vida
+   * Limpia balas fuera de pantalla
    */
   cleanupBullets() {
     const canvas = window.getCanvas();
@@ -316,30 +285,30 @@ const BulletManager = {
   },
 
   // ======================================================
-  // SISTEMA DE COLISIONES
+  // SISTEMA DE COLISIONES - CORREGIDO
   // ======================================================
 
   /**
-   * Verifica colisiones con enemigos
+   * Verifica colisiones con enemigos - CORREGIDO
    */
   checkEnemyCollisions(enemies) {
-    let enemiesKilled = 0;
+    let totalKilled = 0;
 
     // Verificar balas normales
-    enemiesKilled += this.checkBulletCollisions(this.bullets, enemies, false);
+    totalKilled += this.checkBulletCollisions(this.bullets, enemies, false);
 
     // Verificar balas especiales
-    enemiesKilled += this.checkBulletCollisions(
+    totalKilled += this.checkBulletCollisions(
       this.specialBullets,
       enemies,
       true
     );
 
-    return enemiesKilled;
+    return totalKilled;
   },
 
   /**
-   * Verifica colisiones de un array de balas
+   * Verifica colisiones de un array de balas - CORREGIDO
    */
   checkBulletCollisions(bulletArray, enemies, isSpecial) {
     let enemiesKilled = 0;
@@ -383,11 +352,14 @@ const BulletManager = {
         enemies.splice(i, 1);
         enemiesKilled++;
 
-        // Solo contar para poder especial si no es bala especial
+        // 🔥 CORREGIDO: Solo contar para poder especial si no es bala especial
         if (!isSpecial) {
-          this.enemiesKilledForSpecial++;
+          this.enemiesForSpecialPower++;
           this.checkSpecialPowerReady();
         }
+
+        // 🔥 CORREGIDO: Notificar al EnemyManager
+        EnemyManager.enemiesKilled++;
 
         // Calcular puntos
         const basePoints = 10 * window.getLevel();
@@ -406,71 +378,23 @@ const BulletManager = {
   },
 
   /**
-   * Verifica colisiones con el boss
+   * Verifica si el poder especial está listo - CORREGIDO
    */
-  checkBossCollisions() {
-    if (!BossManager.isActive()) return;
+  checkSpecialPowerReady() {
+    if (this.enemiesForSpecialPower >= this.ENEMIES_FOR_SPECIAL) {
+      this.specialPowerReady = true;
+      this.enemiesForSpecialPower = this.ENEMIES_FOR_SPECIAL; // Cap al máximo
 
-    const boss = BossManager.getBoss();
-    let hitCount = 0;
-
-    // Verificar balas normales
-    hitCount += this.checkBossHits(this.bullets, boss);
-
-    // Verificar balas especiales
-    hitCount += this.checkBossHits(this.specialBullets, boss);
-
-    if (hitCount > 0) {
-      BossManager.takeDamage(hitCount);
+      UI.showScreenMessage("🔥 PODER ESPECIAL LISTO", "#FF0000");
+      console.log("🔥 Poder especial cargado");
     }
-  },
-
-  /**
-   * Verifica impactos contra el boss
-   */
-  checkBossHits(bulletArray, boss) {
-    let hitCount = 0;
-
-    for (let j = bulletArray.length - 1; j >= 0; j--) {
-      const bullet = bulletArray[j];
-
-      if (this.checkCollision(bullet, boss)) {
-        hitCount++;
-
-        // Crear explosión si es bala explosiva
-        if (bullet.explosive) {
-          UI.createExplosionEffect(
-            bullet.x + bullet.width / 2,
-            bullet.y + bullet.height / 2
-          );
-        }
-
-        // Eliminar bala (el boss no tiene penetración)
-        bulletArray.splice(j, 1);
-      }
-    }
-
-    return hitCount;
-  },
-
-  /**
-   * Verifica colisión entre dos objetos
-   */
-  checkCollision(obj1, obj2) {
-    return (
-      obj1.x < obj2.x + obj2.width &&
-      obj1.x + obj1.width > obj2.x &&
-      obj1.y < obj2.y + obj2.height &&
-      obj1.y + obj1.height > obj2.y
-    );
   },
 
   /**
    * Crea una explosión que daña enemigos cercanos
    */
   createExplosion(center, enemies) {
-    const explosionRadius =
-      GameConfig.POWERUP_CONFIG.types.EXPLOSIVE.explosionRadius;
+    const explosionRadius = 120; // Radio fijo
 
     // Crear efecto visual
     UI.createExplosionEffect(center.x, center.y);
@@ -491,32 +415,30 @@ const BulletManager = {
       if (distance < explosionRadius) {
         enemies.splice(i, 1);
 
+        // 🔥 CORREGIDO: Notificar al EnemyManager
+        EnemyManager.enemiesKilled++;
+
         // Puntos por explosión
         const explosionPoints = 5 * window.getLevel();
         window.setScore(window.getScore() + explosionPoints);
-
-        console.log("💥 Enemigo eliminado por explosión");
       }
     }
   },
 
   /**
-   * Verifica si el poder especial está listo
+   * Verifica colisión entre dos objetos
    */
-  checkSpecialPowerReady() {
-    const required = GameConfig.PLAYER_CONFIG.specialPower.enemiesRequired;
-
-    if (this.enemiesKilledForSpecial >= required) {
-      this.specialPowerReady = true;
-      this.enemiesKilledForSpecial = required; // Cap al máximo
-
-      UI.showScreenMessage("¡PODER ESPECIAL LISTO!", "#FF0000");
-      console.log("🔥 Poder especial cargado");
-    }
+  checkCollision(obj1, obj2) {
+    return (
+      obj1.x < obj2.x + obj2.width &&
+      obj1.x + obj1.width > obj2.x &&
+      obj1.y < obj2.y + obj2.height &&
+      obj1.y + obj1.height > obj2.y
+    );
   },
 
   // ======================================================
-  // RENDERIZADO
+  // RENDERIZADO - CORREGIDO
   // ======================================================
 
   /**
@@ -541,33 +463,15 @@ const BulletManager = {
       if (bullet.penetrating) {
         ctx.shadowColor = "#FFFF00";
         ctx.shadowBlur = 8;
-
-        // Estela para balas penetrantes
-        ctx.strokeStyle = "#FFFF00";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(bullet.x + bullet.width / 2, bullet.y + bullet.height);
-        ctx.lineTo(bullet.x + bullet.width / 2, bullet.y + bullet.height + 10);
-        ctx.stroke();
       } else if (bullet.explosive) {
         ctx.shadowColor = "#FF8800";
         ctx.shadowBlur = 8;
       } else if (isSpecial) {
         ctx.shadowColor = "#FF0000";
         ctx.shadowBlur = 15;
-
-        // Partículas para balas especiales
-        if (window.getGameTime() % 3 === 0) {
-          UI.createParticleEffect(
-            bullet.x + bullet.width / 2,
-            bullet.y + bullet.height / 2,
-            "#FF3333",
-            1
-          );
-        }
       }
 
-      // Calcular rotación según dirección
+      // 🔥 CORREGIDO: Rotación basada en dirección
       const angle =
         Math.atan2(bullet.velocityY, bullet.velocityX) + Math.PI / 2;
 
@@ -621,8 +525,10 @@ const BulletManager = {
     return this.specialPowerActive;
   },
   getSpecialPowerProgress() {
-    const required = GameConfig.PLAYER_CONFIG.specialPower.enemiesRequired;
-    return Math.min(this.enemiesKilledForSpecial / required, 1.0);
+    return Math.min(
+      this.enemiesForSpecialPower / this.ENEMIES_FOR_SPECIAL,
+      1.0
+    );
   },
 
   /**
@@ -633,10 +539,9 @@ const BulletManager = {
 
     this.bullets = [];
     this.specialBullets = [];
-    this.enemiesKilledForSpecial = 0;
+    this.enemiesForSpecialPower = 0;
     this.specialPowerReady = false;
     this.specialPowerActive = false;
-    this.rapidFireActive = false;
     this.lastShootTime = 0;
 
     console.log("🔫 Sistema de balas reseteado");
@@ -645,5 +550,3 @@ const BulletManager = {
 
 // Hacer disponible globalmente
 window.BulletManager = BulletManager;
-
-console.log("🔫 bullets.js cargado - Sistema de balas listo");

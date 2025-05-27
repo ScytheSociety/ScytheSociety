@@ -1,6 +1,6 @@
 /**
- * Hell Shooter - UI Management
- * Sistema de interfaz de usuario y efectos visuales
+ * Hell Shooter - UI Management CORREGIDO
+ * Sistema de interfaz más elegante y profesional
  */
 
 const UI = {
@@ -52,22 +52,22 @@ const UI = {
   },
 
   // ======================================================
-  // SISTEMA DE MENSAJES EN PANTALLA
+  // SISTEMA DE MENSAJES EN PANTALLA - MEJORADO
   // ======================================================
 
   /**
-   * Muestra un mensaje en pantalla
+   * Muestra un mensaje en pantalla - VERSIÓN ELEGANTE Y CONCISA
    */
   showScreenMessage(message, color = "#FFFFFF") {
     const messageId = this.messageIdCounter++;
 
-    // Buscar posición disponible
-    let yPosition = 15;
-    const messageHeight = 8;
-    const padding = 2;
+    // 🔥 CORREGIDO: Posición más compacta y elegante
+    let yPosition = 10;
+    const messageHeight = 6;
+    const padding = 1;
 
     // Verificar posiciones ocupadas
-    for (let y = 15; y < 80; y += messageHeight + padding) {
+    for (let y = 10; y < 40; y += messageHeight + padding) {
       const positionTaken = this.messagePositions.some(
         (pos) => Math.abs(pos.y - y) < messageHeight + padding && pos.active
       );
@@ -76,11 +76,6 @@ const UI = {
         yPosition = y;
         break;
       }
-    }
-
-    // Si no hay espacio, usar posición alternativa
-    if (yPosition > 70) {
-      yPosition = 15 + (messageId % 5) * (messageHeight + padding);
     }
 
     // Registrar posición
@@ -92,7 +87,7 @@ const UI = {
     };
     this.messagePositions.push(position);
 
-    // Crear elemento del mensaje
+    // 🔥 CORREGIDO: Diseño más elegante y profesional
     const messageElement = document.createElement("div");
     messageElement.textContent = message;
     messageElement.style.position = "fixed";
@@ -100,25 +95,29 @@ const UI = {
     messageElement.style.left = "50%";
     messageElement.style.transform = "translateX(-50%)";
     messageElement.style.color = color;
-    messageElement.style.fontSize = "18px";
+    messageElement.style.fontSize = "16px"; // Más pequeño
     messageElement.style.fontWeight = "bold";
-    messageElement.style.textShadow = "2px 2px 4px rgba(0,0,0,0.8)";
+    messageElement.style.textShadow = "2px 2px 4px rgba(0,0,0,0.9)";
     messageElement.style.zIndex = "1000";
-    messageElement.style.backgroundColor = "rgba(0,0,0,0.6)";
-    messageElement.style.padding = "5px 15px";
-    messageElement.style.borderRadius = "10px";
-    messageElement.style.border = `2px solid ${color}`;
-    messageElement.style.maxWidth = "400px";
+    messageElement.style.backgroundColor = "rgba(0,0,0,0.8)"; // Más transparente
+    messageElement.style.padding = "4px 12px"; // Más compacto
+    messageElement.style.borderRadius = "8px"; // Más redondeado
+    messageElement.style.border = `1px solid ${color}`; // Borde más sutil
+    messageElement.style.maxWidth = "300px"; // Más estrecho
     messageElement.style.textAlign = "center";
-    messageElement.style.fontFamily = '"Times New Roman", serif';
+    messageElement.style.fontFamily = '"Arial", sans-serif'; // Fuente más limpia
+    messageElement.style.letterSpacing = "0.5px"; // Espaciado elegante
+    messageElement.style.backdropFilter = "blur(5px)"; // Efecto moderno
 
     document.body.appendChild(messageElement);
 
-    // Animación de desvanecimiento
+    // 🔥 CORREGIDO: Animación más rápida y suave
     setTimeout(() => {
-      messageElement.style.transition = "opacity 1s, transform 1s";
+      messageElement.style.transition =
+        "opacity 0.8s ease-out, transform 0.8s ease-out";
       messageElement.style.opacity = "0";
-      messageElement.style.transform = "translateX(-50%) translateY(-20px)";
+      messageElement.style.transform =
+        "translateX(-50%) translateY(-15px) scale(0.95)";
 
       // Marcar posición como libre
       const pos = this.messagePositions.find((p) => p.id === messageId);
@@ -131,12 +130,12 @@ const UI = {
         // Limpiar posiciones viejas
         const now = Date.now();
         for (let i = this.messagePositions.length - 1; i >= 0; i--) {
-          if (now - this.messagePositions[i].timeCreated > 10000) {
+          if (now - this.messagePositions[i].timeCreated > 8000) {
             this.messagePositions.splice(i, 1);
           }
         }
-      }, 1000);
-    }, 2500);
+      }, 800);
+    }, 2000); // Duración más corta
   },
 
   // ======================================================
@@ -188,7 +187,7 @@ const UI = {
     } else {
       indicator.classList.remove("special-power-ready");
       const progress = BulletManager.getSpecialPowerProgress();
-      const required = GameConfig.PLAYER_CONFIG.specialPower.enemiesRequired;
+      const required = 25; // ENEMIES_FOR_SPECIAL
       const current = Math.floor(progress * required);
       counter.textContent = `${current}/${required}`;
     }
@@ -239,7 +238,7 @@ const UI = {
         indicator.style.fontWeight = "bold";
         indicator.style.transition = "all 0.3s";
         indicator.style.zIndex = "100";
-        indicator.style.fontFamily = '"Times New Roman", serif';
+        indicator.style.fontFamily = '"Arial", sans-serif';
         document.body.appendChild(indicator);
       }
 
@@ -345,7 +344,7 @@ const UI = {
     if (!ctx) return;
 
     let radius = 5;
-    const maxRadius = GameConfig.POWERUP_CONFIG.types.EXPLOSIVE.explosionRadius;
+    const maxRadius = 120;
     let life = 20;
 
     const animateShockwave = () => {
@@ -396,83 +395,86 @@ const UI = {
   },
 
   // ======================================================
-  // PANTALLAS Y MODALES
+  // PANTALLAS Y MODALES - CORREGIDO
   // ======================================================
 
   /**
-   * Muestra las instrucciones del juego
+   * Muestra las instrucciones del juego - VERSIÓN CORREGIDA Y ELEGANTE
    */
   showInstructions(callback) {
     const modal = document.createElement("div");
     modal.style.position = "fixed";
     modal.style.top = "50%";
     modal.style.left = "50%";
-    modal.style.width = "85%";
-    modal.style.maxWidth = "700px";
+    modal.style.width = "80%";
+    modal.style.maxWidth = "600px";
     modal.style.transform = "translate(-50%, -50%)";
     modal.style.backgroundColor = "rgba(0, 0, 0, 0.95)";
     modal.style.border = "3px solid #8B0000";
     modal.style.borderRadius = "15px";
-    modal.style.padding = "25px";
+    modal.style.padding = "20px";
     modal.style.color = "#FFFFFF";
     modal.style.zIndex = "1000";
-    modal.style.fontFamily = '"Times New Roman", serif';
+    modal.style.fontFamily = '"Arial", sans-serif';
     modal.style.boxShadow = "0 0 30px #FF0000";
-    modal.style.maxHeight = "85vh";
+    modal.style.maxHeight = "80vh";
     modal.style.overflowY = "auto";
 
+    // 🔥 CORREGIDO: Instrucciones más concisas y elegantes
     modal.innerHTML = `
-            <h2 style="text-align: center; color: #FF0000; text-shadow: 0 0 15px #FF0000; margin-bottom: 20px;">
-                🎮 HELL SHOOTER - GUÍA BALANCEADA 🎮
+            <h2 style="text-align: center; color: #FF0000; text-shadow: 0 0 15px #FF0000; margin-bottom: 20px; font-size: 24px;">
+                🎮 HELL SHOOTER 🎮
             </h2>
             
-            <div style="margin-bottom: 15px;">
-                <h3 style="color: #FF0000; margin-bottom: 8px;">🎯 CONTROLES:</h3>
-                <p>• <strong>Movimiento:</strong> Ratón (PC) o deslizar dedo (móvil)</p>
-                <p>• <strong>Disparo:</strong> Automático (máximo 2 balas)</p>
-                <p>• <strong>Poder Especial:</strong> ESPACIO o tocar indicador 🔥</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div>
+                    <h3 style="color: #FF0000; margin-bottom: 8px;">🎯 CONTROLES</h3>
+                    <p style="margin: 5px 0; font-size: 14px;">• Movimiento: Ratón/Táctil</p>
+                    <p style="margin: 5px 0; font-size: 14px;">• Disparo: Automático</p>
+                    <p style="margin: 5px 0; font-size: 14px;">• Poder: ESPACIO / 🔥</p>
+                </div>
+                
+                <div>
+                    <h3 style="color: #FF0000; margin-bottom: 8px;">💀 SUPERVIVENCIA</h3>
+                    <p style="margin: 5px 0; font-size: 14px;">• 7 vidas (máx. 14)</p>
+                    <p style="margin: 5px 0; font-size: 14px;">• 10 niveles intensos</p>
+                    <p style="margin: 5px 0; font-size: 14px;">• Boss final épico</p>
+                </div>
             </div>
             
             <div style="margin-bottom: 15px;">
-                <h3 style="color: #FF0000; margin-bottom: 8px;">🏆 OBJETIVO:</h3>
-                <p><strong>10 niveles intensos</strong> con boss final épico</p>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <h3 style="color: #FF0000; margin-bottom: 8px;">💀 SISTEMA DE VIDAS:</h3>
-                <p>• <strong>7 vidas iniciales, máximo 14</strong></p>
-                <p>• Recupera vidas con corazones ❤️</p>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <h3 style="color: #FF0000; margin-bottom: 8px;">⚡ POWER-UPS MEJORADOS:</h3>
-                <p>• 🟡 <strong>Penetrantes:</strong> Atraviesan 3 enemigos</p>
-                <p>• 🔵 <strong>Amplio:</strong> 7 balas en abanico</p> // 🔥 CAMBIAR AQUÍ: de 3 a 7
-                <p>• 🟠 <strong>Explosivas:</strong> Radio amplio de explosión</p>
-                <p>• 🟣 <strong>Súper Rápido:</strong> Balas grandes + disparo ultra-rápido</p>
-                <p>• 🟢 <strong>Escudo:</strong> Inmunidad total temporal</p>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <h3 style="color: #FF0000; margin-bottom: 8px;">👹 BOSS FINAL (NIVEL 10):</h3>
-                <p>• <strong>4 fases</strong> con diferentes ataques</p>
-                <p>• <strong>Invoca enemigos</strong> mientras es inmune</p>
-                <p>• <strong>Se teletransporta</strong> cuando pierde vida</p>
-                <p>• <strong>Lanza minas explosivas</strong> al 10% de vida</p>
+                <h3 style="color: #FF0000; margin-bottom: 8px;">⚡ POWER-UPS</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px;">
+                    <span style="background: rgba(255,255,0,0.2); padding: 2px 6px; border-radius: 4px;">🟡 Penetrantes</span>
+                    <span style="background: rgba(0,255,255,0.2); padding: 2px 6px; border-radius: 4px;">🔵 Amplio (7 balas)</span>
+                    <span style="background: rgba(255,136,0,0.2); padding: 2px 6px; border-radius: 4px;">🟠 Explosivas</span>
+                    <span style="background: rgba(255,0,255,0.2); padding: 2px 6px; border-radius: 4px;">🟣 Súper Rápido</span>
+                    <span style="background: rgba(0,255,0,0.2); padding: 2px 6px; border-radius: 4px;">🟢 Escudo</span>
+                </div>
             </div>
             
             <div style="text-align: center; margin-top: 25px;">
                 <button id="start-game-btn" style="background: linear-gradient(45deg, #8B0000, #FF0000); 
-                color: white; padding: 15px 30px; font-size: 18px; border: none; border-radius: 10px; 
-                cursor: pointer; font-family: inherit; box-shadow: 0 0 20px #FF0000; font-weight: bold;">
-                    🔥 ¡COMENZAR BATALLA! 🔥
+                color: white; padding: 12px 24px; font-size: 16px; border: none; border-radius: 8px; 
+                cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(255,0,0,0.3);
+                transition: transform 0.2s; font-family: inherit;">
+                    🔥 ¡COMENZAR BATALLA!
                 </button>
             </div>
         `;
 
     document.body.appendChild(modal);
 
-    document.getElementById("start-game-btn").addEventListener("click", () => {
+    // Efecto hover del botón
+    const startBtn = document.getElementById("start-game-btn");
+    startBtn.addEventListener("mouseenter", () => {
+      startBtn.style.transform = "scale(1.05)";
+    });
+    startBtn.addEventListener("mouseleave", () => {
+      startBtn.style.transform = "scale(1)";
+    });
+
+    startBtn.addEventListener("click", () => {
       document.body.removeChild(modal);
       callback();
     });
@@ -496,7 +498,7 @@ const UI = {
     transition.style.border = "3px solid #8B0000";
     transition.style.boxShadow = "0 0 30px #FF0000";
     transition.style.textAlign = "center";
-    transition.style.fontFamily = '"Times New Roman", serif';
+    transition.style.fontFamily = '"Arial", sans-serif';
     transition.style.fontWeight = "bold";
 
     if (level === 10) {
@@ -553,7 +555,7 @@ const UI = {
     volumeContainer.style.display = "flex";
     volumeContainer.style.alignItems = "center";
     volumeContainer.style.gap = "10px";
-    volumeContainer.style.fontFamily = '"Times New Roman", serif';
+    volumeContainer.style.fontFamily = '"Arial", sans-serif';
 
     const volumeIcon = document.createElement("span");
     volumeIcon.textContent = "🔊";
@@ -670,4 +672,4 @@ window.selectEmoji = (emoji) => UI.selectEmoji(emoji);
 // Hacer disponible globalmente
 window.UI = UI;
 
-console.log("🎨 ui.js cargado - Sistema de UI listo");
+console.log("🎨 ui.js cargado - Sistema de UI corregido");

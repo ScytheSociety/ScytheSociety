@@ -1,6 +1,6 @@
 /**
- * Hell Shooter - Player Management
- * Gestión completa del jugador
+ * Hell Shooter - Player Management CORREGIDO
+ * Gestión del jugador basada en el código original funcional
  */
 
 const Player = {
@@ -18,7 +18,7 @@ const Player = {
   width: 0,
   height: 0,
 
-  // Estado del juego
+  // 🔥 CORREGIDO: Estado del juego como en el original
   lives: 7,
   invulnerabilityTime: 0,
   visible: true,
@@ -28,13 +28,9 @@ const Player = {
   mouseX: 0,
   mouseY: 0,
 
-  // Power-ups activos
+  // 🔥 CORREGIDO: Power-ups como en el original
   activePowerUp: null,
   powerUpTimeLeft: 0,
-
-  // Sistema de escudo
-  shieldActive: false,
-  shieldTimeLeft: 0,
 
   // ======================================================
   // INICIALIZACIÓN
@@ -46,7 +42,7 @@ const Player = {
   init(name, avatar) {
     this.name = name;
     this.avatar = avatar;
-    this.lives = GameConfig.PLAYER_CONFIG.initialLives;
+    this.lives = 7; // 🔥 CORREGIDO: 7 vidas como en el original
 
     // Posición inicial en el centro
     const canvas = window.getCanvas();
@@ -63,14 +59,12 @@ const Player = {
     this.damaged = false;
     this.activePowerUp = null;
     this.powerUpTimeLeft = 0;
-    this.shieldActive = false;
-    this.shieldTimeLeft = 0;
 
     console.log(`👤 Jugador inicializado: ${name} ${avatar}`);
   },
 
   /**
-   * Configura los controles del jugador
+   * Configura los controles del jugador - CORREGIDO SEGÚN ORIGINAL
    */
   setupControls(canvas) {
     // Controles de mouse
@@ -81,14 +75,14 @@ const Player = {
       this.updatePosition();
     });
 
-    // Controles táctiles
+    // 🔥 CORREGIDO: Controles táctiles como en el original
     if (GameConfig.isTouch) {
       canvas.addEventListener("touchmove", (e) => {
         e.preventDefault();
         const rect = canvas.getBoundingClientRect();
         const touch = e.touches[0];
         this.mouseX = touch.clientX - rect.left;
-        this.mouseY = touch.clientY - rect.top - 80; // Offset para que no tape con el dedo
+        this.mouseY = touch.clientY - rect.top - 80; // 🔥 Offset para que no tape con el dedo
         this.updatePosition();
       });
 
@@ -97,14 +91,18 @@ const Player = {
         const rect = canvas.getBoundingClientRect();
         const touch = e.touches[0];
         this.mouseX = touch.clientX - rect.left;
-        this.mouseY = touch.clientY - rect.top - 80;
+        this.mouseY = touch.clientY - rect.top - 80; // 🔥 Mismo offset
         this.updatePosition();
       });
     }
 
-    // Poder especial con espacio o clic en indicador
+    // 🔥 CORREGIDO: Poder especial con espacio
     window.addEventListener("keydown", (e) => {
-      if (e.key === " " && BulletManager.isSpecialPowerReady()) {
+      if (
+        e.key === " " &&
+        BulletManager.isSpecialPowerReady() &&
+        !BulletManager.isSpecialPowerActive()
+      ) {
         BulletManager.activateSpecialPower();
         e.preventDefault();
       }
@@ -120,7 +118,7 @@ const Player = {
     this.x = this.mouseX - this.width / 2;
     this.y = this.mouseY - this.height / 2;
 
-    // Mantener dentro de los límites del canvas
+    // 🔥 CORREGIDO: Mantener dentro de los límites del canvas
     const canvas = window.getCanvas();
     this.x = Math.max(0, Math.min(canvas.width - this.width, this.x));
     this.y = Math.max(0, Math.min(canvas.height - this.height, this.y));
@@ -140,21 +138,18 @@ const Player = {
     // Actualizar power-ups
     this.updatePowerUps();
 
-    // Actualizar escudo
-    this.updateShield();
-
     // Actualizar posición
     this.updatePosition();
   },
 
   /**
-   * Actualiza el estado de invulnerabilidad
+   * Actualiza el estado de invulnerabilidad - CORREGIDO SEGÚN ORIGINAL
    */
   updateInvulnerability() {
     if (this.invulnerabilityTime > 0) {
       this.invulnerabilityTime--;
 
-      // Efecto de parpadeo
+      // 🔥 CORREGIDO: Efecto de parpadeo como en el original
       this.visible = Math.floor(this.invulnerabilityTime / 5) % 2 === 0;
     } else {
       this.visible = true;
@@ -175,26 +170,12 @@ const Player = {
     }
   },
 
-  /**
-   * Actualiza el escudo protector
-   */
-  updateShield() {
-    if (this.shieldActive) {
-      this.shieldTimeLeft--;
-
-      if (this.shieldTimeLeft <= 0) {
-        this.shieldActive = false;
-        console.log("🛡️ Escudo desactivado");
-      }
-    }
-  },
-
   // ======================================================
-  // SISTEMA DE POWER-UPS
+  // SISTEMA DE POWER-UPS - CORREGIDO
   // ======================================================
 
   /**
-   * Activa un power-up
+   * Activa un power-up - CORREGIDO SEGÚN ORIGINAL
    */
   activatePowerUp(powerUpType) {
     // Si hay un power-up activo, reemplazarlo
@@ -205,19 +186,14 @@ const Player = {
     this.activePowerUp = powerUpType;
     this.powerUpTimeLeft = powerUpType.duration;
 
-    // Efectos especiales según el tipo
+    // 🔥 CORREGIDO: Efectos especiales según el tipo como en el original
     switch (powerUpType.id) {
-      case 4: // Escudo
-        this.shieldActive = true;
-        this.shieldTimeLeft = powerUpType.duration;
-        break;
-
       case 3: // Rapid Fire
-        BulletManager.setRapidFire(true, powerUpType.shootDelay);
+        // El rapid fire se maneja en BulletManager
         break;
     }
 
-    UI.showScreenMessage(`¡${powerUpType.name}!`, powerUpType.color);
+    UI.showScreenMessage(`${powerUpType.name}!`, powerUpType.color);
     AudioManager.playSound("powerUp");
 
     console.log(`⚡ Power-up activado: ${powerUpType.name}`);
@@ -229,40 +205,29 @@ const Player = {
   deactivatePowerUp() {
     if (!this.activePowerUp) return;
 
-    // Efectos de desactivación según el tipo
-    switch (this.activePowerUp.id) {
-      case 3: // Rapid Fire
-        BulletManager.setRapidFire(false);
-        break;
-    }
-
     console.log(`⚡ Power-up desactivado: ${this.activePowerUp.name}`);
     this.activePowerUp = null;
     this.powerUpTimeLeft = 0;
   },
 
   // ======================================================
-  // SISTEMA DE DAÑO Y VIDAS
+  // SISTEMA DE DAÑO Y VIDAS - CORREGIDO SEGÚN ORIGINAL
   // ======================================================
 
   /**
-   * El jugador recibe daño
+   * El jugador recibe daño - CORREGIDO SEGÚN ORIGINAL
    */
   takeDamage() {
-    // Si tiene escudo activo, es inmune
-    if (this.shieldActive) {
-      console.log("🛡️ Daño bloqueado por escudo");
-      return false;
-    }
-
-    // Si es invulnerable, no recibir daño
+    // 🔥 CORREGIDO: Si es invulnerable, no recibir daño
     if (this.invulnerabilityTime > 0) {
       return false;
     }
 
     // Reducir vidas
     this.lives--;
-    this.invulnerabilityTime = GameConfig.PLAYER_CONFIG.invulnerabilityFrames;
+
+    // 🔥 CORREGIDO: Invulnerabilidad como en el original
+    this.invulnerabilityTime = 120; // 2 segundos a 60fps
     this.damaged = true;
 
     // Efectos visuales y sonoros
@@ -288,39 +253,33 @@ const Player = {
   },
 
   /**
-   * Recupera una vida
+   * Recupera una vida - CORREGIDO SEGÚN ORIGINAL
    */
   addLife() {
-    if (this.lives < GameConfig.MAX_LIVES) {
-      this.lives++;
-      AudioManager.playSound("heart");
-      UI.showScreenMessage(
-        this.lives > 10
-          ? `¡Vida recuperada! ❤️ (${this.lives} vidas)`
-          : "¡Vida recuperada! ❤️",
-        "#FF0000"
-      );
+    // 🔥 CORREGIDO: Permitir más de 14 vidas como en el original
+    this.lives++;
+    AudioManager.playSound("heart");
 
-      console.log(`❤️ Vida recuperada. Total: ${this.lives}`);
-      return true;
-    } else {
-      // Si está al máximo, dar puntos bonus
-      const bonusPoints = 500;
-      window.setScore(window.getScore() + bonusPoints);
-      UI.showScreenMessage(`¡Vida máxima! +${bonusPoints} puntos`, "#FFD700");
-      return false;
-    }
+    const lifeMessage =
+      this.lives > 10
+        ? `¡Vida recuperada! ❤️ (${this.lives} vidas)`
+        : "¡Vida recuperada! ❤️";
+
+    UI.showScreenMessage(lifeMessage, "#FF0000");
+
+    console.log(`❤️ Vida recuperada. Total: ${this.lives}`);
+    return true;
   },
 
   // ======================================================
-  // COLISIONES
+  // COLISIONES - CORREGIDAS
   // ======================================================
 
   /**
-   * Verifica colisiones con enemigos
+   * Verifica colisiones con enemigos - CORREGIDO
    */
   checkEnemyCollisions(enemies) {
-    if (this.invulnerabilityTime > 0 || this.shieldActive) {
+    if (this.invulnerabilityTime > 0) {
       return false;
     }
 
@@ -384,7 +343,7 @@ const Player = {
   },
 
   /**
-   * Verifica colisiones con el boss
+   * Verifica colisiones con el boss (si existe)
    */
   checkBossCollisions() {
     if (!BossManager.isActive()) return false;
@@ -392,16 +351,6 @@ const Player = {
     const boss = BossManager.getBoss();
     if (this.checkCollisionWith(boss)) {
       return this.takeDamage();
-    }
-
-    // Verificar colisiones con minas del boss
-    const mines = BossManager.getMines();
-    for (let i = 0; i < mines.length; i++) {
-      if (this.checkCollisionWith(mines[i]) && mines[i].armed) {
-        // Explotar mina
-        BossManager.explodeMine(i);
-        return this.takeDamage();
-      }
     }
 
     return false;
@@ -420,16 +369,34 @@ const Player = {
   },
 
   // ======================================================
-  // RENDERIZADO
+  // RENDERIZADO - CORREGIDO SEGÚN ORIGINAL
   // ======================================================
 
   /**
-   * Dibuja el jugador en el canvas
+   * Dibuja el jugador en el canvas - CORREGIDO SEGÚN ORIGINAL
    */
   draw(ctx) {
-    if (!this.visible) return;
+    // 🔥 CORREGIDO: Siempre actualizar posición
+    this.x = this.mouseX - this.width / 2;
+    this.y = this.mouseY - this.height / 2;
 
-    // Configurar transparencia si es invulnerable
+    // Mantener dentro de los límites
+    const canvas = window.getCanvas();
+    this.x = Math.max(0, Math.min(canvas.width - this.width, this.x));
+    this.y = Math.max(0, Math.min(canvas.height - this.height, this.y));
+
+    // 🔥 CORREGIDO: Siempre visible durante el juego activo, solo parpadear si es invulnerable
+    if (window.getGameTime && !window.isGameEnded()) {
+      if (this.invulnerabilityTime > 0) {
+        this.visible = window.getGameTime() % 10 < 5; // Parpadeo cada 10 frames
+      } else {
+        this.visible = true; // SIEMPRE visible si no es invulnerable
+      }
+    } else {
+      this.visible = true; // Visible en menús y transiciones
+    }
+
+    // 🔥 CORREGIDO: Configurar transparencia si es invulnerable
     if (this.invulnerabilityTime > 0) {
       ctx.globalAlpha = 0.7;
     }
@@ -444,16 +411,16 @@ const Player = {
         this.height
       );
     } else {
-      // Respaldo visual
+      // 🔥 CORREGIDO: Fallback visible como en el original
       ctx.fillStyle = "#FF0000";
       ctx.fillRect(this.x, this.y, this.width, this.height);
 
-      // Círculo interno
       const centerX = this.x + this.width / 2;
       const centerY = this.y + this.height / 2;
+
       ctx.beginPath();
-      ctx.arc(centerX, centerY, this.width * 0.3, 0, Math.PI * 2);
-      ctx.strokeStyle = "#FFFFFF";
+      ctx.arc(centerX, centerY, this.width * 0.6, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
       ctx.lineWidth = 2;
       ctx.stroke();
     }
@@ -466,13 +433,13 @@ const Player = {
   },
 
   /**
-   * Dibuja efectos visuales del jugador
+   * Dibuja efectos visuales del jugador - CORREGIDO SEGÚN ORIGINAL
    */
   drawEffects(ctx) {
     const centerX = this.x + this.width / 2;
     const centerY = this.y + this.height / 2;
 
-    // Crosshair
+    // 🔥 CORREGIDO: Crosshair como en el original
     ctx.strokeStyle = "rgba(255, 0, 0, 0.8)";
     ctx.lineWidth = 1;
     const size = this.width * 0.3;
@@ -489,39 +456,14 @@ const Player = {
     ctx.lineTo(centerX, centerY + size);
     ctx.stroke();
 
-    // Escudo protector
-    if (this.shieldActive) {
-      const shieldSize = this.width * 0.8;
-      const opacity = 0.3 + Math.sin(window.getGameTime() * 0.3) * 0.2;
+    // 🔥 CORREGIDO: Círculo exterior
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, this.width * 0.6, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, shieldSize, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(0, 255, 0, ${opacity})`;
-      ctx.lineWidth = 4;
-      ctx.stroke();
-
-      // Efecto de brillo
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = "#00FF00";
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-    }
-
-    // Aura de power-up
-    if (this.activePowerUp) {
-      const auraSize = this.width * 0.9;
-      const opacity = 0.4 + Math.sin(window.getGameTime() * 0.2) * 0.2;
-
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, auraSize, 0, Math.PI * 2);
-      ctx.strokeStyle = `${this.activePowerUp.color}${Math.floor(
-        opacity * 255
-      ).toString(16)}`;
-      ctx.lineWidth = 3;
-      ctx.stroke();
-    }
-
-    // Círculo exterior cuando es invulnerable
+    // 🔥 CORREGIDO: Escudo si es invulnerable
     if (this.invulnerabilityTime > 0) {
       const shieldSize = this.width * 0.7;
       ctx.beginPath();
@@ -530,6 +472,16 @@ const Player = {
         0.3 + Math.sin(window.getGameTime() * 0.2) * 0.2
       })`;
       ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Aura de power-up
+    if (this.activePowerUp) {
+      const auraSize = this.width * 0.8;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, auraSize, 0, Math.PI * 2);
+      ctx.strokeStyle = `${this.activePowerUp.color}80`;
+      ctx.lineWidth = 3;
       ctx.stroke();
     }
   },
@@ -559,11 +511,8 @@ const Player = {
   getPowerUpTimeLeft() {
     return this.powerUpTimeLeft;
   },
-  isShieldActive() {
-    return this.shieldActive;
-  },
   isInvulnerable() {
-    return this.invulnerabilityTime > 0 || this.shieldActive;
+    return this.invulnerabilityTime > 0;
   },
 
   /**
@@ -572,14 +521,12 @@ const Player = {
   reset() {
     this.name = "";
     this.avatar = "";
-    this.lives = GameConfig.PLAYER_CONFIG.initialLives;
+    this.lives = 7;
     this.invulnerabilityTime = 0;
     this.visible = true;
     this.damaged = false;
     this.activePowerUp = null;
     this.powerUpTimeLeft = 0;
-    this.shieldActive = false;
-    this.shieldTimeLeft = 0;
 
     console.log("🔄 Jugador reseteado");
   },
@@ -588,4 +535,4 @@ const Player = {
 // Hacer disponible globalmente
 window.Player = Player;
 
-console.log("👤 player.js cargado - Gestión del jugador lista");
+console.log("👤 player.js cargado y corregido");

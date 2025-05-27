@@ -1,14 +1,7 @@
 /**
- * Hell Shooter - Main Game File
- * Archivo principal que coordina todos los módulos del juego
+ * Hell Shooter - Main Game File CORREGIDO
+ * Archivo principal basado en el código original funcional
  */
-
-// ======================================================
-// IMPORTS - Cargar todos los módulos
-// ======================================================
-
-// Se cargarán automáticamente por los tags script en el HTML
-// config.js, player.js, enemies.js, bullets.js, powerups.js, boss.js, ui.js, audio.js
 
 // ======================================================
 // VARIABLES GLOBALES PRINCIPALES
@@ -211,7 +204,7 @@ function startGameLoop() {
 }
 
 /**
- * Bucle principal del juego
+ * Bucle principal del juego - CORREGIDO
  */
 function gameLoop() {
   if (gameEnded) return;
@@ -237,8 +230,13 @@ function gameLoop() {
       BossManager.update();
     }
 
-    // Verificar colisiones
+    // 🔥 CORREGIDO: Verificar colisiones y contar enemigos eliminados
     checkCollisions();
+
+    // 🔥 CORREGIDO: Verificar si el nivel está completo
+    if (EnemyManager.isLevelComplete()) {
+      nextLevel();
+    }
 
     // Dibujar elementos
     Player.draw(ctx);
@@ -258,11 +256,13 @@ function gameLoop() {
 }
 
 /**
- * Verificar todas las colisiones
+ * Verificar todas las colisiones - CORREGIDO
  */
 function checkCollisions() {
-  // Balas vs Enemigos
-  BulletManager.checkEnemyCollisions(EnemyManager.enemies);
+  // 🔥 CORREGIDO: Balas vs Enemigos - contar enemigos eliminados
+  const enemiesKilledByBullets = BulletManager.checkEnemyCollisions(
+    EnemyManager.enemies
+  );
 
   // Jugador vs Enemigos
   if (Player.checkEnemyCollisions(EnemyManager.enemies)) {
@@ -286,25 +286,23 @@ function checkCollisions() {
 }
 
 /**
- * Iniciar un nuevo nivel
+ * Iniciar un nuevo nivel - CORREGIDO
  */
 function startLevel() {
   console.log(`🎯 Iniciando nivel ${level}`);
 
-  // Configurar enemigos para el nivel
+  // 🔥 CORREGIDO: Configurar enemigos para el nivel
   EnemyManager.setupLevel(level);
+
+  // 🔥 ELIMINADO: Ya no hay startNewLevel para PowerUpManager
 
   // Si es nivel 10, preparar boss
   if (level === 10) {
     BossManager.init();
-  } else {
-    // Reiniciar sistemas para nuevo nivel
-    PowerUpManager.reset();
   }
 
   // Mostrar transición de nivel
   UI.showLevelTransition(level, () => {
-    // Callback cuando termina la transición
     console.log(`✅ Nivel ${level} iniciado`);
   });
 }
@@ -359,7 +357,7 @@ function drawBackground() {
 }
 
 /**
- * Game Over - VERSIÓN ACTUALIZADA
+ * Game Over
  */
 function gameOver() {
   gameEnded = true;
@@ -380,7 +378,7 @@ function gameOver() {
 }
 
 /**
- * Victoria - VERSIÓN ACTUALIZADA
+ * Victoria
  */
 function victory() {
   gameEnded = true;
@@ -412,7 +410,7 @@ function restartGame() {
 }
 
 /**
- * Resetear estado del juego - VERSIÓN ACTUALIZADA
+ * Resetear estado del juego
  */
 function resetGameState() {
   // Detener intervalos
@@ -468,7 +466,7 @@ function backToMenu() {
 }
 
 // ======================================================
-// SISTEMA DE RANKING - AGREGAR ESTO A main.js
+// SISTEMA DE RANKING
 // ======================================================
 
 // URL de tu Web App de Google Sheets
@@ -486,7 +484,6 @@ async function saveScore() {
   console.log("🚀 Guardando puntuación...");
 
   try {
-    // Validar datos antes de enviar
     const playerName = Player.getName();
     const playerAvatar = Player.getAvatar();
 
@@ -494,7 +491,6 @@ async function saveScore() {
       throw new Error("Datos del jugador incompletos");
     }
 
-    // Crear URL con parámetros
     const params = new URLSearchParams();
     params.append("action", "save");
     params.append("date", new Date().toISOString());
@@ -514,16 +510,14 @@ async function saveScore() {
     const urlWithParams = `${WEBAPP_URL}?${params.toString()}`;
     console.log("📡 Enviando a:", urlWithParams);
 
-    // Timeout para la petición
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch(urlWithParams, {
       signal: controller.signal,
     });
 
     clearTimeout(timeoutId);
-
     const result = await response.json();
 
     if (result.success) {
@@ -550,7 +544,6 @@ async function saveScore() {
  * Guarda puntuación y muestra ranking
  */
 async function saveAndViewRanking() {
-  // Verificar si ya se guardó o se está guardando
   if (scoreAlreadySaved) {
     alert("⚠️ La puntuación ya fue guardada anteriormente.");
     viewRanking();
@@ -563,17 +556,13 @@ async function saveAndViewRanking() {
     return;
   }
 
-  // Marcar que se está guardando
   isSaving = true;
 
   try {
     const saveResult = await saveScore();
 
     if (saveResult) {
-      // Marcar como guardado exitosamente
       scoreAlreadySaved = true;
-
-      // Cambiar el texto del botón para indicar que ya se guardó
       const saveButton = document.querySelector("#game-over button");
       if (saveButton && saveButton.textContent.includes("Guardar")) {
         saveButton.textContent = "✅ Ya Guardado - Ver Ranking";
@@ -584,14 +573,12 @@ async function saveAndViewRanking() {
       }
     }
 
-    // Mostrar ranking
     viewRanking();
     document.getElementById("game-over").style.display = "none";
   } catch (error) {
     console.error("Error al guardar:", error);
     alert("❌ Error al guardar la puntuación. Inténtalo de nuevo.");
   } finally {
-    // Permitir intentos futuros si falló
     isSaving = false;
   }
 }
@@ -628,7 +615,6 @@ async function viewRanking() {
       return;
     }
 
-    // Procesar datos usando los nombres de columnas exactos
     const processedPlayers = players.map((player) => ({
       date: player.date || "",
       avatar: player.avatar || "👤",
@@ -640,7 +626,6 @@ async function viewRanking() {
       status: player.status || "Derrota",
     }));
 
-    // Ordenar por puntuación (descendente) y luego por tiempo (ascendente)
     const sortedPlayers = processedPlayers.sort((a, b) => {
       if (b.score !== a.score) {
         return b.score - a.score;
@@ -648,10 +633,8 @@ async function viewRanking() {
       return a.time - b.time;
     });
 
-    // Tomar solo los primeros 10
     const top10 = sortedPlayers.slice(0, 10);
 
-    // Generar HTML del ranking
     rankingContainer.innerHTML = `
             <h2>🏆 Ranking de Jugadores 🏆</h2>
             <table>
@@ -737,4 +720,4 @@ window.getScore = () => score;
 window.setScore = (newScore) => (score = newScore);
 window.isGameEnded = () => gameEnded;
 
-console.log("📁 main.js cargado correctamente");
+console.log("📁 main.js cargado y corregido");
