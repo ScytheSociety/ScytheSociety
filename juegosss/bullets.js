@@ -1,6 +1,6 @@
 /**
- * Hell Shooter - Bullet Management CORREGIDO
- * Sistema de balas basado en el código original funcional
+ * Hell Shooter - Bullet Management ÉPICO
+ * Sistema de balas con MÁXIMO 3 BALAS y más acción
  */
 
 const BulletManager = {
@@ -22,24 +22,24 @@ const BulletManager = {
   enemiesForSpecialPower: 0,
   specialPowerReady: false,
   specialPowerActive: false,
-  ENEMIES_FOR_SPECIAL: 25,
+  ENEMIES_FOR_SPECIAL: 20, // 🔥 REDUCIDO para más acción
 
   // ======================================================
   // INICIALIZACIÓN Y CONTROL
   // ======================================================
 
   /**
-   * Inicia el disparo automático
+   * Inicia el disparo automático - MÁS RÁPIDO
    */
   startAutoShoot() {
-    this.stopAutoShoot(); // Limpiar intervalo anterior
+    this.stopAutoShoot();
 
     const level = window.getLevel();
 
-    // 🔥 CORREGIDO: Cálculo de delay como en el código original
-    const baseDelay = 200;
-    const reductionPerLevel = 15;
-    const minDelay = 80;
+    // 🔥 MÁS RÁPIDO: Disparo base más veloz
+    const baseDelay = 150; // Era 200ms, ahora 150ms
+    const reductionPerLevel = 12; // Era 15ms, ahora 12ms
+    const minDelay = 60; // Era 80ms, ahora 60ms
     const shootDelay = Math.max(
       minDelay,
       baseDelay - level * reductionPerLevel
@@ -49,7 +49,7 @@ const BulletManager = {
       this.shootBullet();
     }, shootDelay);
 
-    console.log(`🔫 Auto-disparo iniciado: ${shootDelay}ms`);
+    console.log(`🔫 Auto-disparo ÉPICO: ${shootDelay}ms`);
   },
 
   /**
@@ -63,28 +63,28 @@ const BulletManager = {
   },
 
   // ======================================================
-  // CREACIÓN DE BALAS - CORREGIDO SEGÚN CÓDIGO ORIGINAL
+  // CREACIÓN DE BALAS - MÁXIMO 3 BALAS
   // ======================================================
 
   /**
-   * Dispara una bala normal - BASADO EN EL CÓDIGO ORIGINAL
+   * Dispara una bala normal - MÁXIMO 3 BALAS
    */
   shootBullet() {
     const currentTime = Date.now();
     const level = window.getLevel();
     const canvas = window.getCanvas();
 
-    // 🔥 CORREGIDO: Cooldown como en el original
-    const cooldownTime = Math.max(80, 200 - level * 12);
+    // 🔥 Cooldown más rápido
+    const cooldownTime = Math.max(60, 150 - level * 10);
 
     if (currentTime - this.lastShootTime > cooldownTime) {
-      // 🔥 CORREGIDO: Velocidad de bala como en el original
-      const bulletSpeed = canvas.height * (0.015 + level * 0.002);
+      // 🔥 Velocidad de bala más rápida
+      const bulletSpeed = canvas.height * (0.018 + level * 0.003);
 
       // Obtener power-up activo
       const activePowerUp = Player.getActivePowerUp();
 
-      // 🔥 CORREGIDO: Configuración como en el original
+      // 🔥 MÁXIMO 3 BALAS SIEMPRE
       let bulletCount = 1;
       let spreadAngle = Math.PI / 12;
       let bulletConfig = {
@@ -98,12 +98,12 @@ const BulletManager = {
         switch (activePowerUp.id) {
           case 0: // Penetrante
             bulletConfig.penetrating = true;
-            bulletConfig.penetrationCount = 3;
+            bulletConfig.penetrationCount = 4; // 🔥 MÁS PENETRACIÓN
             break;
 
           case 1: // Disparo Amplio
-            bulletCount = 7; // 🔥 Como en el original
-            spreadAngle = Math.PI / 8; // 🔥 Como en el original
+            bulletCount = 3; // 🔥 MÁXIMO 3 BALAS
+            spreadAngle = Math.PI / 6; // Más dispersión
             break;
 
           case 2: // Explosivo
@@ -113,12 +113,14 @@ const BulletManager = {
           case 3: // Rapid Fire - manejado por el intervalo
             break;
         }
-      } else if (level >= 3) {
-        // 🔥 CORREGIDO: Sin power-up, máximo 5 balas como en el original
-        bulletCount = Math.min(1 + Math.floor(level / 3), 5);
+      } else {
+        // 🔥 SIN POWER-UP: MÁXIMO 3 BALAS según nivel
+        if (level >= 2) bulletCount = 2;
+        if (level >= 4) bulletCount = 3;
+        // NUNCA más de 3 balas
       }
 
-      // 🔥 CORREGIDO: Crear balas exactamente como en el original
+      // Crear balas
       const playerPos = Player.getPosition();
       const playerSize = Player.getSize();
 
@@ -132,7 +134,7 @@ const BulletManager = {
           width: GameConfig.BULLET_WIDTH,
           height: GameConfig.BULLET_HEIGHT,
           velocityX: Math.sin(angle) * bulletSpeed,
-          velocityY: -Math.cos(angle) * bulletSpeed, // 🔥 CORREGIDO: Hacia arriba
+          velocityY: -Math.cos(angle) * bulletSpeed,
 
           // Propiedades especiales
           penetrating: bulletConfig.penetrating,
@@ -157,7 +159,7 @@ const BulletManager = {
   },
 
   /**
-   * Activa el poder especial - CORREGIDO
+   * Activa el poder especial - MÁS ÉPICO
    */
   activateSpecialPower() {
     if (!this.specialPowerReady || this.specialPowerActive) return;
@@ -170,9 +172,9 @@ const BulletManager = {
     const playerSize = Player.getSize();
     const canvas = window.getCanvas();
 
-    // 🔥 CORREGIDO: Configuración como en el original
-    const bulletCount = 16;
-    const bulletSpeed = canvas.height * 0.01;
+    // 🔥 MÁS BALAS ESPECIALES
+    const bulletCount = 20; // Era 16, ahora 20
+    const bulletSpeed = canvas.height * 0.012; // Más rápidas
 
     // Crear balas en círculo
     for (let i = 0; i < bulletCount; i++) {
@@ -189,7 +191,7 @@ const BulletManager = {
         // Propiedades especiales
         explosive: true,
         fromSpecialPower: true,
-        life: 3000 / 16.67, // 3 segundos en frames
+        life: 4000 / 16.67, // 4 segundos en frames (más duración)
 
         level: window.getLevel(),
       };
@@ -197,27 +199,27 @@ const BulletManager = {
       this.specialBullets.push(specialBullet);
     }
 
-    // Efectos
+    // Efectos más épicos
     UI.createParticleEffect(
       playerPos.x + playerSize.width / 2,
       playerPos.y + playerSize.height / 2,
       "#FF0000",
-      50
+      80 // Más partículas
     );
 
     AudioManager.playSound("special");
-    UI.showScreenMessage("🔥 PODER ESPECIAL", "#FF0000");
+    UI.showScreenMessage("🔥 PODER DEVASTADOR 🔥", "#FF0000");
 
     // Resetear estado
     setTimeout(() => {
       this.specialPowerActive = false;
-    }, 3000);
+    }, 4000); // Más duración
 
-    console.log("🔥 Poder especial activado");
+    console.log("🔥 Poder especial ÉPICO activado");
   },
 
   // ======================================================
-  // ACTUALIZACIÓN Y MOVIMIENTO - CORREGIDO
+  // ACTUALIZACIÓN Y MOVIMIENTO
   // ======================================================
 
   /**
@@ -236,7 +238,7 @@ const BulletManager = {
     for (let i = 0; i < this.bullets.length; i++) {
       const bullet = this.bullets[i];
 
-      // 🔥 CORREGIDO: Movimiento simple y directo
+      // Movimiento más fluido
       bullet.x += bullet.velocityX;
       bullet.y += bullet.velocityY;
     }
@@ -285,11 +287,11 @@ const BulletManager = {
   },
 
   // ======================================================
-  // SISTEMA DE COLISIONES - CORREGIDO
+  // SISTEMA DE COLISIONES
   // ======================================================
 
   /**
-   * Verifica colisiones con enemigos - CORREGIDO
+   * Verifica colisiones con enemigos
    */
   checkEnemyCollisions(enemies) {
     let totalKilled = 0;
@@ -308,7 +310,7 @@ const BulletManager = {
   },
 
   /**
-   * Verifica colisiones de un array de balas - CORREGIDO
+   * Verifica colisiones de un array de balas
    */
   checkBulletCollisions(bulletArray, enemies, isSpecial) {
     let enemiesKilled = 0;
@@ -352,18 +354,28 @@ const BulletManager = {
         enemies.splice(i, 1);
         enemiesKilled++;
 
-        // 🔥 CORREGIDO: Solo contar para poder especial si no es bala especial
+        // Solo contar para poder especial si no es bala especial
         if (!isSpecial) {
           this.enemiesForSpecialPower++;
           this.checkSpecialPowerReady();
         }
 
-        // 🔥 CORREGIDO: Notificar al EnemyManager
+        // 🔥 INCREMENTAR COMBO en el sistema de combos
+        if (window.ComboSystem) {
+          window.ComboSystem.addKill();
+        }
+
+        // Notificar al EnemyManager
         EnemyManager.enemiesKilled++;
 
-        // Calcular puntos
+        // Calcular puntos con combo
         const basePoints = 10 * window.getLevel();
-        window.setScore(window.getScore() + basePoints);
+        const comboMultiplier = window.ComboSystem
+          ? window.ComboSystem.getMultiplier()
+          : 1;
+        const finalPoints = Math.floor(basePoints * comboMultiplier);
+
+        window.setScore(window.getScore() + finalPoints);
 
         AudioManager.playSound("hit");
 
@@ -378,25 +390,25 @@ const BulletManager = {
   },
 
   /**
-   * Verifica si el poder especial está listo - CORREGIDO
+   * Verifica si el poder especial está listo
    */
   checkSpecialPowerReady() {
     if (this.enemiesForSpecialPower >= this.ENEMIES_FOR_SPECIAL) {
       this.specialPowerReady = true;
-      this.enemiesForSpecialPower = this.ENEMIES_FOR_SPECIAL; // Cap al máximo
+      this.enemiesForSpecialPower = this.ENEMIES_FOR_SPECIAL;
 
-      UI.showScreenMessage("🔥 PODER ESPECIAL LISTO", "#FF0000");
+      UI.showScreenMessage("🔥 PODER LISTO", "#FF0000");
       console.log("🔥 Poder especial cargado");
     }
   },
 
   /**
-   * Crea una explosión que daña enemigos cercanos
+   * Crea una explosión épica
    */
   createExplosion(center, enemies) {
-    const explosionRadius = 120; // Radio fijo
+    const explosionRadius = 140; // Radio más grande
 
-    // Crear efecto visual
+    // Crear efecto visual más épico
     UI.createExplosionEffect(center.x, center.y);
 
     // Dañar enemigos en el radio
@@ -415,11 +427,21 @@ const BulletManager = {
       if (distance < explosionRadius) {
         enemies.splice(i, 1);
 
-        // 🔥 CORREGIDO: Notificar al EnemyManager
+        // Notificar al EnemyManager
         EnemyManager.enemiesKilled++;
 
-        // Puntos por explosión
-        const explosionPoints = 5 * window.getLevel();
+        // 🔥 INCREMENTAR COMBO
+        if (window.ComboSystem) {
+          window.ComboSystem.addKill();
+        }
+
+        // Puntos por explosión con combo
+        const basePoints = 5 * window.getLevel();
+        const comboMultiplier = window.ComboSystem
+          ? window.ComboSystem.getMultiplier()
+          : 1;
+        const explosionPoints = Math.floor(basePoints * comboMultiplier);
+
         window.setScore(window.getScore() + explosionPoints);
       }
     }
@@ -438,7 +460,7 @@ const BulletManager = {
   },
 
   // ======================================================
-  // RENDERIZADO - CORREGIDO
+  // RENDERIZADO
   // ======================================================
 
   /**
@@ -453,7 +475,7 @@ const BulletManager = {
   },
 
   /**
-   * Dibuja un array de balas
+   * Dibuja un array de balas con efectos épicos
    */
   drawBulletArray(ctx, bulletArray, isSpecial) {
     for (const bullet of bulletArray) {
@@ -462,16 +484,16 @@ const BulletManager = {
       // Configurar efectos visuales según tipo
       if (bullet.penetrating) {
         ctx.shadowColor = "#FFFF00";
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 12; // Más brillo
       } else if (bullet.explosive) {
         ctx.shadowColor = "#FF8800";
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 12; // Más brillo
       } else if (isSpecial) {
         ctx.shadowColor = "#FF0000";
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 20; // Mucho más brillo
       }
 
-      // 🔥 CORREGIDO: Rotación basada en dirección
+      // Rotación basada en dirección
       const angle =
         Math.atan2(bullet.velocityY, bullet.velocityX) + Math.PI / 2;
 
@@ -544,9 +566,11 @@ const BulletManager = {
     this.specialPowerActive = false;
     this.lastShootTime = 0;
 
-    console.log("🔫 Sistema de balas reseteado");
+    console.log("🔫 Sistema de balas ÉPICO reseteado");
   },
 };
 
 // Hacer disponible globalmente
 window.BulletManager = BulletManager;
+
+console.log("🔫 bullets.js ÉPICO cargado");

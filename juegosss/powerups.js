@@ -1,6 +1,6 @@
 /**
- * Hell Shooter - PowerUp Management CORREGIDO
- * Sistema de power-ups y corazones balanceado como el original
+ * Hell Shooter - PowerUp Management ÉPICO
+ * Sistema de power-ups y corazones con combos y más acción
  */
 
 const PowerUpManager = {
@@ -11,10 +11,6 @@ const PowerUpManager = {
   powerUps: [],
   hearts: [],
 
-  // 🔥 CORREGIDO: Control de spawn como en el original
-  heartSpawned: false,
-  powerUpsSpawned: false,
-
   // ======================================================
   // ACTUALIZACIÓN PRINCIPAL
   // ======================================================
@@ -23,9 +19,12 @@ const PowerUpManager = {
    * Actualiza todos los power-ups y corazones
    */
   update() {
-    // 🔥 CORREGIDO: Spawn controlado como en el original
+    // 🔥 Spawn más frecuente y dinámico
     this.trySpawnHeart();
     this.trySpawnPowerUp();
+
+    // Eventos especiales aleatorios
+    this.checkSpecialEvents();
 
     // Actualizar items existentes
     this.updatePowerUps();
@@ -36,24 +35,62 @@ const PowerUpManager = {
   },
 
   // ======================================================
-  // SISTEMA DE CORAZONES - CORREGIDO SEGÚN ORIGINAL
+  // SISTEMA DE CORAZONES - ÉPICO Y BALANCEADO
   // ======================================================
 
   /**
-   * Intenta crear un corazón - CORREGIDO según el código original
+   * Intenta crear un corazón - SISTEMA ÉPICO basado en combos
    */
   trySpawnHeart() {
-    // 🔥 CORREGIDO: Un corazón por nivel máximo, como en el original
-    if (this.heartSpawned || this.hearts.length >= 1) return;
+    // 🔥 Máximo 3 corazones en pantalla
+    if (this.hearts.length >= 3) return;
 
-    // 🔥 CORREGIDO: Probabilidad MUCHO más baja, como en el original
-    const spawnChance = 0.0012; // Reducido de 0.01
+    const playerLives = Player.getLives();
+    const combo = window.ComboSystem ? window.ComboSystem.getCurrentCombo() : 0;
 
-    if (Math.random() < spawnChance) {
-      this.spawnHeart();
-      this.heartSpawned = true; // 🔥 IMPORTANTE: Marcar como spawneado
-      console.log("❤️ Corazón spawneado - uno por nivel máximo");
+    // 🔥 PROBABILIDAD DINÁMICA basada en vidas y combos
+    let baseChance = 0.001; // Base baja
+
+    // Aumentar según vidas perdidas
+    if (playerLives <= 2) {
+      baseChance *= 6; // 6x más probable con muy pocas vidas
+    } else if (playerLives <= 4) {
+      baseChance *= 3; // 3x más probable con pocas vidas
+    } else if (playerLives <= 6) {
+      baseChance *= 1.5; // 1.5x más probable con vidas medias
     }
+
+    // 🔥 BONUS POR COMBO - Más combos = más corazones
+    if (combo >= 10) {
+      baseChance *= 1.5; // 50% más probable con combo 10+
+    }
+    if (combo >= 20) {
+      baseChance *= 2; // 2x más probable con combo 20+
+    }
+    if (combo >= 30) {
+      baseChance *= 2.5; // 2.5x más probable con combo 30+
+    }
+
+    // 🔥 LÍMITE INTELIGENTE: Si tienes muchas vidas, reducir dramáticamente
+    if (playerLives >= 10) {
+      baseChance *= 0.1; // 90% menos probable con muchas vidas
+    }
+
+    if (Math.random() < baseChance) {
+      this.spawnHeart();
+      console.log(
+        `❤️ Corazón spawneado (Vidas: ${playerLives}, Combo: ${combo})`
+      );
+    }
+  },
+
+  /**
+   * Fuerza el spawn de un corazón (para combos)
+   */
+  forceSpawnHeart() {
+    if (this.hearts.length >= 3) return;
+    this.spawnHeart();
+    console.log("❤️ Corazón forzado por combo");
   },
 
   /**
@@ -67,10 +104,10 @@ const PowerUpManager = {
     const x = size + Math.random() * (canvas.width - size * 2);
     const y = -size;
 
-    // 🔥 CORREGIDO: Velocidad como en el original
+    // 🔥 Velocidad más lenta para ser más fácil de agarrar
     const level = window.getLevel();
-    const levelSpeedFactor = 1 + level * 0.1;
-    const speed = canvas.height * 0.003 * levelSpeedFactor;
+    const levelSpeedFactor = 1 + level * 0.08; // Reducido
+    const speed = canvas.height * 0.002 * levelSpeedFactor; // Más lento
 
     const heart = {
       x: x,
@@ -78,10 +115,11 @@ const PowerUpManager = {
       width: size,
       height: size,
       velocityY: speed,
-      velocityX: (Math.random() - 0.5) * speed * 0.5,
+      velocityX: (Math.random() - 0.5) * speed * 0.3, // Menos errático
 
-      // Efectos visuales
+      // Efectos visuales mejorados
       pulseTimer: 0,
+      glowIntensity: 0,
       spawnTime: window.getGameTime(),
     };
 
@@ -97,53 +135,78 @@ const PowerUpManager = {
     for (let i = 0; i < this.hearts.length; i++) {
       const heart = this.hearts[i];
 
-      // Movimiento
+      // Movimiento más suave
       heart.x += heart.velocityX;
       heart.y += heart.velocityY;
 
-      // Rebote en bordes laterales
+      // Rebote más suave en bordes laterales
       if (heart.x <= 0 || heart.x + heart.width >= canvas.width) {
-        heart.velocityX *= -1;
+        heart.velocityX *= -0.8; // Rebote más suave
       }
 
-      // Efectos visuales de pulsación
-      heart.pulseTimer += 0.1;
+      // Efectos visuales mejorados
+      heart.pulseTimer += 0.12;
+      heart.glowIntensity = 0.6 + Math.sin(heart.pulseTimer) * 0.4;
     }
   },
 
   // ======================================================
-  // SISTEMA DE POWER-UPS - CORREGIDO SEGÚN ORIGINAL
+  // SISTEMA DE POWER-UPS - ÉPICO
   // ======================================================
 
   /**
-   * Intenta crear un power-up - CORREGIDO según el código original
+   * Intenta crear un power-up - SISTEMA ÉPICO basado en combos
    */
   trySpawnPowerUp() {
-    // 🔥 CORREGIDO: Un power-up por nivel máximo, como en el original
-    if (this.powerUpsSpawned || this.powerUps.length >= 1) return;
+    // 🔥 Máximo 4 power-ups en pantalla para más acción
+    if (this.powerUps.length >= 4) return;
 
-    // 🔥 CORREGIDO: Probabilidad balanceada, como en el original
-    const spawnChance = 0.001; // Probabilidad moderada
+    const combo = window.ComboSystem ? window.ComboSystem.getCurrentCombo() : 0;
 
-    if (Math.random() < spawnChance) {
+    // 🔥 PROBABILIDAD DINÁMICA basada en combos
+    let baseChance = 0.003; // Base más alta
+
+    // 🔥 BONUS POR COMBO - Más combos = más power-ups
+    if (combo >= 5) {
+      baseChance *= 1.5; // 50% más probable con combo 5+
+    }
+    if (combo >= 10) {
+      baseChance *= 2; // 2x más probable con combo 10+
+    }
+    if (combo >= 20) {
+      baseChance *= 3; // 3x más probable con combo 20+
+    }
+    if (combo >= 30) {
+      baseChance *= 4; // 4x más probable con combo 30+
+    }
+
+    if (Math.random() < baseChance) {
       this.spawnPowerUp();
-      this.powerUpsSpawned = true; // 🔥 IMPORTANTE: Marcar como spawneado
-      console.log("⚡ Power-up spawneado - uno por nivel máximo");
+      console.log(`⚡ Power-up spawneado (Combo: ${combo})`);
     }
   },
 
   /**
-   * Crea un power-up aleatorio
+   * Fuerza el spawn de un power-up (para combos)
+   */
+  forceSpawnPowerUp() {
+    if (this.powerUps.length >= 4) return;
+    this.spawnPowerUp();
+    console.log("⚡ Power-up forzado por combo");
+  },
+
+  /**
+   * Crea un power-up aleatorio - MÁS ÉPICO
    */
   spawnPowerUp() {
     const canvas = window.getCanvas();
 
-    // 🔥 CORREGIDO: Tipos de power-ups como en el original
+    // 🔥 Power-ups mejorados con más duración
     const types = [
-      { id: 0, name: "Balas Penetrantes", color: "#FFFF00", duration: 600 },
-      { id: 1, name: "Disparo Amplio", color: "#00FFFF", duration: 500 },
-      { id: 2, name: "Balas Explosivas", color: "#FF8800", duration: 450 },
-      { id: 3, name: "Disparo Rápido", color: "#FF00FF", duration: 550 },
+      { id: 0, name: "Balas Penetrantes", color: "#FFFF00", duration: 800 }, // +200 frames
+      { id: 1, name: "Disparo Amplio", color: "#00FFFF", duration: 700 }, // +200 frames
+      { id: 2, name: "Balas Explosivas", color: "#FF8800", duration: 650 }, // +200 frames
+      { id: 3, name: "Disparo Rápido", color: "#FF00FF", duration: 750 }, // +200 frames
     ];
 
     const selectedType = types[Math.floor(Math.random() * types.length)];
@@ -158,11 +221,12 @@ const PowerUpManager = {
       y: y,
       width: size,
       height: size,
-      velocityY: canvas.height * 0.003,
-      velocityX: (Math.random() - 0.5) * 0.002 * canvas.height,
+      velocityY: canvas.height * 0.0025, // Más lento para ser más fácil
+      velocityX: (Math.random() - 0.5) * 0.0015 * canvas.height, // Menos errático
 
       type: selectedType,
       pulseTimer: 0,
+      glowIntensity: 0,
       spawnTime: window.getGameTime(),
     };
 
@@ -178,18 +242,78 @@ const PowerUpManager = {
     for (let i = 0; i < this.powerUps.length; i++) {
       const powerUp = this.powerUps[i];
 
-      // Movimiento
+      // Movimiento más suave
       powerUp.x += powerUp.velocityX;
       powerUp.y += powerUp.velocityY;
 
-      // Rebote en paredes laterales
+      // Rebote más suave en paredes laterales
       if (powerUp.x <= 0 || powerUp.x + powerUp.width >= canvas.width) {
-        powerUp.velocityX *= -1;
+        powerUp.velocityX *= -0.8;
       }
 
-      // Efectos visuales
-      powerUp.pulseTimer += 0.1;
+      // Efectos visuales mejorados
+      powerUp.pulseTimer += 0.15;
+      powerUp.glowIntensity = 0.7 + Math.sin(powerUp.pulseTimer) * 0.3;
     }
+  },
+
+  // ======================================================
+  // EVENTOS ESPECIALES ÉPICOS
+  // ======================================================
+
+  /**
+   * Verifica eventos especiales aleatorios
+   */
+  checkSpecialEvents() {
+    // 🔥 Lluvia de meteoritos
+    if (Math.random() < 0.0008) {
+      this.triggerMeteorShower();
+    }
+
+    // 🔥 Tiempo lento
+    if (Math.random() < 0.0012) {
+      this.triggerSlowMotion();
+    }
+
+    // 🔥 Lluvia de power-ups
+    if (Math.random() < 0.0006) {
+      this.triggerPowerUpShower();
+    }
+  },
+
+  /**
+   * Lluvia de meteoritos (enemigos extra agresivos)
+   */
+  triggerMeteorShower() {
+    if (window.ComboSystem) {
+      window.ComboSystem.triggerMeteorShower();
+    }
+  },
+
+  /**
+   * Tiempo lento épico
+   */
+  triggerSlowMotion() {
+    if (window.ComboSystem) {
+      window.ComboSystem.triggerSlowMotion();
+    }
+  },
+
+  /**
+   * Lluvia de power-ups
+   */
+  triggerPowerUpShower() {
+    UI.showScreenMessage("🌟 ¡LLUVIA DE PODER! 🌟", "#FFD700");
+
+    // Crear 3 power-ups con delay
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        this.forceSpawnPowerUp();
+      }, i * 300);
+    }
+
+    AudioManager.playSound("special");
+    console.log("🌟 Lluvia de power-ups activada");
   },
 
   // ======================================================
@@ -203,30 +327,18 @@ const PowerUpManager = {
     const canvas = window.getCanvas();
 
     // Limpiar power-ups
-    const powerUpsRemoved = this.powerUps.length;
     this.powerUps = this.powerUps.filter((powerUp) => {
       return powerUp.y <= canvas.height + 50;
     });
 
-    // Si se eliminó un power-up, permitir spawn de otro
-    if (this.powerUps.length < powerUpsRemoved) {
-      this.powerUpsSpawned = false;
-    }
-
     // Limpiar corazones
-    const heartsRemoved = this.hearts.length;
     this.hearts = this.hearts.filter((heart) => {
       return heart.y <= canvas.height + 50;
     });
-
-    // Si se eliminó un corazón, permitir spawn de otro
-    if (this.hearts.length < heartsRemoved) {
-      this.heartSpawned = false;
-    }
   },
 
   // ======================================================
-  // RENDERIZADO
+  // RENDERIZADO ÉPICO
   // ======================================================
 
   /**
@@ -238,35 +350,41 @@ const PowerUpManager = {
   },
 
   /**
-   * Dibuja los power-ups
+   * Dibuja los power-ups con efectos épicos
    */
   drawPowerUps(ctx) {
     for (const powerUp of this.powerUps) {
       ctx.save();
 
-      // Configurar efectos visuales
+      // Configurar efectos visuales mejorados
       ctx.shadowColor = powerUp.type.color;
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 15 + powerUp.glowIntensity * 8; // Más brillo
 
-      // Efecto de flotación
-      const floatOffset = Math.sin(powerUp.pulseTimer * 2) * 3;
+      // Efecto de flotación más pronunciado
+      const floatOffset = Math.sin(powerUp.pulseTimer * 2) * 5;
       const drawY = powerUp.y + floatOffset;
 
-      // Forma de diamante
+      // Efecto de escala pulsante
+      const scale = 1 + Math.sin(powerUp.pulseTimer * 1.5) * 0.1;
+
+      ctx.translate(powerUp.x + powerUp.width / 2, drawY + powerUp.height / 2);
+      ctx.scale(scale, scale);
+
+      // Forma de diamante mejorada
       ctx.fillStyle = powerUp.type.color;
       ctx.beginPath();
-      ctx.moveTo(powerUp.x + powerUp.width / 2, drawY);
-      ctx.lineTo(powerUp.x + powerUp.width, drawY + powerUp.height / 2);
-      ctx.lineTo(powerUp.x + powerUp.width / 2, drawY + powerUp.height);
-      ctx.lineTo(powerUp.x, drawY + powerUp.height / 2);
+      ctx.moveTo(0, -powerUp.height / 2);
+      ctx.lineTo(powerUp.width / 2, 0);
+      ctx.lineTo(0, powerUp.height / 2);
+      ctx.lineTo(-powerUp.width / 2, 0);
       ctx.closePath();
       ctx.fill();
 
-      // Símbolo interior
+      // Símbolo interior más grande
       ctx.fillStyle = "#FFFFFF";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = `bold ${powerUp.width * 0.4}px Arial`;
+      ctx.font = `bold ${powerUp.width * 0.5}px Arial`; // Más grande
 
       // Símbolo según tipo
       let symbol = "?";
@@ -285,38 +403,43 @@ const PowerUpManager = {
           break; // Rápido
       }
 
-      ctx.fillText(
-        symbol,
-        powerUp.x + powerUp.width / 2,
-        drawY + powerUp.height / 2
-      );
+      ctx.fillText(symbol, 0, 0);
 
       ctx.restore();
     }
   },
 
   /**
-   * Dibuja los corazones - CORREGIDO como en el original
+   * Dibuja los corazones con efectos épicos
    */
   drawHearts(ctx) {
     for (const heart of this.hearts) {
       ctx.save();
 
-      // 🔥 CORREGIDO: Forma de corazón como en el original
-      ctx.fillStyle = "#FF0000";
+      // Configurar efectos visuales mejorados
       ctx.shadowColor = "#FF0000";
-      ctx.shadowBlur = 15;
+      ctx.shadowBlur = 20 + heart.glowIntensity * 15; // Mucho más brillo
 
       const centerX = heart.x + heart.width / 2;
       const centerY = heart.y + heart.height / 2;
       const size = heart.width / 2;
 
-      // Efecto de pulsación como en el original
-      const pulse = 1 + Math.sin(heart.pulseTimer) * 0.1;
+      // Efecto de pulsación más dramático
+      const pulse = 1 + heart.glowIntensity * 0.15;
       ctx.translate(centerX, centerY);
       ctx.scale(pulse, pulse);
 
-      // Dibujar forma de corazón exacta del original
+      // Dibujar forma de corazón con gradiente
+      ctx.fillStyle = "#FF0000";
+      ctx.beginPath();
+      ctx.moveTo(0, -size / 4);
+      ctx.bezierCurveTo(size / 2, -size, size, -size / 4, 0, size);
+      ctx.bezierCurveTo(-size, -size / 4, -size / 2, -size, 0, -size / 4);
+      ctx.fill();
+
+      // Brillo interior más intenso
+      ctx.fillStyle = `rgba(255, 170, 170, ${heart.glowIntensity})`;
+      ctx.scale(0.7, 0.7);
       ctx.beginPath();
       ctx.moveTo(0, -size / 4);
       ctx.bezierCurveTo(size / 2, -size, size, -size / 4, 0, size);
@@ -337,15 +460,11 @@ const PowerUpManager = {
   getHearts() {
     return this.hearts;
   },
-
-  /**
-   * Marca que un nuevo nivel ha comenzado - CORREGIDO
-   */
-  startNewLevel() {
-    // 🔥 CORREGIDO: Resetear flags para nuevo nivel
-    this.heartSpawned = false;
-    this.powerUpsSpawned = false;
-    console.log("🔄 Nuevo nivel - spawn de items permitido");
+  getPowerUpCount() {
+    return this.powerUps.length;
+  },
+  getHeartCount() {
+    return this.hearts.length;
   },
 
   /**
@@ -354,7 +473,6 @@ const PowerUpManager = {
   removePowerUp(index) {
     if (index >= 0 && index < this.powerUps.length) {
       this.powerUps.splice(index, 1);
-      this.powerUpsSpawned = false; // Permitir spawn de otro
       return true;
     }
     return false;
@@ -366,7 +484,6 @@ const PowerUpManager = {
   removeHeart(index) {
     if (index >= 0 && index < this.hearts.length) {
       this.hearts.splice(index, 1);
-      this.heartSpawned = false; // Permitir spawn de otro
       return true;
     }
     return false;
@@ -378,14 +495,12 @@ const PowerUpManager = {
   reset() {
     this.powerUps = [];
     this.hearts = [];
-    this.heartSpawned = false;
-    this.powerUpsSpawned = false;
 
-    console.log("⚡ Sistema de power-ups reseteado");
+    console.log("⚡ Sistema de power-ups ÉPICO reseteado");
   },
 };
 
 // Hacer disponible globalmente
 window.PowerUpManager = PowerUpManager;
 
-console.log("⚡ powerups.js cargado - Sistema de power-ups corregido");
+console.log("⚡ powerups.js ÉPICO cargado");

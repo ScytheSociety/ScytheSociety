@@ -146,6 +146,19 @@ const UI = {
    * Actualiza la información del juego
    */
   updateGameInfo() {
+    // NUEVO: Actualizar información del jugador
+    const playerNameElement = document.getElementById("player-name");
+    const playerAvatarElement = document.getElementById("player-avatar");
+
+    if (playerNameElement && Player.getName()) {
+      playerNameElement.textContent = Player.getName();
+    }
+
+    if (playerAvatarElement && Player.getAvatar()) {
+      playerAvatarElement.textContent = Player.getAvatar();
+    }
+
+    // Resto del código existente...
     const level = window.getLevel();
     const score = window.getScore();
     const gameTime = window.getGameTime();
@@ -432,6 +445,7 @@ const UI = {
                     <p style="margin: 5px 0; font-size: 14px;">• Movimiento: Ratón/Táctil</p>
                     <p style="margin: 5px 0; font-size: 14px;">• Disparo: Automático</p>
                     <p style="margin: 5px 0; font-size: 14px;">• Poder: ESPACIO / 🔥</p>
+                    <p style="margin: 5px 0; font-size: 14px;">• Combos: Elimina enemigos sin parar para multiplicar puntos</p>
                 </div>
                 
                 <div>
@@ -522,12 +536,15 @@ const UI = {
   /**
    * Muestra pantalla de game over
    */
-  showGameOver(isVictory, finalScore, finalLevel) {
+  showGameOver(isVictory, finalScore, finalLevel, maxCombo = 0) {
     const gameOverScreen = document.getElementById("game-over");
     const gameOverText = document.getElementById("game-over-text");
 
     if (gameOverScreen && gameOverText) {
       gameOverText.textContent = isVictory ? "¡VICTORIA! 🏆" : "GAME OVER 💀";
+      if (maxCombo > 0) {
+        gameOverText.textContent += ` - Combo Máximo: ${maxCombo}`;
+      }
       gameOverScreen.style.display = "block";
     }
   },

@@ -1,6 +1,6 @@
 /**
- * Hell Shooter - Main Game File CORREGIDO
- * Archivo principal basado en el código original funcional
+ * Hell Shooter - Main Game File ÉPICO FINAL
+ * Coordinador principal con sistema de combos y efectos especiales
  */
 
 // ======================================================
@@ -14,12 +14,16 @@ let level = 1;
 let score = 0;
 let gameEnded = false;
 
+// 🔥 Variables para efectos especiales globales
+let slowMotionActive = false;
+let slowMotionFactor = 1.0;
+
 // ======================================================
 // INICIALIZACIÓN DEL JUEGO
 // ======================================================
 
 window.onload = function () {
-  console.log("🎮 Hell Shooter - Iniciando juego...");
+  console.log("🎮 Hell Shooter ÉPICO - Iniciando juego...");
 
   // Detectar dispositivo
   GameConfig.detectDevice();
@@ -30,6 +34,7 @@ window.onload = function () {
   // Inicializar módulos
   AudioManager.init();
   UI.init();
+  ComboSystem.init(); // 🔥 NUEVO: Inicializar sistema de combos
 
   // Precargar recursos
   loadGameAssets();
@@ -37,7 +42,7 @@ window.onload = function () {
   // Configurar eventos
   setupEventListeners();
 
-  console.log("✅ Juego inicializado correctamente");
+  console.log("✅ Juego ÉPICO inicializado correctamente");
 };
 
 /**
@@ -65,7 +70,7 @@ function setupCanvas() {
 }
 
 /**
- * Cargar recursos del juego
+ * Cargar recursos del juego - CON BOSS MVP
  */
 function loadGameAssets() {
   fetch("assets.json")
@@ -85,6 +90,23 @@ function loadGameAssets() {
         return img;
       });
 
+      // 🔥 NUEVO: Cargar imagen del boss MVP
+      if (data.boss) {
+        GameConfig.bossImage = new Image();
+        GameConfig.bossImage.src = data.boss;
+        console.log("👑 Imagen del boss cargada");
+      }
+
+      // 🔥 NUEVO: Cargar frames del boss para animación
+      if (data.bossFrames) {
+        GameConfig.bossFrames = data.bossFrames.map((src) => {
+          const img = new Image();
+          img.src = src;
+          return img;
+        });
+        console.log("👑 Frames del boss cargados para animación");
+      }
+
       // Cargar imagen del jugador
       GameConfig.playerImage = new Image();
       GameConfig.playerImage.src = data.player;
@@ -93,7 +115,7 @@ function loadGameAssets() {
       GameConfig.bulletImage = new Image();
       GameConfig.bulletImage.src = data.bullet;
 
-      console.log("✅ Recursos cargados");
+      console.log("✅ Recursos ÉPICOS cargados");
     })
     .catch((error) => {
       console.error("❌ Error cargando recursos:", error);
@@ -125,7 +147,20 @@ function createFallbackImages() {
   GameConfig.bulletImage = new Image();
   GameConfig.bulletImage.src = bulletCanvas.toDataURL();
 
-  console.log("🔄 Imágenes de respaldo creadas");
+  // 🔥 Imagen simple del boss
+  const bossCanvas = document.createElement("canvas");
+  bossCanvas.width = 120;
+  bossCanvas.height = 120;
+  const bossCtx = bossCanvas.getContext("2d");
+  bossCtx.fillStyle = "#8B0000";
+  bossCtx.fillRect(0, 0, 120, 120);
+  bossCtx.fillStyle = "#FFFFFF";
+  bossCtx.fillRect(50, 40, 20, 10); // Ojos
+  bossCtx.fillRect(50, 70, 20, 10); // Boca
+  GameConfig.bossImage = new Image();
+  GameConfig.bossImage.src = bossCanvas.toDataURL();
+
+  console.log("🔄 Imágenes de respaldo ÉPICAS creadas");
 }
 
 /**
@@ -173,13 +208,13 @@ function startGame() {
   // Configurar controles
   Player.setupControls(canvas);
 
-  // Mostrar instrucciones
+  // Mostrar instrucciones épicas
   UI.showInstructions(() => {
     // Callback cuando se confirman las instrucciones
     startGameLoop();
   });
 
-  console.log("🚀 Juego iniciado");
+  console.log("🚀 Juego ÉPICO iniciado");
 }
 
 /**
@@ -200,11 +235,11 @@ function startGameLoop() {
   // Iniciar primer nivel
   startLevel();
 
-  console.log("🔄 Bucle de juego iniciado");
+  console.log("🔄 Bucle de juego ÉPICO iniciado");
 }
 
 /**
- * Bucle principal del juego - CORREGIDO
+ * Bucle principal del juego - ÉPICO CON COMBOS
  */
 function gameLoop() {
   if (gameEnded) return;
@@ -213,11 +248,20 @@ function gameLoop() {
     // Actualizar tiempo
     gameTime++;
 
+    // 🔥 Actualizar sistema de combos
+    ComboSystem.update();
+
     // Limpiar canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Dibujar fondo
     drawBackground();
+
+    // 🔥 Aplicar efectos de tiempo lento si está activo
+    const originalSlowFactor = window.slowMotionFactor;
+    if (slowMotionActive) {
+      window.slowMotionFactor = slowMotionFactor;
+    }
 
     // Actualizar sistemas de juego
     Player.update();
@@ -230,10 +274,15 @@ function gameLoop() {
       BossManager.update();
     }
 
-    // 🔥 CORREGIDO: Verificar colisiones y contar enemigos eliminados
+    // Restaurar factor de tiempo
+    if (slowMotionActive) {
+      window.slowMotionFactor = originalSlowFactor;
+    }
+
+    // Verificar colisiones
     checkCollisions();
 
-    // 🔥 CORREGIDO: Verificar si el nivel está completo
+    // Verificar si el nivel está completo
     if (EnemyManager.isLevelComplete()) {
       nextLevel();
     }
@@ -248,6 +297,9 @@ function gameLoop() {
       BossManager.draw(ctx);
     }
 
+    // 🔥 Efectos especiales de pantalla
+    drawSpecialEffects(ctx);
+
     // Actualizar UI
     UI.update();
   } catch (error) {
@@ -256,17 +308,51 @@ function gameLoop() {
 }
 
 /**
- * Verificar todas las colisiones - CORREGIDO
+ * 🔥 NUEVO: Dibuja efectos especiales en pantalla
+ */
+function drawSpecialEffects(ctx) {
+  // Efecto de tiempo lento
+  if (slowMotionActive) {
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 187, 255, 0.05)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Líneas de velocidad
+    for (let i = 0; i < 5; i++) {
+      ctx.strokeStyle = `rgba(0, 187, 255, ${0.1 + Math.random() * 0.1})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.random() * canvas.width, 0);
+      ctx.lineTo(Math.random() * canvas.width, canvas.height);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Efecto de combo alto
+  if (window.ComboSystem && window.ComboSystem.getCurrentCombo() >= 20) {
+    const combo = window.ComboSystem.getCurrentCombo();
+    const intensity = Math.min(combo / 50, 0.1);
+
+    ctx.save();
+    ctx.fillStyle = `rgba(255, 215, 0, ${intensity})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+}
+
+/**
+ * Verificar todas las colisiones
  */
 function checkCollisions() {
-  // 🔥 CORREGIDO: Balas vs Enemigos - contar enemigos eliminados
+  // Balas vs Enemigos
   const enemiesKilledByBullets = BulletManager.checkEnemyCollisions(
     EnemyManager.enemies
   );
 
   // Jugador vs Enemigos
   if (Player.checkEnemyCollisions(EnemyManager.enemies)) {
-    // El jugador fue golpeado
+    // El jugador fue golpeado (combo roto automáticamente en Player.takeDamage)
     if (Player.getLives() <= 0) {
       gameOver();
     }
@@ -286,15 +372,13 @@ function checkCollisions() {
 }
 
 /**
- * Iniciar un nuevo nivel - CORREGIDO
+ * Iniciar un nuevo nivel
  */
 function startLevel() {
-  console.log(`🎯 Iniciando nivel ${level}`);
+  console.log(`🎯 Iniciando nivel ÉPICO ${level}`);
 
-  // 🔥 CORREGIDO: Configurar enemigos para el nivel
+  // Configurar enemigos para el nivel
   EnemyManager.setupLevel(level);
-
-  // 🔥 ELIMINADO: Ya no hay startNewLevel para PowerUpManager
 
   // Si es nivel 10, preparar boss
   if (level === 10) {
@@ -303,7 +387,7 @@ function startLevel() {
 
   // Mostrar transición de nivel
   UI.showLevelTransition(level, () => {
-    console.log(`✅ Nivel ${level} iniciado`);
+    console.log(`✅ Nivel ÉPICO ${level} iniciado`);
   });
 }
 
@@ -362,6 +446,7 @@ function drawBackground() {
 function gameOver() {
   gameEnded = true;
 
+  // Detener TODOS los intervalos y sistemas
   if (gameInterval) {
     clearInterval(gameInterval);
     gameInterval = null;
@@ -370,11 +455,15 @@ function gameOver() {
   BulletManager.stopAutoShoot();
   AudioManager.stopBackgroundMusic();
 
+  // NUEVO: Limpiar sistemas completamente
+  ComboSystem.cleanup();
+
   // Mostrar pantalla de game over
-  UI.showGameOver(false, score, level);
+  const maxCombo = ComboSystem.getMaxCombo();
+  UI.showGameOver(false, score, level, maxCombo);
   AudioManager.playSound("gameOver");
 
-  console.log("💀 Game Over");
+  console.log(`💀 Game Over - Combo máximo: ${maxCombo}`);
 }
 
 /**
@@ -383,6 +472,7 @@ function gameOver() {
 function victory() {
   gameEnded = true;
 
+  // Detener TODOS los intervalos y sistemas
   if (gameInterval) {
     clearInterval(gameInterval);
     gameInterval = null;
@@ -391,26 +481,33 @@ function victory() {
   BulletManager.stopAutoShoot();
   AudioManager.stopBackgroundMusic();
 
-  // Mostrar pantalla de victoria
-  UI.showGameOver(true, score, level);
+  // Celebración épica con combo
+  const maxCombo = ComboSystem.getMaxCombo();
+  UI.showGameOver(true, score, level, maxCombo);
   AudioManager.playSound("victory");
 
-  // Efecto de celebración
+  // Efecto de celebración más épico
   UI.celebrationEffect();
 
-  console.log("🏆 Victoria!");
+  console.log(`🏆 Victoria ÉPICA! - Combo máximo: ${maxCombo}`);
 }
 
 /**
  * Reiniciar juego
  */
 function restartGame() {
+  // CORRECCIÓN: Ocultar pantalla de game over PRIMERO
+  const gameOverScreen = document.getElementById("game-over");
+  if (gameOverScreen) {
+    gameOverScreen.style.display = "none";
+  }
+
   resetGameState();
   startGame();
 }
 
 /**
- * Resetear estado del juego
+ * Resetear estado del juego - CON COMBOS
  */
 function resetGameState() {
   // Detener intervalos
@@ -429,6 +526,10 @@ function resetGameState() {
   level = 1;
   score = 0;
 
+  // 🔥 Resetear efectos especiales
+  slowMotionActive = false;
+  slowMotionFactor = 1.0;
+
   // Resetear módulos
   Player.reset();
   BulletManager.reset();
@@ -436,8 +537,9 @@ function resetGameState() {
   PowerUpManager.reset();
   BossManager.reset();
   UI.reset();
+  ComboSystem.reset(); // 🔥 NUEVO
 
-  console.log("🔄 Estado del juego reseteado");
+  console.log("🔄 Estado del juego ÉPICO reseteado");
 }
 
 /**
@@ -450,6 +552,7 @@ function cleanupGame() {
 
   BulletManager.stopAutoShoot();
   AudioManager.stopBackgroundMusic();
+  ComboSystem.cleanup(); // 🔥 NUEVO
 }
 
 /**
@@ -466,7 +569,7 @@ function backToMenu() {
 }
 
 // ======================================================
-// SISTEMA DE RANKING
+// SISTEMA DE RANKING MEJORADO
 // ======================================================
 
 // URL de tu Web App de Google Sheets
@@ -478,10 +581,10 @@ let scoreAlreadySaved = false;
 let isSaving = false;
 
 /**
- * Guarda la puntuación en Google Sheets
+ * Guarda la puntuación en Google Sheets - CON COMBO MÁXIMO
  */
 async function saveScore() {
-  console.log("🚀 Guardando puntuación...");
+  console.log("🚀 Guardando puntuación ÉPICA...");
 
   try {
     const playerName = Player.getName();
@@ -500,6 +603,7 @@ async function saveScore() {
     params.append("enemiesKilled", EnemyManager.getEnemiesKilled());
     params.append("time", Math.floor(gameTime / 60));
     params.append("score", score);
+    params.append("maxCombo", ComboSystem.getMaxCombo()); // 🔥 NUEVO
     params.append(
       "status",
       document.getElementById("game-over-text").textContent.includes("VICTORIA")
@@ -521,8 +625,8 @@ async function saveScore() {
     const result = await response.json();
 
     if (result.success) {
-      console.log("✅ Guardado exitoso");
-      alert("¡Puntuación guardada con éxito! 🎉");
+      console.log("✅ Guardado ÉPICO exitoso");
+      alert("¡Puntuación ÉPICA guardada con éxito! 🎉");
       return true;
     } else {
       throw new Error(result.message || "Error desconocido del servidor");
@@ -544,6 +648,15 @@ async function saveScore() {
  * Guarda puntuación y muestra ranking
  */
 async function saveAndViewRanking() {
+  // Deshabilitar botón inmediatamente
+  const saveButton = document.querySelector(
+    '#game-over button[onclick*="saveAndViewRanking"]'
+  );
+  if (saveButton) {
+    saveButton.disabled = true;
+    saveButton.textContent = "⏳ Guardando...";
+  }
+
   if (scoreAlreadySaved) {
     alert("⚠️ La puntuación ya fue guardada anteriormente.");
     viewRanking();
@@ -563,9 +676,8 @@ async function saveAndViewRanking() {
 
     if (saveResult) {
       scoreAlreadySaved = true;
-      const saveButton = document.querySelector("#game-over button");
-      if (saveButton && saveButton.textContent.includes("Guardar")) {
-        saveButton.textContent = "✅ Ya Guardado - Ver Ranking";
+      if (saveButton) {
+        saveButton.textContent = "✅ Ya Guardado";
         saveButton.onclick = () => {
           viewRanking();
           document.getElementById("game-over").style.display = "none";
@@ -578,13 +690,19 @@ async function saveAndViewRanking() {
   } catch (error) {
     console.error("Error al guardar:", error);
     alert("❌ Error al guardar la puntuación. Inténtalo de nuevo.");
+
+    // Rehabilitar botón en caso de error
+    if (saveButton) {
+      saveButton.disabled = false;
+      saveButton.textContent = "💾 Guardar Ranking";
+    }
   } finally {
     isSaving = false;
   }
 }
 
 /**
- * Muestra el ranking desde Google Sheets
+ * Muestra el ranking desde Google Sheets - CON COMBOS
  */
 async function viewRanking() {
   try {
@@ -593,7 +711,7 @@ async function viewRanking() {
 
     const rankingContainer = document.getElementById("ranking-container");
     rankingContainer.style.display = "block";
-    rankingContainer.innerHTML = `<h2>⌛ Cargando ranking... ⌛</h2>`;
+    rankingContainer.innerHTML = `<h2>⌛ Cargando ranking ÉPICO... ⌛</h2>`;
 
     const response = await fetch(WEBAPP_URL);
     const result = await response.json();
@@ -606,7 +724,7 @@ async function viewRanking() {
 
     if (players.length === 0) {
       rankingContainer.innerHTML = `
-                <h2>📊 Ranking de Jugadores</h2>
+                <h2>📊 Ranking ÉPICO de Jugadores</h2>
                 <p style="text-align: center;">No hay puntuaciones registradas aún.</p>
                 <div style="text-align: center; margin-top: 20px;">
                     <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
@@ -623,12 +741,17 @@ async function viewRanking() {
       enemiesKilled: parseInt(player.enemiesKilled) || 0,
       time: parseInt(player.time) || 0,
       score: parseInt(player.score) || 0,
+      maxCombo: parseInt(player.maxCombo) || 0, // 🔥 NUEVO
       status: player.status || "Derrota",
     }));
 
+    // Ordenar por puntuación, luego por combo máximo
     const sortedPlayers = processedPlayers.sort((a, b) => {
       if (b.score !== a.score) {
         return b.score - a.score;
+      }
+      if (b.maxCombo !== a.maxCombo) {
+        return b.maxCombo - a.maxCombo;
       }
       return a.time - b.time;
     });
@@ -636,18 +759,17 @@ async function viewRanking() {
     const top10 = sortedPlayers.slice(0, 10);
 
     rankingContainer.innerHTML = `
-            <h2>🏆 Ranking de Jugadores 🏆</h2>
+            <h2>🏆 Ranking ÉPICO de Jugadores 🏆</h2>
             <table>
                 <tr>
                     <th>Pos</th>
                     <th>Avatar</th>
                     <th>Nombre</th>
                     <th>Nivel</th>
-                    <th>Enemigos</th>
-                    <th>Tiempo</th>
                     <th>Score</th>
+                    <th>Combo Max</th>
+                    <th>Tiempo</th>
                     <th>Estado</th>
-                    <th>Fecha</th>
                 </tr>
                 ${top10
                   .map(
@@ -669,11 +791,12 @@ async function viewRanking() {
                         <td>${player.avatar}</td>
                         <td>${player.name}</td>
                         <td>${player.level}</td>
-                        <td>${player.enemiesKilled}</td>
-                        <td>${player.time}s</td>
                         <td>${player.score}</td>
+                        <td style="color: #FFD700; font-weight: bold;">${
+                          player.maxCombo
+                        }</td>
+                        <td>${player.time}s</td>
                         <td>${player.status === "Victoria" ? "🏆" : "💀"}</td>
-                        <td>${new Date(player.date).toLocaleDateString()}</td>
                     </tr>
                 `
                   )
@@ -691,7 +814,6 @@ async function viewRanking() {
     rankingContainer.innerHTML = `
             <h2>❌ Error al cargar el ranking</h2>
             <p>No se pudo conectar con Google Sheets.</p>
-            <p>Detalles: ${error.message}</p>
             <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
             <button onclick="viewRanking()" class="gothic-button">Reintentar</button>
         `;
@@ -720,4 +842,8 @@ window.getScore = () => score;
 window.setScore = (newScore) => (score = newScore);
 window.isGameEnded = () => gameEnded;
 
-console.log("📁 main.js cargado y corregido");
+// 🔥 NUEVAS variables globales para efectos especiales
+window.slowMotionActive = slowMotionActive;
+window.slowMotionFactor = slowMotionFactor;
+
+console.log("📁 main.js ÉPICO cargado y listo para la acción!");

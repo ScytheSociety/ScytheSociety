@@ -1,6 +1,6 @@
 /**
- * Hell Shooter - Player Management CORREGIDO
- * Gestión del jugador basada en el código original funcional
+ * Hell Shooter - Player Management ÉPICO
+ * Jugador con sistema de combos integrado
  */
 
 const Player = {
@@ -18,7 +18,7 @@ const Player = {
   width: 0,
   height: 0,
 
-  // 🔥 CORREGIDO: Estado del juego como en el original
+  // Estado del juego
   lives: 7,
   invulnerabilityTime: 0,
   visible: true,
@@ -28,7 +28,7 @@ const Player = {
   mouseX: 0,
   mouseY: 0,
 
-  // 🔥 CORREGIDO: Power-ups como en el original
+  // Power-ups
   activePowerUp: null,
   powerUpTimeLeft: 0,
 
@@ -42,7 +42,7 @@ const Player = {
   init(name, avatar) {
     this.name = name;
     this.avatar = avatar;
-    this.lives = 7; // 🔥 CORREGIDO: 7 vidas como en el original
+    this.lives = 7;
 
     // Posición inicial en el centro
     const canvas = window.getCanvas();
@@ -60,11 +60,11 @@ const Player = {
     this.activePowerUp = null;
     this.powerUpTimeLeft = 0;
 
-    console.log(`👤 Jugador inicializado: ${name} ${avatar}`);
+    console.log(`👤 Jugador ÉPICO inicializado: ${name} ${avatar}`);
   },
 
   /**
-   * Configura los controles del jugador - CORREGIDO SEGÚN ORIGINAL
+   * Configura los controles del jugador
    */
   setupControls(canvas) {
     // Controles de mouse
@@ -75,14 +75,14 @@ const Player = {
       this.updatePosition();
     });
 
-    // 🔥 CORREGIDO: Controles táctiles como en el original
+    // Controles táctiles mejorados
     if (GameConfig.isTouch) {
       canvas.addEventListener("touchmove", (e) => {
         e.preventDefault();
         const rect = canvas.getBoundingClientRect();
         const touch = e.touches[0];
         this.mouseX = touch.clientX - rect.left;
-        this.mouseY = touch.clientY - rect.top - 80; // 🔥 Offset para que no tape con el dedo
+        this.mouseY = touch.clientY - rect.top - 80; // Offset para no tapar
         this.updatePosition();
       });
 
@@ -91,12 +91,12 @@ const Player = {
         const rect = canvas.getBoundingClientRect();
         const touch = e.touches[0];
         this.mouseX = touch.clientX - rect.left;
-        this.mouseY = touch.clientY - rect.top - 80; // 🔥 Mismo offset
+        this.mouseY = touch.clientY - rect.top - 80;
         this.updatePosition();
       });
     }
 
-    // 🔥 CORREGIDO: Poder especial con espacio
+    // Poder especial con espacio
     window.addEventListener("keydown", (e) => {
       if (
         e.key === " " &&
@@ -108,7 +108,7 @@ const Player = {
       }
     });
 
-    console.log("🎮 Controles configurados");
+    console.log("🎮 Controles ÉPICOS configurados");
   },
 
   /**
@@ -118,7 +118,7 @@ const Player = {
     this.x = this.mouseX - this.width / 2;
     this.y = this.mouseY - this.height / 2;
 
-    // 🔥 CORREGIDO: Mantener dentro de los límites del canvas
+    // Mantener dentro de los límites del canvas
     const canvas = window.getCanvas();
     this.x = Math.max(0, Math.min(canvas.width - this.width, this.x));
     this.y = Math.max(0, Math.min(canvas.height - this.height, this.y));
@@ -143,13 +143,13 @@ const Player = {
   },
 
   /**
-   * Actualiza el estado de invulnerabilidad - CORREGIDO SEGÚN ORIGINAL
+   * Actualiza el estado de invulnerabilidad
    */
   updateInvulnerability() {
     if (this.invulnerabilityTime > 0) {
       this.invulnerabilityTime--;
 
-      // 🔥 CORREGIDO: Efecto de parpadeo como en el original
+      // Efecto de parpadeo
       this.visible = Math.floor(this.invulnerabilityTime / 5) % 2 === 0;
     } else {
       this.visible = true;
@@ -171,11 +171,11 @@ const Player = {
   },
 
   // ======================================================
-  // SISTEMA DE POWER-UPS - CORREGIDO
+  // SISTEMA DE POWER-UPS
   // ======================================================
 
   /**
-   * Activa un power-up - CORREGIDO SEGÚN ORIGINAL
+   * Activa un power-up
    */
   activatePowerUp(powerUpType) {
     // Si hay un power-up activo, reemplazarlo
@@ -185,13 +185,6 @@ const Player = {
 
     this.activePowerUp = powerUpType;
     this.powerUpTimeLeft = powerUpType.duration;
-
-    // 🔥 CORREGIDO: Efectos especiales según el tipo como en el original
-    switch (powerUpType.id) {
-      case 3: // Rapid Fire
-        // El rapid fire se maneja en BulletManager
-        break;
-    }
 
     UI.showScreenMessage(`${powerUpType.name}!`, powerUpType.color);
     AudioManager.playSound("powerUp");
@@ -211,52 +204,65 @@ const Player = {
   },
 
   // ======================================================
-  // SISTEMA DE DAÑO Y VIDAS - CORREGIDO SEGÚN ORIGINAL
+  // SISTEMA DE DAÑO Y VIDAS - CON COMBOS
   // ======================================================
 
   /**
-   * El jugador recibe daño - CORREGIDO SEGÚN ORIGINAL
+   * El jugador recibe daño - ROMPE EL COMBO
    */
   takeDamage() {
-    // 🔥 CORREGIDO: Si es invulnerable, no recibir daño
+    // Si es invulnerable, no recibir daño
     if (this.invulnerabilityTime > 0) {
       return false;
+    }
+
+    // 🔥 ROMPER COMBO al recibir daño
+    if (window.ComboSystem) {
+      window.ComboSystem.onPlayerDamaged();
     }
 
     // Reducir vidas
     this.lives--;
 
-    // 🔥 CORREGIDO: Invulnerabilidad como en el original
-    this.invulnerabilityTime = 120; // 2 segundos a 60fps
+    // Invulnerabilidad temporal
+    this.invulnerabilityTime = 120; // 2 segundos
     this.damaged = true;
 
-    // Efectos visuales y sonoros
+    // Efectos visuales y sonoros más épicos
     AudioManager.playSound("damaged");
-    UI.showScreenMessage("¡Daño recibido!", "#FF0000");
+    UI.showScreenMessage("💔 ¡COMBO PERDIDO!", "#FF0000");
     this.createDamageEffect();
 
-    console.log(`💔 Jugador dañado. Vidas restantes: ${this.lives}`);
+    console.log(`💔 Jugador dañado. Vidas: ${this.lives}. Combo roto.`);
 
     return true;
   },
 
   /**
-   * Crea efecto visual de daño
+   * Crea efecto visual de daño más épico
    */
   createDamageEffect() {
+    // Partículas rojas más intensas
     UI.createParticleEffect(
       this.x + this.width / 2,
       this.y + this.height / 2,
       "#FF0000",
+      30 // Más partículas
+    );
+
+    // Efecto de onda de impacto adicional
+    UI.createParticleEffect(
+      this.x + this.width / 2,
+      this.y + this.height / 2,
+      "#FFAA00",
       20
     );
   },
 
   /**
-   * Recupera una vida - CORREGIDO SEGÚN ORIGINAL
+   * Recupera una vida
    */
   addLife() {
-    // 🔥 CORREGIDO: Permitir más de 14 vidas como en el original
     this.lives++;
     AudioManager.playSound("heart");
 
@@ -272,11 +278,11 @@ const Player = {
   },
 
   // ======================================================
-  // COLISIONES - CORREGIDAS
+  // COLISIONES
   // ======================================================
 
   /**
-   * Verifica colisiones con enemigos - CORREGIDO
+   * Verifica colisiones con enemigos
    */
   checkEnemyCollisions(enemies) {
     if (this.invulnerabilityTime > 0) {
@@ -288,7 +294,7 @@ const Player = {
         // Eliminar enemigo que golpeó
         enemies.splice(i, 1);
 
-        // Aplicar daño
+        // Aplicar daño (esto romperá el combo automáticamente)
         return this.takeDamage();
       }
     }
@@ -305,12 +311,12 @@ const Player = {
         // Activar power-up
         this.activatePowerUp(powerUps[i].type);
 
-        // Crear efecto visual
+        // Crear efecto visual más épico
         UI.createParticleEffect(
           powerUps[i].x + powerUps[i].width / 2,
           powerUps[i].y + powerUps[i].height / 2,
           powerUps[i].type.color,
-          30
+          40 // Más partículas
         );
 
         // Eliminar power-up
@@ -328,12 +334,12 @@ const Player = {
         // Recuperar vida
         this.addLife();
 
-        // Crear efecto visual
+        // Crear efecto visual más épico
         UI.createParticleEffect(
           hearts[i].x + hearts[i].width / 2,
           hearts[i].y + hearts[i].height / 2,
           "#FF0000",
-          30
+          40 // Más partículas
         );
 
         // Eliminar corazón
@@ -343,7 +349,7 @@ const Player = {
   },
 
   /**
-   * Verifica colisiones con el boss (si existe)
+   * Verifica colisiones con el boss
    */
   checkBossCollisions() {
     if (!BossManager.isActive()) return false;
@@ -369,14 +375,14 @@ const Player = {
   },
 
   // ======================================================
-  // RENDERIZADO - CORREGIDO SEGÚN ORIGINAL
+  // RENDERIZADO ÉPICO
   // ======================================================
 
   /**
-   * Dibuja el jugador en el canvas - CORREGIDO SEGÚN ORIGINAL
+   * Dibuja el jugador con efectos épicos
    */
   draw(ctx) {
-    // 🔥 CORREGIDO: Siempre actualizar posición
+    // Siempre actualizar posición
     this.x = this.mouseX - this.width / 2;
     this.y = this.mouseY - this.height / 2;
 
@@ -385,18 +391,18 @@ const Player = {
     this.x = Math.max(0, Math.min(canvas.width - this.width, this.x));
     this.y = Math.max(0, Math.min(canvas.height - this.height, this.y));
 
-    // 🔥 CORREGIDO: Siempre visible durante el juego activo, solo parpadear si es invulnerable
+    // Visibilidad durante el juego
     if (window.getGameTime && !window.isGameEnded()) {
       if (this.invulnerabilityTime > 0) {
-        this.visible = window.getGameTime() % 10 < 5; // Parpadeo cada 10 frames
+        this.visible = window.getGameTime() % 10 < 5; // Parpadeo
       } else {
-        this.visible = true; // SIEMPRE visible si no es invulnerable
+        this.visible = true;
       }
     } else {
-      this.visible = true; // Visible en menús y transiciones
+      this.visible = true;
     }
 
-    // 🔥 CORREGIDO: Configurar transparencia si es invulnerable
+    // Configurar transparencia si es invulnerable
     if (this.invulnerabilityTime > 0) {
       ctx.globalAlpha = 0.7;
     }
@@ -411,7 +417,7 @@ const Player = {
         this.height
       );
     } else {
-      // 🔥 CORREGIDO: Fallback visible como en el original
+      // Fallback épico
       ctx.fillStyle = "#FF0000";
       ctx.fillRect(this.x, this.y, this.width, this.height);
 
@@ -428,61 +434,96 @@ const Player = {
     // Restaurar transparencia
     ctx.globalAlpha = 1.0;
 
-    // Dibujar efectos adicionales
-    this.drawEffects(ctx);
+    // Dibujar efectos épicos
+    this.drawEpicEffects(ctx);
   },
 
   /**
-   * Dibuja efectos visuales del jugador - CORREGIDO SEGÚN ORIGINAL
+   * Dibuja efectos visuales épicos del jugador
    */
-  drawEffects(ctx) {
+  drawEpicEffects(ctx) {
     const centerX = this.x + this.width / 2;
     const centerY = this.y + this.height / 2;
 
-    // 🔥 CORREGIDO: Crosshair como en el original
-    ctx.strokeStyle = "rgba(255, 0, 0, 0.8)";
-    ctx.lineWidth = 1;
-    const size = this.width * 0.3;
+    // Crosshair mejorado
+    ctx.strokeStyle = "rgba(255, 0, 0, 0.9)";
+    ctx.lineWidth = 2;
+    const size = this.width * 0.35;
 
-    // Línea horizontal
+    // Líneas del crosshair
     ctx.beginPath();
     ctx.moveTo(centerX - size, centerY);
     ctx.lineTo(centerX + size, centerY);
-    ctx.stroke();
-
-    // Línea vertical
-    ctx.beginPath();
     ctx.moveTo(centerX, centerY - size);
     ctx.lineTo(centerX, centerY + size);
     ctx.stroke();
 
-    // 🔥 CORREGIDO: Círculo exterior
+    // Círculo exterior más épico
     ctx.beginPath();
-    ctx.arc(centerX, centerY, this.width * 0.6, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
-    ctx.lineWidth = 2;
+    ctx.arc(centerX, centerY, this.width * 0.65, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(255, 0, 0, 0.6)";
+    ctx.lineWidth = 3;
     ctx.stroke();
 
-    // 🔥 CORREGIDO: Escudo si es invulnerable
+    // Escudo de invulnerabilidad más épico
     if (this.invulnerabilityTime > 0) {
-      const shieldSize = this.width * 0.7;
+      const shieldSize = this.width * 0.8;
+      const opacity = 0.4 + Math.sin(window.getGameTime() * 0.3) * 0.3;
+
       ctx.beginPath();
       ctx.arc(centerX, centerY, shieldSize, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(255, 0, 0, ${
-        0.3 + Math.sin(window.getGameTime() * 0.2) * 0.2
-      })`;
+      ctx.strokeStyle = `rgba(255, 0, 0, ${opacity})`;
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Efecto de pulso adicional
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, shieldSize * 1.2, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255, 100, 100, ${opacity * 0.5})`;
       ctx.lineWidth = 2;
       ctx.stroke();
     }
 
-    // Aura de power-up
+    // Aura de power-up más épica
     if (this.activePowerUp) {
-      const auraSize = this.width * 0.8;
+      const auraSize = this.width * 0.9;
+      const pulse = 0.5 + Math.sin(window.getGameTime() * 0.25) * 0.3;
+
       ctx.beginPath();
       ctx.arc(centerX, centerY, auraSize, 0, Math.PI * 2);
-      ctx.strokeStyle = `${this.activePowerUp.color}80`;
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = `${this.activePowerUp.color}${Math.floor(pulse * 255)
+        .toString(16)
+        .padStart(2, "0")}`;
+      ctx.lineWidth = 4;
       ctx.stroke();
+
+      // Aura exterior
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, auraSize * 1.3, 0, Math.PI * 2);
+      ctx.strokeStyle = `${this.activePowerUp.color}${Math.floor(pulse * 128)
+        .toString(16)
+        .padStart(2, "0")}`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // 🔥 EFECTO ESPECIAL: Aura de combo alto
+    if (window.ComboSystem) {
+      const combo = window.ComboSystem.getCurrentCombo();
+      if (combo >= 10) {
+        const comboAuraSize = this.width * (1.0 + combo * 0.01); // Crece con combo
+        const comboOpacity = Math.min(combo * 0.02, 0.8);
+        const comboColor =
+          combo >= 30 ? "#FFD700" : combo >= 20 ? "#FF00FF" : "#FFFF00";
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, comboAuraSize, 0, Math.PI * 2);
+        ctx.strokeStyle = `${comboColor}${Math.floor(comboOpacity * 255)
+          .toString(16)
+          .padStart(2, "0")}`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
     }
   },
 
@@ -528,11 +569,11 @@ const Player = {
     this.activePowerUp = null;
     this.powerUpTimeLeft = 0;
 
-    console.log("🔄 Jugador reseteado");
+    console.log("🔄 Jugador ÉPICO reseteado");
   },
 };
 
 // Hacer disponible globalmente
 window.Player = Player;
 
-console.log("👤 player.js cargado y corregido");
+console.log("👤 player.js ÉPICO cargado");

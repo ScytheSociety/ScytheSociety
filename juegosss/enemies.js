@@ -1,6 +1,6 @@
 /**
- * Hell Shooter - Enemy Management CORREGIDO
- * Sistema de enemigos basado en el código original funcional
+ * Hell Shooter - Enemy Management ÉPICO
+ * Sistema de enemigos con meteoritos y más velocidad
  */
 
 const EnemyManager = {
@@ -10,44 +10,47 @@ const EnemyManager = {
 
   enemies: [],
 
-  // Control de spawn
+  // Control de spawn más agresivo
   spawnTimer: 0,
-  currentSpawnDelay: 60,
+  currentSpawnDelay: 50, // 🔥 MÁS RÁPIDO
 
-  // 🔥 CORREGIDO: Progreso del nivel como en el original
+  // Progreso del nivel
   enemiesKilled: 0,
   enemiesRequired: 0,
 
+  // Sistemas especiales
+  meteorShowerActive: false,
+  lastMeteorTime: 0,
+
   // ======================================================
-  // CONFIGURACIÓN DE NIVEL - CORREGIDO
+  // CONFIGURACIÓN DE NIVEL ÉPICA
   // ======================================================
 
   /**
-   * Configura el nivel actual - BASADO EN EL CÓDIGO ORIGINAL
+   * Configura el nivel actual - MÁS AGRESIVO
    */
   setupLevel(level) {
-    // 🔥 CORREGIDO: Array de enemigos por nivel como en el original
+    // 🔥 MÁS ENEMIGOS por nivel para más acción
     const levelUpEnemies = [
-      100, 200, 350, 550, 800, 1100, 1450, 1850, 2300, 2800,
+      120, 250, 400, 600, 850, 1150, 1500, 1900, 2400, 2900,
     ];
 
     this.enemiesRequired =
       levelUpEnemies[level - 1] || levelUpEnemies[levelUpEnemies.length - 1];
 
-    // 🔥 CORREGIDO: Calcular spawn delay como en el original
-    const baseSpawnRate = 60;
-    const spawnRateReduction = 3;
-    const minSpawnRate = 15;
+    // 🔥 Spawn más rápido y agresivo
+    const baseSpawnRate = 50; // Era 60, ahora 50
+    const spawnRateReduction = 4; // Era 3, ahora 4 (más agresivo)
+    const minSpawnRate = 12; // Era 15, ahora 12 (más rápido)
     this.currentSpawnDelay = Math.max(
       minSpawnRate,
       baseSpawnRate - level * spawnRateReduction
     );
 
-    // 🔥 IMPORTANTE: NO resetear enemiesKilled aquí para continuidad
     this.spawnTimer = 0;
 
     console.log(
-      `👹 Nivel ${level} configurado: ${this.enemiesRequired} enemigos requeridos, ${this.enemiesKilled} ya eliminados`
+      `👹 Nivel ÉPICO ${level}: ${this.enemiesRequired} enemigos, spawn cada ${this.currentSpawnDelay} frames`
     );
   },
 
@@ -59,32 +62,32 @@ const EnemyManager = {
   },
 
   // ======================================================
-  // CREACIÓN DE ENEMIGOS - CORREGIDO SEGÚN ORIGINAL
+  // CREACIÓN DE ENEMIGOS ÉPICA
   // ======================================================
 
   /**
-   * Crea un enemigo estándar - BASADO EN EL CÓDIGO ORIGINAL
+   * Crea un enemigo estándar - MÁS AGRESIVO
    */
   spawnEnemy() {
     const canvas = window.getCanvas();
     const level = window.getLevel();
 
-    // 🔥 CORREGIDO: Tamaño como en el original
-    const sizeVariation = 0.8 + Math.random() * 0.4;
+    // 🔥 Tamaños más variados
+    const sizeVariation = 0.7 + Math.random() * 0.6; // Más variación
     const baseSize =
       GameConfig.ENEMY_MIN_SIZE +
       Math.random() * (GameConfig.ENEMY_MAX_SIZE - GameConfig.ENEMY_MIN_SIZE);
     const enemySize =
-      baseSize * sizeVariation * Math.max(0.6, 1 - level * 0.05);
+      baseSize * sizeVariation * Math.max(0.5, 1 - level * 0.04); // Más pequeños en niveles altos
 
     const x = Math.random() * (canvas.width - enemySize);
 
-    // 🔥 CORREGIDO: Velocidad como en el original
-    const levelSpeedFactor = 1 + level * 0.2;
-    const baseSpeed = canvas.height * 0.006 * levelSpeedFactor;
+    // 🔥 Velocidad MÁS AGRESIVA
+    const levelSpeedFactor = 1 + level * 0.25; // Era 0.2, ahora 0.25
+    const baseSpeed = canvas.height * 0.007 * levelSpeedFactor; // Era 0.006, ahora 0.007
 
     const angle = (Math.random() * Math.PI) / 2 - Math.PI / 4;
-    const speed = baseSpeed * (0.8 + Math.random() * 0.6);
+    const speed = baseSpeed * (0.8 + Math.random() * 0.8); // Más rango de velocidad
     const velocityX = Math.sin(angle) * speed;
     const velocityY = Math.abs(Math.cos(angle) * speed);
 
@@ -96,9 +99,9 @@ const EnemyManager = {
       velocityX: velocityX,
       velocityY: velocityY,
       image: this.getEnemyImage(level),
-      speedFactor: 1.0,
+      speedFactor: 1.0 + Math.random() * 0.3, // 🔥 Factor de velocidad variable
       bounceCount: 0,
-      maxBounces: 3 + Math.floor(Math.random() * 3),
+      maxBounces: 2 + Math.floor(Math.random() * 4), // 2-5 rebotes
       level: level,
       spawnTime: window.getGameTime(),
       type: "normal",
@@ -106,16 +109,18 @@ const EnemyManager = {
 
     this.enemies.push(enemy);
 
-    // 🔥 CORREGIDO: Spawn extra como en el original
-    if (level > 3 && Math.random() < level * 0.05 && this.enemies.length < 30) {
-      const extraEnemies = Math.min(2, Math.floor(level / 4));
+    // 🔥 Spawn extra MÁS AGRESIVO
+    if (level > 2 && Math.random() < level * 0.08 && this.enemies.length < 50) {
+      // Más enemigos simultáneos
+      const extraEnemies = Math.min(3, Math.floor(level / 3)); // Hasta 3 extra
 
       for (let i = 0; i < extraEnemies; i++) {
         setTimeout(() => {
-          if (!window.isGameEnded() && this.enemies.length < 40) {
+          if (!window.isGameEnded() && this.enemies.length < 60) {
+            // Límite más alto
             this.spawnSimpleEnemy();
           }
-        }, i * 400);
+        }, i * 200); // Spawn más rápido
       }
     }
   },
@@ -131,7 +136,7 @@ const EnemyManager = {
       GameConfig.ENEMY_MIN_SIZE +
       Math.random() * (GameConfig.ENEMY_MAX_SIZE - GameConfig.ENEMY_MIN_SIZE);
     const simpleX = Math.random() * (canvas.width - simpleEnemySize);
-    const simpleSpeed = canvas.height * 0.005;
+    const simpleSpeed = canvas.height * 0.006 * (1 + level * 0.1); // Más rápido
 
     const enemy = {
       x: simpleX,
@@ -139,11 +144,11 @@ const EnemyManager = {
       width: simpleEnemySize,
       height: simpleEnemySize,
       velocityX: (Math.random() - 0.5) * simpleSpeed,
-      velocityY: simpleSpeed,
+      velocityY: simpleSpeed * (0.9 + Math.random() * 0.4),
       image: this.getEnemyImage(level),
-      speedFactor: 1.0,
+      speedFactor: 1.2, // Más rápidos
       bounceCount: 0,
-      maxBounces: 2,
+      maxBounces: 3,
       level: level,
       spawnTime: window.getGameTime(),
       type: "extra",
@@ -152,15 +157,57 @@ const EnemyManager = {
     this.enemies.push(enemy);
   },
 
+  /**
+   * 🔥 NUEVO: Crea un enemigo meteorito súper agresivo
+   */
+  spawnMeteorEnemy() {
+    const canvas = window.getCanvas();
+    const level = window.getLevel();
+
+    // Meteoritos más grandes y rápidos
+    const meteorSize = GameConfig.ENEMY_MAX_SIZE * 1.2; // 20% más grandes
+    const meteorX = Math.random() * (canvas.width - meteorSize);
+    const meteorSpeed = canvas.height * 0.012; // MUY RÁPIDO
+
+    const meteorEnemy = {
+      x: meteorX,
+      y: -meteorSize,
+      width: meteorSize,
+      height: meteorSize,
+      velocityX: (Math.random() - 0.5) * meteorSpeed * 0.5, // Movimiento lateral leve
+      velocityY: meteorSpeed * (1.2 + Math.random() * 0.3), // Muy rápido hacia abajo
+      image: this.getEnemyImage(level),
+      speedFactor: 1.5, // Súper rápidos
+      bounceCount: 0,
+      maxBounces: 5, // Más rebotes
+      level: level,
+      spawnTime: window.getGameTime(),
+      type: "meteor",
+      isMeteor: true, // Flag especial
+    };
+
+    this.enemies.push(meteorEnemy);
+
+    // Efecto visual de meteorito
+    UI.createParticleEffect(
+      meteorX + meteorSize / 2,
+      -meteorSize / 2,
+      "#FF8800",
+      15
+    );
+
+    console.log("☄️ Enemigo meteorito spawneado");
+  },
+
   // ======================================================
-  // ACTUALIZACIÓN Y MOVIMIENTO - CORREGIDO
+  // ACTUALIZACIÓN Y MOVIMIENTO ÉPICO
   // ======================================================
 
   /**
    * Actualiza todos los enemigos
    */
   update() {
-    // Actualizar spawn timer
+    // Actualizar spawn timer más agresivo
     this.updateSpawning();
 
     // Actualizar posiciones y física
@@ -171,67 +218,101 @@ const EnemyManager = {
   },
 
   /**
-   * Controla el spawn de enemigos - CORREGIDO
+   * Controla el spawn de enemigos - MÁS AGRESIVO
    */
   updateSpawning() {
-    // 🔥 CORREGIDO: No spawnar si el nivel está completo
+    // No spawnar si el nivel está completo
     if (this.isLevelComplete()) return;
 
-    // 🔥 CORREGIDO: Limitar cantidad como en el original
-    if (this.enemies.length > 40) return;
+    // 🔥 Límite más alto de enemigos simultáneos
+    if (this.enemies.length > 60) return; // Era 40, ahora 60
 
     this.spawnTimer++;
 
-    if (this.spawnTimer >= this.currentSpawnDelay) {
+    // 🔥 Spawn más frecuente con combos altos
+    let effectiveDelay = this.currentSpawnDelay;
+    if (window.ComboSystem) {
+      const combo = window.ComboSystem.getCurrentCombo();
+      if (combo >= 10) {
+        effectiveDelay = Math.max(8, effectiveDelay * 0.8); // 20% más rápido con combo 10+
+      }
+      if (combo >= 20) {
+        effectiveDelay = Math.max(6, effectiveDelay * 0.6); // 40% más rápido con combo 20+
+      }
+    }
+
+    if (this.spawnTimer >= effectiveDelay) {
       this.spawnEnemy();
       this.spawnTimer = 0;
+
+      // 🔥 Spawn adicional aleatorio más frecuente
+      if (Math.random() < 0.3) {
+        // 30% probabilidad
+        setTimeout(() => this.spawnEnemy(), 100);
+      }
     }
   },
 
   /**
-   * Actualiza el movimiento de todos los enemigos - BASADO EN EL ORIGINAL
+   * Actualiza el movimiento de todos los enemigos - MÁS ÉPICO
    */
   updateEnemyMovement() {
     const canvas = window.getCanvas();
-    const wallBounceFactorX = 0.9;
-    const wallBounceFactorY = 1.05;
-    const enemyBounceFactorBase = 1.1;
+    const wallBounceFactorX = 0.85; // Menos pérdida de velocidad
+    const wallBounceFactorY = 1.1; // Más ganancia de velocidad
+    const enemyBounceFactorBase = 1.15; // Más aceleración en rebotes
 
-    // 🔥 CORREGIDO: Actualizar cada enemigo como en el original
+    // 🔥 Factor de tiempo lento si está activo
+    const slowFactor = window.slowMotionActive ? window.slowMotionFactor : 1.0;
+
     for (let i = 0; i < this.enemies.length; i++) {
       const enemy = this.enemies[i];
 
-      // Mover enemigo
-      enemy.x += enemy.velocityX;
-      enemy.y += enemy.velocityY;
+      // 🔥 Movimiento con factor de tiempo lento
+      enemy.x += enemy.velocityX * enemy.speedFactor * slowFactor;
+      enemy.y += enemy.velocityY * enemy.speedFactor * slowFactor;
 
-      // 🔥 CORREGIDO: Rebotes exactos como en el original
-      // Rebote en paredes laterales
+      // 🔥 Rebotes más agresivos para meteoritos
+      const bounceMultiplierX = enemy.isMeteor ? 1.0 : wallBounceFactorX;
+      const bounceMultiplierY = enemy.isMeteor ? 1.2 : wallBounceFactorY;
+
+      // Rebotes en paredes laterales
       if (enemy.x <= 0) {
-        enemy.velocityX = Math.abs(enemy.velocityX) * wallBounceFactorX;
+        enemy.velocityX = Math.abs(enemy.velocityX) * bounceMultiplierX;
         enemy.x = 0;
-        enemy.velocityY *= 0.95 + Math.random() * 0.1;
+        enemy.velocityY *= 0.9 + Math.random() * 0.2;
+        enemy.bounceCount++;
       } else if (enemy.x + enemy.width >= canvas.width) {
-        enemy.velocityX = -Math.abs(enemy.velocityX) * wallBounceFactorX;
+        enemy.velocityX = -Math.abs(enemy.velocityX) * bounceMultiplierX;
         enemy.x = canvas.width - enemy.width;
-        enemy.velocityY *= 0.95 + Math.random() * 0.1;
+        enemy.velocityY *= 0.9 + Math.random() * 0.2;
+        enemy.bounceCount++;
       }
 
       // Rebote en techo
       if (enemy.y <= 0) {
-        enemy.velocityY = Math.abs(enemy.velocityY) * wallBounceFactorY;
+        enemy.velocityY = Math.abs(enemy.velocityY) * bounceMultiplierY;
         enemy.y = 0;
+        enemy.bounceCount++;
       }
 
       // Rebote en suelo - SIEMPRE hacia arriba
       if (enemy.y + enemy.height >= canvas.height) {
-        enemy.velocityY = -Math.abs(enemy.velocityY) * wallBounceFactorY;
+        enemy.velocityY = -Math.abs(enemy.velocityY) * bounceMultiplierY;
         enemy.y = canvas.height - enemy.height;
-        enemy.velocityX += (Math.random() - 0.5) * (canvas.width * 0.003);
+        enemy.velocityX += (Math.random() - 0.5) * (canvas.width * 0.004); // Más variación
+        enemy.bounceCount++;
       }
 
-      // 🔥 CORREGIDO: Cambio de dirección ocasional como en el original
-      if (Math.random() < 0.001) {
+      // 🔥 Aumento de agresividad después de rebotes
+      if (enemy.bounceCount >= enemy.maxBounces) {
+        enemy.speedFactor = Math.min(enemy.speedFactor * 1.2, 2.0); // Hasta 2x velocidad
+        enemy.bounceCount = 0;
+      }
+
+      // 🔥 Cambio de dirección más frecuente para meteoritos
+      const directionChangeChance = enemy.isMeteor ? 0.002 : 0.001;
+      if (Math.random() < directionChangeChance) {
         const angle = Math.random() * ((2 * Math.PI) / 3) - Math.PI / 3;
         const speed = Math.sqrt(
           enemy.velocityX * enemy.velocityX + enemy.velocityY * enemy.velocityY
@@ -240,7 +321,7 @@ const EnemyManager = {
         enemy.velocityY = Math.abs(Math.cos(angle) * speed);
       }
 
-      // 🔥 CORREGIDO: Colisiones entre enemigos
+      // 🔥 Colisiones entre enemigos más agresivas
       for (let j = i + 1; j < this.enemies.length; j++) {
         const otherEnemy = this.enemies[j];
 
@@ -272,13 +353,15 @@ const EnemyManager = {
             otherEnemy.velocityY =
               (otherEnemy.velocityY + ny * (p1 - p2)) * otherEnemyBounceFactor;
 
-            enemy.speedFactor = Math.min(enemy.speedFactor * 1.05, 1.5);
+            // 🔥 Aumento de velocidad más agresivo
+            enemy.speedFactor = Math.min(enemy.speedFactor * 1.08, 2.0);
             otherEnemy.speedFactor = Math.min(
-              otherEnemy.speedFactor * 1.05,
-              1.5
+              otherEnemy.speedFactor * 1.08,
+              2.0
             );
 
-            const overlap = (enemy.width + otherEnemy.width) / 2 - dist + 2;
+            // Separar enemigos
+            const overlap = (enemy.width + otherEnemy.width) / 2 - dist + 3;
             if (overlap > 0) {
               enemy.x -= (nx * overlap) / 2;
               enemy.y -= (ny * overlap) / 2;
@@ -289,8 +372,8 @@ const EnemyManager = {
         }
       }
 
-      // 🔥 CORREGIDO: Limitar velocidad máxima
-      const maxSpeed = canvas.height * 0.02 * (1 + window.getLevel() * 0.1);
+      // 🔥 Límite de velocidad más alto
+      const maxSpeed = canvas.height * 0.025 * (1 + window.getLevel() * 0.15); // Más rápido
       const currentSpeed = Math.sqrt(
         enemy.velocityX * enemy.velocityX + enemy.velocityY * enemy.velocityY
       );
@@ -309,17 +392,17 @@ const EnemyManager = {
     const canvas = window.getCanvas();
     const gameTime = window.getGameTime();
 
-    // 🔥 CORREGIDO: Limpiar solo los que están muy lejos
+    // Limpiar solo los que están muy lejos o llevan mucho tiempo fuera
     this.enemies = this.enemies.filter((enemy) => {
       const tooLowForTooLong =
-        enemy.y > canvas.height + 100 && gameTime - enemy.spawnTime > 300;
-      const tooFarSide = enemy.x < -200 || enemy.x > canvas.width + 200;
+        enemy.y > canvas.height + 150 && gameTime - enemy.spawnTime > 400;
+      const tooFarSide = enemy.x < -300 || enemy.x > canvas.width + 300;
       return !tooLowForTooLong && !tooFarSide;
     });
   },
 
   // ======================================================
-  // RENDERIZADO
+  // RENDERIZADO ÉPICO
   // ======================================================
 
   /**
@@ -332,22 +415,53 @@ const EnemyManager = {
   },
 
   /**
-   * Dibuja un enemigo individual
+   * Dibuja un enemigo individual con efectos épicos
    */
   drawEnemy(ctx, enemy) {
+    ctx.save();
+
+    // 🔥 Efectos especiales para meteoritos
+    if (enemy.isMeteor) {
+      ctx.shadowColor = "#FF8800";
+      ctx.shadowBlur = 10;
+
+      // Estela de meteorito
+      ctx.strokeStyle = "#FF4400";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(enemy.x + enemy.width / 2, enemy.y);
+      ctx.lineTo(enemy.x + enemy.width / 2, enemy.y - 20);
+      ctx.stroke();
+    }
+
+    // 🔥 Efecto de velocidad para enemigos rápidos
+    if (enemy.speedFactor > 1.3) {
+      ctx.shadowColor = "#FFAA00";
+      ctx.shadowBlur = 5;
+    }
+
     // Dibujar imagen o respaldo
     if (enemy.image && enemy.image.complete) {
       ctx.drawImage(enemy.image, enemy.x, enemy.y, enemy.width, enemy.height);
     } else {
-      // Respaldo visual
-      ctx.fillStyle = "#8B0000";
+      // Respaldo visual épico
+      let color = "#8B0000";
+      if (enemy.isMeteor) {
+        color = "#FF4400";
+      } else if (enemy.speedFactor > 1.3) {
+        color = "#AA0000";
+      }
+
+      ctx.fillStyle = color;
       ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
 
       // Borde para visibilidad
       ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 1;
+      ctx.lineWidth = enemy.isMeteor ? 2 : 1;
       ctx.strokeRect(enemy.x, enemy.y, enemy.width, enemy.height);
     }
+
+    ctx.restore();
   },
 
   // ======================================================
@@ -402,12 +516,14 @@ const EnemyManager = {
     this.enemiesKilled = 0;
     this.enemiesRequired = 0;
     this.spawnTimer = 0;
+    this.meteorShowerActive = false;
+    this.lastMeteorTime = 0;
 
-    console.log("👹 Sistema de enemigos reseteado");
+    console.log("👹 Sistema de enemigos ÉPICO reseteado");
   },
 };
 
 // Hacer disponible globalmente
 window.EnemyManager = EnemyManager;
 
-console.log("👹 enemies.js cargado y corregido");
+console.log("👹 enemies.js ÉPICO cargado");

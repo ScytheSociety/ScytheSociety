@@ -23,6 +23,17 @@
     "../imagenes/imagenesjuegosss/enemy9.gif",
     "../imagenes/imagenesjuegosss/enemy10.gif"
   ],
+  "bossFrames": [
+    "../imagenes/imagenesjuegosss/boss_frame1.png",
+    "../imagenes/imagenesjuegosss/boss_frame2.png",
+    "../imagenes/imagenesjuegosss/boss_frame3.png",
+    "../imagenes/imagenesjuegosss/boss_frame4.png",
+    "../imagenes/imagenesjuegosss/boss_frame5.png",
+    "../imagenes/imagenesjuegosss/boss_frame6.png",
+    "../imagenes/imagenesjuegosss/boss_frame7.png",
+    "../imagenes/imagenesjuegosss/boss_frame8.png"
+  ],
   "player": "../imagenes/imagenesjuegosss/player.png",
-  "bullet": "../imagenes/imagenesjuegosss/bone.png"
+  "bullet": "../imagenes/imagenesjuegosss/bone.png",
+  "boss": "../imagenes/imagenesjuegosss/boss.gif"
 }

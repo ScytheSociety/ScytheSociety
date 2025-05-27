@@ -20,6 +20,7 @@ const GameConfig = {
   enemyImages: [],
   playerImage: null,
   bulletImage: null,
+  bossImage: null,
 
   // Dimensiones dinámicas
   PLAYER_SIZE: 80,

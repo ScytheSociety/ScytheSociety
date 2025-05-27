@@ -654,3 +654,21 @@ button:hover,
     height: 100vh;
   }
 }
+
+/* Animación para el combo display */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Efecto de brillo para combo alto */
+#combo-display {
+  text-shadow: 0 0 10px currentColor;
+}

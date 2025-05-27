@@ -654,23 +654,60 @@ const BossManager = {
       ctx.shadowBlur = 10 + this.boss.glowIntensity * 10;
     }
 
-    // Dibujar forma del boss
-    ctx.fillStyle = this.boss.color;
-    ctx.fillRect(this.boss.x, this.boss.y, this.boss.width, this.boss.height);
+    // 🔥 NUEVO: Animación del boss con frames
+    if (GameConfig.bossFrames && GameConfig.bossFrames.length > 0) {
+      // Cambiar frame cada 15 frames del juego (4 FPS de animación)
+      const frameIndex =
+        Math.floor(window.getGameTime() / 15) % GameConfig.bossFrames.length;
+      const currentFrame = GameConfig.bossFrames[frameIndex];
 
-    // Detalles adicionales
-    ctx.fillStyle = "#FFFFFF";
-    const centerX = this.boss.x + this.boss.width / 2;
-    const centerY = this.boss.y + this.boss.height / 2;
-
-    // Ojos malvados
-    ctx.fillRect(centerX - 20, centerY - 20, 10, 10);
-    ctx.fillRect(centerX + 10, centerY - 20, 10, 10);
-
-    // Boca
-    ctx.fillRect(centerX - 15, centerY + 10, 30, 5);
+      if (currentFrame && currentFrame.complete) {
+        ctx.drawImage(
+          currentFrame,
+          this.boss.x,
+          this.boss.y,
+          this.boss.width,
+          this.boss.height
+        );
+      } else {
+        // Fallback al GIF estático
+        this.drawStaticBoss(ctx);
+      }
+    } else {
+      // Usar GIF estático o respaldo
+      this.drawStaticBoss(ctx);
+    }
 
     ctx.restore();
+  },
+
+  // 🔥 NUEVO: Función auxiliar para dibujar boss estático
+  drawStaticBoss(ctx) {
+    if (GameConfig.bossImage && GameConfig.bossImage.complete) {
+      ctx.drawImage(
+        GameConfig.bossImage,
+        this.boss.x,
+        this.boss.y,
+        this.boss.width,
+        this.boss.height
+      );
+    } else {
+      // Respaldo visual
+      ctx.fillStyle = this.boss.color;
+      ctx.fillRect(this.boss.x, this.boss.y, this.boss.width, this.boss.height);
+
+      // Detalles adicionales
+      ctx.fillStyle = "#FFFFFF";
+      const centerX = this.boss.x + this.boss.width / 2;
+      const centerY = this.boss.y + this.boss.height / 2;
+
+      // Ojos malvados
+      ctx.fillRect(centerX - 20, centerY - 20, 10, 10);
+      ctx.fillRect(centerX + 10, centerY - 20, 10, 10);
+
+      // Boca
+      ctx.fillRect(centerX - 15, centerY + 10, 30, 5);
+    }
   },
 
   /**
