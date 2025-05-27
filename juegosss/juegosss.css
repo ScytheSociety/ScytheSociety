@@ -549,6 +549,18 @@ button:hover,
   }
 }
 
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 /* Extra small devices */
 @media (max-width: 480px) {
   h1 {

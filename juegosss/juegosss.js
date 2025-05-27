@@ -28,6 +28,12 @@ let specialPowerTimer = 0;
 let enemiesForSpecialPower = 0;
 let ENEMIES_FOR_SPECIAL = 25;
 
+let spawnExtraEnemiesFlag = false;
+let waveInProgress = false;
+
+let comboDisplay = null; // Elemento para mostrar combo
+let lastComboTime = 0; // Tiempo del último combo
+
 // Lives System
 let playerLives = 5;
 let invulnerableTime = 0;
@@ -240,8 +246,11 @@ function createVolumeControl() {
   const volumeContainer = document.createElement("div");
   volumeContainer.id = "volume-control";
   volumeContainer.style.position = "fixed";
-  volumeContainer.style.top = "10px";
+
+  // 👈 CAMBIO: Mover ABAJO para no tapar las vidas
+  volumeContainer.style.top = "80px"; // Era "10px" - ahora más abajo
   volumeContainer.style.right = "10px";
+
   volumeContainer.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
   volumeContainer.style.padding = "10px";
   volumeContainer.style.borderRadius = "10px";
@@ -288,14 +297,13 @@ function createVolumeControl() {
   let isMuted = false;
   let previousVolume = 50;
 
-  // Event listeners
+  // Event listeners (mismo código que antes)
   volumeSlider.addEventListener("input", (e) => {
     const volume = parseInt(e.target.value);
     masterVolume = volume / 100;
     volumeText.textContent = `${volume}%`;
     updateAllSoundVolumes();
 
-    // Actualizar icono
     if (volume === 0) {
       volumeIcon.textContent = "🔇";
     } else if (volume < 30) {
@@ -309,7 +317,6 @@ function createVolumeControl() {
 
   muteButton.addEventListener("click", () => {
     if (isMuted) {
-      // Unmute
       masterVolume = previousVolume / 100;
       volumeSlider.value = previousVolume;
       volumeText.textContent = `${previousVolume}%`;
@@ -317,7 +324,6 @@ function createVolumeControl() {
       volumeIcon.textContent = previousVolume > 50 ? "🔊" : "🔉";
       isMuted = false;
     } else {
-      // Mute
       previousVolume = parseInt(volumeSlider.value);
       masterVolume = 0;
       volumeSlider.value = 0;
@@ -335,7 +341,6 @@ function createVolumeControl() {
   volumeContainer.appendChild(volumeText);
   volumeContainer.appendChild(muteButton);
 
-  // Añadir al DOM cuando el juego comience
   document.body.appendChild(volumeContainer);
 }
 
@@ -1765,24 +1770,45 @@ function drawPlayer() {
  * Sistema de oleadas de enemigos para mayor intensidad
  */
 function trySpawnWave() {
+  if (waveInProgress || enemies.length > 25) return; // 👈 LÍNEA NUEVA
+
   if (Math.random() < GAME_CONFIG.enemies.waveSpawnChance) {
+    waveInProgress = true; // 👈 LÍNEA NUEVA
+
     console.log("¡Oleada de enemigos incoming!");
     showScreenMessage("¡OLEADA ENEMIGA!", "#FF4444");
 
-    // Spawnar múltiples enemigos con delay
     for (let i = 0; i < GAME_CONFIG.enemies.waveSize; i++) {
       setTimeout(() => {
-        spawnEnemy();
-        // Enemigos de oleada son más agresivos
-        if (enemies.length > 0) {
-          const lastEnemy = enemies[enemies.length - 1];
-          lastEnemy.speedFactor = 1.5; // Más rápidos
-          lastEnemy.waveEnemy = true; // Marca especial
+        if (gameInterval && enemies.length < 35) {
+          // 👈 LÍMITE AGREGADO
+          // Crear enemigo simple para la oleada
+          const waveEnemySize =
+            ENEMY_MIN_SIZE + Math.random() * (ENEMY_MAX_SIZE - ENEMY_MIN_SIZE);
+          const waveX = Math.random() * (canvas.width - waveEnemySize);
+          const waveSpeed = canvas.height * 0.007;
+
+          enemies.push({
+            x: waveX,
+            y: -waveEnemySize,
+            width: waveEnemySize,
+            height: waveEnemySize,
+            velocityX: (Math.random() - 0.5) * waveSpeed,
+            velocityY: waveSpeed,
+            image: enemyImages[level - 1] || enemyImages[0],
+            speedFactor: 1.5, // Más rápidos
+            waveEnemy: true,
+          });
         }
-      }, i * 200); // 200ms entre cada enemigo
+      }, i * 300); // 👈 MÁS ESPACIADO
     }
 
-    playSound("special"); // Sonido de alerta
+    playSound("special");
+
+    // 👈 RESETEAR FLAG
+    setTimeout(() => {
+      waveInProgress = false;
+    }, GAME_CONFIG.enemies.waveSize * 300 + 2000);
   }
 }
 
@@ -1810,27 +1836,103 @@ function spawnHeart() {
   });
 }
 
+function updateComboDisplay() {
+  const combo = GAME_CONFIG.player.comboCounter;
+
+  // Solo mostrar si el combo es significativo
+  if (combo < 3) {
+    // Ocultar display si combo es muy bajo
+    if (comboDisplay) {
+      comboDisplay.style.display = "none";
+    }
+    return;
+  }
+
+  // Crear elemento si no existe
+  if (!comboDisplay) {
+    comboDisplay = document.createElement("div");
+    comboDisplay.id = "combo-display";
+    comboDisplay.style.position = "fixed";
+
+    // 👈 POSICIÓN: Esquina inferior izquierda, junto al poder especial
+    comboDisplay.style.bottom = "80px"; // Arriba del poder especial
+    comboDisplay.style.left = "20px"; // Mismo lado que poder especial
+
+    comboDisplay.style.backgroundColor = "rgba(255, 255, 0, 0.9)";
+    comboDisplay.style.color = "#000000";
+    comboDisplay.style.padding = "8px 15px";
+    comboDisplay.style.borderRadius = "15px";
+    comboDisplay.style.fontSize = "18px";
+    comboDisplay.style.fontWeight = "bold";
+    comboDisplay.style.border = "2px solid #FFD700";
+    comboDisplay.style.boxShadow = "0 0 15px #FFFF00";
+    comboDisplay.style.zIndex = "1000";
+    comboDisplay.style.fontFamily = '"Times New Roman", serif';
+    comboDisplay.style.textAlign = "center";
+    comboDisplay.style.minWidth = "120px";
+
+    document.body.appendChild(comboDisplay);
+  }
+
+  // Actualizar contenido
+  const multiplier = (1 + combo * 0.1).toFixed(1);
+  comboDisplay.textContent = `COMBO x${combo} (${multiplier}x puntos)`;
+
+  // Mostrar elemento
+  comboDisplay.style.display = "block";
+
+  // Efecto de pulsación para combo alto
+  if (combo >= 10) {
+    comboDisplay.style.animation = "pulse 0.5s ease-in-out";
+    comboDisplay.style.backgroundColor = "rgba(255, 165, 0, 0.9)"; // Naranja para combo alto
+    comboDisplay.style.border = "2px solid #FF4500";
+  } else if (combo >= 5) {
+    comboDisplay.style.backgroundColor = "rgba(255, 215, 0, 0.9)"; // Dorado
+    comboDisplay.style.border = "2px solid #FFD700";
+  }
+
+  // Actualizar tiempo
+  lastComboTime = gameTime;
+}
+
 /**
  * Sistema de combos para mayor puntuación
  */
 function updateComboSystem() {
   if (GAME_CONFIG.player.comboCounter > 0) {
-    // Decay del combo si no se elimina enemigo en un tiempo
-    if (gameTime % 120 === 0) {
-      // Cada 2 segundos
+    // Decay del combo si no se elimina enemigo en un tiempo (2 segundos)
+    if (gameTime - lastComboTime > 120) {
+      // 120 frames = 2 segundos
       GAME_CONFIG.player.comboCounter = Math.max(
         0,
         GAME_CONFIG.player.comboCounter - 1
       );
-    }
 
-    // Mostrar combo actual si es significativo
-    if (GAME_CONFIG.player.comboCounter >= 5 && gameTime % 60 === 0) {
-      showScreenMessage(
-        `COMBO x${GAME_CONFIG.player.comboCounter}!`,
-        "#FFFF00"
-      );
+      // Actualizar display cuando decae
+      updateComboDisplay();
+
+      // Si se perdió el combo completamente
+      if (GAME_CONFIG.player.comboCounter === 0 && comboDisplay) {
+        // Mostrar mensaje de pérdida de combo brevemente
+        comboDisplay.textContent = "¡Combo perdido!";
+        comboDisplay.style.backgroundColor = "rgba(255, 0, 0, 0.7)";
+        comboDisplay.style.color = "#FFFFFF";
+
+        setTimeout(() => {
+          if (comboDisplay) {
+            comboDisplay.style.display = "none";
+          }
+        }, 1500);
+      }
+
+      lastComboTime = gameTime;
     }
+  }
+
+  // Actualizar display regularmente
+  if (gameTime % 30 === 0) {
+    // Cada medio segundo
+    updateComboDisplay();
   }
 }
 
@@ -2356,28 +2458,22 @@ function activateDoublePoints() {
  * Spawns a new enemy with random properties
  */
 function spawnEnemy() {
-  // Randomize enemy size based on level - smaller at higher levels
-  const sizeVariation = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
+  const sizeVariation = 0.8 + Math.random() * 0.4;
   const baseSize =
     ENEMY_MIN_SIZE + Math.random() * (ENEMY_MAX_SIZE - ENEMY_MIN_SIZE);
-  const enemySize = baseSize * sizeVariation * Math.max(0.6, 1 - level * 0.05); // Reduce size with level
+  const enemySize = baseSize * sizeVariation * Math.max(0.6, 1 - level * 0.05);
 
-  // Random position (top of screen)
   const x = Math.random() * (canvas.width - enemySize);
 
-  // Velocidad base aumentada significativamente - más rápido con cada nivel
-  const levelSpeedFactor = 1 + level * 0.2; // 20% más rápido por nivel
-  const baseSpeed = canvas.height * 0.006 * levelSpeedFactor; // Velocidad base incrementada
+  const levelSpeedFactor = 1 + level * 0.2;
+  const baseSpeed = canvas.height * 0.006 * levelSpeedFactor;
 
-  // Angle is mostly downward (between -PI/4 and PI/4 from vertical)
   const angle = (Math.random() * Math.PI) / 2 - Math.PI / 4;
 
-  // Velocity components - mainly vertical with some horizontal variation
-  const speed = baseSpeed * (0.8 + Math.random() * 0.6); // 0.8x to 1.4x base speed
+  const speed = baseSpeed * (0.8 + Math.random() * 0.6);
   const velocityX = Math.sin(angle) * speed;
-  const velocityY = Math.abs(Math.cos(angle) * speed); // Always positive (downward)
+  const velocityY = Math.abs(Math.cos(angle) * speed);
 
-  // Create the enemy object
   enemies.push({
     x: x,
     y: -enemySize,
@@ -2385,22 +2481,52 @@ function spawnEnemy() {
     height: enemySize,
     velocityX: velocityX,
     velocityY: velocityY,
-    image: enemyImages[level - 1] || enemyImages[0], // Fallback to first image if level image not available
-    speedFactor: 1.0, // Factor usado para aumentar velocidad en colisiones
+    image: enemyImages[level - 1] || enemyImages[0],
+    speedFactor: 1.0,
   });
 
-  // Si estamos en nivel alto, aumentar la cantidad de enemigos
-  if (level > 3 && Math.random() < level * 0.05) {
-    // Spawn additional enemies based on level
-    const extraEnemies = Math.min(Math.floor(level / 2), 5); // Max 5 extra enemies at once
+  // 👈 REEMPLAZAR ESTA PARTE COMPLETA:
+  // BUSCA DESDE AQUÍ:
+  // if (level > 3 && Math.random() < level * 0.05) {
+  // HASTA EL FINAL DE LA FUNCIÓN
+  // Y REEMPLÁZALA CON ESTO:
+
+  if (
+    level > 3 &&
+    !spawnExtraEnemiesFlag &&
+    Math.random() < 0.01 &&
+    enemies.length < 30
+  ) {
+    spawnExtraEnemiesFlag = true;
+
+    const extraEnemies = Math.min(2, Math.floor(level / 4)); // Máximo 2 enemigos extra
+
     for (let i = 0; i < extraEnemies; i++) {
       setTimeout(() => {
-        if (gameInterval) {
-          // Verificar que el juego aún está en marcha
-          spawnEnemy();
+        if (gameInterval && enemies.length < 40) {
+          // Crear enemigo simple sin efectos secundarios
+          const simpleEnemySize =
+            ENEMY_MIN_SIZE + Math.random() * (ENEMY_MAX_SIZE - ENEMY_MIN_SIZE);
+          const simpleX = Math.random() * (canvas.width - simpleEnemySize);
+          const simpleSpeed = canvas.height * 0.005;
+
+          enemies.push({
+            x: simpleX,
+            y: -simpleEnemySize,
+            width: simpleEnemySize,
+            height: simpleEnemySize,
+            velocityX: (Math.random() - 0.5) * simpleSpeed,
+            velocityY: simpleSpeed,
+            image: enemyImages[level - 1] || enemyImages[0],
+            speedFactor: 1.0,
+          });
         }
-      }, Math.random() * 500); // Retraso aleatorio hasta 500ms
+      }, i * 400);
     }
+
+    setTimeout(() => {
+      spawnExtraEnemiesFlag = false;
+    }, 3000);
   }
 }
 
@@ -2814,16 +2940,15 @@ function checkBulletEnemyCollisions() {
     const enemy = enemies[i];
     let enemyHit = false;
     let explosionSource = null;
+    let hitBySpecialBullet = false; // 👈 LÍNEA NUEVA
 
     // Check against regular bullets
     for (let j = bullets.length - 1; j >= 0; j--) {
       const bullet = bullets[j];
 
       if (checkCollisionBetweenObjects(bullet, enemy)) {
-        // Mark enemy as hit
         enemyHit = true;
 
-        // Guardar referencia para explosión si la bala es explosiva
         if (bullet.explosive) {
           explosionSource = {
             x: enemy.x + enemy.width / 2,
@@ -2831,17 +2956,14 @@ function checkBulletEnemyCollisions() {
           };
         }
 
-        // Manejar balas penetrantes
         if (bullet.penetrating) {
           bullet.penetrationCount--;
           if (bullet.penetrationCount <= 0) {
             bullets.splice(j, 1);
           }
         } else {
-          // Bala normal, eliminar
           bullets.splice(j, 1);
         }
-
         break;
       }
     }
@@ -2852,16 +2974,13 @@ function checkBulletEnemyCollisions() {
         const bullet = specialBullets[j];
 
         if (checkCollisionBetweenObjects(bullet, enemy)) {
-          // Mark enemy as hit
           enemyHit = true;
+          hitBySpecialBullet = true; // 👈 LÍNEA NUEVA - MARCAR QUE FUE BALA ESPECIAL
 
-          // Special bullets are explosive
           explosionSource = {
             x: enemy.x + enemy.width / 2,
             y: enemy.y + enemy.height / 2,
           };
-
-          // No eliminar la bala especial, solo continúa
           break;
         }
       }
@@ -2869,84 +2988,65 @@ function checkBulletEnemyCollisions() {
 
     // Process enemy hit
     if (enemyHit) {
-      // Remove enemy
       enemies.splice(i, 1);
-
-      // SISTEMA DE COMBOS Y PUNTOS MEJORADO:
       enemiesKilled++;
-      enemiesForSpecialPower++;
+      if (!hitBySpecialBullet) {
+        enemiesForSpecialPower++;
+      }
 
-      // Incrementar combo
+      //   👈 INCREMENTAR COMBO Y ACTUALIZAR DISPLAY
       GAME_CONFIG.player.comboCounter++;
+      lastComboTime = gameTime; // Resetear tiempo de combo
+      updateComboDisplay(); // Actualizar display inmediatamente
 
-      // Puntos base con multiplicador de combo
       let basePoints = 10 * level;
       let comboMultiplier = 1 + GAME_CONFIG.player.comboCounter * 0.1;
       let finalPoints = Math.floor(basePoints * comboMultiplier);
 
-      // Bonus por modo adrenalina
       if (GAME_CONFIG.player.adrenalineMode) {
         finalPoints *= 1.5;
       }
 
       score += finalPoints;
 
-      // Mostrar puntos si es combo alto
-      if (GAME_CONFIG.player.comboCounter >= 3) {
-        showScreenMessage(
-          `+${finalPoints} (x${GAME_CONFIG.player.comboCounter.toFixed(1)})`,
-          "#FFFF00"
-        );
-      }
-
-      // Check if special power is ready
-      if (enemiesForSpecialPower >= ENEMIES_FOR_SPECIAL) {
+      // 👈 CAMBIO IMPORTANTE: Solo verificar poder especial si NO fue bala especial
+      if (
+        !hitBySpecialBullet &&
+        enemiesForSpecialPower >= ENEMIES_FOR_SPECIAL
+      ) {
         specialPowerReady = true;
         enemiesForSpecialPower = ENEMIES_FOR_SPECIAL;
       }
 
-      // Update UI
       document.getElementById(
         "enemies-killed"
       ).textContent = `Enemigos: ${enemiesKilled}`;
       document.getElementById("score").textContent = `Puntuación: ${score}`;
       updateSpecialPowerIndicator();
 
-      // Play hit sound
       playSound("hit");
 
-      // Si había una fuente de explosión, procesarla y dañar enemigos cercanos
       if (explosionSource) {
         createExplosionEffect(explosionSource.x, explosionSource.y);
 
-        // Dañar enemigos cercanos con la explosión
         for (let k = enemies.length - 1; k >= 0; k--) {
           const nearbyEnemy = enemies[k];
           const centerX = nearbyEnemy.x + nearbyEnemy.width / 2;
           const centerY = nearbyEnemy.y + nearbyEnemy.height / 2;
 
-          // Calcular distancia al centro de la explosión
           const dx = centerX - explosionSource.x;
           const dy = centerY - explosionSource.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          // Si está dentro del radio de explosión, eliminarlo
           if (distance < EXPLOSION_RADIUS) {
-            // Eliminar enemigo
             enemies.splice(k, 1);
-
-            // Actualizar estadísticas
             enemiesKilled++;
-            enemiesForSpecialPower++;
-            score += 5 * level; // Menos puntos por explosión
 
-            // Comprobar poder especial
-            if (enemiesForSpecialPower >= ENEMIES_FOR_SPECIAL) {
-              specialPowerReady = true;
-              enemiesForSpecialPower = ENEMIES_FOR_SPECIAL;
-            }
+            // 👈 CAMBIO: Explosiones tampoco cuentan para poder especial
+            // enemiesForSpecialPower++; // QUITAR ESTA LÍNEA
 
-            // Actualizar UI
+            score += 5 * level;
+
             document.getElementById(
               "enemies-killed"
             ).textContent = `Enemigos: ${enemiesKilled}`;
@@ -2958,14 +3058,12 @@ function checkBulletEnemyCollisions() {
         }
       }
 
-      // Check for level completion
       if (enemiesKilled >= levelUpEnemies[level - 1]) {
         level++;
 
-        // Verificar si se completaron todos los niveles
         if (level > levelUpEnemies.length) {
           console.log("¡Todos los niveles completados!");
-          victory(); // Llamar a victory que ahora detiene completamente el juego
+          victory();
         } else {
           console.log(`Avanzando al nivel ${level}`);
           startLevel();
@@ -3535,6 +3633,15 @@ function resetGameState() {
   // Resetear variables del juego
   invulnerableTime = 0;
   isLevelTransition = false;
+
+  // 👈 AGREGAR ESTAS LÍNEAS AQUÍ:
+  // Limpiar combo display
+  if (comboDisplay && comboDisplay.parentNode) {
+    comboDisplay.parentNode.removeChild(comboDisplay);
+    comboDisplay = null;
+  }
+  GAME_CONFIG.player.comboCounter = 0;
+  lastComboTime = 0;
 
   console.log("Estado del juego completamente limpiado");
 }
