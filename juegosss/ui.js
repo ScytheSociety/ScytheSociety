@@ -447,7 +447,7 @@ const UI = {
             <div style="margin-bottom: 15px;">
                 <h3 style="color: #FF0000; margin-bottom: 8px;">⚡ POWER-UPS MEJORADOS:</h3>
                 <p>• 🟡 <strong>Penetrantes:</strong> Atraviesan 3 enemigos</p>
-                <p>• 🔵 <strong>Amplio:</strong> 3 balas en abanico</p>
+                <p>• 🔵 <strong>Amplio:</strong> 7 balas en abanico</p> // 🔥 CAMBIAR AQUÍ: de 3 a 7
                 <p>• 🟠 <strong>Explosivas:</strong> Radio amplio de explosión</p>
                 <p>• 🟣 <strong>Súper Rápido:</strong> Balas grandes + disparo ultra-rápido</p>
                 <p>• 🟢 <strong>Escudo:</strong> Inmunidad total temporal</p>

@@ -128,8 +128,8 @@ const BulletManager = {
           break;
 
         case 1: // Disparo Amplio - SOLO 3 BALAS
-          bulletCount = 3;
-          spreadAngle = Math.PI / 8; // 22.5 grados
+          bulletCount = 7; // 🔥 CAMBIAR DE 3 A 7
+          spreadAngle = Math.PI / 6; // 🔥 CAMBIAR ÁNGULO: de Math.PI / 8 a Math.PI / 6 (30 grados para mejor distribución)
           break;
 
         case 2: // Explosivo

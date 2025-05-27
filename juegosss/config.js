@@ -132,7 +132,7 @@ const GameConfig = {
         name: "Disparo Amplio",
         color: "#00FFFF",
         duration: 6000, // 6 segundos
-        description: "Dispara 3 balas en abanico", // 🔥 REDUCIDO DE 7 A 3
+        description: "Dispara 7 balas en abanico", // 🔥 Aumentado de 3 a 7
       },
       EXPLOSIVE: {
         id: 2,
