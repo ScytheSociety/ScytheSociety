@@ -56,24 +56,43 @@ const UI = {
   // ======================================================
 
   /**
-   * Muestra un mensaje en pantalla - VERSIÓN ELEGANTE Y CONCISA
+   * Muestra un mensaje en pantalla - SIN SUPERPOSICIÓN
    */
   showScreenMessage(message, color = "#FFFFFF") {
+    // 🔥 FILTRAR MENSAJES INNECESARIOS
+    if (
+      message.includes("PODER LISTO") ||
+      message.includes("🔥 Poder especial cargado")
+    ) {
+      return; // No mostrar estos mensajes
+    }
+
     const messageId = this.messageIdCounter++;
 
-    // 🔥 CORREGIDO: Posición más compacta y elegante
-    let yPosition = 10;
-    const messageHeight = 6;
-    const padding = 1;
+    // 🔥 SISTEMA DE POSICIONES SIN SUPERPOSICIÓN
+    let yPosition = 15; // Empezar más arriba
+    const messageHeight = 8; // Más espaciado
+    const maxMessages = 5; // Máximo 5 mensajes
 
-    // Verificar posiciones ocupadas
-    for (let y = 10; y < 40; y += messageHeight + padding) {
+    // Limpiar mensajes viejos primero
+    this.messagePositions = this.messagePositions.filter(
+      (pos) => pos.active && Date.now() - pos.timeCreated < 4000
+    );
+
+    // Si hay demasiados mensajes, quitar el más viejo
+    if (this.messagePositions.length >= maxMessages) {
+      this.messagePositions.shift();
+    }
+
+    // Encontrar posición libre
+    for (let i = 0; i < maxMessages; i++) {
+      const testY = 15 + i * messageHeight;
       const positionTaken = this.messagePositions.some(
-        (pos) => Math.abs(pos.y - y) < messageHeight + padding && pos.active
+        (pos) => Math.abs(pos.y - testY) < messageHeight && pos.active
       );
 
       if (!positionTaken) {
-        yPosition = y;
+        yPosition = testY;
         break;
       }
     }
@@ -87,7 +106,7 @@ const UI = {
     };
     this.messagePositions.push(position);
 
-    // 🔥 CORREGIDO: Diseño más elegante y profesional
+    // Crear elemento
     const messageElement = document.createElement("div");
     messageElement.textContent = message;
     messageElement.style.position = "fixed";
@@ -95,29 +114,25 @@ const UI = {
     messageElement.style.left = "50%";
     messageElement.style.transform = "translateX(-50%)";
     messageElement.style.color = color;
-    messageElement.style.fontSize = "16px"; // Más pequeño
+    messageElement.style.fontSize = "14px"; // Más pequeño
     messageElement.style.fontWeight = "bold";
     messageElement.style.textShadow = "2px 2px 4px rgba(0,0,0,0.9)";
     messageElement.style.zIndex = "1000";
-    messageElement.style.backgroundColor = "rgba(0,0,0,0.8)"; // Más transparente
-    messageElement.style.padding = "4px 12px"; // Más compacto
-    messageElement.style.borderRadius = "8px"; // Más redondeado
-    messageElement.style.border = `1px solid ${color}`; // Borde más sutil
-    messageElement.style.maxWidth = "300px"; // Más estrecho
+    messageElement.style.backgroundColor = "rgba(0,0,0,0.7)";
+    messageElement.style.padding = "3px 10px"; // Más compacto
+    messageElement.style.borderRadius = "6px";
+    messageElement.style.border = `1px solid ${color}`;
+    messageElement.style.maxWidth = "250px"; // Más estrecho
     messageElement.style.textAlign = "center";
-    messageElement.style.fontFamily = '"Arial", sans-serif'; // Fuente más limpia
-    messageElement.style.letterSpacing = "0.5px"; // Espaciado elegante
-    messageElement.style.backdropFilter = "blur(5px)"; // Efecto moderno
+    messageElement.style.fontFamily = '"Arial", sans-serif';
+    messageElement.style.transition = "all 0.5s ease";
 
     document.body.appendChild(messageElement);
 
-    // 🔥 CORREGIDO: Animación más rápida y suave
+    // 🔥 ANIMACIÓN DE SUBIDA Y DESVANECIMIENTO
     setTimeout(() => {
-      messageElement.style.transition =
-        "opacity 0.8s ease-out, transform 0.8s ease-out";
+      messageElement.style.transform = "translateX(-50%) translateY(-20px)";
       messageElement.style.opacity = "0";
-      messageElement.style.transform =
-        "translateX(-50%) translateY(-15px) scale(0.95)";
 
       // Marcar posición como libre
       const pos = this.messagePositions.find((p) => p.id === messageId);
@@ -127,15 +142,8 @@ const UI = {
         if (messageElement.parentNode) {
           document.body.removeChild(messageElement);
         }
-        // Limpiar posiciones viejas
-        const now = Date.now();
-        for (let i = this.messagePositions.length - 1; i >= 0; i--) {
-          if (now - this.messagePositions[i].timeCreated > 8000) {
-            this.messagePositions.splice(i, 1);
-          }
-        }
-      }, 800);
-    }, 2000); // Duración más corta
+      }, 500);
+    }, 2500); // Duración más corta
   },
 
   // ======================================================

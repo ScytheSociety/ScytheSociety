@@ -67,7 +67,7 @@ const BulletManager = {
   // ======================================================
 
   /**
-   * Dispara una bala normal - MÁXIMO 3 BALAS
+   * Dispara una bala normal - CON PODER COMBINABLE
    */
   shootBullet() {
     const currentTime = Date.now();
@@ -75,16 +75,21 @@ const BulletManager = {
     const canvas = window.getCanvas();
 
     // 🔥 Cooldown más rápido
-    const cooldownTime = Math.max(60, 150 - level * 10);
+    let cooldownTime = Math.max(60, 150 - level * 10);
+
+    // Obtener power-up activo
+    const activePowerUp = Player.getActivePowerUp();
+
+    // 🔥 NUEVO: Si hay poder rápido, reducir cooldown SIEMPRE
+    if (activePowerUp && activePowerUp.id === 3) {
+      cooldownTime = 30; // Súper rápido
+    }
 
     if (currentTime - this.lastShootTime > cooldownTime) {
       // 🔥 Velocidad de bala más rápida
       const bulletSpeed = canvas.height * (0.018 + level * 0.003);
 
-      // Obtener power-up activo
-      const activePowerUp = Player.getActivePowerUp();
-
-      // 🔥 MÁXIMO 3 BALAS SIEMPRE
+      // 🔥 CONFIGURACIÓN COMBINABLE
       let bulletCount = 1;
       let spreadAngle = Math.PI / 12;
       let bulletConfig = {
@@ -93,31 +98,32 @@ const BulletManager = {
         penetrationCount: 0,
       };
 
-      // Configurar según power-up activo
+      // 🔥 NUEVO: Configurar según power-up COMBINABLE
       if (activePowerUp) {
         switch (activePowerUp.id) {
           case 0: // Penetrante
             bulletConfig.penetrating = true;
-            bulletConfig.penetrationCount = 4; // 🔥 MÁS PENETRACIÓN
+            bulletConfig.penetrationCount = 4;
             break;
 
           case 1: // Disparo Amplio
-            bulletCount = 7; // 🔥 CORREGIDO: Era 3, ahora 7 balas
-            spreadAngle = Math.PI / 4; // Más dispersión para 7 balas
+            bulletCount = 7;
+            spreadAngle = Math.PI / 4;
             break;
 
           case 2: // Explosivo
             bulletConfig.explosive = true;
             break;
 
-          case 3: // Rapid Fire - manejado por el intervalo
+          case 3: // Rapid Fire - SE COMBINA CON OTROS
+            // Si SOLO tiene rapid fire, disparo normal rápido
+            bulletCount = 1;
             break;
         }
       } else {
-        // 🔥 SIN POWER-UP: MÁXIMO 3 BALAS según nivel
-        if (level >= 2) bulletCount = 2;
-        if (level >= 4) bulletCount = 3;
-        // NUNCA más de 3 balas
+        // Sin power-up: Progresión normal
+        if (level >= 3) bulletCount = 2;
+        if (level >= 6) bulletCount = 3;
       }
 
       // Crear balas
@@ -567,6 +573,36 @@ const BulletManager = {
     this.lastShootTime = 0;
 
     console.log("🔫 Sistema de balas ÉPICO reseteado");
+  },
+
+  /**
+   * Verifica colisiones con el boss
+   */
+  checkBossCollisions() {
+    if (!BossManager.isActive()) return;
+
+    const boss = BossManager.getBoss();
+    if (!boss) return;
+
+    // Verificar balas normales contra boss
+    for (let i = this.bullets.length - 1; i >= 0; i--) {
+      const bullet = this.bullets[i];
+
+      if (this.checkCollision(bullet, boss)) {
+        BossManager.takeDamage(1);
+        this.bullets.splice(i, 1);
+      }
+    }
+
+    // Verificar balas especiales contra boss
+    for (let i = this.specialBullets.length - 1; i >= 0; i--) {
+      const bullet = this.specialBullets[i];
+
+      if (this.checkCollision(bullet, boss)) {
+        BossManager.takeDamage(2); // Más daño con balas especiales
+        this.specialBullets.splice(i, 1);
+      }
+    }
   },
 };
 

@@ -81,13 +81,10 @@ const EnemyManager = {
     const canvas = window.getCanvas();
     const level = window.getLevel();
 
-    // 🔥 Tamaños BALANCEADOS
-    const sizeVariation = 0.8 + Math.random() * 0.4; // Menos variación
-    const baseSize =
-      GameConfig.ENEMY_MIN_SIZE +
-      Math.random() * (GameConfig.ENEMY_MAX_SIZE - GameConfig.ENEMY_MIN_SIZE);
-    const enemySize =
-      baseSize * sizeVariation * Math.max(0.7, 1 - level * 0.02); // Menos reducción por nivel
+    // 🔥 Tamaños COMPLETAMENTE ALEATORIOS
+    const minSize = GameConfig.ENEMY_MIN_SIZE;
+    const maxSize = GameConfig.ENEMY_MAX_SIZE;
+    const enemySize = minSize + Math.random() * (maxSize - minSize);
 
     const x = Math.random() * (canvas.width - enemySize);
 

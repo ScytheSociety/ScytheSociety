@@ -308,14 +308,18 @@ function gameLoop() {
 }
 
 /**
- * 🔥 NUEVO: Dibuja efectos especiales en pantalla con colores temáticos
+ * 🔥 NUEVO: Dibuja efectos especiales en pantalla con colores MÁS INTENSOS
  */
 function drawSpecialEffects(ctx) {
-  // 🌊 Efecto de tiempo lento - BAJO EL AGUA
+  // 🌊 Efecto de tiempo lento - MUY AZUL COMO BAJO EL AGUA
   if (slowMotionActive) {
     ctx.save();
 
-    // Overlay azul acuático
+    // Overlay azul MUY INTENSO
+    ctx.fillStyle = "rgba(0, 100, 255, 0.4)"; // MUY MÁS INTENSO
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Segundo overlay para efecto bajo el agua
     const gradient = ctx.createRadialGradient(
       canvas.width / 2,
       canvas.height / 2,
@@ -324,40 +328,40 @@ function drawSpecialEffects(ctx) {
       canvas.height / 2,
       Math.max(canvas.width, canvas.height)
     );
-    gradient.addColorStop(0, "rgba(0, 100, 150, 0.15)");
-    gradient.addColorStop(1, "rgba(0, 50, 100, 0.25)");
+    gradient.addColorStop(0, "rgba(0, 150, 255, 0.2)");
+    gradient.addColorStop(1, "rgba(0, 50, 150, 0.3)");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Burbujas flotantes
-    for (let i = 0; i < 8; i++) {
+    // Burbujas MÁS VISIBLES
+    for (let i = 0; i < 12; i++) {
       const bubbleX =
-        Math.sin(window.getGameTime() * 0.02 + i) * canvas.width * 0.3 +
+        Math.sin(window.getGameTime() * 0.02 + i) * canvas.width * 0.4 +
         canvas.width / 2;
       const bubbleY =
-        Math.cos(window.getGameTime() * 0.015 + i * 0.7) * canvas.height * 0.3 +
+        Math.cos(window.getGameTime() * 0.015 + i * 0.7) * canvas.height * 0.4 +
         canvas.height / 2;
-      const bubbleSize = 20 + Math.sin(window.getGameTime() * 0.03 + i) * 10;
+      const bubbleSize = 25 + Math.sin(window.getGameTime() * 0.03 + i) * 15;
 
       ctx.beginPath();
       ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(100, 200, 255, 0.3)";
+      ctx.fillStyle = "rgba(150, 220, 255, 0.6)"; // MÁS OPACO
       ctx.fill();
-      ctx.strokeStyle = "rgba(150, 220, 255, 0.5)";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(200, 240, 255, 0.8)"; // MÁS VISIBLE
+      ctx.lineWidth = 3;
       ctx.stroke();
     }
 
-    // Ondas acuáticas
-    for (let i = 0; i < 3; i++) {
-      ctx.strokeStyle = `rgba(0, 187, 255, ${0.2 - i * 0.05})`;
-      ctx.lineWidth = 3 - i;
+    // Ondas acuáticas MÁS INTENSAS
+    for (let i = 0; i < 5; i++) {
+      ctx.strokeStyle = `rgba(0, 200, 255, ${0.4 - i * 0.08})`;
+      ctx.lineWidth = 4 - i;
       ctx.beginPath();
 
-      for (let x = 0; x < canvas.width; x += 10) {
+      for (let x = 0; x < canvas.width; x += 8) {
         const y =
           canvas.height / 2 +
-          Math.sin((x + window.getGameTime() * 2) * 0.01 + i) * 30;
+          Math.sin((x + window.getGameTime() * 3) * 0.01 + i) * 40;
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
@@ -367,11 +371,15 @@ function drawSpecialEffects(ctx) {
     ctx.restore();
   }
 
-  // 🔥 Efecto de modo frenesí - INFIERNO
+  // 🔥 Efecto de modo frenesí - MUY ROJO COMO FUEGO
   if (window.frenzyModeActive) {
     ctx.save();
 
-    // Overlay rojizo ardiente
+    // Overlay rojizo MUY INTENSO
+    ctx.fillStyle = "rgba(255, 50, 0, 0.4)"; // MUY MÁS INTENSO
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Segundo overlay ardiente
     const fireGradient = ctx.createRadialGradient(
       canvas.width / 2,
       canvas.height,
@@ -380,18 +388,18 @@ function drawSpecialEffects(ctx) {
       canvas.height,
       canvas.height
     );
-    fireGradient.addColorStop(0, "rgba(255, 100, 0, 0.2)");
-    fireGradient.addColorStop(0.5, "rgba(255, 50, 0, 0.15)");
-    fireGradient.addColorStop(1, "rgba(150, 0, 0, 0.1)");
+    fireGradient.addColorStop(0, "rgba(255, 100, 0, 0.3)");
+    fireGradient.addColorStop(0.5, "rgba(255, 50, 0, 0.25)");
+    fireGradient.addColorStop(1, "rgba(200, 0, 0, 0.2)");
     ctx.fillStyle = fireGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Llamas danzantes
-    for (let i = 0; i < 12; i++) {
-      const flameX = (i / 12) * canvas.width;
-      const flameHeight = 80 + Math.sin(window.getGameTime() * 0.1 + i) * 40;
+    // Llamas MÁS GRANDES Y VISIBLES
+    for (let i = 0; i < 15; i++) {
+      const flameX = (i / 15) * canvas.width;
+      const flameHeight = 120 + Math.sin(window.getGameTime() * 0.12 + i) * 60;
       const flameIntensity =
-        0.3 + Math.sin(window.getGameTime() * 0.15 + i * 0.5) * 0.2;
+        0.5 + Math.sin(window.getGameTime() * 0.18 + i * 0.5) * 0.3;
 
       const flameGradient = ctx.createLinearGradient(
         flameX,
@@ -399,25 +407,25 @@ function drawSpecialEffects(ctx) {
         flameX,
         canvas.height - flameHeight
       );
-      flameGradient.addColorStop(0, `rgba(255, 100, 0, ${flameIntensity})`);
+      flameGradient.addColorStop(0, `rgba(255, 80, 0, ${flameIntensity})`);
       flameGradient.addColorStop(
         0.5,
-        `rgba(255, 200, 0, ${flameIntensity * 0.7})`
+        `rgba(255, 150, 0, ${flameIntensity * 0.8})`
       );
-      flameGradient.addColorStop(1, `rgba(255, 255, 100, 0)`);
+      flameGradient.addColorStop(1, `rgba(255, 255, 50, 0)`);
 
       ctx.fillStyle = flameGradient;
-      ctx.fillRect(flameX - 15, canvas.height - flameHeight, 30, flameHeight);
+      ctx.fillRect(flameX - 20, canvas.height - flameHeight, 40, flameHeight);
     }
 
-    // Chispas volando
-    for (let i = 0; i < 15; i++) {
+    // Chispas MÁS GRANDES Y NUMEROSAS
+    for (let i = 0; i < 25; i++) {
       const sparkX = Math.random() * canvas.width;
       const sparkY = Math.random() * canvas.height;
-      const sparkSize = 2 + Math.random() * 3;
+      const sparkSize = 3 + Math.random() * 5;
 
-      ctx.fillStyle = `rgba(255, ${150 + Math.random() * 105}, 0, ${
-        0.5 + Math.random() * 0.5
+      ctx.fillStyle = `rgba(255, ${100 + Math.random() * 155}, 0, ${
+        0.7 + Math.random() * 0.3
       })`;
       ctx.fillRect(sparkX, sparkY, sparkSize, sparkSize);
     }
@@ -425,14 +433,14 @@ function drawSpecialEffects(ctx) {
     ctx.restore();
   }
 
-  // ⚡ Efecto de combo alto - ENERGÍA DORADA
+  // ⚡ Efecto de combo alto - ENERGÍA DORADA MÁS SUTIL
   if (window.ComboSystem && window.ComboSystem.getCurrentCombo() >= 20) {
     const combo = window.ComboSystem.getCurrentCombo();
-    const intensity = Math.min(combo / 100, 0.3);
+    const intensity = Math.min(combo / 150, 0.2); // Más sutil
 
     ctx.save();
 
-    // Resplandor dorado
+    // Resplandor dorado MÁS SUTIL
     const goldGradient = ctx.createRadialGradient(
       canvas.width / 2,
       canvas.height / 2,
@@ -442,59 +450,10 @@ function drawSpecialEffects(ctx) {
       Math.max(canvas.width, canvas.height) / 2
     );
     goldGradient.addColorStop(0, `rgba(255, 215, 0, 0)`);
-    goldGradient.addColorStop(0.7, `rgba(255, 215, 0, ${intensity * 0.5})`);
+    goldGradient.addColorStop(0.7, `rgba(255, 215, 0, ${intensity * 0.3})`);
     goldGradient.addColorStop(1, `rgba(255, 165, 0, ${intensity})`);
     ctx.fillStyle = goldGradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Rayos de energía
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2 + window.getGameTime() * 0.02;
-      const rayLength = canvas.width * 0.4;
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-
-      ctx.strokeStyle = `rgba(255, 215, 0, ${intensity * 0.8})`;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.lineTo(
-        centerX + Math.cos(angle) * rayLength,
-        centerY + Math.sin(angle) * rayLength
-      );
-      ctx.stroke();
-    }
-
-    ctx.restore();
-  }
-
-  // 🌟 Efecto de lluvia de power-ups - DESTELLOS MÁGICOS
-  if (window.powerUpRainActive) {
-    ctx.save();
-
-    // Partículas mágicas cayendo
-    for (let i = 0; i < 20; i++) {
-      const starX =
-        Math.sin(window.getGameTime() * 0.01 + i) * canvas.width * 0.8 +
-        canvas.width * 0.1;
-      const starY =
-        ((window.getGameTime() * 2 + i * 50) % (canvas.height + 100)) - 50;
-      const starSize = 3 + Math.sin(window.getGameTime() * 0.05 + i) * 2;
-
-      // Estrella brillante
-      ctx.fillStyle = `rgba(255, 255, 255, ${
-        0.7 + Math.sin(window.getGameTime() * 0.1 + i) * 0.3
-      })`;
-      ctx.beginPath();
-      for (let j = 0; j < 5; j++) {
-        const angle = (j / 5) * Math.PI * 2;
-        const x = starX + Math.cos(angle) * starSize;
-        const y = starY + Math.sin(angle) * starSize;
-        if (j === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.fill();
-    }
+    ctx.fillRect(0, 0, canvas.width, canvas.width);
 
     ctx.restore();
   }
@@ -740,52 +699,57 @@ let scoreAlreadySaved = false;
 let isSaving = false;
 
 /**
- * Guarda la puntuación en Google Sheets - CON COMBO MÁXIMO
+ * Guarda la puntuación usando el formato EXACTO de tu Excel (8 columnas) - CORREGIDO
  */
 async function saveScore() {
-  console.log("🚀 Guardando puntuación ÉPICA...");
+  console.log("🚀 Guardando puntuación...");
 
   try {
     const playerName = Player.getName();
     const playerAvatar = Player.getAvatar();
+    const enemiesKilled = EnemyManager.getEnemiesKilled();
 
+    // Validar datos antes de enviar
     if (!playerName || !playerAvatar) {
       throw new Error("Datos del jugador incompletos");
     }
 
+    // 🔥 CORRECCIÓN: Obtener status sin acceder al DOM problemático
+    let gameStatus = "Derrota";
+    if (level >= GameConfig.MAX_LEVELS) {
+      gameStatus = "Victoria";
+    }
+
+    // Crear URL con parámetros
     const params = new URLSearchParams();
     params.append("action", "save");
     params.append("date", new Date().toISOString());
     params.append("avatar", playerAvatar);
     params.append("name", playerName);
     params.append("level", level);
-    params.append("enemiesKilled", EnemyManager.getEnemiesKilled());
+    params.append("enemiesKilled", enemiesKilled);
     params.append("time", Math.floor(gameTime / 60));
     params.append("score", score);
-    params.append("maxCombo", ComboSystem.getMaxCombo()); // 🔥 NUEVO
-    params.append(
-      "status",
-      document.getElementById("game-over-text").textContent.includes("VICTORIA")
-        ? "Victoria"
-        : "Derrota"
-    );
+    params.append("status", gameStatus);
 
     const urlWithParams = `${WEBAPP_URL}?${params.toString()}`;
     console.log("📡 Enviando a:", urlWithParams);
 
+    // Timeout para la petición
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
 
     const response = await fetch(urlWithParams, {
       signal: controller.signal,
     });
 
     clearTimeout(timeoutId);
+
     const result = await response.json();
 
     if (result.success) {
-      console.log("✅ Guardado ÉPICO exitoso");
-      alert("¡Puntuación ÉPICA guardada con éxito! 🎉");
+      console.log("✅ Guardado exitoso");
+      alert("¡Puntuación guardada con éxito! 🎉");
       return true;
     } else {
       throw new Error(result.message || "Error desconocido del servidor");

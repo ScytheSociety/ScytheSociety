@@ -65,43 +65,38 @@ const ComboSystem = {
   },
 
   /**
-   * Crea el elemento HTML que muestra el combo en pantalla
-   * Posición: Esquina inferior izquierda
-   * Estilo: Caja negra semi-transparente con borde dorado
+   * Crea el elemento HTML que muestra el combo - MÁS PEQUEÑO Y MEJOR POSICIONADO
    */
   createComboDisplay() {
-    // Si ya existe el display, no crear otro
     if (this.comboDisplay) return;
 
     console.log("🎨 Creando display visual del combo...");
 
-    // Crear elemento DIV
     this.comboDisplay = document.createElement("div");
     this.comboDisplay.id = "combo-display";
 
-    // ===== ESTILOS CSS DEL DISPLAY =====
-    this.comboDisplay.style.position = "fixed"; // Posición fija en pantalla
-    this.comboDisplay.style.bottom = "20px"; // 20px desde abajo
-    this.comboDisplay.style.left = "20px"; // 20px desde izquierda
-    this.comboDisplay.style.backgroundColor = "rgba(0, 0, 0, 0.8)"; // Fondo negro semi-transparente
-    this.comboDisplay.style.color = "#FFFFFF"; // Texto blanco
-    this.comboDisplay.style.padding = "10px 15px"; // Espaciado interno
-    this.comboDisplay.style.borderRadius = "10px"; // Bordes redondeados
-    this.comboDisplay.style.fontSize = "18px"; // Tamaño de fuente
-    this.comboDisplay.style.fontWeight = "bold"; // Texto en negrita
-    this.comboDisplay.style.fontFamily = '"Arial", sans-serif'; // Fuente Arial
-    this.comboDisplay.style.border = "2px solid #FFD700"; // Borde dorado
-    this.comboDisplay.style.boxShadow = "0 0 15px rgba(255, 215, 0, 0.5)"; // Sombra dorada
-    this.comboDisplay.style.zIndex = "1000"; // Aparecer encima de otros elementos
-    this.comboDisplay.style.minWidth = "120px"; // Ancho mínimo
-    this.comboDisplay.style.textAlign = "center"; // Texto centrado
-    this.comboDisplay.style.display = "none"; // Oculto inicialmente
-    this.comboDisplay.style.transition = "all 0.3s ease"; // Transiciones suaves
+    // 🔥 POSICIÓN Y TAMAÑO CORREGIDOS
+    this.comboDisplay.style.position = "fixed";
+    this.comboDisplay.style.bottom = "120px"; // MÁS ARRIBA, no tapa el poder especial
+    this.comboDisplay.style.left = "15px"; // Más cerca del borde
+    this.comboDisplay.style.backgroundColor = "rgba(0, 0, 0, 0.85)";
+    this.comboDisplay.style.color = "#FFFFFF";
+    this.comboDisplay.style.padding = "6px 10px"; // MÁS PEQUEÑO
+    this.comboDisplay.style.borderRadius = "6px"; // MÁS PEQUEÑO
+    this.comboDisplay.style.fontSize = "12px"; // MÁS PEQUEÑO
+    this.comboDisplay.style.fontWeight = "bold";
+    this.comboDisplay.style.fontFamily = '"Arial", sans-serif';
+    this.comboDisplay.style.border = "1px solid #FFD700"; // Borde más sutil
+    this.comboDisplay.style.boxShadow = "0 0 8px rgba(255, 215, 0, 0.4)"; // Sombra más sutil
+    this.comboDisplay.style.zIndex = "1000";
+    this.comboDisplay.style.minWidth = "80px"; // MÁS PEQUEÑO
+    this.comboDisplay.style.textAlign = "center";
+    this.comboDisplay.style.display = "none";
+    this.comboDisplay.style.transition = "all 0.2s ease"; // Más rápido
 
-    // Añadir el elemento al DOM (página web)
     document.body.appendChild(this.comboDisplay);
 
-    console.log("✅ Display del combo creado y añadido a la página");
+    console.log("✅ Display del combo pequeño y elegante creado");
   },
 
   // ======================================================
@@ -340,57 +335,49 @@ const ComboSystem = {
    * - El multiplicador de puntos
    * - Cambia colores según el threshold
    */
+  /**
+   * Actualiza el display visual del combo - MÁS COMPACTO
+   */
   updateDisplay() {
-    // Si no existe el display, no hacer nada
     if (!this.comboDisplay) return;
 
-    // ===== OCULTAR SI NO HAY COMBO =====
     if (this.currentCombo === 0) {
       this.comboDisplay.style.display = "none";
       return;
     }
 
-    // ===== OBTENER INFORMACIÓN DEL THRESHOLD ACTUAL =====
     const threshold = this.getCurrentThreshold();
-    const multiplier = threshold.multiplier.toFixed(1); // ej: "1.5" en lugar de "1.5000000"
+    const multiplier = threshold.multiplier.toFixed(1);
 
-    // ===== MOSTRAR EL DISPLAY =====
     this.comboDisplay.style.display = "block";
 
-    // ===== ACTUALIZAR CONTENIDO HTML =====
+    // 🔥 CONTENIDO MÁS COMPACTO
     this.comboDisplay.innerHTML = `
-      <div style="font-size: 16px;">COMBO</div>
-      <div style="font-size: 24px; margin: 2px 0;">${this.currentCombo}</div>
-      <div style="font-size: 12px;">${multiplier}x puntos</div>
-    `;
+    <div style="font-size: 10px;">COMBO</div>
+    <div style="font-size: 16px; margin: 1px 0;">${this.currentCombo}</div>
+    <div style="font-size: 9px;">${multiplier}x</div>
+  `;
 
-    // ===== ACTUALIZAR ESTILO SEGÚN THRESHOLD =====
-    this.comboDisplay.style.color = threshold.color; // Color del texto
-    this.comboDisplay.style.borderColor = threshold.color; // Color del borde
-    this.comboDisplay.style.boxShadow = `0 0 15px ${threshold.color}`; // Color de la sombra
+    // Actualizar colores
+    this.comboDisplay.style.color = threshold.color;
+    this.comboDisplay.style.borderColor = threshold.color;
+    this.comboDisplay.style.boxShadow = `0 0 8px ${threshold.color}`;
 
-    // ===== EFECTO DE PULSACIÓN PARA COMBOS ALTOS =====
+    // Efecto sutil para combos altos
     if (this.currentCombo >= 20) {
-      // Animación de pulsación infinita
       this.comboDisplay.style.animation =
-        "pulse 0.5s ease-in-out infinite alternate";
+        "pulse 0.8s ease-in-out infinite alternate";
     } else {
-      // Sin animación
       this.comboDisplay.style.animation = "none";
     }
 
-    // ===== EFECTO DE ESCALA AL CONSEGUIR NUEVO COMBO =====
-    // El display se agranda brevemente y luego vuelve al tamaño normal
-    this.comboDisplay.style.transform = "scale(1.1)"; // Agrandar 10%
+    // Efecto de escala MÁS SUTIL
+    this.comboDisplay.style.transform = "scale(1.05)";
     setTimeout(() => {
       if (this.comboDisplay) {
-        this.comboDisplay.style.transform = "scale(1)"; // Volver al tamaño normal
+        this.comboDisplay.style.transform = "scale(1)";
       }
-    }, 200); // Después de 200ms
-
-    console.log(
-      `🎨 Display actualizado: Combo ${this.currentCombo}, Multiplicador ${multiplier}x`
-    );
+    }, 150);
   },
 
   // ======================================================
