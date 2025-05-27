@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hell Shooter</title>
+    <title>Hell Shooter - Versión Balanceada</title>
     <link rel="stylesheet" href="juegosss.css">
     <!-- Font Awesome for emoji picker button -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -32,33 +32,46 @@
             </div>
         </div>
         <div class="button-container">
-            <button onclick="startGame()" class="gothic-button">Jugar</button>
-            <button onclick="viewRanking()" class="gothic-button">Ranking</button>
+            <button onclick="startGame()" class="gothic-button">🎮 Jugar</button>
+            <button onclick="viewRanking()" class="gothic-button">🏆 Ranking</button>
         </div>
     </div>
 
     <!-- Game Area -->
     <div id="game-area" style="display: none;">
+        <!-- Información del juego (ACTUALIZADO) -->
         <div id="game-info">
-            <span id="player-name"></span> - <span id="player-avatar"></span>
-            <span id="level">Nivel 1</span>
-            <span id="enemies-killed">Enemigos: 0</span>
-            <span id="time">Tiempo: 0s</span>
-            <span id="score">Puntuación: 0</span>
+            <div><span id="player-name"></span> - <span id="player-avatar"></span></div>
+            <div id="player-lives">💀💀💀💀💀💀💀</div>
+            <div id="level">Nivel 1</div>
+            <div id="enemies-killed">Enemigos: 0</div>
+            <div id="time">Tiempo: 0s</div>
+            <div id="score">Puntuación: 0</div>
         </div>
+
+        <!-- Canvas del juego -->
         <canvas id="game-canvas"></canvas>
+
+        <!-- Indicador de poder especial (MEJORADO) -->
         <div id="special-power-indicator" class="special-power-indicator">
-            <span id="special-power-counter">0</span>
+            <span id="special-power-counter">0/25</span>
         </div>
+
+        <!-- Pantalla de Game Over (ACTUALIZADA) -->
         <div id="game-over" style="display: none;">
             <h2 id="game-over-text"></h2>
-            <button onclick="restartGame()" class="gothic-button">Jugar otra vez</button>
-            <button onclick="saveAndViewRanking()" class="gothic-button">Guardar Ranking</button>
+            <div class="button-container">
+                <button onclick="restartGame()" class="gothic-button">🔄 Jugar otra vez</button>
+                <button onclick="saveAndViewRanking()" class="gothic-button">💾 Guardar Ranking</button>
+                <button onclick="backToMenu()" class="gothic-button">🏠 Menú Principal</button>
+            </div>
         </div>
     </div>
 
-    <!-- Ranking Container -->
-    <div id="ranking-container" style="display: none;"></div>
+    <!-- Ranking Container (MEJORADO) -->
+    <div id="ranking-container" style="display: none;">
+        <h2>⌛ Cargando ranking... ⌛</h2>
+    </div>
 
     <!-- Emoji Picker Modal -->
     <div id="emoji-picker" style="display: none;">
@@ -82,13 +95,41 @@
                 <span class="emoji-option" onclick="selectEmoji('🌑')">🌑</span>
                 <span class="emoji-option" onclick="selectEmoji('🦇')">🦇</span>
                 <span class="emoji-option" onclick="selectEmoji('🕸️')">🕸️</span>
+                <!-- AÑADIDOS NUEVOS -->
+                <span class="emoji-option" onclick="selectEmoji('😈')">😈</span>
+                <span class="emoji-option" onclick="selectEmoji('🎯')">🎯</span>
+                <span class="emoji-option" onclick="selectEmoji('💎')">💎</span>
+                <span class="emoji-option" onclick="selectEmoji('🗡️')">🗡️</span>
+                <span class="emoji-option" onclick="selectEmoji('🛡️')">🛡️</span>
+                <span class="emoji-option" onclick="selectEmoji('🚀')">🚀</span>
+                <span class="emoji-option" onclick="selectEmoji('💥')">💥</span>
+                <span class="emoji-option" onclick="selectEmoji('⭐')">⭐</span>
             </div>
             <button onclick="closeEmojiPicker()" class="gothic-button">Cerrar</button>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="juegosss.js"></script>
+    <!-- ======================================================
+         SCRIPTS DEL JUEGO (ORDEN CORRECTO - MUY IMPORTANTE)
+         ====================================================== -->
+
+    <!-- 1. Configuración (debe cargarse primero) -->
+    <script src="config.js"></script>
+
+    <!-- 2. Sistemas auxiliares -->
+    <script src="audio.js"></script>
+    <script src="ui.js"></script>
+
+    <!-- 3. Sistemas de juego -->
+    <script src="player.js"></script>
+    <script src="bullets.js"></script>
+    <script src="enemies.js"></script>
+    <script src="boss.js"></script>
+    <script src="powerups.js"></script>
+
+    <!-- 4. Sistema principal (debe cargarse al final) -->
+    <script src="main.js"></script>
+
 </body>
 
 </html>
