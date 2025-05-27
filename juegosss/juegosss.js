@@ -159,15 +159,15 @@ const GAME_CONFIG = {
 
   // Power-ups y corazones - BALANCEADOS
   items: {
-    heartSpawnChance: 0.0005, // Reducido de 0.0008 a 0.0005
-    powerUpSpawnChance: 0.0004, // Reducido de 0.0006 a 0.0004
-    maxPowerUpDuration: 800, // Reducido de 900 a 800
-    minPowerUpDuration: 500, // Reducido de 600 a 500
-    explosionRadius: 100, // Reducido de 120 a 100
-    multiHeartChance: 0.2, // Reducido de 0.3 a 0.2
-    rarePowerUpChance: 0.08, // Reducido de 0.1 a 0.08
-    comboMultiplier: 1.3, // Reducido de 1.5 a 1.3
-    shieldDuration: 250, // Reducido
+    heartSpawnChance: 0.0012, // AUMENTADO de 0.0005 a 0.0012 (más del doble)
+    powerUpSpawnChance: 0.001, // AUMENTADO de 0.0004 a 0.0010 (2.5x más frecuente)
+    maxPowerUpDuration: 800,
+    minPowerUpDuration: 500,
+    explosionRadius: 100,
+    multiHeartChance: 0.3, // AUMENTADO de 0.2 a 0.3
+    rarePowerUpChance: 0.15, // AUMENTADO de 0.08 a 0.15
+    comboMultiplier: 1.3,
+    shieldDuration: 250,
   },
 
   // Jugador - BALANCEADO
@@ -1096,10 +1096,21 @@ function updateLivesDisplay() {
     gameInfo.appendChild(livesElement);
   }
 
-  // Actualizar el texto con emojis de calavera
-  document.getElementById("player-lives").textContent = "💀".repeat(
-    playerLives
-  );
+  // Crear el texto de vidas con apilamiento vertical
+  let livesText = "";
+
+  if (playerLives <= 7) {
+    // Hasta 7 vidas: mostrar en línea horizontal
+    livesText = "💀".repeat(playerLives);
+  } else {
+    // Más de 7 vidas: primera fila con 7, resto en segunda fila
+    const firstRow = "💀".repeat(7);
+    const secondRow = "💀".repeat(playerLives - 7);
+    livesText = firstRow + "<br>" + secondRow;
+  }
+
+  // Actualizar el contenido con HTML para permitir <br>
+  document.getElementById("player-lives").innerHTML = livesText;
 }
 
 /**
@@ -1585,7 +1596,7 @@ function playLevelUpSound() {
 // ======================================================
 
 /**
- * Maneja la colisión del jugador con un enemigo
+ * Maneja la colisión del jugador con un enemigo - VERSIÓN ACTUALIZADA
  */
 function playerHit() {
   // Si el jugador es invulnerable, no recibe daño
@@ -1594,7 +1605,7 @@ function playerHit() {
   // Reducir vidas
   playerLives--;
 
-  // Actualizar visualización
+  // Actualizar visualización (ahora maneja más de 7 vidas)
   updateLivesDisplay();
 
   // Reproducir sonido de daño
@@ -1836,7 +1847,19 @@ function spawnHeart() {
   });
 }
 
+/**
+ * Actualiza combo display - SOLO SI EL JUEGO ESTÁ ACTIVO
+ */
 function updateComboDisplay() {
+  // VERIFICACIÓN CRÍTICA: Solo mostrar durante el juego activo
+  if (!gameInterval || gameEnded || isLevelTransition) {
+    // Si el juego no está corriendo, limpiar display
+    if (comboDisplay) {
+      clearComboDisplay();
+    }
+    return;
+  }
+
   const combo = GAME_CONFIG.player.comboCounter;
 
   // Solo mostrar si el combo es significativo
@@ -1853,11 +1876,8 @@ function updateComboDisplay() {
     comboDisplay = document.createElement("div");
     comboDisplay.id = "combo-display";
     comboDisplay.style.position = "fixed";
-
-    // 👈 POSICIÓN: Esquina inferior izquierda, junto al poder especial
-    comboDisplay.style.bottom = "80px"; // Arriba del poder especial
-    comboDisplay.style.left = "20px"; // Mismo lado que poder especial
-
+    comboDisplay.style.bottom = "80px";
+    comboDisplay.style.left = "20px";
     comboDisplay.style.backgroundColor = "rgba(255, 255, 0, 0.9)";
     comboDisplay.style.color = "#000000";
     comboDisplay.style.padding = "8px 15px";
@@ -1884,10 +1904,10 @@ function updateComboDisplay() {
   // Efecto de pulsación para combo alto
   if (combo >= 10) {
     comboDisplay.style.animation = "pulse 0.5s ease-in-out";
-    comboDisplay.style.backgroundColor = "rgba(255, 165, 0, 0.9)"; // Naranja para combo alto
+    comboDisplay.style.backgroundColor = "rgba(255, 165, 0, 0.9)";
     comboDisplay.style.border = "2px solid #FF4500";
   } else if (combo >= 5) {
-    comboDisplay.style.backgroundColor = "rgba(255, 215, 0, 0.9)"; // Dorado
+    comboDisplay.style.backgroundColor = "rgba(255, 215, 0, 0.9)";
     comboDisplay.style.border = "2px solid #FFD700";
   }
 
@@ -1896,13 +1916,17 @@ function updateComboDisplay() {
 }
 
 /**
- * Sistema de combos para mayor puntuación
+ * Sistema de combos - VERSIÓN CORREGIDA
  */
 function updateComboSystem() {
+  // VERIFICACIÓN: Solo ejecutar durante el juego activo
+  if (!gameInterval || gameEnded || isLevelTransition) {
+    return;
+  }
+
   if (GAME_CONFIG.player.comboCounter > 0) {
     // Decay del combo si no se elimina enemigo en un tiempo (2 segundos)
     if (gameTime - lastComboTime > 120) {
-      // 120 frames = 2 segundos
       GAME_CONFIG.player.comboCounter = Math.max(
         0,
         GAME_CONFIG.player.comboCounter - 1
@@ -1913,15 +1937,12 @@ function updateComboSystem() {
 
       // Si se perdió el combo completamente
       if (GAME_CONFIG.player.comboCounter === 0 && comboDisplay) {
-        // Mostrar mensaje de pérdida de combo brevemente
         comboDisplay.textContent = "¡Combo perdido!";
         comboDisplay.style.backgroundColor = "rgba(255, 0, 0, 0.7)";
         comboDisplay.style.color = "#FFFFFF";
 
         setTimeout(() => {
-          if (comboDisplay) {
-            comboDisplay.style.display = "none";
-          }
+          clearComboDisplay(); // Limpiar completamente
         }, 1500);
       }
 
@@ -1929,9 +1950,8 @@ function updateComboSystem() {
     }
   }
 
-  // Actualizar display regularmente
+  // Actualizar display regularmente solo si el juego está activo
   if (gameTime % 30 === 0) {
-    // Cada medio segundo
     updateComboDisplay();
   }
 }
@@ -2024,11 +2044,12 @@ function spawnMultipleHearts() {
 }
 
 /**
- * Power-ups raros con efectos especiales
+ * Power-ups raros más frecuentes
  */
 function spawnRarePowerUp() {
-  if (Math.random() < GAME_CONFIG.items.rarePowerUpChance) {
-    const size = PLAYER_WIDTH * 0.8; // Más grandes que los normales
+  // PROBABILIDAD AUMENTADA significativamente
+  if (Math.random() < GAME_CONFIG_UPDATED.items.rarePowerUpChance) {
+    const size = PLAYER_WIDTH * 0.8;
     const x = size + Math.random() * (canvas.width - size * 2);
     const y = -size;
 
@@ -2047,14 +2068,15 @@ function spawnRarePowerUp() {
       y: y,
       width: size,
       height: size,
-      velocityY: canvas.height * 0.002, // Más lento
-      velocityX: 0, // Sin movimiento horizontal
+      velocityY: canvas.height * 0.002,
+      velocityX: 0,
       type: rareType,
-      rare: true, // Marca especial
-      pulseEffect: 0, // Para efecto de pulsación
+      rare: true,
+      pulseEffect: 0,
     });
 
     showScreenMessage("¡POWER-UP RARO!", rareType.color);
+    console.log("Power-up raro spawneado!");
   }
 }
 
@@ -2079,7 +2101,7 @@ function checkSpecialEvents() {
 }
 
 /**
- * Actualiza y dibuja los corazones de recuperación
+ * Actualiza y dibuja los corazones de recuperación - VERSIÓN CORREGIDA
  */
 function updateHearts() {
   for (let i = hearts.length - 1; i >= 0; i--) {
@@ -2124,21 +2146,26 @@ function updateHearts() {
 
     // Comprobar colisión con jugador
     if (checkCollisionBetweenObjects(player, heart)) {
-      // Recuperar vida si no tiene el máximo
-      if (playerLives < 5) {
-        playerLives++;
-        updateLivesDisplay();
-        playSound("heart");
-        showScreenMessage("¡Vida recuperada! ❤️", "#FF0000");
+      // CAMBIO: Siempre recuperar vida, sin límite máximo
+      playerLives++;
+      updateLivesDisplay(); // Actualizar display que maneja apilamiento
+      playSound("heart");
 
-        // Efecto visual al recoger corazón
-        createParticleEffect(
-          heart.x + heart.width / 2,
-          heart.y + heart.height / 2,
-          "#FF0000",
-          30
-        );
-      }
+      // Mensaje diferente según cantidad de vidas
+      const lifeMessage =
+        playerLives > 10
+          ? `¡Vida recuperada! ❤️ (${playerLives} vidas)`
+          : "¡Vida recuperada! ❤️";
+
+      showScreenMessage(lifeMessage, "#FF0000");
+
+      // Efecto visual al recoger corazón
+      createParticleEffect(
+        heart.x + heart.width / 2,
+        heart.y + heart.height / 2,
+        "#FF0000",
+        30
+      );
 
       // Eliminar corazón
       hearts.splice(i, 1);
@@ -2152,16 +2179,21 @@ function updateHearts() {
 }
 
 /**
- * Intenta crear un power-up aleatorio
+ * Intenta crear un power-up aleatorio - VERSIÓN MÁS FRECUENTE
  */
 function trySpawnPowerUp() {
-  // Si ya apareció un power-up en este nivel, no crear otro
-  if (powerUpsSpawned) return;
+  // CAMBIO: Permitir múltiples power-ups por nivel
+  // Si ya hay 2 power-ups activos, esperar
+  if (powerUps.length >= 2) return;
 
-  // Probabilidad baja de aparición (0.015% por frame)
-  if (Math.random() < GAME_CONFIG.items.powerUpSpawnChance) {
+  // PROBABILIDAD AUMENTADA y sin restricción de "uno por nivel"
+  if (Math.random() < GAME_CONFIG_UPDATED.items.powerUpSpawnChance) {
     spawnRandomPowerUp();
-    powerUpsSpawned = true;
+
+    // CAMBIO: No marcar powerUpsSpawned = true
+    // Esto permite múltiples power-ups por nivel
+
+    console.log("Power-up spawneado - más frecuentes ahora!");
   }
 }
 
@@ -2368,16 +2400,21 @@ function checkCollisionBetweenObjects(obj1, obj2) {
 }
 
 /**
- * Intenta crear un corazón de recuperación aleatoriamente
+ * Intenta crear un corazón de recuperación - VERSIÓN MÁS FRECUENTE
  */
 function trySpawnHeart() {
-  // Si ya apareció un corazón en este nivel, no crear otro
-  if (heartSpawned) return;
+  // CAMBIO: Permitir múltiples corazones por nivel
+  // Si ya hay 3 corazones, esperar
+  if (hearts.length >= 3) return;
 
-  // Probabilidad baja de aparición usando nueva configuración
-  if (Math.random() < GAME_CONFIG.items.heartSpawnChance) {
+  // PROBABILIDAD AUMENTADA y sin restricción de "uno por nivel"
+  if (Math.random() < GAME_CONFIG_UPDATED.items.heartSpawnChance) {
     spawnHeart();
-    heartSpawned = true;
+
+    // CAMBIO: No marcar heartSpawned = true
+    // Esto permite múltiples corazones por nivel
+
+    console.log("Corazón spawneado - más frecuentes ahora!");
   }
 }
 
@@ -3095,13 +3132,14 @@ function checkPlayerEnemyCollisions() {
 // ======================================================
 
 /**
- * Main game loop function - VERSIÓN MEJORADA CON NUEVAS MECÁNICAS
+ * Game Loop actualizado con todas las correcciones
  */
 function gameLoop() {
   try {
-    // NUEVA VERIFICACIÓN: Si el juego terminó, no continuar
+    // VERIFICACIÓN: Si el juego terminó, limpiar todo y salir
     if (gameEnded) {
-      console.log("Juego terminado, deteniendo game loop");
+      console.log("Juego terminado, limpiando y deteniendo game loop");
+      clearComboDisplay(); // Limpiar combo display
       clearInterval(gameInterval);
       gameInterval = null;
       return;
@@ -3110,7 +3148,7 @@ function gameLoop() {
     // Skip update during level transition
     if (isLevelTransition) return;
 
-    // Update game time (60 updates per second = 1 second)
+    // Update game time
     gameTime++;
     if (gameTime % 60 === 0) {
       document.getElementById("time").textContent = `Tiempo: ${Math.floor(
@@ -3131,45 +3169,37 @@ function gameLoop() {
         canvas.height
       );
     } else {
-      // Fallback background
       ctx.fillStyle = "#111";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // ======================================================
-    // NUEVAS MECÁNICAS INTENSAS - AÑADIR ESTAS LÍNEAS:
-    // ======================================================
-    trySpawnWave(); // Oleadas de enemigos
-    updateComboSystem(); // Sistema de combos
-    checkAdrenalineMode(); // Modo adrenalina
-    checkSpecialEvents(); // Eventos especiales
+    // MECÁNICAS MEJORADAS con nuevas frecuencias
+    trySpawnWave();
+    updateComboSystem(); // Ahora con verificación de juego activo
+    checkAdrenalineMode();
+    checkSpecialEvents();
 
-    // Spawn mejorado de items (ocasionalmente múltiples)
-    trySpawnHeart();
-    trySpawnPowerUp();
+    // Items más frecuentes
+    trySpawnHeart(); // Ahora más frecuente y sin límite por nivel
+    trySpawnPowerUp(); // Ahora más frecuente y sin límite por nivel
 
-    if (Math.random() < 0.001) {
-      // Ocasionalmente
-      spawnMultipleHearts();
+    // Power-ups raros más frecuentes
+    if (Math.random() < 0.002) {
+      // Aumentado de 0.001
       spawnRarePowerUp();
     }
 
-    // Spawn enemies if needed
+    // Spawn enemies
     spawnTimer++;
-
-    // Delay between enemy spawns decreases with level
     const spawnDelay = Math.max(
       GAME_CONFIG.enemies.minSpawnRate,
       GAME_CONFIG.enemies.spawnRateBase -
         level * GAME_CONFIG.enemies.spawnRateReduction
     );
 
-    // Multiple enemy spawning at higher levels
     if (spawnTimer >= spawnDelay) {
-      // Spawn at least one enemy
       spawnEnemy();
 
-      // Chance to spawn additional enemies based on level
       if (level > GAME_CONFIG.enemies.extraEnemiesThreshold) {
         const extraEnemyChance = Math.min(
           GAME_CONFIG.enemies.extraEnemyChancePerLevel * level,
@@ -3180,17 +3210,14 @@ function gameLoop() {
         }
       }
 
-      // Reset spawn timer
       spawnTimer = 0;
     }
 
-    // Update invulnerability timer
+    // Update game elements
     updateInvulnerability();
-
-    // Update and draw game elements
     updateEnemies();
     updateBullets();
-    updateHearts();
+    updateHearts(); // Ahora permite vidas ilimitadas con apilamiento
     updatePowerUps();
     drawPlayer();
 
@@ -3200,22 +3227,19 @@ function gameLoop() {
 
     // Draw UI overlays
     drawGameInfo();
-
-    // Troubleshoot if the game has been running for a while with no enemy kills
-    if (gameTime > 300 && enemiesKilled === 0) {
-      console.log(
-        "Posible problema: El juego lleva tiempo corriendo sin eliminar enemigos"
-      );
-    }
   } catch (error) {
     console.error("Error in game loop:", error);
 
-    // Try to recover SOLO si el juego no ha terminado
     if (!gameInterval && !gameEnded) {
       gameInterval = setInterval(gameLoop, 1000 / 60);
     }
   }
 }
+
+console.log("✅ Hell Shooter - Todas las correcciones aplicadas:");
+console.log("1. ❤️ Vidas se apilan verticalmente después de 7");
+console.log("2. ⚡ Power-ups 2.5x más frecuentes");
+console.log("3. 🎯 Combo display solo durante el juego activo");
 
 /**
  * Draws additional UI information on screen
@@ -3252,12 +3276,21 @@ function drawGameInfo() {
 // ======================================================
 
 /**
- * Handles game over
+ * Game Over - VERSIÓN CORREGIDA
  */
 function gameOver() {
+  // Marcar juego como terminado PRIMERO
+  gameEnded = true;
+
   clearInterval(gameInterval);
+  gameInterval = null;
+
   stopAutoShoot();
   stopBackgroundMusic();
+
+  // LIMPIAR COMBO DISPLAY INMEDIATAMENTE
+  clearComboDisplay();
+
   document.getElementById("game-over").style.display = "block";
   document.getElementById("game-over-text").textContent = "Game Over 💀";
   playSound("gameOver");
@@ -3269,12 +3302,17 @@ function gameOver() {
     "#FF0000",
     100
   );
+
+  console.log("Game Over - combo display limpiado");
 }
 
 /**
- * Restarts the game - VERSIÓN CORREGIDA
+ * Restart Game - VERSIÓN CORREGIDA
  */
 function restartGame() {
+  // LIMPIAR COMBO DISPLAY ANTES DE REINICIAR
+  clearComboDisplay();
+
   // Resetear variables de control
   gameEnded = false;
   scoreAlreadySaved = false;
@@ -3285,6 +3323,8 @@ function restartGame() {
 
   // Iniciar nuevo juego
   startGame();
+
+  console.log("Juego reiniciado - combo display limpiado");
 }
 
 /**
@@ -3406,7 +3446,7 @@ async function saveScore() {
 }
 
 /**
- * Handles victory - VERSIÓN CORREGIDA
+ * Victory - VERSIÓN CORREGIDA
  */
 function victory() {
   // Detener completamente el juego
@@ -3418,6 +3458,9 @@ function victory() {
   stopAutoShoot();
   stopBackgroundMusic();
 
+  // LIMPIAR COMBO DISPLAY INMEDIATAMENTE
+  clearComboDisplay();
+
   // Mostrar pantalla de victoria
   document.getElementById("game-over").style.display = "block";
   document.getElementById("game-over-text").textContent = "¡Victoria! 🎉";
@@ -3426,12 +3469,7 @@ function victory() {
   // Efecto visual de celebración
   celebrationEffect();
 
-  // Opcional: Mostrar mensaje con estadísticas finales
-  setTimeout(() => {
-    showScreenMessage(`¡JUEGO COMPLETADO!`, "#FFD700");
-    showScreenMessage(`Puntuación Final: ${score}`, "#FFFFFF");
-    showScreenMessage(`Tiempo Total: ${Math.floor(gameTime / 60)}s`, "#FFFFFF");
-  }, 1000);
+  console.log("Victory - combo display limpiado");
 }
 
 /**
@@ -3550,12 +3588,34 @@ async function viewRanking() {
 }
 
 /**
- * Returns to the main menu
+ * Limpia el combo display completamente
+ */
+function clearComboDisplay() {
+  if (comboDisplay && comboDisplay.parentNode) {
+    comboDisplay.parentNode.removeChild(comboDisplay);
+    comboDisplay = null;
+  }
+
+  // Resetear variables de combo
+  GAME_CONFIG.player.comboCounter = 0;
+  lastComboTime = 0;
+
+  console.log("Combo display limpiado");
+}
+
+/**
+ * Back to Menu - VERSIÓN CORREGIDA
  */
 function backToMenu() {
+  // LIMPIAR COMBO DISPLAY ANTES DE VOLVER AL MENÚ
+  clearComboDisplay();
+
   document.getElementById("ranking-container").style.display = "none";
+  document.getElementById("game-area").style.display = "none"; // Asegurar que game-area se oculte
   document.getElementById("main-menu").style.display = "block";
   centerMainMenu();
+
+  console.log("Volviendo al menú - combo display limpiado");
 }
 
 /**
@@ -3597,8 +3657,7 @@ function drawBackground() {
 }
 
 /**
- * Limpia completamente el estado del juego
- * AÑADIR ESTA FUNCIÓN AL CÓDIGO (después de drawBackground())
+ * Limpia completamente el estado del juego - VERSIÓN CORREGIDA
  */
 function resetGameState() {
   // Detener todos los intervalos
@@ -3634,16 +3693,12 @@ function resetGameState() {
   invulnerableTime = 0;
   isLevelTransition = false;
 
-  // 👈 AGREGAR ESTAS LÍNEAS AQUÍ:
-  // Limpiar combo display
-  if (comboDisplay && comboDisplay.parentNode) {
-    comboDisplay.parentNode.removeChild(comboDisplay);
-    comboDisplay = null;
-  }
-  GAME_CONFIG.player.comboCounter = 0;
-  lastComboTime = 0;
+  // CAMBIO CRÍTICO: Limpiar combo display inmediatamente
+  clearComboDisplay();
 
-  console.log("Estado del juego completamente limpiado");
+  console.log(
+    "Estado del juego completamente limpiado - incluyendo combo display"
+  );
 }
 
 /**
