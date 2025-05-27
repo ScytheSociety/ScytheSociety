@@ -34,6 +34,11 @@ let invulnerableTime = 0;
 let INVULNERABLE_DURATION = 120; // 2 segundos a 60fps
 let heartSpawned = false;
 
+// AGREGAR VARIABLES DE CONTROL AL INICIO DEL ARCHIVO (después de las variables globales)
+let gameEnded = false; // Para controlar si el juego ha terminado
+let scoreAlreadySaved = false; // Para evitar guardado múltiple
+let isSaving = false; // Para evitar múltiples operaciones de guardado simultáneas
+
 // Power-up System
 const POWERUP_TYPES = {
   PENETRATING: {
@@ -117,102 +122,99 @@ const sounds = {
 // GAME CONFIG - Variables ajustables para balancear el juego
 // ======================================================
 
+// 2. CONFIGURACIÓN MEJORADA - Balance y Performance
 const GAME_CONFIG = {
-  // Dificultad General - AUMENTADA PARA MÁS INTENSIDAD
-  difficulty: 1.2, // Aumentado de 0.8 a 1.2 (más difícil y emocionante)
+  // Dificultad General - BALANCEADA
+  difficulty: 1.0, // Reducido de 1.2 a 1.0 para mejor balance
 
-  // Enemigos - MÁS FRECUENTES Y AGRESIVOS
+  // Enemigos - OPTIMIZADO PARA PERFORMANCE
   enemies: {
-    baseSpeed: 0.003, // Aumentado de 0.001 a 0.003 (3x más rápido)
-    levelSpeedIncrease: 0.15, // Aumentado de 0.1 a 0.15 (más incremento por nivel)
-    sizeReduction: 0.02, // Reducido de 0.03 a 0.02 (enemigos se mantienen más grandes)
-    maxSpeedFactor: 0.6, // Aumentado de 0.3 a 0.6 (velocidad máxima tras rebotes)
+    baseSpeed: 0.0025, // Reducido de 0.003 a 0.0025
+    levelSpeedIncrease: 0.12, // Reducido de 0.15 a 0.12
+    sizeReduction: 0.025, // Ligeramente aumentado
+    maxSpeedFactor: 0.5, // Reducido de 0.6 a 0.5
 
-    // SPAWN MEJORADO - MÁS ENEMIGOS MÁS FRECUENTEMENTE
-    spawnRateBase: 45, // Reducido de 90 a 45 (aparecen 2x más frecuente)
-    spawnRateReduction: 3, // Aumentado de 2 a 3 (reducción más agresiva por nivel)
-    minSpawnRate: 15, // Reducido de 40 a 15 (spawn mínimo muy frecuente)
+    // SPAWN BALANCEADO - Menos intenso para evitar congelamiento
+    spawnRateBase: 55, // Aumentado de 45 a 55 (menos frecuente)
+    spawnRateReduction: 2, // Reducido de 3 a 2 (progresión más suave)
+    minSpawnRate: 25, // Aumentado de 15 a 25 (mínimo más alto)
 
-    // OLEADAS DE ENEMIGOS
-    extraEnemiesThreshold: 2, // Reducido de 3 a 2 (desde nivel 2)
-    extraEnemyChancePerLevel: 0.08, // Aumentado de 0.03 a 0.08 (más probabilidad)
-    maxExtraEnemyChance: 0.5, // Aumentado de 0.2 a 0.5 (hasta 50% de enemigos extra)
+    // OLEADAS BALANCEADAS
+    extraEnemiesThreshold: 3, // Vuelto a 3
+    extraEnemyChancePerLevel: 0.05, // Reducido de 0.08 a 0.05
+    maxExtraEnemyChance: 0.3, // Reducido de 0.5 a 0.3
 
-    // NUEVAS MECÁNICAS DE OLEADAS
-    waveSpawnChance: 0.003, // Probabilidad de oleada por frame
-    waveSize: 5, // Enemigos por oleada
-    bossSpawnLevel: 5, // Nivel donde aparecen "mini-bosses"
-    bossHealthMultiplier: 3, // Vida extra para mini-bosses
+    // OLEADAS OPTIMIZADAS
+    waveSpawnChance: 0.0015, // Reducido de 0.003 a 0.0015 (menos frecuentes)
+    waveSize: 4, // Reducido de 5 a 4 enemigos
+    bossSpawnLevel: 7, // Aumentado de 5 a 7
+    bossHealthMultiplier: 2, // Reducido de 3 a 2
   },
 
-  // Power-ups y corazones - MÁS FRECUENTES Y DURADEROS
+  // Power-ups y corazones - BALANCEADOS
   items: {
-    // APARICIÓN MÁS FRECUENTE
-    heartSpawnChance: 0.0008, // Aumentado de 0.0002 a 0.0008 (4x más frecuente)
-    powerUpSpawnChance: 0.0006, // Aumentado de 0.00015 a 0.0006 (4x más frecuente)
-
-    // DURACIÓN AUMENTADA
-    maxPowerUpDuration: 900, // Aumentado de 600 a 900 frames (15 segundos)
-    minPowerUpDuration: 600, // Aumentado de 450 a 600 frames (10 segundos)
-
-    // MECÁNICAS MEJORADAS
-    explosionRadius: 120, // Aumentado de 80 a 120 (explosiones más grandes)
-    multiHeartChance: 0.3, // 30% de que aparezcan 2 corazones juntos
-    rarePowerUpChance: 0.1, // 10% de power-ups "raros" con efectos especiales
-
-    // NUEVOS POWER-UPS
-    comboMultiplier: 1.5, // Multiplicador de puntos por combos
-    shieldDuration: 300, // Duración del escudo temporal (5 segundos)
+    heartSpawnChance: 0.0005, // Reducido de 0.0008 a 0.0005
+    powerUpSpawnChance: 0.0004, // Reducido de 0.0006 a 0.0004
+    maxPowerUpDuration: 800, // Reducido de 900 a 800
+    minPowerUpDuration: 500, // Reducido de 600 a 500
+    explosionRadius: 100, // Reducido de 120 a 100
+    multiHeartChance: 0.2, // Reducido de 0.3 a 0.2
+    rarePowerUpChance: 0.08, // Reducido de 0.1 a 0.08
+    comboMultiplier: 1.3, // Reducido de 1.5 a 1.3
+    shieldDuration: 250, // Reducido
   },
 
-  // Jugador - MÁS PODER PERO MÁS DESAFÍO
+  // Jugador - BALANCEADO
   player: {
-    lives: 7, // Aumentado de 5 a 7 (más vidas para mayor intensidad)
-    invulnerabilityTime: 90, // Reducido de 120 a 90 (menos tiempo invulnerable)
-
-    // DISPARO MÁS RÁPIDO
-    autoShootDelayBase: 120, // Reducido de 200 a 120ms (más rápido)
-    autoShootDelayReduction: 15, // Aumentado de 12 a 15ms (mejora más por nivel)
-    autoShootDelayMin: 40, // Reducido de 80 a 40ms (disparo súper rápido)
-
-    // BALAS MEJORADAS
-    bulletSpeedBase: 0.02, // Aumentado de 0.015 a 0.020 (balas más rápidas)
-    bulletSpeedIncrease: 0.003, // Aumentado de 0.002 a 0.003 (más incremento por nivel)
-
-    // PODER ESPECIAL MÁS FRECUENTE
-    specialPowerCost: 15, // Reducido de 25 a 15 (se carga más rápido)
-    specialPowerDuration: 4000, // Aumentado de 3000 a 4000ms (dura más)
-    specialBulletCount: 24, // Aumentado de 16 a 24 (más balas)
-
-    // NUEVAS MECÁNICAS
-    comboCounter: 0, // Contador de enemigos eliminados seguidos
-    maxCombo: 50, // Combo máximo para bonificaciones
-    adrenalineMode: false, // Modo adrenalina cuando vida baja
+    lives: 7, // Mantener 7 vidas
+    invulnerabilityTime: 100, // Aumentado de 90 a 100
+    autoShootDelayBase: 140, // Aumentado de 120 a 140ms
+    autoShootDelayReduction: 12, // Reducido de 15 a 12ms
+    autoShootDelayMin: 50, // Aumentado de 40 a 50ms
+    bulletSpeedBase: 0.018, // Reducido de 0.02 a 0.018
+    bulletSpeedIncrease: 0.0025, // Reducido
+    specialPowerCost: 18, // Aumentado de 15 a 18
+    specialPowerDuration: 3500, // Reducido de 4000 a 3500ms
+    specialBulletCount: 20, // Reducido de 24 a 20
+    comboCounter: 0,
+    maxCombo: 40, // Reducido de 50 a 40
+    adrenalineMode: false,
   },
 
-  // Niveles - PROGRESIÓN MÁS INTENSA
+  // NIVELES EXTENDIDOS Y BALANCEADOS - 20 NIVELES
   levels: {
-    // MÁS ENEMIGOS POR NIVEL
-    enemiesPerLevel: [25, 50, 80, 120, 170, 230, 300, 380, 470, 600], // Progresión más intensa
-    bossLevels: [3, 6, 9], // Niveles con mini-bosses
-    bonusLevels: [5, 10], // Niveles bonus con recompensas especiales
+    enemiesPerLevel: [
+      // Niveles 1-5: Introducción suave
+      30, 65, 105, 150, 200,
+      // Niveles 6-10: Incremento moderado
+      260, 330, 410, 500, 600,
+      // Niveles 11-15: Desafío intenso pero controlado
+      720, 860, 1020, 1200, 1400,
+      // Niveles 16-20: Máximo desafío
+      1620, 1860, 2120, 2400, 2700,
+    ],
+    bossLevels: [5, 10, 15, 20], // Bosses en niveles clave
+    bonusLevels: [7, 14], // Niveles bonus
   },
 
-  // NUEVAS MECÁNICAS DE JUEGO
+  // EVENTOS ESPECIALES BALANCEADOS
   special: {
-    // MODO SUPERVIVENCIA
-    survivalModeAfter: 10, // Activar modo supervivencia después del nivel 10
-    survivalSpawnRate: 0.5, // Spawn rate en modo supervivencia
+    survivalModeAfter: 20, // Después del nivel 20
+    survivalSpawnRate: 0.3, // Reducido
 
-    // EVENTOS ESPECIALES
-    meteorShowerChance: 0.001, // Lluvia de meteoritos ocasional
-    timeSlowChance: 0.0005, // Slow motion temporal
-    doublePointsChance: 0.0008, // Puntos dobles temporales
+    // EVENTOS MÁS FRECUENTES PERO BALANCEADOS
+    meteorShowerChance: 0.0008, // Reducido de 0.001
+    timeSlowChance: 0.0012, // Aumentado de 0.0005 (más frecuente - ¡es hermoso!)
+    doublePointsChance: 0.0006, // Reducido de 0.0008
 
-    // ACHIEVEMENTS/LOGROS
+    // DURACIÓN DE EVENTOS
+    timeSlowDuration: 5000, // 5 segundos de tiempo lento
+    meteorShowerSize: 6, // Reducido de 8 a 6 enemigos
+
     achievements: [
       { id: "combo_10", name: "Combo x10", requirement: 10 },
-      { id: "level_5", name: "Sobreviviente", requirement: 5 },
+      { id: "level_10", name: "Veterano", requirement: 10 },
+      { id: "level_20", name: "Maestro", requirement: 20 },
       { id: "no_damage", name: "Intocable", requirement: "no_damage_level" },
       {
         id: "speed_demon",
@@ -222,6 +224,160 @@ const GAME_CONFIG = {
     ],
   },
 };
+
+// ======================================================
+// CONTROL DE VOLUMEN - AÑADIR ESTAS FUNCIONES COMPLETAS
+// ======================================================
+
+// Variable global para el volumen maestro
+let masterVolume = 0.5; // 50% por defecto
+
+/**
+ * Crea la barra de volumen en la interfaz
+ */
+function createVolumeControl() {
+  // Crear contenedor de controles de sonido
+  const volumeContainer = document.createElement("div");
+  volumeContainer.id = "volume-control";
+  volumeContainer.style.position = "fixed";
+  volumeContainer.style.top = "10px";
+  volumeContainer.style.right = "10px";
+  volumeContainer.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+  volumeContainer.style.padding = "10px";
+  volumeContainer.style.borderRadius = "10px";
+  volumeContainer.style.border = "2px solid #8B0000";
+  volumeContainer.style.color = "#FFFFFF";
+  volumeContainer.style.fontSize = "14px";
+  volumeContainer.style.zIndex = "1001";
+  volumeContainer.style.display = "flex";
+  volumeContainer.style.alignItems = "center";
+  volumeContainer.style.gap = "10px";
+  volumeContainer.style.fontFamily = '"Times New Roman", serif';
+
+  // Icono de volumen
+  const volumeIcon = document.createElement("span");
+  volumeIcon.textContent = "🔊";
+  volumeIcon.style.fontSize = "18px";
+
+  // Slider de volumen
+  const volumeSlider = document.createElement("input");
+  volumeSlider.type = "range";
+  volumeSlider.min = "0";
+  volumeSlider.max = "100";
+  volumeSlider.value = "50";
+  volumeSlider.style.width = "80px";
+  volumeSlider.style.cursor = "pointer";
+
+  // Texto del porcentaje
+  const volumeText = document.createElement("span");
+  volumeText.textContent = "50%";
+  volumeText.style.minWidth = "35px";
+  volumeText.style.textAlign = "center";
+
+  // Botón de mute/unmute
+  const muteButton = document.createElement("button");
+  muteButton.textContent = "🔇";
+  muteButton.style.background = "none";
+  muteButton.style.border = "1px solid #8B0000";
+  muteButton.style.color = "#FFFFFF";
+  muteButton.style.cursor = "pointer";
+  muteButton.style.borderRadius = "5px";
+  muteButton.style.padding = "2px 5px";
+  muteButton.style.fontSize = "16px";
+
+  let isMuted = false;
+  let previousVolume = 50;
+
+  // Event listeners
+  volumeSlider.addEventListener("input", (e) => {
+    const volume = parseInt(e.target.value);
+    masterVolume = volume / 100;
+    volumeText.textContent = `${volume}%`;
+    updateAllSoundVolumes();
+
+    // Actualizar icono
+    if (volume === 0) {
+      volumeIcon.textContent = "🔇";
+    } else if (volume < 30) {
+      volumeIcon.textContent = "🔈";
+    } else if (volume < 70) {
+      volumeIcon.textContent = "🔉";
+    } else {
+      volumeIcon.textContent = "🔊";
+    }
+  });
+
+  muteButton.addEventListener("click", () => {
+    if (isMuted) {
+      // Unmute
+      masterVolume = previousVolume / 100;
+      volumeSlider.value = previousVolume;
+      volumeText.textContent = `${previousVolume}%`;
+      muteButton.textContent = "🔇";
+      volumeIcon.textContent = previousVolume > 50 ? "🔊" : "🔉";
+      isMuted = false;
+    } else {
+      // Mute
+      previousVolume = parseInt(volumeSlider.value);
+      masterVolume = 0;
+      volumeSlider.value = 0;
+      volumeText.textContent = "0%";
+      muteButton.textContent = "🔊";
+      volumeIcon.textContent = "🔇";
+      isMuted = true;
+    }
+    updateAllSoundVolumes();
+  });
+
+  // Ensamblar el control
+  volumeContainer.appendChild(volumeIcon);
+  volumeContainer.appendChild(volumeSlider);
+  volumeContainer.appendChild(volumeText);
+  volumeContainer.appendChild(muteButton);
+
+  // Añadir al DOM cuando el juego comience
+  document.body.appendChild(volumeContainer);
+}
+
+/**
+ * Actualiza el volumen de todos los sonidos
+ */
+function updateAllSoundVolumes() {
+  for (const key in sounds) {
+    if (sounds.hasOwnProperty(key)) {
+      const sound = sounds[key];
+
+      // Volúmenes base específicos por sonido
+      let baseVolume = 0.5;
+      switch (key) {
+        case "background":
+          baseVolume = 0.3;
+          break;
+        case "explosion":
+          baseVolume = 0.6;
+          break;
+        case "special":
+          baseVolume = 0.7;
+          break;
+        case "powerUp":
+          baseVolume = 0.6;
+          break;
+        case "shoot":
+          baseVolume = 0.3;
+          break; // Más bajo para disparos
+        case "hit":
+          baseVolume = 0.4;
+          break;
+        default:
+          baseVolume = 0.5;
+          break;
+      }
+
+      // Aplicar volumen maestro
+      sound.volume = baseVolume * masterVolume;
+    }
+  }
+}
 
 /**
  * Actualiza las constantes globales basadas en la configuración
@@ -285,6 +441,12 @@ window.onload = function () {
 
   // Center the main menu
   centerMainMenu();
+
+  // Crear control de volumen
+  createVolumeControl();
+
+  // Aplicar volumen inicial a todos los sonidos
+  updateAllSoundVolumes();
 };
 
 /**
@@ -391,28 +553,91 @@ function stopBackgroundMusic() {
  * @param {string} message - El mensaje a mostrar
  * @param {string} color - Color del texto (opcional)
  */
+
+// ======================================================
+// 1. SISTEMA DE MENSAJES DISTRIBUIDO (Reemplazar showScreenMessage existente)
+// ======================================================
+
+const messagePositions = [];
+let messageIdCounter = 0;
+
 function showScreenMessage(message, color = "#FFFFFF") {
+  const messageId = messageIdCounter++;
+
+  // Buscar posición disponible
+  let yPosition = 20;
+  const messageHeight = 40;
+  const padding = 10;
+
+  // Verificar posiciones ocupadas y encontrar una libre
+  for (let y = 20; y < canvas.height - 200; y += messageHeight + padding) {
+    const positionTaken = messagePositions.some(
+      (pos) => Math.abs(pos.y - y) < messageHeight + padding && pos.active
+    );
+
+    if (!positionTaken) {
+      yPosition = y;
+      break;
+    }
+  }
+
+  // Si no hay espacio arriba, usar posiciones alternativas
+  if (yPosition > canvas.height - 300) {
+    yPosition = 20 + (messageId % 5) * (messageHeight + padding);
+  }
+
+  // Registrar la posición
+  const position = {
+    id: messageId,
+    y: yPosition,
+    active: true,
+    timeCreated: Date.now(),
+  };
+  messagePositions.push(position);
+
   const messageElement = document.createElement("div");
   messageElement.textContent = message;
   messageElement.style.position = "fixed";
-  messageElement.style.top = "30%";
+  messageElement.style.top = `${yPosition}%`;
   messageElement.style.left = "50%";
-  messageElement.style.transform = "translate(-50%, -50%)";
+  messageElement.style.transform = "translateX(-50%)";
   messageElement.style.color = color;
-  messageElement.style.fontSize = "24px";
+  messageElement.style.fontSize = "20px";
   messageElement.style.fontWeight = "bold";
-  messageElement.style.textShadow = "0 0 10px #FF0000";
+  messageElement.style.textShadow = "2px 2px 4px rgba(0,0,0,0.8)";
   messageElement.style.zIndex = "1000";
+  messageElement.style.backgroundColor = "rgba(0,0,0,0.5)";
+  messageElement.style.padding = "5px 15px";
+  messageElement.style.borderRadius = "10px";
+  messageElement.style.border = `2px solid ${color}`;
+  messageElement.style.maxWidth = "400px";
+  messageElement.style.textAlign = "center";
+
   document.body.appendChild(messageElement);
 
   // Animación de desvanecimiento
   setTimeout(() => {
-    messageElement.style.transition = "opacity 1s";
+    messageElement.style.transition = "opacity 1s, transform 1s";
     messageElement.style.opacity = "0";
+    messageElement.style.transform = "translateX(-50%) translateY(-20px)";
+
+    // Marcar posición como libre
+    const pos = messagePositions.find((p) => p.id === messageId);
+    if (pos) pos.active = false;
+
     setTimeout(() => {
-      document.body.removeChild(messageElement);
+      if (messageElement.parentNode) {
+        document.body.removeChild(messageElement);
+      }
+      // Limpiar posiciones viejas
+      const now = Date.now();
+      for (let i = messagePositions.length - 1; i >= 0; i--) {
+        if (now - messagePositions[i].timeCreated > 10000) {
+          messagePositions.splice(i, 1);
+        }
+      }
     }, 1000);
-  }, 1500);
+  }, 2000);
 }
 
 // ======================================================
@@ -961,6 +1186,9 @@ function drawStaticGameBackground() {
  * hasta que el usuario confirme
  */
 function startGame() {
+  // Limpiar estado anterior
+  resetGameState();
+
   playerName = document.getElementById("name").value;
   playerAvatar = document.getElementById("avatar").value;
 
@@ -1056,6 +1284,7 @@ function startGame() {
 
 /**
  * Muestra las instrucciones del juego antes de iniciar el nivel 1
+ * VERSIÓN ACTUALIZADA CON TODAS LAS NUEVAS CARACTERÍSTICAS
  */
 function showInstructions() {
   // Crear elemento de instrucciones
@@ -1064,71 +1293,110 @@ function showInstructions() {
   instructionsModal.style.position = "fixed";
   instructionsModal.style.top = "50%";
   instructionsModal.style.left = "50%";
-  instructionsModal.style.width = "80%";
-  instructionsModal.style.maxWidth = "600px";
+  instructionsModal.style.width = "85%";
+  instructionsModal.style.maxWidth = "700px";
   instructionsModal.style.transform = "translate(-50%, -50%)";
-  instructionsModal.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
+  instructionsModal.style.backgroundColor = "rgba(0, 0, 0, 0.95)";
   instructionsModal.style.border = "3px solid #8B0000";
-  instructionsModal.style.borderRadius = "10px";
-  instructionsModal.style.padding = "20px";
+  instructionsModal.style.borderRadius = "15px";
+  instructionsModal.style.padding = "25px";
   instructionsModal.style.color = "#FFFFFF";
   instructionsModal.style.zIndex = "1000";
   instructionsModal.style.fontFamily = '"Times New Roman", Times, serif';
-  instructionsModal.style.boxShadow = "0 0 20px #FF0000";
+  instructionsModal.style.boxShadow = "0 0 30px #FF0000";
   instructionsModal.style.textAlign = "left";
-  instructionsModal.style.maxHeight = "80vh";
+  instructionsModal.style.maxHeight = "85vh";
   instructionsModal.style.overflowY = "auto";
 
   // Contenido HTML de las instrucciones
   instructionsModal.innerHTML = `
-    <h2 style="text-align: center; color: #FF0000; text-shadow: 0 0 10px #FF0000; margin-bottom: 20px;">INSTRUCCIONES DE JUEGO</h2>
+    <h2 style="text-align: center; color: #FF0000; text-shadow: 0 0 15px #FF0000; margin-bottom: 20px;">🎮 HELL SHOOTER - GUÍA COMPLETA 🎮</h2>
     
     <div style="margin-bottom: 15px;">
-      <h3 style="color: #FF0000; margin-bottom: 5px;">CONTROLES:</h3>
-      <p>• <strong>Movimiento:</strong> Mueve el ratón o desliza el dedo en dispositivos táctiles para controlar al jugador.</p>
-      <p>• <strong>Disparo:</strong> Automático. Tu personaje dispara constantemente hacia arriba.</p>
+      <h3 style="color: #FF0000; margin-bottom: 8px;">🎯 CONTROLES:</h3>
+      <p>• <strong>Movimiento:</strong> Ratón (PC) o deslizar dedo (móvil)</p>
+      <p>• <strong>Disparo:</strong> Automático y constante</p>
+      <p>• <strong>Poder Especial:</strong> ESPACIO (PC) o tocar indicador 🔥 (móvil)</p>
+      <p>• <strong>Volumen:</strong> Control deslizante en esquina superior derecha</p>
     </div>
     
     <div style="margin-bottom: 15px;">
-      <h3 style="color: #FF0000; margin-bottom: 5px;">OBJETIVO:</h3>
-      <p>Sobrevive a las hordas de enemigos y elimina el número requerido para avanzar de nivel. Los enemigos se vuelven más rápidos y numerosos en niveles superiores.</p>
+      <h3 style="color: #FF0000; margin-bottom: 8px;">🏆 OBJETIVO:</h3>
+      <p><strong>Sobrevive 20 niveles épicos</strong> eliminando hordas de enemigos. Cada nivel requiere más enemigos para avanzar y la dificultad aumenta progresivamente.</p>
     </div>
     
     <div style="margin-bottom: 15px;">
-      <h3 style="color: #FF0000; margin-bottom: 5px;">VIDAS:</h3>
-       <p>• Tienes 7 vidas (💀💀💀💀💀💀💀) al comenzar.</p>
-      <p>• Pierdes una vida al ser golpeado por un enemigo.</p>
-      <p>• Después de ser golpeado, eres invulnerable por unos segundos.</p>
+      <h3 style="color: #FF0000; margin-bottom: 8px;">💀 SISTEMA DE VIDAS:</h3>
+      <p>• <strong>7 vidas iniciales</strong> (💀💀💀💀💀💀💀)</p>
+      <p>• Invulnerabilidad temporal tras recibir daño</p>
+      <p>• Recupera vidas con corazones ❤️</p>
     </div>
     
     <div style="margin-bottom: 15px;">
-      <h3 style="color: #FF0000; margin-bottom: 5px;">PODER ESPECIAL:</h3>
-      <p>• Por cada 15 enemigos eliminados, se carga tu poder especial (indicador inferior derecho).</p>
-      <p>• Actívalo con ESPACIO (PC) o tocando el indicador (móvil).</p>
-      <p>• Dispara balas en todas direcciones durante unos segundos.</p>
+      <h3 style="color: #FF0000; margin-bottom: 8px;">🔥 PODER ESPECIAL:</h3>
+      <p>• Se carga cada <strong>18 enemigos</strong> eliminados</p>
+      <p>• Dispara <strong>20 balas explosivas</strong> en todas direcciones</p>
+      <p>• Duración: <strong>3.5 segundos</strong> de destrucción total</p>
     </div>
     
     <div style="margin-bottom: 15px;">
-      <h3 style="color: #FF0000; margin-bottom: 5px;">ELEMENTOS DE AYUDA:</h3>
-      <p>• <span style="color: #FF0000;">❤️</span> <strong>Corazones:</strong> Recuperan una vida perdida.</p>
-      <p>• <span style="color: #FFFF00;">⬦</span> <strong>Balas Penetrantes:</strong> Atraviesan varios enemigos.</p>
-      <p>• <span style="color: #00FFFF;">⬦</span> <strong>Disparo Amplio:</strong> Dispara en abanico.</p>
-      <p>• <span style="color: #FF8800;">⬦</span> <strong>Balas Explosivas:</strong> Crean explosiones que dañan enemigos cercanos.</p>
-      <p>• <span style="color: #FF00FF;">⬦</span> <strong>Disparo Rápido:</strong> Aumenta la velocidad de disparo.</p>
+      <h3 style="color: #FF0000; margin-bottom: 8px;">⚡ SISTEMA DE COMBOS:</h3>
+      <p>• <strong>Elimina enemigos consecutivamente</strong> para multiplicar puntos</p>
+      <p>• Combo x2, x3, x4... hasta x4.0 = <strong>¡4x más puntos!</strong></p>
+      <p>• Se pierde si no eliminas enemigos por 2 segundos</p>
     </div>
     
-    <div style="text-align: center; margin-top: 20px;">
-      <button id="start-game-btn" style="background-color: #8B0000; color: white; padding: 10px 20px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; font-family: inherit; box-shadow: 0 0 10px #FF0000;">¡COMENZAR JUEGO!</button>
+    <div style="margin-bottom: 15px;">
+      <h3 style="color: #FF0000; margin-bottom: 8px;">🚨 MODO ADRENALINA:</h3>
+      <p>• Se activa automáticamente con <strong>≤2 vidas</strong></p>
+      <p>• <strong>Disparo más rápido</strong> + <strong>50% más puntos</strong></p>
+      <p>• Pantalla roja parpadeante de intensidad máxima</p>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <h3 style="color: #FF0000; margin-bottom: 8px;">💎 POWER-UPS:</h3>
+      <p>• 🟡 <strong>Balas Penetrantes:</strong> Atraviesan 3 enemigos</p>
+      <p>• 🔵 <strong>Disparo Amplio:</strong> 7 balas en abanico</p>
+      <p>• 🟠 <strong>Balas Explosivas:</strong> Crean explosiones de área</p>
+      <p>• 🟣 <strong>Disparo Rápido:</strong> Velocidad de fuego extrema</p>
+      <p>• ✨ <strong>Power-ups Raros:</strong> Escudo, Puntos Dobles, Imán</p>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <h3 style="color: #FF0000; margin-bottom: 8px;">🌟 EVENTOS ESPECIALES:</h3>
+      <p>• 🌊 <strong>Oleadas Enemigas:</strong> 4 enemigos súper agresivos</p>
+      <p>• ☄️ <strong>Lluvia de Meteoritos:</strong> 6 enemigos desde el cielo</p>
+      <p>• 🐢 <strong>Tiempo Súper Lento:</strong> Todo se mueve como tortuga (¡hermoso!)</p>
+      <p>• 💰 <strong>Puntos Dobles:</strong> Multiplica tu puntuación temporalmente</p>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <h3 style="color: #FF0000; margin-bottom: 8px;">🎵 AUDIO:</h3>
+      <p>• <strong>Control de volumen</strong> en la esquina superior derecha</p>
+      <p>• Botón de <strong>mute/unmute</strong> rápido</p>
+      <p>• Ajuste de <strong>0% a 100%</strong> de volumen</p>
+    </div>
+    
+    <div style="background: rgba(139, 0, 0, 0.2); padding: 15px; border-radius: 10px; margin: 15px 0;">
+      <h3 style="color: #FFD700; margin-bottom: 8px; text-align: center;">🏅 PROGRESIÓN DE NIVELES:</h3>
+      <p style="text-align: center;"><strong>Nivel 1-5:</strong> Introducción (30-200 enemigos)</p>
+      <p style="text-align: center;"><strong>Nivel 6-10:</strong> Intensidad Media (260-600 enemigos)</p>
+      <p style="text-align: center;"><strong>Nivel 11-15:</strong> Desafío Alto (720-1400 enemigos)</p>
+      <p style="text-align: center;"><strong>Nivel 16-20:</strong> ¡INFIERNO PURO! (1620-2700 enemigos)</p>
+    </div>
+    
+    <div style="text-align: center; margin-top: 25px;">
+      <button id="start-game-btn" style="background: linear-gradient(45deg, #8B0000, #FF0000); color: white; padding: 15px 30px; font-size: 18px; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; box-shadow: 0 0 20px #FF0000; font-weight: bold;">🔥 ¡COMENZAR AVENTURA! 🔥</button>
     </div>
   `;
 
   // Añadir al DOM
   document.body.appendChild(instructionsModal);
 
-  // Asignar evento al botón - AHORA LLAMA A startRealGame
+  // Asignar evento al botón
   document.getElementById("start-game-btn").addEventListener("click", () => {
     document.body.removeChild(instructionsModal);
-    startRealGame(); // Usar la función nueva para iniciar el juego real
+    startRealGame();
   });
 }
 
@@ -1589,7 +1857,7 @@ function checkAdrenalineMode() {
 }
 
 /**
- * Efectos visuales para la pantalla
+ * Efectos visuales para la pantalla - VERSIÓN ACTUALIZADA PARA TU CSS
  */
 function createScreenEffect(type) {
   const overlay = document.createElement("div");
@@ -1601,18 +1869,16 @@ function createScreenEffect(type) {
   overlay.style.pointerEvents = "none";
   overlay.style.zIndex = "999";
 
+  // Usar las clases CSS que definimos
   switch (type) {
     case "adrenaline":
-      overlay.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
-      overlay.style.animation = "pulse 0.5s infinite alternate";
+      overlay.className = "screen-effect-adrenaline";
       break;
     case "slowmo":
-      overlay.style.backgroundColor = "rgba(0, 100, 255, 0.1)";
-      overlay.style.filter = "blur(1px)";
+      overlay.className = "screen-effect-slowmo";
       break;
     case "doublepoints":
-      overlay.style.backgroundColor = "rgba(255, 215, 0, 0.1)";
-      overlay.style.animation = "sparkle 1s infinite";
+      overlay.className = "screen-effect-doublepoints";
       break;
   }
 
@@ -2014,37 +2280,72 @@ function trySpawnHeart() {
 }
 
 /**
- * Eventos especiales aleatorios (NUEVOS)
+ * Lluvia de meteoritos mejorada
  */
 function meteorShower() {
-  showScreenMessage("¡LLUVIA DE METEORITOS!", "#FF8800");
-  // Crear múltiples enemigos desde arriba
-  for (let i = 0; i < 8; i++) {
+  showScreenMessage("☄️ ¡LLUVIA DE METEORITOS! ☄️", "#FF8800");
+  // Crear enemigos con delay más espaciado para mejor performance
+  for (let i = 0; i < GAME_CONFIG.special.meteorShowerSize; i++) {
     setTimeout(() => {
       spawnEnemy();
-    }, i * 150);
+    }, i * 200); // 200ms entre cada meteorito
   }
   playSound("special");
 }
 
+// Variables para modo lento
+let slowMotionActive = false;
+let slowMotionFactor = 1.0;
+
+/**
+ * Modo lento mejorado - Más hermoso y frecuente
+ */
 function activateSlowMotion() {
-  showScreenMessage("¡TIEMPO LENTO!", "#00BBFF");
+  if (slowMotionActive) return; // Evitar múltiples activaciones
+
+  slowMotionActive = true;
+  slowMotionFactor = 0.3; // 30% de velocidad normal - muy lento
+
+  showScreenMessage("🐢 ¡TIEMPO SÚPER LENTO! 🐢", "#00BBFF");
   createScreenEffect("slowmo");
 
-  // Reducir velocidad de enemigos temporalmente
+  // Aplicar efectos visuales especiales
+  createSlowMotionParticles();
+
+  // Duración extendida para disfrutar el efecto
   setTimeout(() => {
-    showScreenMessage("Tiempo normal restaurado", "#FFFFFF");
-  }, 3000);
+    slowMotionActive = false;
+    slowMotionFactor = 1.0;
+    showScreenMessage("⚡ Tiempo normal restaurado ⚡", "#FFFFFF");
+  }, GAME_CONFIG.special.timeSlowDuration);
 }
 
+/**
+ * Crear partículas especiales para el modo lento
+ */
+function createSlowMotionParticles() {
+  for (let i = 0; i < 20; i++) {
+    setTimeout(() => {
+      createParticleEffect(
+        Math.random() * canvas.width,
+        Math.random() * canvas.height,
+        "#00BBFF",
+        3
+      );
+    }, i * 100);
+  }
+}
+
+/**
+ * Puntos dobles temporal
+ */
 function activateDoublePoints() {
-  showScreenMessage("¡PUNTOS DOBLES!", "#FFD700");
+  showScreenMessage("💰 ¡PUNTOS DOBLES! 💰", "#FFD700");
   createScreenEffect("doublepoints");
 
-  // El efecto se maneja en enhancedEnemyKill
   setTimeout(() => {
-    showScreenMessage("Puntos normales", "#FFFFFF");
-  }, 5000);
+    showScreenMessage("📊 Puntos normales", "#FFFFFF");
+  }, 4000);
 }
 
 // ======================================================
@@ -2103,21 +2404,44 @@ function spawnEnemy() {
   }
 }
 
+let maxEnemiesOnScreen = 150; // Límite de enemigos simultáneos
+
+function optimizedSpawnEnemy() {
+  // No spawnar si hay demasiados enemigos en pantalla
+  if (enemies.length >= maxEnemiesOnScreen) {
+    return;
+  }
+
+  // Ajustar límite basado en el nivel
+  if (level >= 15) {
+    maxEnemiesOnScreen = 120; // Reducir en niveles altos
+  } else if (level >= 10) {
+    maxEnemiesOnScreen = 135;
+  }
+
+  // Llamar a la función normal de spawn
+  spawnEnemy();
+}
+
 /**
  * Updates enemy positions and handles collision with walls and other enemies
+ * VERSIÓN MEJORADA CON MODO LENTO
  */
 function updateEnemies() {
   const wallBounceFactorX = 0.9; // Rebote con paredes laterales
   const wallBounceFactorY = 1.05; // Rebote con techo/suelo - aumenta velocidad
   const enemyBounceFactorBase = 1.1; // Base para rebote entre enemigos - aumenta velocidad
 
+  // Aplicar factor de tiempo lento
+  const currentSlowFactor = slowMotionActive ? slowMotionFactor : 1.0;
+
   // Update each enemy's position
   for (let i = 0; i < enemies.length; i++) {
     const enemy = enemies[i];
 
-    // Move enemy
-    enemy.x += enemy.velocityX;
-    enemy.y += enemy.velocityY;
+    // Move enemy CON VELOCIDAD AJUSTADA POR MODO LENTO
+    enemy.x += enemy.velocityX * currentSlowFactor;
+    enemy.y += enemy.velocityY * currentSlowFactor;
 
     // Bounce off side walls - change direction but maintain mainly downward movement
     if (enemy.x <= 0) {
@@ -2637,9 +2961,13 @@ function checkBulletEnemyCollisions() {
       // Check for level completion
       if (enemiesKilled >= levelUpEnemies[level - 1]) {
         level++;
+
+        // Verificar si se completaron todos los niveles
         if (level > levelUpEnemies.length) {
-          victory();
+          console.log("¡Todos los niveles completados!");
+          victory(); // Llamar a victory que ahora detiene completamente el juego
         } else {
+          console.log(`Avanzando al nivel ${level}`);
           startLevel();
         }
       }
@@ -2669,10 +2997,18 @@ function checkPlayerEnemyCollisions() {
 // ======================================================
 
 /**
- * Main game loop function
+ * Main game loop function - VERSIÓN MEJORADA CON NUEVAS MECÁNICAS
  */
 function gameLoop() {
   try {
+    // NUEVA VERIFICACIÓN: Si el juego terminó, no continuar
+    if (gameEnded) {
+      console.log("Juego terminado, deteniendo game loop");
+      clearInterval(gameInterval);
+      gameInterval = null;
+      return;
+    }
+
     // Skip update during level transition
     if (isLevelTransition) return;
 
@@ -2702,7 +3038,9 @@ function gameLoop() {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
+    // ======================================================
     // NUEVAS MECÁNICAS INTENSAS - AÑADIR ESTAS LÍNEAS:
+    // ======================================================
     trySpawnWave(); // Oleadas de enemigos
     updateComboSystem(); // Sistema de combos
     checkAdrenalineMode(); // Modo adrenalina
@@ -2774,8 +3112,8 @@ function gameLoop() {
   } catch (error) {
     console.error("Error in game loop:", error);
 
-    // Try to recover
-    if (!gameInterval) {
+    // Try to recover SOLO si el juego no ha terminado
+    if (!gameInterval && !gameEnded) {
       gameInterval = setInterval(gameLoop, 1000 / 60);
     }
   }
@@ -2836,20 +3174,69 @@ function gameOver() {
 }
 
 /**
- * Restarts the game
+ * Restarts the game - VERSIÓN CORREGIDA
  */
 function restartGame() {
+  // Resetear variables de control
+  gameEnded = false;
+  scoreAlreadySaved = false;
+  isSaving = false;
+
+  // Ocultar pantalla de game over
   document.getElementById("game-over").style.display = "none";
+
+  // Iniciar nuevo juego
   startGame();
 }
 
 /**
- * Saves score and shows ranking
+ * Saves score and shows ranking - VERSIÓN CORREGIDA PARA EVITAR GUARDADO MÚLTIPLE
  */
 async function saveAndViewRanking() {
-  await saveScore();
-  viewRanking();
-  document.getElementById("game-over").style.display = "none";
+  // Verificar si ya se guardó o se está guardando
+  if (scoreAlreadySaved) {
+    alert("⚠️ La puntuación ya fue guardada anteriormente.");
+    viewRanking(); // Solo mostrar el ranking
+    document.getElementById("game-over").style.display = "none";
+    return;
+  }
+
+  if (isSaving) {
+    alert("⏳ Ya se está guardando la puntuación. Por favor espera...");
+    return;
+  }
+
+  // Marcar que se está guardando
+  isSaving = true;
+
+  try {
+    const saveResult = await saveScore();
+
+    if (saveResult) {
+      // Marcar como guardado exitosamente
+      scoreAlreadySaved = true;
+
+      // Cambiar el texto del botón para indicar que ya se guardó
+      const saveButton = document.querySelector("#game-over button");
+      if (saveButton && saveButton.textContent.includes("Guardar")) {
+        saveButton.textContent = "✅ Ya Guardado - Ver Ranking";
+        saveButton.onclick = () => {
+          viewRanking();
+          document.getElementById("game-over").style.display = "none";
+        };
+      }
+    }
+
+    // Mostrar ranking
+    viewRanking();
+    document.getElementById("game-over").style.display = "none";
+  } catch (error) {
+    console.error("Error al guardar:", error);
+    alert("❌ Error al guardar la puntuación. Inténtalo de nuevo.");
+  } finally {
+    // Permitir intentos futuros si falló
+    isSaving = false;
+  }
 }
 
 // URL de tu Web App (CAMBIAR POR LA QUE COPIASTE)
@@ -2863,6 +3250,11 @@ async function saveScore() {
   console.log("🚀 Guardando puntuación...");
 
   try {
+    // Validar datos antes de enviar
+    if (!playerName || !playerAvatar) {
+      throw new Error("Datos del jugador incompletos");
+    }
+
     // Crear URL con parámetros
     const params = new URLSearchParams();
     params.append("action", "save");
@@ -2883,7 +3275,16 @@ async function saveScore() {
     const urlWithParams = `${WEBAPP_URL}?${params.toString()}`;
     console.log("📡 Enviando a:", urlWithParams);
 
-    const response = await fetch(urlWithParams);
+    // Timeout para la petición
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
+
+    const response = await fetch(urlWithParams, {
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
     const result = await response.json();
 
     if (result.success) {
@@ -2891,28 +3292,48 @@ async function saveScore() {
       alert("¡Puntuación guardada con éxito! 🎉");
       return true;
     } else {
-      throw new Error(result.message);
+      throw new Error(result.message || "Error desconocido del servidor");
     }
   } catch (error) {
     console.error("❌ Error:", error);
-    alert("Error al guardar: " + error.message);
+
+    if (error.name === "AbortError") {
+      alert("⏰ Tiempo de espera agotado. Verifica tu conexión a internet.");
+    } else {
+      alert("❌ Error al guardar: " + error.message);
+    }
+
     return false;
   }
 }
 
 /**
- * Handles victory
+ * Handles victory - VERSIÓN CORREGIDA
  */
 function victory() {
+  // Detener completamente el juego
+  gameEnded = true;
+
   clearInterval(gameInterval);
+  gameInterval = null;
+
   stopAutoShoot();
   stopBackgroundMusic();
+
+  // Mostrar pantalla de victoria
   document.getElementById("game-over").style.display = "block";
   document.getElementById("game-over-text").textContent = "¡Victoria! 🎉";
   playSound("victory");
 
   // Efecto visual de celebración
   celebrationEffect();
+
+  // Opcional: Mostrar mensaje con estadísticas finales
+  setTimeout(() => {
+    showScreenMessage(`¡JUEGO COMPLETADO!`, "#FFD700");
+    showScreenMessage(`Puntuación Final: ${score}`, "#FFFFFF");
+    showScreenMessage(`Tiempo Total: ${Math.floor(gameTime / 60)}s`, "#FFFFFF");
+  }, 1000);
 }
 
 /**
@@ -3075,6 +3496,47 @@ function drawBackground() {
     const ctx = canvas.getContext("2d");
     ctx.drawImage(img, x, y, drawWidth, drawHeight);
   }
+}
+
+/**
+ * Limpia completamente el estado del juego
+ * AÑADIR ESTA FUNCIÓN AL CÓDIGO (después de drawBackground())
+ */
+function resetGameState() {
+  // Detener todos los intervalos
+  if (gameInterval) {
+    clearInterval(gameInterval);
+    gameInterval = null;
+  }
+
+  if (autoShootInterval) {
+    clearInterval(autoShootInterval);
+    autoShootInterval = null;
+  }
+
+  // Resetear variables de control
+  gameEnded = false;
+  scoreAlreadySaved = false;
+  isSaving = false;
+
+  // Resetear arrays de juego
+  bullets = [];
+  enemies = [];
+  specialBullets = [];
+  hearts = [];
+  powerUps = [];
+
+  // Resetear estados
+  specialPowerActive = false;
+  specialPowerReady = false;
+  activePowerUp = null;
+  powerUpTimeLeft = 0;
+
+  // Resetear variables del juego
+  invulnerableTime = 0;
+  isLevelTransition = false;
+
+  console.log("Estado del juego completamente limpiado");
 }
 
 /**
