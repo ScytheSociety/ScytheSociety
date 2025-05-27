@@ -89,7 +89,7 @@ const BulletManager = {
       // 🔥 Velocidad de bala más rápida
       const bulletSpeed = canvas.height * (0.018 + level * 0.003);
 
-      // 🔥 CONFIGURACIÓN COMBINABLE
+      // 🔥 CONFIGURACIÓN COMBINABLE CORREGIDA
       let bulletCount = 1;
       let spreadAngle = Math.PI / 12;
       let bulletConfig = {
@@ -98,7 +98,7 @@ const BulletManager = {
         penetrationCount: 0,
       };
 
-      // 🔥 NUEVO: Configurar según power-up COMBINABLE
+      // 🔥 NUEVO: Sistema combinable - el rapid fire se mantiene
       if (activePowerUp) {
         switch (activePowerUp.id) {
           case 0: // Penetrante
@@ -115,9 +115,8 @@ const BulletManager = {
             bulletConfig.explosive = true;
             break;
 
-          case 3: // Rapid Fire - SE COMBINA CON OTROS
-            // Si SOLO tiene rapid fire, disparo normal rápido
-            bulletCount = 1;
+          case 3: // Rapid Fire - NO SE PIERDE, solo afecta velocidad
+            // Este power-up solo afecta el cooldown, no las balas
             break;
         }
       } else {

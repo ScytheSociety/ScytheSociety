@@ -49,15 +49,15 @@ const PowerUpManager = {
     const combo = window.ComboSystem ? window.ComboSystem.getCurrentCombo() : 0;
 
     // 🔥 PROBABILIDAD DINÁMICA basada en vidas y combos
-    let baseChance = 0.001; // Base baja
+    let baseChance = 0.0005; // Era 0.001, ahora 0.0005 (MÁS RARO)
 
     // Aumentar según vidas perdidas
     if (playerLives <= 2) {
-      baseChance *= 6; // 6x más probable con muy pocas vidas
+      baseChance *= 4; // Era 6x, ahora 4x
     } else if (playerLives <= 4) {
-      baseChance *= 3; // 3x más probable con pocas vidas
+      baseChance *= 2; // Era 3x, ahora 2x
     } else if (playerLives <= 6) {
-      baseChance *= 1.5; // 1.5x más probable con vidas medias
+      baseChance *= 1.2; // Era 1.5x, ahora 1.2x
     }
 
     // 🔥 BONUS POR COMBO - Más combos = más corazones

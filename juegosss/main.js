@@ -17,6 +17,7 @@ let gameEnded = false;
 // 🔥 Variables para efectos especiales globales
 let slowMotionActive = false;
 let slowMotionFactor = 1.0;
+let frenzyModeActive = false;
 
 // ======================================================
 // INICIALIZACIÓN DEL JUEGO
@@ -308,15 +309,15 @@ function gameLoop() {
 }
 
 /**
- * 🔥 NUEVO: Dibuja efectos especiales en pantalla con colores MÁS INTENSOS
+ * 🔥 NUEVO: Dibuja efectos especiales en pantalla - CORREGIDO
  */
 function drawSpecialEffects(ctx) {
-  // 🌊 Efecto de tiempo lento - MUY AZUL COMO BAJO EL AGUA
+  // 🌊 Efecto de tiempo lento - MUY AZUL PERO MÁS INTENSO
   if (slowMotionActive) {
     ctx.save();
 
     // Overlay azul MUY INTENSO
-    ctx.fillStyle = "rgba(0, 100, 255, 0.4)"; // MUY MÁS INTENSO
+    ctx.fillStyle = "rgba(0, 150, 255, 0.5)"; // MUY MÁS INTENSO
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Segundo overlay para efecto bajo el agua
@@ -328,40 +329,40 @@ function drawSpecialEffects(ctx) {
       canvas.height / 2,
       Math.max(canvas.width, canvas.height)
     );
-    gradient.addColorStop(0, "rgba(0, 150, 255, 0.2)");
-    gradient.addColorStop(1, "rgba(0, 50, 150, 0.3)");
+    gradient.addColorStop(0, "rgba(0, 200, 255, 0.3)");
+    gradient.addColorStop(1, "rgba(0, 100, 200, 0.4)");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Burbujas MÁS VISIBLES
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 15; i++) {
       const bubbleX =
         Math.sin(window.getGameTime() * 0.02 + i) * canvas.width * 0.4 +
         canvas.width / 2;
       const bubbleY =
         Math.cos(window.getGameTime() * 0.015 + i * 0.7) * canvas.height * 0.4 +
         canvas.height / 2;
-      const bubbleSize = 25 + Math.sin(window.getGameTime() * 0.03 + i) * 15;
+      const bubbleSize = 30 + Math.sin(window.getGameTime() * 0.03 + i) * 20;
 
       ctx.beginPath();
       ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(150, 220, 255, 0.6)"; // MÁS OPACO
+      ctx.fillStyle = "rgba(200, 240, 255, 0.7)"; // MÁS OPACO
       ctx.fill();
-      ctx.strokeStyle = "rgba(200, 240, 255, 0.8)"; // MÁS VISIBLE
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(220, 250, 255, 0.9)"; // MÁS VISIBLE
+      ctx.lineWidth = 4;
       ctx.stroke();
     }
 
     // Ondas acuáticas MÁS INTENSAS
-    for (let i = 0; i < 5; i++) {
-      ctx.strokeStyle = `rgba(0, 200, 255, ${0.4 - i * 0.08})`;
-      ctx.lineWidth = 4 - i;
+    for (let i = 0; i < 6; i++) {
+      ctx.strokeStyle = `rgba(0, 220, 255, ${0.5 - i * 0.08})`;
+      ctx.lineWidth = 5 - i;
       ctx.beginPath();
 
       for (let x = 0; x < canvas.width; x += 8) {
         const y =
           canvas.height / 2 +
-          Math.sin((x + window.getGameTime() * 3) * 0.01 + i) * 40;
+          Math.sin((x + window.getGameTime() * 3) * 0.01 + i) * 50;
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
@@ -371,15 +372,15 @@ function drawSpecialEffects(ctx) {
     ctx.restore();
   }
 
-  // 🔥 Efecto de modo frenesí - MUY ROJO COMO FUEGO
-  if (window.frenzyModeActive) {
+  // 🔥 Efecto de modo frenesí - MENOS ROJO E INTENSO
+  if (frenzyModeActive) {
     ctx.save();
 
-    // Overlay rojizo MUY INTENSO
-    ctx.fillStyle = "rgba(255, 50, 0, 0.4)"; // MUY MÁS INTENSO
+    // Overlay rojizo MENOS INTENSO
+    ctx.fillStyle = "rgba(255, 80, 0, 0.2)"; // MUCHO MENOS INTENSO
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Segundo overlay ardiente
+    // Segundo overlay más sutil
     const fireGradient = ctx.createRadialGradient(
       canvas.width / 2,
       canvas.height,
@@ -388,44 +389,20 @@ function drawSpecialEffects(ctx) {
       canvas.height,
       canvas.height
     );
-    fireGradient.addColorStop(0, "rgba(255, 100, 0, 0.3)");
-    fireGradient.addColorStop(0.5, "rgba(255, 50, 0, 0.25)");
-    fireGradient.addColorStop(1, "rgba(200, 0, 0, 0.2)");
+    fireGradient.addColorStop(0, "rgba(255, 120, 0, 0.15)");
+    fireGradient.addColorStop(0.5, "rgba(255, 80, 0, 0.1)");
+    fireGradient.addColorStop(1, "rgba(200, 50, 0, 0.05)");
     ctx.fillStyle = fireGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Llamas MÁS GRANDES Y VISIBLES
-    for (let i = 0; i < 15; i++) {
-      const flameX = (i / 15) * canvas.width;
-      const flameHeight = 120 + Math.sin(window.getGameTime() * 0.12 + i) * 60;
-      const flameIntensity =
-        0.5 + Math.sin(window.getGameTime() * 0.18 + i * 0.5) * 0.3;
-
-      const flameGradient = ctx.createLinearGradient(
-        flameX,
-        canvas.height,
-        flameX,
-        canvas.height - flameHeight
-      );
-      flameGradient.addColorStop(0, `rgba(255, 80, 0, ${flameIntensity})`);
-      flameGradient.addColorStop(
-        0.5,
-        `rgba(255, 150, 0, ${flameIntensity * 0.8})`
-      );
-      flameGradient.addColorStop(1, `rgba(255, 255, 50, 0)`);
-
-      ctx.fillStyle = flameGradient;
-      ctx.fillRect(flameX - 20, canvas.height - flameHeight, 40, flameHeight);
-    }
-
-    // Chispas MÁS GRANDES Y NUMEROSAS
-    for (let i = 0; i < 25; i++) {
+    // Chispas más sutiles
+    for (let i = 0; i < 12; i++) {
       const sparkX = Math.random() * canvas.width;
       const sparkY = Math.random() * canvas.height;
-      const sparkSize = 3 + Math.random() * 5;
+      const sparkSize = 2 + Math.random() * 3;
 
-      ctx.fillStyle = `rgba(255, ${100 + Math.random() * 155}, 0, ${
-        0.7 + Math.random() * 0.3
+      ctx.fillStyle = `rgba(255, ${120 + Math.random() * 100}, 0, ${
+        0.4 + Math.random() * 0.2
       })`;
       ctx.fillRect(sparkX, sparkY, sparkSize, sparkSize);
     }
@@ -647,6 +624,7 @@ function resetGameState() {
   // 🔥 Resetear efectos especiales
   slowMotionActive = false;
   slowMotionFactor = 1.0;
+  frenzyModeActive = false;
 
   // Resetear módulos
   Player.reset();
@@ -687,7 +665,7 @@ function backToMenu() {
 }
 
 // ======================================================
-// SISTEMA DE RANKING MEJORADO
+// SISTEMA DE RANKING MEJORADO - CORREGIDO
 // ======================================================
 
 // URL de tu Web App de Google Sheets
@@ -699,7 +677,7 @@ let scoreAlreadySaved = false;
 let isSaving = false;
 
 /**
- * Guarda la puntuación usando el formato EXACTO de tu Excel (8 columnas) - CORREGIDO
+ * Guarda la puntuación - CORREGIDO PARA ENVIAR ENEMIGOS MATADOS
  */
 async function saveScore() {
   console.log("🚀 Guardando puntuación...");
@@ -708,6 +686,7 @@ async function saveScore() {
     const playerName = Player.getName();
     const playerAvatar = Player.getAvatar();
     const enemiesKilled = EnemyManager.getEnemiesKilled();
+    const maxCombo = ComboSystem.getMaxCombo(); // 🔥 OBTENER COMBO MÁXIMO
 
     // Validar datos antes de enviar
     if (!playerName || !playerAvatar) {
@@ -720,16 +699,17 @@ async function saveScore() {
       gameStatus = "Victoria";
     }
 
-    // Crear URL con parámetros
+    // 🔥 CREAR URL CON PARÁMETROS CORRECTOS
     const params = new URLSearchParams();
     params.append("action", "save");
     params.append("date", new Date().toISOString());
     params.append("avatar", playerAvatar);
     params.append("name", playerName);
     params.append("level", level);
-    params.append("enemiesKilled", enemiesKilled);
+    params.append("enemiesKilled", enemiesKilled); // 🔥 ENVIAR ENEMIGOS MATADOS
     params.append("time", Math.floor(gameTime / 60));
     params.append("score", score);
+    params.append("maxCombo", maxCombo); // 🔥 ENVIAR COMBO MÁXIMO
     params.append("status", gameStatus);
 
     const urlWithParams = `${WEBAPP_URL}?${params.toString()}`;
@@ -825,7 +805,7 @@ async function saveAndViewRanking() {
 }
 
 /**
- * Muestra el ranking desde Google Sheets - CON COMBOS
+ * Muestra el ranking desde Google Sheets - CORREGIDO PARA MOSTRAR ENEMIGOS MATADOS
  */
 async function viewRanking() {
   try {
@@ -864,7 +844,7 @@ async function viewRanking() {
       enemiesKilled: parseInt(player.enemiesKilled) || 0,
       time: parseInt(player.time) || 0,
       score: parseInt(player.score) || 0,
-      maxCombo: parseInt(player.maxCombo) || 0, // 🔥 NUEVO
+      maxCombo: parseInt(player.maxCombo) || 0,
       status: player.status || "Derrota",
     }));
 
@@ -881,6 +861,7 @@ async function viewRanking() {
 
     const top10 = sortedPlayers.slice(0, 10);
 
+    // 🔥 TABLA CORREGIDA - MOSTRAR ENEMIGOS MATADOS EN LUGAR DE COMBO MAX
     rankingContainer.innerHTML = `
             <h2>🏆 Ranking ÉPICO de Jugadores 🏆</h2>
             <table>
@@ -890,7 +871,7 @@ async function viewRanking() {
                     <th>Nombre</th>
                     <th>Nivel</th>
                     <th>Score</th>
-                    <th>Combo Max</th>
+                    <th>Enemigos</th>
                     <th>Tiempo</th>
                     <th>Estado</th>
                 </tr>
@@ -915,8 +896,8 @@ async function viewRanking() {
                         <td>${player.name}</td>
                         <td>${player.level}</td>
                         <td>${player.score}</td>
-                        <td style="color: #FFD700; font-weight: bold;">${
-                          player.maxCombo
+                        <td style="color: #FF6B00; font-weight: bold;">${
+                          player.enemiesKilled
                         }</td>
                         <td>${player.time}s</td>
                         <td>${player.status === "Victoria" ? "🏆" : "💀"}</td>
@@ -968,5 +949,6 @@ window.isGameEnded = () => gameEnded;
 // 🔥 NUEVAS variables globales para efectos especiales
 window.slowMotionActive = slowMotionActive;
 window.slowMotionFactor = slowMotionFactor;
+window.frenzyModeActive = frenzyModeActive;
 
 console.log("📁 main.js ÉPICO cargado y listo para la acción!");

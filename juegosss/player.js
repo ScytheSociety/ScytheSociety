@@ -59,6 +59,8 @@ const Player = {
     this.damaged = false;
     this.activePowerUp = null;
     this.powerUpTimeLeft = 0;
+    this.rapidFireActive = false;
+    this.rapidFireTimeLeft = 0;
 
     console.log(`👤 Jugador ÉPICO inicializado: ${name} ${avatar}`);
   },
@@ -161,11 +163,20 @@ const Player = {
    * Actualiza los power-ups activos
    */
   updatePowerUps() {
+    // Actualizar power-up principal
     if (this.activePowerUp) {
       this.powerUpTimeLeft--;
-
       if (this.powerUpTimeLeft <= 0) {
         this.deactivatePowerUp();
+      }
+    }
+
+    // 🔥 NUEVO: Actualizar rapid fire por separado
+    if (this.rapidFireActive) {
+      this.rapidFireTimeLeft--;
+      if (this.rapidFireTimeLeft <= 0) {
+        this.rapidFireActive = false;
+        console.log("⚡ Rapid Fire terminado");
       }
     }
   },
@@ -178,13 +189,17 @@ const Player = {
    * Activa un power-up
    */
   activatePowerUp(powerUpType) {
-    // Si hay un power-up activo, reemplazarlo
-    if (this.activePowerUp) {
-      this.deactivatePowerUp();
+    // 🔥 NUEVO: Sistema combinable - Rapid Fire se mantiene
+    if (powerUpType.id === 3) {
+      // Rapid Fire
+      // Solo actualizar el poder de rapid fire
+      this.rapidFireActive = true;
+      this.rapidFireTimeLeft = powerUpType.duration;
+    } else {
+      // Para otros power-ups, reemplazar el actual (excepto rapid fire)
+      this.activePowerUp = powerUpType;
+      this.powerUpTimeLeft = powerUpType.duration;
     }
-
-    this.activePowerUp = powerUpType;
-    this.powerUpTimeLeft = powerUpType.duration;
 
     UI.showScreenMessage(`${powerUpType.name}!`, powerUpType.color);
     AudioManager.playSound("powerUp");
@@ -547,7 +562,20 @@ const Player = {
     return { width: this.width, height: this.height };
   },
   getActivePowerUp() {
-    return this.activePowerUp;
+    // 🔥 NUEVO: Combinar rapid fire con power-up actual
+    if (this.rapidFireActive && this.activePowerUp) {
+      // Devolver power-up actual con rapid fire activo
+      return {
+        ...this.activePowerUp,
+        hasRapidFire: true,
+      };
+    } else if (this.rapidFireActive) {
+      // Solo rapid fire activo
+      return { id: 3, hasRapidFire: true };
+    } else {
+      // Power-up normal
+      return this.activePowerUp;
+    }
   },
   getPowerUpTimeLeft() {
     return this.powerUpTimeLeft;

@@ -232,10 +232,6 @@ const ComboSystem = {
 
   /**
    * 🎁 Activa bonificaciones especiales basadas en el combo actual
-   * Diferentes combos desbloquean diferentes bonificaciones:
-   * - Cada 10 combos: Mayor probabilidad de items
-   * - Combo 25: Lluvia de power-ups
-   * - Combo 40: Modo frenesí
    */
   triggerComboBonus() {
     // ===== BONUS CADA 10 COMBOS =====
@@ -255,15 +251,32 @@ const ComboSystem = {
       UI.showScreenMessage("🎁 BONUS POR COMBO!", "#FFD700");
     }
 
+    // ===== EVENTOS ESPECIALES ALEATORIOS =====
+    // 🌊 Tiempo lento más frecuente - cada 15 combos
+    if (this.currentCombo > 0 && this.currentCombo % 15 === 0) {
+      if (Math.random() < 0.8) {
+        // 80% probabilidad
+        this.triggerSlowMotion();
+      }
+    }
+
+    // 🔥 Modo frenesí menos frecuente - cada 25 combos
+    if (this.currentCombo > 0 && this.currentCombo % 25 === 0) {
+      if (Math.random() < 0.4) {
+        // 40% probabilidad
+        this.triggerFrenzyMode();
+      }
+    }
+
     // ===== MEGA BONUS: LLUVIA DE POWER-UPS =====
     if (this.currentCombo === 25) {
       console.log("🌟 Activando lluvia de power-ups!");
       this.triggerPowerUpRain();
     }
 
-    // ===== ULTRA BONUS: MODO FRENESÍ =====
+    // ===== ULTRA BONUS: MODO FRENESÍ GARANTIZADO =====
     if (this.currentCombo === 40) {
-      console.log("⚡ Activando modo frenesí!");
+      console.log("⚡ Activando modo frenesí garantizado!");
       this.triggerFrenzyMode();
     }
   },
@@ -297,7 +310,7 @@ const ComboSystem = {
     window.frenzyModeActive = true;
 
     console.log(
-      "⚡ Iniciando modo frenesí - disparo súper rápido por 30 segundos"
+      "⚡ Iniciando modo frenesí - disparo súper rápido por 15 segundos"
     );
 
     // ===== GUARDAR INTERVALO ORIGINAL =====
@@ -311,14 +324,14 @@ const ComboSystem = {
       BulletManager.shootBullet();
     }, 30); // Disparar cada 30ms (súper rápido)
 
-    // ===== RESTAURAR DESPUÉS DE 30 SEGUNDOS =====
+    // ===== RESTAURAR DESPUÉS DE 15 SEGUNDOS =====
     setTimeout(() => {
-      clearInterval(frenzyInterval); // Parar disparo rápido
-      BulletManager.startAutoShoot(); // Restaurar disparo normal
-      window.frenzyModeActive = false; // 🔥 NUEVO: Desactivar flag
+      clearInterval(frenzyInterval);
+      BulletManager.startAutoShoot();
+      window.frenzyModeActive = false; // 🔥 DESACTIVAR FLAG
       UI.showScreenMessage("Frenesí terminado", "#FFFFFF");
       console.log("⚡ Modo frenesí terminado - disparo normal restaurado");
-    }, 30000); // 30 segundos
+    }, 15000);
 
     AudioManager.playSound("special");
   },
@@ -477,7 +490,7 @@ const ComboSystem = {
 
     // ===== ACTIVAR MODO LENTO GLOBAL =====
     window.slowMotionActive = true;
-    window.slowMotionFactor = 0.3; // 30% de velocidad normal
+    window.slowMotionFactor = 0.15; // Era 0.3, ahora 0.15 (MUY MÁS LENTO)
 
     // ===== DURACIÓN DE 8 SEGUNDOS =====
     setTimeout(() => {
