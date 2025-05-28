@@ -275,18 +275,21 @@ const PowerUpManager = {
    * Verifica eventos especiales aleatorios
    */
   checkSpecialEvents() {
-    // 🔥 Lluvia de meteoritos
-    if (Math.random() < 0.0008) {
+    // 🔥 Lluvia de meteoritos MÁS RARA
+    if (Math.random() < 0.0003) {
+      // Era 0.0008, ahora 0.0003
       this.triggerMeteorShower();
     }
 
-    // 🔥 Tiempo lento
-    if (Math.random() < 0.0012) {
+    // 🔥 Tiempo lento MÁS RARO
+    if (Math.random() < 0.0005) {
+      // Era 0.0012, ahora 0.0005
       this.triggerSlowMotion();
     }
 
-    // 🔥 Lluvia de power-ups
-    if (Math.random() < 0.0006) {
+    // 🔥 Lluvia de power-ups MÁS RARA
+    if (Math.random() < 0.0002) {
+      // Era 0.0006, ahora 0.0002
       this.triggerPowerUpShower();
     }
   },

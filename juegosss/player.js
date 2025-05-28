@@ -160,18 +160,33 @@ const Player = {
   },
 
   /**
-   * 🔥 NUEVO: Actualiza los power-ups acumulables
+   * 🔥 NUEVO: Actualiza los power-ups acumulables con tiempos individuales
    */
   updatePowerUps() {
-    // Actualizar cada power-up activo
+    // Actualizar cada power-up activo individualmente
     for (let i = this.activePowerUps.length - 1; i >= 0; i--) {
       const powerUp = this.activePowerUps[i];
       powerUp.timeLeft--;
 
+      // Parpadeo cuando está por expirar (últimos 2 segundos)
+      if (powerUp.timeLeft <= 120 && powerUp.timeLeft % 20 === 0) {
+        UI.showScreenMessage(
+          `${powerUp.type.name} expirando...`,
+          powerUp.type.color
+        );
+      }
+
       if (powerUp.timeLeft <= 0) {
-        console.log(`⚡ Power-up ${powerUp.type.name} expirado`);
+        console.log(
+          `⚡ Power-up ${powerUp.type.name} expirado individualmente`
+        );
         this.activePowerUps.splice(i, 1);
+
+        // Actualizar efectos visuales inmediatamente
         this.updatePowerUpVisuals();
+
+        // Mostrar qué poder se perdió
+        UI.showScreenMessage(`❌ ${powerUp.type.name} terminado`, "#FF6666");
       }
     }
   },
@@ -206,10 +221,7 @@ const Player = {
   // ======================================================
 
   /**
-   * Activa un power-up
-   */
-  /**
-   * 🔥 NUEVO: Activa un power-up acumulable
+   * 🔥 NUEVO: Activa un power-up acumulable con tiempo individual
    */
   activatePowerUp(powerUpType) {
     // Buscar si ya existe este tipo de power-up
@@ -218,24 +230,54 @@ const Player = {
     );
 
     if (existingPowerUp) {
-      // Si ya existe, reiniciar su tiempo
+      // Si ya existe, RENOVAR su tiempo (no acumular)
       existingPowerUp.timeLeft = powerUpType.duration;
-      console.log(`⚡ Power-up ${powerUpType.name} renovado`);
+      console.log(
+        `⚡ Power-up ${powerUpType.name} RENOVADO - Tiempo reiniciado`
+      );
+      UI.showScreenMessage(
+        `🔄 ${powerUpType.name} renovado!`,
+        powerUpType.color
+      );
     } else {
-      // Si no existe, agregarlo
+      // Si no existe, agregarlo como nuevo
       this.activePowerUps.push({
         id: powerUpType.id,
         type: powerUpType,
         timeLeft: powerUpType.duration,
+        startTime: window.getGameTime(), // Para tracking
       });
-      console.log(`⚡ Power-up ${powerUpType.name} agregado`);
+      console.log(`⚡ Power-up ${powerUpType.name} NUEVO agregado`);
+      UI.showScreenMessage(
+        `✨ ${powerUpType.name} activado!`,
+        powerUpType.color
+      );
     }
 
-    UI.showScreenMessage(`${powerUpType.name}!`, powerUpType.color);
     AudioManager.playSound("powerUp");
 
     // Actualizar efectos visuales
     this.updatePowerUpVisuals();
+
+    // Mostrar todos los poderes activos
+    this.showActivePowerUpsSummary();
+  },
+
+  /**
+   * 🔥 NUEVO: Muestra resumen de power-ups activos
+   */
+  showActivePowerUpsSummary() {
+    if (this.activePowerUps.length === 0) return;
+
+    const activeNames = this.activePowerUps.map((p) => p.type.name).join(" + ");
+    console.log(`🎯 Power-ups activos: ${activeNames}`);
+
+    // Solo mostrar si hay múltiples poderes
+    if (this.activePowerUps.length > 1) {
+      setTimeout(() => {
+        UI.showScreenMessage(`🔥 Combo: ${activeNames}`, "#FFD700");
+      }, 500);
+    }
   },
 
   /**

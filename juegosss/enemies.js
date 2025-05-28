@@ -81,12 +81,13 @@ const EnemyManager = {
     const canvas = window.getCanvas();
     const level = window.getLevel();
 
-    // 🔥 TAMAÑOS MUCHO MÁS GRANDES Y PROGRESIVOS
-    const baseMinSize = 60; // Era 30, ahora 60 (100% más grande)
-    const baseMaxSize = 100; // Era 60, ahora 100 (66% más grande)
+    // 🔥 TAMAÑOS BALANCEADOS - NO TAN GRANDES
+    const baseMinSize = 45; // Reducido de 60 a 45
+    const baseMaxSize = 75; // Reducido de 100 a 75
 
-    // Crecimiento progresivo más suave por nivel
-    const sizeBonus = level * 8; // Cada nivel suma 8px
+    // Crecimiento progresivo más controlado por nivel
+    const sizeBonus = level * 5; // Reducido de 8 a 5px por nivel
+
     const minSize = Math.max(50, baseMinSize + sizeBonus);
     const maxSize = Math.max(80, baseMaxSize + sizeBonus);
 
@@ -174,6 +175,17 @@ const EnemyManager = {
       level: level,
       spawnTime: window.getGameTime(),
       type: "extra",
+      // 🔥 AGREGAR: Sistema de escalado dinámico para enemigos simples
+      dynamicScaling: {
+        enabled: Math.random() < 0.3, // 30% de enemigos simples
+        baseSize: simpleEnemySize,
+        currentScale: 1.0,
+        scaleDirection: 1,
+        scaleSpeed: 0.004,
+        minScale: 0.7,
+        maxScale: 1.3,
+        pulseTimer: 0,
+      },
     };
 
     this.enemies.push(enemy);
@@ -206,6 +218,17 @@ const EnemyManager = {
       spawnTime: window.getGameTime(),
       type: "meteor",
       isMeteor: true, // Flag especial
+      // 🔥 AGREGAR: Sistema de escalado dinámico para meteoritos
+      dynamicScaling: {
+        enabled: Math.random() < 0.6, // 60% de meteoritos tendrán escalado
+        baseSize: meteorSize,
+        currentScale: 1.0,
+        scaleDirection: 1,
+        scaleSpeed: 0.005, // Más rápido para meteoritos
+        minScale: 0.8,
+        maxScale: 1.6,
+        pulseTimer: 0,
+      },
     };
 
     this.enemies.push(meteorEnemy);
