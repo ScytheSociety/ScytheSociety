@@ -337,27 +337,6 @@ const ComboSystem = {
     AudioManager.playSound("special");
   },
 
-  /**
-   * ☄️ Lluvia de meteoritos
-   */
-  triggerMeteorShower() {
-    UI.showScreenMessage("☄️ ¡LLUVIA DE METEORITOS! ☄️", "#FF8800");
-
-    console.log("☄️ Iniciando lluvia de meteoritos - 6 enemigos especiales");
-
-    // Crear 6 enemigos meteorito con delay de 200ms entre cada uno
-    for (let i = 0; i < 6; i++) {
-      setTimeout(() => {
-        if (window.EnemyManager && window.EnemyManager.spawnMeteorEnemy) {
-          window.EnemyManager.spawnMeteorEnemy();
-        }
-      }, i * 200);
-    }
-
-    AudioManager.playSound("special");
-    console.log("☄️ Lluvia de meteoritos activada");
-  },
-
   // ======================================================
   // 🎨 SISTEMA DE DISPLAY VISUAL
   // ======================================================
@@ -482,8 +461,7 @@ const ComboSystem = {
   // ======================================================
 
   /**
-   * ☄️ Lluvia de meteoritos (enemigos extra agresivos)
-   * Se puede activar aleatoriamente o por combo alto
+   * ☄️ Lluvia de meteoritos
    */
   triggerMeteorShower() {
     UI.showScreenMessage("☄️ ¡LLUVIA DE METEORITOS! ☄️", "#FF8800");
@@ -493,8 +471,10 @@ const ComboSystem = {
     // Crear 6 enemigos meteorito con delay de 200ms entre cada uno
     for (let i = 0; i < 6; i++) {
       setTimeout(() => {
-        EnemyManager.spawnMeteorEnemy(); // Función especial para meteoritos
-      }, i * 200); // 0ms, 200ms, 400ms, 600ms, 800ms, 1000ms
+        if (window.EnemyManager && window.EnemyManager.spawnMeteorEnemy) {
+          window.EnemyManager.spawnMeteorEnemy();
+        }
+      }, i * 200);
     }
 
     AudioManager.playSound("special");
