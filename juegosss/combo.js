@@ -484,20 +484,22 @@ const ComboSystem = {
    * Ralentiza todo el juego por 8 segundos
    */
   triggerSlowMotion() {
-    UI.showScreenMessage("🐢 ¡TIEMPO LENTO! 🐢", "#00BBFF");
+    UI.showScreenMessage("🌊 ¡TIEMPO SUBMARINO! 🌊", "#0080FF");
 
-    console.log("🐢 Activando tiempo lento por 8 segundos");
+    console.log("🌊 Activando tiempo lento submarino por 8 segundos");
 
     // ===== ACTIVAR MODO LENTO GLOBAL =====
     window.slowMotionActive = true;
-    window.slowMotionFactor = 0.15; // Era 0.3, ahora 0.15 (MUY MÁS LENTO)
+    window.slowMotionFactor = 0.12; // Aún más lento para el efecto submarino
 
     // ===== DURACIÓN DE 8 SEGUNDOS =====
     setTimeout(() => {
       window.slowMotionActive = false;
       window.slowMotionFactor = 1.0;
-      UI.showScreenMessage("⚡ Tiempo normal", "#FFFFFF");
-      console.log("🐢 Tiempo lento terminado - velocidad normal restaurada");
+      UI.showScreenMessage("⚡ Superficie alcanzada", "#FFFFFF");
+      console.log(
+        "🌊 Tiempo submarino terminado - velocidad normal restaurada"
+      );
     }, 8000); // 8 segundos
 
     AudioManager.playSound("special");

@@ -67,96 +67,128 @@ const BulletManager = {
   // ======================================================
 
   /**
-   * Dispara una bala normal - CON PODER COMBINABLE
+   * Dispara una bala normal - CON SISTEMA ACUMULABLE Y DISPARO DUAL
    */
   shootBullet() {
     const currentTime = Date.now();
     const level = window.getLevel();
     const canvas = window.getCanvas();
 
-    // 🔥 Cooldown más rápido
+    // Cooldown más rápido
     let cooldownTime = Math.max(60, 150 - level * 10);
 
-    // Obtener power-up activo
-    const activePowerUp = Player.getActivePowerUp();
+    // 🔥 OBTENER POWER-UPS ACTIVOS (sistema acumulable)
+    const activePowerUps = Player.getActivePowerUps();
 
-    // 🔥 NUEVO: Si hay poder rápido, reducir cooldown SIEMPRE
-    if (activePowerUp && activePowerUp.id === 3) {
-      cooldownTime = 30; // Súper rápido
+    // 🔥 RAPID FIRE MÁS RÁPIDO
+    const hasRapidFire = activePowerUps.some((p) => p.id === 3);
+    if (hasRapidFire) {
+      cooldownTime = 20; // Era 30, ahora 20 (66% más rápido)
     }
 
     if (currentTime - this.lastShootTime > cooldownTime) {
       // 🔥 Velocidad de bala más rápida
       const bulletSpeed = canvas.height * (0.018 + level * 0.003);
 
-      // 🔥 CONFIGURACIÓN COMBINABLE CORREGIDA
+      // 🔥 DISPARO DUAL DESDE NIVEL 5
       let bulletCount = 1;
-      let spreadAngle = Math.PI / 12;
+      if (level >= 5) {
+        bulletCount = 2; // Siempre 2 balas desde nivel 5
+      }
+
+      // Configurar efectos de power-ups
       let bulletConfig = {
         penetrating: false,
         explosive: false,
         penetrationCount: 0,
+        shouldBounce: false,
+        lifeTime: 0,
       };
 
-      // 🔥 NUEVO: Sistema combinable - el rapid fire se mantiene
-      if (activePowerUp) {
-        switch (activePowerUp.id) {
+      // 🔥 SISTEMA ACUMULABLE - aplicar todos los efectos
+      for (const powerUp of activePowerUps) {
+        switch (powerUp.id) {
           case 0: // Penetrante
             bulletConfig.penetrating = true;
             bulletConfig.penetrationCount = 4;
+            bulletConfig.shouldBounce = true;
+            bulletConfig.lifeTime = 300;
             break;
 
           case 1: // Disparo Amplio
-            bulletCount = 7;
-            spreadAngle = Math.PI / 4;
+            bulletCount = Math.max(bulletCount, 7); // Mínimo 7 balas
             break;
 
           case 2: // Explosivo
             bulletConfig.explosive = true;
             break;
 
-          case 3: // Rapid Fire - NO SE PIERDE, solo afecta velocidad
-            // Este power-up solo afecta el cooldown, no las balas
-            break;
+          // case 3 (Rapid Fire) ya se maneja arriba
         }
-      } else {
-        // Sin power-up: Progresión normal
-        if (level >= 3) bulletCount = 2;
-        if (level >= 6) bulletCount = 3;
       }
 
       // Crear balas
       const playerPos = Player.getPosition();
       const playerSize = Player.getSize();
 
-      for (let i = 0; i < bulletCount; i++) {
-        const offset = i - Math.floor(bulletCount / 2);
-        const angle = offset * spreadAngle;
+      // 🔥 POSICIONAMIENTO DUAL MEJORADO
+      if (bulletCount === 2 && level >= 5) {
+        // Dos balas simétricas a los lados del jugador
+        const spacing = playerSize.width * 0.3;
 
-        const bullet = {
-          x: playerPos.x + playerSize.width / 2 - GameConfig.BULLET_WIDTH / 2,
-          y: playerPos.y - GameConfig.BULLET_HEIGHT,
-          width: GameConfig.BULLET_WIDTH,
-          height: GameConfig.BULLET_HEIGHT,
-          velocityX: Math.sin(angle) * bulletSpeed,
-          velocityY: -Math.cos(angle) * bulletSpeed,
+        for (let i = 0; i < 2; i++) {
+          const offsetX = i === 0 ? -spacing : spacing;
 
-          // Propiedades especiales
-          penetrating: bulletConfig.penetrating,
-          penetrationCount: bulletConfig.penetrationCount,
-          explosive: bulletConfig.explosive,
+          const bullet = {
+            x:
+              playerPos.x +
+              playerSize.width / 2 +
+              offsetX -
+              GameConfig.BULLET_WIDTH / 2,
+            y: playerPos.y - GameConfig.BULLET_HEIGHT,
+            width: GameConfig.BULLET_WIDTH,
+            height: GameConfig.BULLET_HEIGHT,
+            velocityX: 0, // Sin ángulo para las balas duales
+            velocityY: -bulletSpeed,
 
-          // Metadatos
-          fromSpecialPower: false,
-          level: level,
-        };
+            // Propiedades especiales acumulables
+            ...bulletConfig,
 
-        this.bullets.push(bullet);
+            fromSpecialPower: false,
+            level: level,
+          };
+
+          this.bullets.push(bullet);
+        }
+      } else {
+        // Sistema original para otros casos
+        const spreadAngle = bulletCount > 2 ? Math.PI / 4 : Math.PI / 12;
+
+        for (let i = 0; i < bulletCount; i++) {
+          const offset = i - Math.floor(bulletCount / 2);
+          const angle = offset * spreadAngle;
+
+          const bullet = {
+            x: playerPos.x + playerSize.width / 2 - GameConfig.BULLET_WIDTH / 2,
+            y: playerPos.y - GameConfig.BULLET_HEIGHT,
+            width: GameConfig.BULLET_WIDTH,
+            height: GameConfig.BULLET_HEIGHT,
+            velocityX: Math.sin(angle) * bulletSpeed,
+            velocityY: -Math.cos(angle) * bulletSpeed,
+
+            // Propiedades especiales acumulables
+            ...bulletConfig,
+
+            fromSpecialPower: false,
+            level: level,
+          };
+
+          this.bullets.push(bullet);
+        }
       }
 
       this.lastShootTime = currentTime;
 
-      // Sonido solo si el juego está activo
       if (!window.isGameEnded()) {
         AudioManager.playSound("shoot");
       }
@@ -233,6 +265,7 @@ const BulletManager = {
   update() {
     this.updateRegularBullets();
     this.updateSpecialBullets();
+    this.updatePenetratingBullets(); // 🔥 NUEVO
     this.cleanupBullets();
   },
 
@@ -262,6 +295,41 @@ const BulletManager = {
       // Mover bala
       bullet.x += bullet.velocityX;
       bullet.y += bullet.velocityY;
+    }
+  },
+
+  /**
+   * 🔥 NUEVO: Actualiza balas penetrantes que rebotan
+   */
+  updatePenetratingBullets() {
+    const canvas = window.getCanvas();
+
+    for (let i = 0; i < this.bullets.length; i++) {
+      const bullet = this.bullets[i];
+
+      if (bullet.penetrating && bullet.shouldBounce) {
+        // Rebotes en paredes
+        if (bullet.x <= 0 || bullet.x + bullet.width >= canvas.width) {
+          bullet.velocityX *= -1;
+          bullet.bounceCount = (bullet.bounceCount || 0) + 1;
+        }
+
+        if (bullet.y <= 0 || bullet.y + bullet.height >= canvas.height) {
+          bullet.velocityY *= -1;
+          bullet.bounceCount = (bullet.bounceCount || 0) + 1;
+        }
+
+        // Reducir tiempo de vida con cada rebote
+        if (bullet.bounceCount && bullet.bounceCount > 0) {
+          bullet.lifeTime = (bullet.lifeTime || 300) - 2; // Reducir vida
+
+          if (bullet.lifeTime <= 0) {
+            this.bullets.splice(i, 1);
+            i--;
+            continue;
+          }
+        }
+      }
     }
   },
 

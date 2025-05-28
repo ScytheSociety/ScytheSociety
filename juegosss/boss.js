@@ -47,9 +47,10 @@ const BossManager = {
     const canvas = window.getCanvas();
     const config = GameConfig.BOSS_CONFIG;
 
+    // 🔥 BOSS APARECE EN EL CENTRO SUPERIOR
     this.boss = {
       x: canvas.width / 2 - config.size / 2,
-      y: 50, // Aparece en la parte superior
+      y: 50,
       width: config.size,
       height: config.size,
       velocityX: 0,
@@ -61,15 +62,22 @@ const BossManager = {
       color: "#8B0000",
       glowIntensity: 0,
 
-      // Comportamiento
+      // Comportamiento mejorado
       moveSpeed: config.speed,
       aggressionLevel: 1.0,
+      teleportCooldown: 0,
+      lastTeleport: 0,
     };
 
-    // Resetear estado
+    // 🔥 MÁS VIDA PARA EL BOSS
+    this.maxHealth = 80; // Era 50, ahora 80
+    this.currentHealth = 80;
+
     this.active = true;
-    this.maxHealth = config.health;
-    this.currentHealth = config.health;
+    // 🔥 NUEVOS: Sistema de comentarios
+    this.lastCommentTime = 0;
+    this.commentCooldown = 300; // 5 segundos entre comentarios
+
     this.currentPhase = 1;
     this.isImmune = false;
     this.immunityTimer = 0;
@@ -80,11 +88,15 @@ const BossManager = {
     this.mineTimer = 0;
     this.miningPhase = false;
 
+    // 🔥 NUEVOS: Sistema de comentarios
+    this.lastCommentTime = 0;
+    this.commentCooldown = 300; // 5 segundos entre comentarios
+
     // Efectos de entrada
-    UI.showScreenMessage("👹 ¡BOSS FINAL APARECE! 👹", "#FF0000");
+    UI.showScreenMessage("👹 ¡EL REY DEL INFIERNO APARECE! 👹", "#FF0000");
+    this.sayRandomComment("entrada");
     AudioManager.playSound("special");
 
-    // Crear efecto de aparición
     UI.createParticleEffect(
       this.boss.x + this.boss.width / 2,
       this.boss.y + this.boss.height / 2,
@@ -111,6 +123,11 @@ const BossManager = {
     this.updateImmunity();
     this.updateSummoning();
     this.updateTeleport();
+    // 🔥 COMENTARIOS ALEATORIOS DURANTE COMBATE
+    if (Math.random() < 0.002) {
+      // 0.2% por frame
+      this.sayRandomComment("combate");
+    }
     this.updateMines();
 
     // Verificar si está derrotado
@@ -435,14 +452,23 @@ const BossManager = {
   // ======================================================
 
   /**
-   * Activa la fase de minas (10% de vida)
+   * 🔥 NUEVO: Activa fase de minas con inmunidad
    */
   activateMiningPhase() {
     this.miningPhase = true;
     this.mineTimer = 0;
 
-    UI.showScreenMessage("💣 ¡FASE DE MINAS! 💣", "#FF8800");
-    console.log("💣 Fase de minas activada");
+    // 🔥 IR AL CENTRO DE LA PANTALLA
+    const canvas = window.getCanvas();
+    this.boss.targetX = canvas.width / 2 - this.boss.width / 2;
+    this.boss.targetY = canvas.height / 2 - this.boss.height / 2;
+
+    // 🔥 INMUNIDAD TOTAL DURANTE MINAS
+    this.makeImmune(600); // 10 segundos de inmunidad
+
+    UI.showScreenMessage("💣 ¡MODO MINAS ACTIVADO! 💣", "#FF8800");
+    this.sayRandomComment("combate");
+    console.log("💣 Fase de minas activada - Boss inmune");
   },
 
   /**
@@ -480,29 +506,32 @@ const BossManager = {
   },
 
   /**
-   * Crea una nueva mina
+   * 🔥 NUEVO: Spawn mejorado de minas con área de peligro
    */
   spawnMine() {
     const canvas = window.getCanvas();
     const config = GameConfig.BOSS_CONFIG.phases.finalPhase;
 
     const mine = {
-      x: Math.random() * (canvas.width - 40),
-      y: Math.random() * (canvas.height - 40),
-      width: 30,
-      height: 30,
+      x: 50 + Math.random() * (canvas.width - 100),
+      y: 50 + Math.random() * (canvas.height - 100),
+      width: 35,
+      height: 35,
       timer: config.mineExplosionDelay,
       armed: false,
       blinkTimer: 0,
+
+      // 🔥 NUEVO: Área de peligro visual
+      dangerRadius: config.mineDamageRadius,
+      showDangerZone: true,
     };
 
     this.mines.push(mine);
 
-    // Efecto visual
-    UI.createParticleEffect(mine.x + 15, mine.y + 15, "#FF8800", 10);
-    UI.showScreenMessage("💣 MINA COLOCADA", "#FF8800");
+    UI.createParticleEffect(mine.x + 17, mine.y + 17, "#FF8800", 15);
+    UI.showScreenMessage("💣 ¡MINA COLOCADA!", "#FF8800");
 
-    console.log("💣 Nueva mina colocada");
+    console.log("💣 Nueva mina con zona de peligro colocada");
   },
 
   /**
@@ -590,6 +619,9 @@ const BossManager = {
    */
   defeat() {
     this.active = false;
+
+    // 🔥 COMENTARIOS DE DERROTA
+    this.sayRandomComment("derrota_boss");
 
     // Efectos de derrota
     UI.showScreenMessage("🏆 ¡BOSS DERROTADO! 🏆", "#FFD700");
@@ -711,18 +743,18 @@ const BossManager = {
   },
 
   /**
-   * Dibuja la barra de vida del boss
+   * 🔥 NUEVO: Dibuja la barra de vida ABAJO del boss
    */
   drawHealthBar(ctx) {
     const canvas = window.getCanvas();
-    const barWidth = canvas.width * 0.6;
-    const barHeight = 20;
+    const barWidth = canvas.width * 0.4; // Más pequeña
+    const barHeight = 15; // Más delgada
     const x = (canvas.width - barWidth) / 2;
-    const y = 20;
+    const y = this.boss.y + this.boss.height + 15; // ABAJO del boss
 
     // Fondo de la barra
-    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-    ctx.fillRect(x - 5, y - 5, barWidth + 10, barHeight + 10);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+    ctx.fillRect(x - 3, y - 3, barWidth + 6, barHeight + 6);
 
     // Borde
     ctx.strokeStyle = "#FFFFFF";
@@ -741,38 +773,55 @@ const BossManager = {
     ctx.fillStyle = healthColor;
     ctx.fillRect(x, y, healthWidth, barHeight);
 
-    // Texto
+    // Texto más pequeño
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 16px Arial";
+    ctx.font = "bold 12px Arial";
     ctx.textAlign = "center";
     ctx.fillText(
-      `BOSS: ${this.currentHealth}/${this.maxHealth}`,
+      `${this.currentHealth}/${this.maxHealth}`,
       canvas.width / 2,
-      y + barHeight / 2 + 5
+      y + barHeight / 2 + 4
     );
 
-    // Indicador de fase
+    // Indicador de fase más pequeño
+    ctx.font = "bold 10px Arial";
     ctx.fillText(
       `FASE ${this.currentPhase}`,
       canvas.width / 2,
-      y + barHeight + 20
+      y + barHeight + 15
     );
   },
 
   /**
-   * Dibuja las minas
+   * 🔥 NUEVO: Dibuja zona de peligro de las minas
    */
   drawMines(ctx) {
     for (const mine of this.mines) {
       ctx.save();
 
+      // 🔥 DIBUJAR ZONA DE PELIGRO ROJA
+      if (mine.showDangerZone) {
+        ctx.beginPath();
+        ctx.arc(
+          mine.x + mine.width / 2,
+          mine.y + mine.height / 2,
+          mine.dangerRadius,
+          0,
+          Math.PI * 2
+        );
+        ctx.strokeStyle = "#FF0000";
+        ctx.setLineDash([5, 5]); // Línea punteada
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.6;
+        ctx.stroke();
+        ctx.setLineDash([]); // Restaurar línea sólida
+      }
+
       // Parpadeo cuando está por explotar
       const timeLeft = mine.timer;
       if (timeLeft < 60) {
-        // Último segundo
         mine.blinkTimer++;
-        if (mine.blinkTimer % 10 < 5) {
-          // Parpadeo rápido
+        if (mine.blinkTimer % 8 < 4) {
           ctx.globalAlpha = 0.3;
         }
       }
@@ -780,14 +829,14 @@ const BossManager = {
       // Color según estado
       ctx.fillStyle = mine.armed ? "#FF0000" : "#FF8800";
       ctx.shadowColor = ctx.fillStyle;
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 12;
 
-      // Dibujar mina
+      // Dibujar mina más grande
       ctx.fillRect(mine.x, mine.y, mine.width, mine.height);
 
       // Indicador visual
       ctx.fillStyle = "#FFFFFF";
-      ctx.fillRect(mine.x + 10, mine.y + 10, 10, 10);
+      ctx.fillRect(mine.x + 12, mine.y + 12, 11, 11);
 
       ctx.restore();
     }
@@ -871,6 +920,68 @@ const BossManager = {
     this.miningPhase = false;
 
     console.log("👹 Sistema del boss reseteado");
+  },
+
+  /**
+   * 🔥 NUEVO: Sistema de comentarios sarcásticos del boss
+   */
+  bossComments: {
+    entrada: [
+      "¡Scythe Society será destruida!",
+      "¡Vengo por la reina Hell!",
+      "¡Prepárense para la aniquilación!",
+      "¡Su clan no durará ni un minuto!",
+      "¡Hell pagará por su insolencia!",
+    ],
+    combate: [
+      "¡Son unos mancos!",
+      "¡Scythe Society, más como Scythe Pathetic!",
+      "¡Hell debería entrenar mejor a sus seguidores!",
+      "¡Qué decepcionante resistencia!",
+      "¡Ni siquiera saben apuntar!",
+      "¡Mi abuela disparaba mejor!",
+      "¡Scythe Society = Scythe Sorry!",
+      "¡Hell te abandonará como a todos!",
+      "¡Sus balas son como cosquillas!",
+      "¡Patéticos mortales!",
+      "¡Esto es todo lo que tienen?!",
+      "¡Hell eligió mal a sus campeones!",
+      "¡Ni sus ancestros los salvarán!",
+      "¡Scythe Society, más como Cry Society!",
+      "¡Deberían rendirse ahora!",
+    ],
+    victoria_boss: [
+      "¡Hell, aquí voy por ti!",
+      "¡Scythe Society ha caído!",
+      "¡Vuelvan pronto... si pueden!",
+      "¡Digan adiós a su preciada Hell!",
+      "¡La oscuridad prevalece!",
+    ],
+    derrota_boss: [
+      "¡Esto no ha terminado!",
+      "¡Volveré más fuerte!",
+      "¡Hell... me las pagará!",
+      "¡No me olvidaré de esto!",
+      "¡Mi venganza será eterna!",
+    ],
+  },
+
+  /**
+   * 🔥 NUEVO: Dice un comentario aleatorio
+   */
+  sayRandomComment(situation) {
+    const currentTime = window.getGameTime();
+
+    if (currentTime - this.lastCommentTime < this.commentCooldown) return;
+
+    const comments = this.bossComments[situation];
+    if (!comments || comments.length === 0) return;
+
+    const randomComment = comments[Math.floor(Math.random() * comments.length)];
+    UI.showScreenMessage(`👹: "${randomComment}"`, "#FF0000");
+
+    this.lastCommentTime = currentTime;
+    console.log(`👹 Boss dice: ${randomComment}`);
   },
 };
 

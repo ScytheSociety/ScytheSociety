@@ -28,9 +28,9 @@ const Player = {
   mouseX: 0,
   mouseY: 0,
 
-  // Power-ups
-  activePowerUp: null,
-  powerUpTimeLeft: 0,
+  // 🔥 NUEVO: Sistema de power-ups acumulables
+  activePowerUps: [], // Array de power-ups activos
+  powerUpVisualEffects: [], // Para mostrar múltiples auras
 
   // ======================================================
   // INICIALIZACIÓN
@@ -160,25 +160,45 @@ const Player = {
   },
 
   /**
-   * Actualiza los power-ups activos
+   * 🔥 NUEVO: Actualiza los power-ups acumulables
    */
   updatePowerUps() {
-    // Actualizar power-up principal
-    if (this.activePowerUp) {
-      this.powerUpTimeLeft--;
-      if (this.powerUpTimeLeft <= 0) {
-        this.deactivatePowerUp();
-      }
-    }
+    // Actualizar cada power-up activo
+    for (let i = this.activePowerUps.length - 1; i >= 0; i--) {
+      const powerUp = this.activePowerUps[i];
+      powerUp.timeLeft--;
 
-    // 🔥 NUEVO: Actualizar rapid fire por separado
-    if (this.rapidFireActive) {
-      this.rapidFireTimeLeft--;
-      if (this.rapidFireTimeLeft <= 0) {
-        this.rapidFireActive = false;
-        console.log("⚡ Rapid Fire terminado");
+      if (powerUp.timeLeft <= 0) {
+        console.log(`⚡ Power-up ${powerUp.type.name} expirado`);
+        this.activePowerUps.splice(i, 1);
+        this.updatePowerUpVisuals();
       }
     }
+  },
+
+  /**
+   * 🔥 NUEVO: Actualiza efectos visuales de múltiples power-ups
+   */
+  updatePowerUpVisuals() {
+    this.powerUpVisualEffects = this.activePowerUps.map((powerUp) => ({
+      color: powerUp.type.color,
+      intensity: powerUp.timeLeft / powerUp.type.duration,
+      radius: 0.9 + powerUp.type.id * 0.1, // Diferentes radios por tipo
+    }));
+  },
+
+  /**
+   * 🔥 NUEVO: Verifica si un power-up específico está activo
+   */
+  hasPowerUp(powerUpId) {
+    return this.activePowerUps.some((p) => p.id === powerUpId);
+  },
+
+  /**
+   * 🔥 NUEVO: Obtiene todos los power-ups activos (para bullets.js)
+   */
+  getActivePowerUps() {
+    return this.activePowerUps.map((p) => p.type);
   },
 
   // ======================================================
@@ -188,23 +208,34 @@ const Player = {
   /**
    * Activa un power-up
    */
+  /**
+   * 🔥 NUEVO: Activa un power-up acumulable
+   */
   activatePowerUp(powerUpType) {
-    // 🔥 NUEVO: Sistema combinable - Rapid Fire se mantiene
-    if (powerUpType.id === 3) {
-      // Rapid Fire
-      // Solo actualizar el poder de rapid fire
-      this.rapidFireActive = true;
-      this.rapidFireTimeLeft = powerUpType.duration;
+    // Buscar si ya existe este tipo de power-up
+    const existingPowerUp = this.activePowerUps.find(
+      (p) => p.id === powerUpType.id
+    );
+
+    if (existingPowerUp) {
+      // Si ya existe, reiniciar su tiempo
+      existingPowerUp.timeLeft = powerUpType.duration;
+      console.log(`⚡ Power-up ${powerUpType.name} renovado`);
     } else {
-      // Para otros power-ups, reemplazar el actual (excepto rapid fire)
-      this.activePowerUp = powerUpType;
-      this.powerUpTimeLeft = powerUpType.duration;
+      // Si no existe, agregarlo
+      this.activePowerUps.push({
+        id: powerUpType.id,
+        type: powerUpType,
+        timeLeft: powerUpType.duration,
+      });
+      console.log(`⚡ Power-up ${powerUpType.name} agregado`);
     }
 
     UI.showScreenMessage(`${powerUpType.name}!`, powerUpType.color);
     AudioManager.playSound("powerUp");
 
-    console.log(`⚡ Power-up activado: ${powerUpType.name}`);
+    // Actualizar efectos visuales
+    this.updatePowerUpVisuals();
   },
 
   /**
@@ -499,23 +530,28 @@ const Player = {
       ctx.stroke();
     }
 
-    // Aura de power-up más épica
-    if (this.activePowerUp) {
-      const auraSize = this.width * 0.9;
-      const pulse = 0.5 + Math.sin(window.getGameTime() * 0.25) * 0.3;
+    // 🔥 NUEVO: Múltiples auras para power-ups acumulables
+    for (let i = 0; i < this.powerUpVisualEffects.length; i++) {
+      const effect = this.powerUpVisualEffects[i];
+      const auraSize = this.width * effect.radius;
+      const pulse = 0.5 + Math.sin(window.getGameTime() * 0.25 + i) * 0.3;
 
       ctx.beginPath();
       ctx.arc(centerX, centerY, auraSize, 0, Math.PI * 2);
-      ctx.strokeStyle = `${this.activePowerUp.color}${Math.floor(pulse * 255)
+      ctx.strokeStyle = `${effect.color}${Math.floor(
+        pulse * effect.intensity * 255
+      )
         .toString(16)
         .padStart(2, "0")}`;
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 3 + i;
       ctx.stroke();
 
       // Aura exterior
       ctx.beginPath();
-      ctx.arc(centerX, centerY, auraSize * 1.3, 0, Math.PI * 2);
-      ctx.strokeStyle = `${this.activePowerUp.color}${Math.floor(pulse * 128)
+      ctx.arc(centerX, centerY, auraSize * 1.2, 0, Math.PI * 2);
+      ctx.strokeStyle = `${effect.color}${Math.floor(
+        pulse * effect.intensity * 128
+      )
         .toString(16)
         .padStart(2, "0")}`;
       ctx.lineWidth = 2;
@@ -562,20 +598,8 @@ const Player = {
     return { width: this.width, height: this.height };
   },
   getActivePowerUp() {
-    // 🔥 NUEVO: Combinar rapid fire con power-up actual
-    if (this.rapidFireActive && this.activePowerUp) {
-      // Devolver power-up actual con rapid fire activo
-      return {
-        ...this.activePowerUp,
-        hasRapidFire: true,
-      };
-    } else if (this.rapidFireActive) {
-      // Solo rapid fire activo
-      return { id: 3, hasRapidFire: true };
-    } else {
-      // Power-up normal
-      return this.activePowerUp;
-    }
+    // 🔥 NUEVO: Devolver el primer power-up activo para compatibilidad
+    return this.activePowerUps.length > 0 ? this.activePowerUps[0].type : null;
   },
   getPowerUpTimeLeft() {
     return this.powerUpTimeLeft;
@@ -594,8 +618,8 @@ const Player = {
     this.invulnerabilityTime = 0;
     this.visible = true;
     this.damaged = false;
-    this.activePowerUp = null;
-    this.powerUpTimeLeft = 0;
+    this.activePowerUps = []; // ⬅️ AGREGA esta línea
+    this.powerUpVisualEffects = []; // ⬅️ AGREGA esta línea
 
     console.log("🔄 Jugador ÉPICO reseteado");
   },

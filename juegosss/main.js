@@ -312,15 +312,15 @@ function gameLoop() {
  * 🔥 NUEVO: Dibuja efectos especiales en pantalla - CORREGIDO
  */
 function drawSpecialEffects(ctx) {
-  // 🌊 Efecto de tiempo lento - MUY AZUL PERO MÁS INTENSO
+  // 🌊 Efecto de tiempo lento - AZUL OCÉANO MUY INTENSO
   if (slowMotionActive) {
     ctx.save();
 
-    // Overlay azul MUY INTENSO
-    ctx.fillStyle = "rgba(0, 150, 255, 0.5)"; // MUY MÁS INTENSO
+    // Overlay azul MUY INTENSO - COMO BAJO EL MAR
+    ctx.fillStyle = "rgba(0, 120, 255, 0.7)"; // MÁS INTENSO Y AZUL
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Segundo overlay para efecto bajo el agua
+    // Segundo overlay para efecto submarino
     const gradient = ctx.createRadialGradient(
       canvas.width / 2,
       canvas.height / 2,
@@ -329,40 +329,40 @@ function drawSpecialEffects(ctx) {
       canvas.height / 2,
       Math.max(canvas.width, canvas.height)
     );
-    gradient.addColorStop(0, "rgba(0, 200, 255, 0.3)");
-    gradient.addColorStop(1, "rgba(0, 100, 200, 0.4)");
+    gradient.addColorStop(0, "rgba(0, 200, 255, 0.4)");
+    gradient.addColorStop(1, "rgba(0, 100, 200, 0.6)");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Burbujas MÁS VISIBLES
-    for (let i = 0; i < 15; i++) {
+    // Burbujas MÁS VISIBLES Y AZULES
+    for (let i = 0; i < 20; i++) {
       const bubbleX =
         Math.sin(window.getGameTime() * 0.02 + i) * canvas.width * 0.4 +
         canvas.width / 2;
       const bubbleY =
         Math.cos(window.getGameTime() * 0.015 + i * 0.7) * canvas.height * 0.4 +
         canvas.height / 2;
-      const bubbleSize = 30 + Math.sin(window.getGameTime() * 0.03 + i) * 20;
+      const bubbleSize = 35 + Math.sin(window.getGameTime() * 0.03 + i) * 25;
 
       ctx.beginPath();
       ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(200, 240, 255, 0.7)"; // MÁS OPACO
+      ctx.fillStyle = "rgba(150, 220, 255, 0.8)"; // MÁS AZUL Y OPACO
       ctx.fill();
-      ctx.strokeStyle = "rgba(220, 250, 255, 0.9)"; // MÁS VISIBLE
-      ctx.lineWidth = 4;
+      ctx.strokeStyle = "rgba(200, 240, 255, 0.9)"; // MÁS VISIBLE
+      ctx.lineWidth = 5;
       ctx.stroke();
     }
 
-    // Ondas acuáticas MÁS INTENSAS
-    for (let i = 0; i < 6; i++) {
-      ctx.strokeStyle = `rgba(0, 220, 255, ${0.5 - i * 0.08})`;
-      ctx.lineWidth = 5 - i;
+    // Ondas acuáticas MÁS INTENSAS Y AZULES
+    for (let i = 0; i < 8; i++) {
+      ctx.strokeStyle = `rgba(0, 180, 255, ${0.6 - i * 0.07})`;
+      ctx.lineWidth = 6 - i;
       ctx.beginPath();
 
-      for (let x = 0; x < canvas.width; x += 8) {
+      for (let x = 0; x < canvas.width; x += 6) {
         const y =
           canvas.height / 2 +
-          Math.sin((x + window.getGameTime() * 3) * 0.01 + i) * 50;
+          Math.sin((x + window.getGameTime() * 4) * 0.012 + i) * 60;
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
@@ -372,15 +372,15 @@ function drawSpecialEffects(ctx) {
     ctx.restore();
   }
 
-  // 🔥 Efecto de modo frenesí - MENOS ROJO E INTENSO
+  // 🔥 Efecto de modo frenesí - FUEGO INTENSO
   if (frenzyModeActive) {
     ctx.save();
 
-    // Overlay rojizo MENOS INTENSO
-    ctx.fillStyle = "rgba(255, 80, 0, 0.2)"; // MUCHO MENOS INTENSO
+    // Overlay de fuego MÁS INTENSO
+    ctx.fillStyle = "rgba(255, 100, 0, 0.4)"; // MÁS INTENSO QUE ANTES
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Segundo overlay más sutil
+    // Gradiente de fuego desde abajo
     const fireGradient = ctx.createRadialGradient(
       canvas.width / 2,
       canvas.height,
@@ -389,20 +389,37 @@ function drawSpecialEffects(ctx) {
       canvas.height,
       canvas.height
     );
-    fireGradient.addColorStop(0, "rgba(255, 120, 0, 0.15)");
-    fireGradient.addColorStop(0.5, "rgba(255, 80, 0, 0.1)");
-    fireGradient.addColorStop(1, "rgba(200, 50, 0, 0.05)");
+    fireGradient.addColorStop(0, "rgba(255, 150, 0, 0.5)");
+    fireGradient.addColorStop(0.5, "rgba(255, 80, 0, 0.3)");
+    fireGradient.addColorStop(1, "rgba(200, 50, 0, 0.2)");
     ctx.fillStyle = fireGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Chispas más sutiles
-    for (let i = 0; i < 12; i++) {
+    // Llamas más visibles
+    for (let i = 0; i < 15; i++) {
+      const flameX = (i / 15) * canvas.width;
+      const flameHeight = 80 + Math.sin(window.getGameTime() * 0.1 + i) * 40;
+
+      ctx.beginPath();
+      ctx.moveTo(flameX, canvas.height);
+      ctx.quadraticCurveTo(
+        flameX + 20 + Math.sin(window.getGameTime() * 0.05 + i) * 15,
+        canvas.height - flameHeight / 2,
+        flameX + Math.sin(window.getGameTime() * 0.08 + i) * 10,
+        canvas.height - flameHeight
+      );
+      ctx.fillStyle = `rgba(255, ${150 + Math.random() * 100}, 0, 0.6)`;
+      ctx.fill();
+    }
+
+    // Chispas más intensas
+    for (let i = 0; i < 20; i++) {
       const sparkX = Math.random() * canvas.width;
       const sparkY = Math.random() * canvas.height;
-      const sparkSize = 2 + Math.random() * 3;
+      const sparkSize = 3 + Math.random() * 4;
 
-      ctx.fillStyle = `rgba(255, ${120 + Math.random() * 100}, 0, ${
-        0.4 + Math.random() * 0.2
+      ctx.fillStyle = `rgba(255, ${200 + Math.random() * 55}, 0, ${
+        0.7 + Math.random() * 0.3
       })`;
       ctx.fillRect(sparkX, sparkY, sparkSize, sparkSize);
     }
@@ -467,20 +484,35 @@ function checkCollisions() {
 }
 
 /**
- * Iniciar un nuevo nivel
+ * 🔥 NUEVO: Limpia enemigos restantes antes del boss
  */
+function clearRemainingEnemies() {
+  EnemyManager.enemies = [];
+  console.log("🧹 Enemigos restantes eliminados para el boss");
+}
+
 function startLevel() {
   console.log(`🎯 Iniciando nivel ÉPICO ${level}`);
 
-  // Configurar enemigos para el nivel
-  EnemyManager.setupLevel(level);
-
-  // Si es nivel 10, preparar boss
+  // 🔥 CONTROL DE NIVEL 10 - BOSS FINAL
   if (level === 10) {
+    clearRemainingEnemies(); // Limpiar enemigos restantes
     BossManager.init();
+    UI.showLevelTransition("BOSS FINAL", () => {
+      console.log(`👹 Boss Final iniciado`);
+    });
+    return;
   }
 
-  // Mostrar transición de nivel
+  // 🔥 CONTROL: No permitir nivel 11+
+  if (level > 10) {
+    victory(); // Forzar victoria
+    return;
+  }
+
+  // Configurar enemigos para niveles normales
+  EnemyManager.setupLevel(level);
+
   UI.showLevelTransition(level, () => {
     console.log(`✅ Nivel ÉPICO ${level} iniciado`);
   });
@@ -492,7 +524,8 @@ function startLevel() {
 function nextLevel() {
   level++;
 
-  if (level > GameConfig.MAX_LEVELS) {
+  // 🔥 CONTROL ESTRICTO: Solo hasta nivel 10
+  if (level > 10) {
     victory();
   } else {
     startLevel();
@@ -535,11 +568,13 @@ function drawBackground() {
   }
 }
 
-/**
- * Game Over
- */
 function gameOver() {
   gameEnded = true;
+
+  // 🔥 COMENTARIO DEL BOSS SI ESTÁ ACTIVO
+  if (level === 10 && BossManager.isActive()) {
+    BossManager.sayRandomComment("victoria_boss");
+  }
 
   // Detener TODOS los intervalos y sistemas
   if (gameInterval) {
@@ -550,7 +585,7 @@ function gameOver() {
   BulletManager.stopAutoShoot();
   AudioManager.stopBackgroundMusic();
 
-  // NUEVO: Limpiar sistemas completamente
+  // Limpiar sistemas completamente
   ComboSystem.cleanup();
 
   // Mostrar pantalla de game over

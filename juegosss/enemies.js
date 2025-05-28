@@ -75,25 +75,31 @@ const EnemyManager = {
   // ======================================================
 
   /**
-   * Crea un enemigo estándar - BALANCEADO
+   * Crea un enemigo estándar - CON TAMAÑOS MÁS GRANDES Y ANIMACIÓN
    */
   spawnEnemy() {
     const canvas = window.getCanvas();
     const level = window.getLevel();
 
-    // 🔥 Tamaños COMPLETAMENTE ALEATORIOS
-    const minSize = GameConfig.ENEMY_MIN_SIZE;
-    const maxSize = GameConfig.ENEMY_MAX_SIZE;
+    // 🔥 TAMAÑOS MUCHO MÁS GRANDES Y PROGRESIVOS
+    const baseMinSize = 60; // Era 30, ahora 60 (100% más grande)
+    const baseMaxSize = 100; // Era 60, ahora 100 (66% más grande)
+
+    // Crecimiento progresivo más suave por nivel
+    const sizeBonus = level * 8; // Cada nivel suma 8px
+    const minSize = Math.max(50, baseMinSize + sizeBonus);
+    const maxSize = Math.max(80, baseMaxSize + sizeBonus);
+
     const enemySize = minSize + Math.random() * (maxSize - minSize);
 
     const x = Math.random() * (canvas.width - enemySize);
 
-    // 🔥 Velocidad BALANCEADA
-    const levelSpeedFactor = 1 + level * 0.15; // Era 0.25, ahora 0.15
-    const baseSpeed = canvas.height * 0.004 * levelSpeedFactor; // Era 0.007, ahora 0.004
+    // Velocidad balanceada
+    const levelSpeedFactor = 1 + level * 0.15;
+    const baseSpeed = canvas.height * 0.004 * levelSpeedFactor;
 
     const angle = (Math.random() * Math.PI) / 2 - Math.PI / 4;
-    const speed = baseSpeed * (0.7 + Math.random() * 0.6); // Menos rango de velocidad
+    const speed = baseSpeed * (0.7 + Math.random() * 0.6);
     const velocityX = Math.sin(angle) * speed;
     const velocityY = Math.abs(Math.cos(angle) * speed);
 
@@ -105,28 +111,38 @@ const EnemyManager = {
       velocityX: velocityX,
       velocityY: velocityY,
       image: this.getEnemyImage(level),
-      speedFactor: 1.0 + Math.random() * 0.2, // Era 0.3, ahora 0.2
+      speedFactor: 1.0 + Math.random() * 0.2,
       bounceCount: 0,
-      maxBounces: 2 + Math.floor(Math.random() * 2), // 2-3 rebotes (era 2-5)
+      maxBounces: 2 + Math.floor(Math.random() * 2),
       level: level,
       spawnTime: window.getGameTime(),
       type: "normal",
+
+      // 🔥 NUEVO: Sistema de escalado dinámico
+      dynamicScaling: {
+        enabled: Math.random() < 0.4, // 40% de enemigos tendrán escalado
+        baseSize: enemySize,
+        currentScale: 1.0,
+        scaleDirection: 1,
+        scaleSpeed: 0.003, // Velocidad de cambio de escala
+        minScale: 0.7,
+        maxScale: 1.4,
+        pulseTimer: 0,
+      },
     };
 
     this.enemies.push(enemy);
 
-    // 🔥 Spawn extra MENOS AGRESIVO
+    // Spawn extra menos agresivo
     if (level > 3 && Math.random() < level * 0.04 && this.enemies.length < 25) {
-      // Era 0.08 y 50, ahora 0.04 y 25
-      const extraEnemies = Math.min(2, Math.floor(level / 4)); // Hasta 2 extra (era 3)
+      const extraEnemies = Math.min(2, Math.floor(level / 4));
 
       for (let i = 0; i < extraEnemies; i++) {
         setTimeout(() => {
           if (!window.isGameEnded() && this.enemies.length < 30) {
-            // Era 60, ahora 30
             this.spawnSimpleEnemy();
           }
-        }, i * 400); // Era 200ms, ahora 400ms (más lento)
+        }, i * 400);
       }
     }
   },
@@ -278,6 +294,9 @@ const EnemyManager = {
       enemy.x += enemy.velocityX * enemy.speedFactor * slowFactor;
       enemy.y += enemy.velocityY * enemy.speedFactor * slowFactor;
 
+      // 🔥 NUEVO: Actualizar escalado dinámico
+      this.updateDynamicScaling(enemy);
+
       // 🔥 Rebotes más agresivos para meteoritos
       const bounceMultiplierX = enemy.isMeteor ? 1.0 : wallBounceFactorX;
       const bounceMultiplierY = enemy.isMeteor ? 1.2 : wallBounceFactorY;
@@ -421,6 +440,27 @@ const EnemyManager = {
   },
 
   /**
+   * 🔥 NUEVO: Actualiza el escalado dinámico de los enemigos
+   */
+  updateDynamicScaling(enemy) {
+    if (!enemy.dynamicScaling.enabled) return;
+
+    const scaling = enemy.dynamicScaling;
+    scaling.pulseTimer += scaling.scaleSpeed;
+
+    // Calcular nueva escala usando función seno para suavidad
+    scaling.currentScale =
+      scaling.minScale +
+      (scaling.maxScale - scaling.minScale) *
+        (Math.sin(scaling.pulseTimer) * 0.5 + 0.5);
+
+    // Actualizar tamaño del enemigo
+    const newSize = scaling.baseSize * scaling.currentScale;
+    enemy.width = newSize;
+    enemy.height = newSize;
+  },
+
+  /**
    * Dibuja un enemigo individual con efectos épicos
    */
   drawEnemy(ctx, enemy) {
@@ -526,6 +566,27 @@ const EnemyManager = {
     this.lastMeteorTime = 0;
 
     console.log("👹 Sistema de enemigos ÉPICO reseteado");
+  },
+
+  /**
+   * 🔥 NUEVO: Actualiza el escalado dinámico de los enemigos
+   */
+  updateDynamicScaling(enemy) {
+    if (!enemy.dynamicScaling.enabled) return;
+
+    const scaling = enemy.dynamicScaling;
+    scaling.pulseTimer += scaling.scaleSpeed;
+
+    // Calcular nueva escala usando función seno para suavidad
+    scaling.currentScale =
+      scaling.minScale +
+      (scaling.maxScale - scaling.minScale) *
+        (Math.sin(scaling.pulseTimer) * 0.5 + 0.5);
+
+    // Actualizar tamaño del enemigo
+    const newSize = scaling.baseSize * scaling.currentScale;
+    enemy.width = newSize;
+    enemy.height = newSize;
   },
 };
 

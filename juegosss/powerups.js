@@ -39,41 +39,47 @@ const PowerUpManager = {
   // ======================================================
 
   /**
-   * Intenta crear un corazón - SISTEMA ÉPICO basado en combos
+   * Intenta crear un corazón - MÁS DIFÍCIL DE OBTENER
    */
   trySpawnHeart() {
-    // 🔥 Máximo 3 corazones en pantalla
-    if (this.hearts.length >= 3) return;
+    // 🔥 Máximo 2 corazones en pantalla (era 3)
+    if (this.hearts.length >= 2) return;
+    // 🔥 NO CORAZONES DURANTE BOSS FINAL
+    if (window.getLevel() === 10) return;
 
     const playerLives = Player.getLives();
     const combo = window.ComboSystem ? window.ComboSystem.getCurrentCombo() : 0;
 
-    // 🔥 PROBABILIDAD DINÁMICA basada en vidas y combos
-    let baseChance = 0.0005; // Era 0.001, ahora 0.0005 (MÁS RARO)
+    // 🔥 PROBABILIDAD MUCHO MÁS BAJA
+    let baseChance = 0.0002; // Era 0.0005, ahora 0.0002 (60% menos frecuente)
 
     // Aumentar según vidas perdidas
     if (playerLives <= 2) {
-      baseChance *= 4; // Era 6x, ahora 4x
+      baseChance *= 3; // Era 4x, ahora 3x
     } else if (playerLives <= 4) {
-      baseChance *= 2; // Era 3x, ahora 2x
+      baseChance *= 1.8; // Era 2x, ahora 1.8x
     } else if (playerLives <= 6) {
-      baseChance *= 1.2; // Era 1.5x, ahora 1.2x
+      baseChance *= 1.3; // Era 1.2x, ahora 1.3x
     }
 
-    // 🔥 BONUS POR COMBO - Más combos = más corazones
-    if (combo >= 10) {
-      baseChance *= 1.5; // 50% más probable con combo 10+
+    // Bonus por combo más restrictivo
+    if (combo >= 15) {
+      // Era 10, ahora 15
+      baseChance *= 1.3; // Era 1.5x, ahora 1.3x
     }
-    if (combo >= 20) {
-      baseChance *= 2; // 2x más probable con combo 20+
+    if (combo >= 25) {
+      // Era 20, ahora 25
+      baseChance *= 1.8; // Era 2x, ahora 1.8x
     }
-    if (combo >= 30) {
-      baseChance *= 2.5; // 2.5x más probable con combo 30+
+    if (combo >= 40) {
+      // Era 30, ahora 40
+      baseChance *= 2.2; // Era 2.5x, ahora 2.2x
     }
 
-    // 🔥 LÍMITE INTELIGENTE: Si tienes muchas vidas, reducir dramáticamente
-    if (playerLives >= 10) {
-      baseChance *= 0.1; // 90% menos probable con muchas vidas
+    // Límite más estricto para muchas vidas
+    if (playerLives >= 8) {
+      // Era 10, ahora 8
+      baseChance *= 0.05; // Era 0.1, ahora 0.05 (95% menos probable)
     }
 
     if (Math.random() < baseChance) {
@@ -155,29 +161,33 @@ const PowerUpManager = {
   // ======================================================
 
   /**
-   * Intenta crear un power-up - SISTEMA ÉPICO basado en combos
+   * Intenta crear un power-up - MÁS DIFÍCIL DE OBTENER
    */
   trySpawnPowerUp() {
-    // 🔥 Máximo 4 power-ups en pantalla para más acción
-    if (this.powerUps.length >= 4) return;
+    // 🔥 Máximo 3 power-ups en pantalla (era 4)
+    if (this.powerUps.length >= 3) return;
 
     const combo = window.ComboSystem ? window.ComboSystem.getCurrentCombo() : 0;
 
-    // 🔥 PROBABILIDAD DINÁMICA basada en combos
-    let baseChance = 0.003; // Base más alta
+    // 🔥 PROBABILIDAD MÁS BAJA
+    let baseChance = 0.0018; // Era 0.003, ahora 0.0018 (40% menos frecuente)
 
-    // 🔥 BONUS POR COMBO - Más combos = más power-ups
-    if (combo >= 5) {
-      baseChance *= 1.5; // 50% más probable con combo 5+
+    // Bonus por combo más restrictivo
+    if (combo >= 8) {
+      // Era 5, ahora 8
+      baseChance *= 1.3; // Era 1.5x, ahora 1.3x
     }
-    if (combo >= 10) {
-      baseChance *= 2; // 2x más probable con combo 10+
+    if (combo >= 15) {
+      // Era 10, ahora 15
+      baseChance *= 1.8; // Era 2x, ahora 1.8x
     }
-    if (combo >= 20) {
-      baseChance *= 3; // 3x más probable con combo 20+
+    if (combo >= 25) {
+      // Era 20, ahora 25
+      baseChance *= 2.5; // Era 3x, ahora 2.5x
     }
-    if (combo >= 30) {
-      baseChance *= 4; // 4x más probable con combo 30+
+    if (combo >= 35) {
+      // Era 30, ahora 35
+      baseChance *= 3.2; // Era 4x, ahora 3.2x
     }
 
     if (Math.random() < baseChance) {
