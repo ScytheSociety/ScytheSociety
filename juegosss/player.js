@@ -168,14 +168,6 @@ const Player = {
       const powerUp = this.activePowerUps[i];
       powerUp.timeLeft--;
 
-      // Parpadeo cuando está por expirar (últimos 2 segundos)
-      if (powerUp.timeLeft <= 120 && powerUp.timeLeft % 20 === 0) {
-        UI.showScreenMessage(
-          `${powerUp.type.name} expirando...`,
-          powerUp.type.color
-        );
-      }
-
       if (powerUp.timeLeft <= 0) {
         console.log(
           `⚡ Power-up ${powerUp.type.name} expirado individualmente`
@@ -184,9 +176,6 @@ const Player = {
 
         // Actualizar efectos visuales inmediatamente
         this.updatePowerUpVisuals();
-
-        // Mostrar qué poder se perdió
-        UI.showScreenMessage(`❌ ${powerUp.type.name} terminado`, "#FF6666");
       }
     }
   },

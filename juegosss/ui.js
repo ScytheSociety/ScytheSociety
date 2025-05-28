@@ -54,96 +54,115 @@ const UI = {
   // ======================================================
   // SISTEMA DE MENSAJES EN PANTALLA - MEJORADO
   // ======================================================
-
   /**
-   * Muestra un mensaje en pantalla - SIN SUPERPOSICIÓN
+   * 🔥 NUEVO: Sistema de mensajes en la parte superior - SOLO 2 SLOTS
    */
   showScreenMessage(message, color = "#FFFFFF") {
-    // 🔥 FILTRAR MENSAJES INNECESARIOS
-    if (
-      message.includes("PODER LISTO") ||
-      message.includes("🔥 Poder especial cargado")
-    ) {
-      return; // No mostrar estos mensajes
+    // 🚫 FILTRAR MENSAJES REPETITIVOS Y SPAM
+    const spamMessages = [
+      "expirando",
+      "terminado",
+      "renovado",
+      "Poder especial cargado",
+      "PODER LISTO",
+      "Combo:",
+      "Balas Penetrantes renovado",
+      "Balas Explosivas renovado",
+      "Disparo Amplio renovado",
+      "Disparo Rápido renovado",
+    ];
+
+    if (spamMessages.some((spam) => message.includes(spam))) {
+      return; // No mostrar mensajes de spam
     }
 
     const messageId = this.messageIdCounter++;
 
-    // 🔥 SISTEMA DE POSICIONES SIN SUPERPOSICIÓN
-    let yPosition = 15; // Empezar más arriba
-    const messageHeight = 8; // Más espaciado
-    const maxMessages = 5; // Máximo 5 mensajes
+    // 🔥 SOLO 2 POSICIONES FIJAS EN LA PARTE SUPERIOR
+    const positions = [
+      { y: 8 }, // Posición 1 (arriba)
+      { y: 16 }, // Posición 2 (abajo)
+    ];
 
-    // Limpiar mensajes viejos primero
-    this.messagePositions = this.messagePositions.filter(
-      (pos) => pos.active && Date.now() - pos.timeCreated < 4000
-    );
+    // Limpiar mensajes antiguos
+    this.messagePositions = this.messagePositions.filter((pos) => pos.active);
 
-    // Si hay demasiados mensajes, quitar el más viejo
-    if (this.messagePositions.length >= maxMessages) {
+    // Si hay 2 mensajes, eliminar el más viejo
+    if (this.messagePositions.length >= 2) {
+      const oldestMessage = document.querySelector(
+        `[data-message-id="${this.messagePositions[0].id}"]`
+      );
+      if (oldestMessage) {
+        oldestMessage.remove();
+      }
       this.messagePositions.shift();
     }
 
-    // Encontrar posición libre
-    for (let i = 0; i < maxMessages; i++) {
-      const testY = 15 + i * messageHeight;
-      const positionTaken = this.messagePositions.some(
-        (pos) => Math.abs(pos.y - testY) < messageHeight && pos.active
+    // Mover mensaje existente hacia abajo
+    if (this.messagePositions.length === 1) {
+      const existingMessage = document.querySelector(
+        `[data-message-id="${this.messagePositions[0].id}"]`
       );
-
-      if (!positionTaken) {
-        yPosition = testY;
-        break;
+      if (existingMessage) {
+        existingMessage.style.top = "16%";
       }
+      this.messagePositions[0].y = 16;
     }
 
-    // Registrar posición
+    // Agregar nuevo mensaje arriba
     const position = {
       id: messageId,
-      y: yPosition,
+      y: 8,
       active: true,
       timeCreated: Date.now(),
     };
-    this.messagePositions.push(position);
+    this.messagePositions.unshift(position); // Agregar al inicio
 
-    // Crear elemento
+    // Crear elemento de mensaje
     const messageElement = document.createElement("div");
     messageElement.textContent = message;
+    messageElement.setAttribute("data-message-id", messageId);
     messageElement.style.position = "fixed";
-    messageElement.style.top = `${yPosition}%`;
+    messageElement.style.top = "8%"; // Siempre arriba
     messageElement.style.left = "50%";
     messageElement.style.transform = "translateX(-50%)";
     messageElement.style.color = color;
-    messageElement.style.fontSize = "14px"; // Más pequeño
+    messageElement.style.fontSize = "13px";
     messageElement.style.fontWeight = "bold";
     messageElement.style.textShadow = "2px 2px 4px rgba(0,0,0,0.9)";
     messageElement.style.zIndex = "1000";
-    messageElement.style.backgroundColor = "rgba(0,0,0,0.7)";
-    messageElement.style.padding = "3px 10px"; // Más compacto
+    messageElement.style.backgroundColor = "rgba(0,0,0,0.8)";
+    messageElement.style.padding = "4px 12px";
     messageElement.style.borderRadius = "6px";
     messageElement.style.border = `1px solid ${color}`;
-    messageElement.style.maxWidth = "250px"; // Más estrecho
+    messageElement.style.maxWidth = "300px";
     messageElement.style.textAlign = "center";
     messageElement.style.fontFamily = '"Arial", sans-serif';
-    messageElement.style.transition = "all 0.5s ease";
+    messageElement.style.transition = "all 0.3s ease";
 
     document.body.appendChild(messageElement);
 
-    // 🔥 ANIMACIÓN DE SUBIDA Y DESVANECIMIENTO
+    // Eliminar después de 3 segundos
     setTimeout(() => {
-      messageElement.style.transform = "translateX(-50%) translateY(-20px)";
-      messageElement.style.opacity = "0";
+      if (messageElement.parentNode) {
+        messageElement.style.opacity = "0";
+        messageElement.style.transform = "translateX(-50%) translateY(-10px)";
 
-      // Marcar posición como libre
-      const pos = this.messagePositions.find((p) => p.id === messageId);
-      if (pos) pos.active = false;
+        setTimeout(() => {
+          if (messageElement.parentNode) {
+            document.body.removeChild(messageElement);
+          }
+        }, 300);
+      }
 
-      setTimeout(() => {
-        if (messageElement.parentNode) {
-          document.body.removeChild(messageElement);
-        }
-      }, 500);
-    }, 2500); // Duración más corta
+      // Limpiar de la lista
+      const posIndex = this.messagePositions.findIndex(
+        (p) => p.id === messageId
+      );
+      if (posIndex !== -1) {
+        this.messagePositions.splice(posIndex, 1);
+      }
+    }, 3000);
   },
 
   // ======================================================

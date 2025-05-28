@@ -234,50 +234,39 @@ const ComboSystem = {
    * 🎁 Activa bonificaciones especiales basadas en el combo actual
    */
   triggerComboBonus() {
-    // ===== BONUS CADA 15 COMBOS (era 10) =====
-    if (this.currentCombo > 0 && this.currentCombo % 15 === 0) {
-      console.log(`🎁 Bonus por combo ${this.currentCombo}!`);
+    // ===== SOLO BONIFICACIONES DE PUNTOS - NO MÁS ITEMS GRATIS =====
 
-      // 40% probabilidad de forzar spawn de item (era 70%)
-      if (Math.random() < 0.4) {
-        if (Math.random() < 0.7) {
-          // 70% power-up, 30% corazón
-          PowerUpManager.forceSpawnPowerUp();
-        } else {
-          PowerUpManager.forceSpawnHeart();
-        }
-      }
-
-      UI.showScreenMessage("🎁 BONUS POR COMBO!", "#FFD700");
+    // Bonus de puntos cada 25 combos
+    if (this.currentCombo > 0 && this.currentCombo % 25 === 0) {
+      const bonusPoints = this.currentCombo * 10;
+      window.setScore(window.getScore() + bonusPoints);
+      UI.showScreenMessage(`💰 +${bonusPoints} BONUS!`, "#FFD700");
+      console.log(
+        `💰 Bonus de puntos por combo ${this.currentCombo}: +${bonusPoints}`
+      );
     }
 
-    // ===== EVENTOS ESPECIALES MÁS RAROS =====
-    // 🌊 Tiempo lento cada 20 combos (era 15)
-    if (this.currentCombo > 0 && this.currentCombo % 20 === 0) {
-      if (Math.random() < 0.6) {
-        // Era 80%, ahora 60%
+    // ===== EVENTOS ESPECIALES MUY RAROS =====
+    // Solo tiempo lento cada 50 combos y con baja probabilidad
+    if (this.currentCombo === 50 || this.currentCombo === 100) {
+      if (Math.random() < 0.3) {
+        // Solo 30% de probabilidad
         this.triggerSlowMotion();
       }
     }
 
-    // 🔥 Modo frenesí cada 35 combos (era 25)
-    if (this.currentCombo > 0 && this.currentCombo % 35 === 0) {
-      if (Math.random() < 0.3) {
-        // Era 40%, ahora 30%
+    // Solo frenesí cada 75 combos
+    if (this.currentCombo === 75) {
+      if (Math.random() < 0.4) {
+        // Solo 40% de probabilidad
         this.triggerFrenzyMode();
       }
     }
 
-    // ===== MEGA BONUS: LLUVIA DE POWER-UPS cada 40 combos (era 25) =====
-    if (this.currentCombo === 40) {
-      console.log("🌟 Activando lluvia de power-ups!");
+    // MEGA BONUS muy raro cada 100 combos
+    if (this.currentCombo === 100) {
+      console.log("🌟 MEGA COMBO 100! Lluvia especial");
       this.triggerPowerUpRain();
-    }
-
-    // ===== ULTRA BONUS: MODO FRENESÍ GARANTIZADO cada 60 combos (era 40) =====
-    if (this.currentCombo === 60) {
-      console.log("⚡ Activando modo frenesí garantizado!");
-      this.triggerFrenzyMode();
     }
   },
 

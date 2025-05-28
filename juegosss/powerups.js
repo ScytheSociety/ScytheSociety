@@ -211,12 +211,12 @@ const PowerUpManager = {
   spawnPowerUp() {
     const canvas = window.getCanvas();
 
-    // 🔥 Power-ups mejorados con más duración
+    // 🔥 Power-ups CON DURACIÓN MUY CORTA
     const types = [
-      { id: 0, name: "Balas Penetrantes", color: "#FFFF00", duration: 800 }, // +200 frames
-      { id: 1, name: "Disparo Amplio", color: "#00FFFF", duration: 700 }, // +200 frames
-      { id: 2, name: "Balas Explosivas", color: "#FF8800", duration: 650 }, // +200 frames
-      { id: 3, name: "Disparo Rápido", color: "#FF00FF", duration: 750 }, // +200 frames
+      { id: 0, name: "Balas Penetrantes", color: "#FFFF00", duration: 180 }, // 3 segundos
+      { id: 1, name: "Disparo Amplio", color: "#00FFFF", duration: 150 }, // 2.5 segundos
+      { id: 2, name: "Balas Explosivas", color: "#FF8800", duration: 210 }, // 3.5 segundos
+      { id: 3, name: "Disparo Rápido", color: "#FF00FF", duration: 120 }, // 2 segundos
     ];
 
     const selectedType = types[Math.floor(Math.random() * types.length)];
@@ -275,23 +275,9 @@ const PowerUpManager = {
    * Verifica eventos especiales aleatorios
    */
   checkSpecialEvents() {
-    // 🔥 Lluvia de meteoritos MÁS RARA
-    if (Math.random() < 0.0003) {
-      // Era 0.0008, ahora 0.0003
-      this.triggerMeteorShower();
-    }
-
-    // 🔥 Tiempo lento MÁS RARO
-    if (Math.random() < 0.0005) {
-      // Era 0.0012, ahora 0.0005
-      this.triggerSlowMotion();
-    }
-
-    // 🔥 Lluvia de power-ups MÁS RARA
-    if (Math.random() < 0.0002) {
-      // Era 0.0006, ahora 0.0002
-      this.triggerPowerUpShower();
-    }
+    // 🚫 EVENTOS DESHABILITADOS PARA BALANCE
+    // Los eventos especiales solo ocurren por combos altos ahora
+    return;
   },
 
   /**

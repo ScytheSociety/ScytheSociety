@@ -312,116 +312,64 @@ function gameLoop() {
  * 🔥 NUEVO: Dibuja efectos especiales en pantalla - CORREGIDO
  */
 function drawSpecialEffects(ctx) {
-  // 🌊 Efecto de tiempo lento - AZUL OCÉANO MUY INTENSO
-  if (slowMotionActive) {
+  // 🌊 Efecto de tiempo lento - PANTALLA COMPLETAMENTE AZUL
+  if (window.slowMotionActive) {
     ctx.save();
 
-    // Overlay azul MUY INTENSO - COMO BAJO EL MAR
-    ctx.fillStyle = "rgba(0, 120, 255, 0.7)"; // MÁS INTENSO Y AZUL
+    // 🔥 OVERLAY AZUL SÚPER INTENSO QUE CUBRE TODO
+    ctx.fillStyle = "rgba(0, 120, 255, 0.6)"; // MUY AZUL Y OPACO
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Segundo overlay para efecto submarino
-    const gradient = ctx.createRadialGradient(
-      canvas.width / 2,
-      canvas.height / 2,
-      0,
-      canvas.width / 2,
-      canvas.height / 2,
-      Math.max(canvas.width, canvas.height)
-    );
-    gradient.addColorStop(0, "rgba(0, 200, 255, 0.4)");
-    gradient.addColorStop(1, "rgba(0, 100, 200, 0.6)");
-    ctx.fillStyle = gradient;
+    // Segundo overlay más intenso
+    ctx.fillStyle = "rgba(0, 80, 200, 0.4)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Burbujas MÁS VISIBLES Y AZULES
-    for (let i = 0; i < 20; i++) {
-      const bubbleX =
-        Math.sin(window.getGameTime() * 0.02 + i) * canvas.width * 0.4 +
-        canvas.width / 2;
-      const bubbleY =
-        Math.cos(window.getGameTime() * 0.015 + i * 0.7) * canvas.height * 0.4 +
-        canvas.height / 2;
-      const bubbleSize = 35 + Math.sin(window.getGameTime() * 0.03 + i) * 25;
+    // Tercer overlay para el efecto submarino
+    ctx.fillStyle = "rgba(0, 150, 255, 0.3)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Burbujas grandes y visibles
+    for (let i = 0; i < 25; i++) {
+      const bubbleX = Math.random() * canvas.width;
+      const bubbleY = Math.random() * canvas.height;
+      const bubbleSize = 20 + Math.random() * 40;
 
       ctx.beginPath();
       ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(150, 220, 255, 0.8)"; // MÁS AZUL Y OPACO
+      ctx.fillStyle = "rgba(200, 240, 255, 0.7)";
       ctx.fill();
-      ctx.strokeStyle = "rgba(200, 240, 255, 0.9)"; // MÁS VISIBLE
-      ctx.lineWidth = 5;
-      ctx.stroke();
-    }
-
-    // Ondas acuáticas MÁS INTENSAS Y AZULES
-    for (let i = 0; i < 8; i++) {
-      ctx.strokeStyle = `rgba(0, 180, 255, ${0.6 - i * 0.07})`;
-      ctx.lineWidth = 6 - i;
-      ctx.beginPath();
-
-      for (let x = 0; x < canvas.width; x += 6) {
-        const y =
-          canvas.height / 2 +
-          Math.sin((x + window.getGameTime() * 4) * 0.012 + i) * 60;
-        if (x === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.lineWidth = 3;
       ctx.stroke();
     }
 
     ctx.restore();
   }
 
-  // 🔥 Efecto de modo frenesí - FUEGO INTENSO
-  if (frenzyModeActive) {
+  // 🔥 Efecto de modo frenesí - PANTALLA COMPLETAMENTE ROJA
+  if (window.frenzyModeActive) {
     ctx.save();
 
-    // Overlay de fuego MÁS INTENSO
-    ctx.fillStyle = "rgba(255, 100, 0, 0.4)"; // MÁS INTENSO QUE ANTES
+    // 🔥 OVERLAY ROJO SÚPER INTENSO QUE CUBRE TODO
+    ctx.fillStyle = "rgba(255, 80, 0, 0.5)"; // MUY ROJO Y OPACO
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Gradiente de fuego desde abajo
-    const fireGradient = ctx.createRadialGradient(
-      canvas.width / 2,
-      canvas.height,
-      0,
-      canvas.width / 2,
-      canvas.height,
-      canvas.height
-    );
-    fireGradient.addColorStop(0, "rgba(255, 150, 0, 0.5)");
-    fireGradient.addColorStop(0.5, "rgba(255, 80, 0, 0.3)");
-    fireGradient.addColorStop(1, "rgba(200, 50, 0, 0.2)");
-    ctx.fillStyle = fireGradient;
+    // Segundo overlay más intenso
+    ctx.fillStyle = "rgba(200, 50, 0, 0.3)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Llamas más visibles
-    for (let i = 0; i < 15; i++) {
-      const flameX = (i / 15) * canvas.width;
-      const flameHeight = 80 + Math.sin(window.getGameTime() * 0.1 + i) * 40;
+    // Tercer overlay para el efecto de fuego
+    ctx.fillStyle = "rgba(255, 100, 0, 0.2)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.beginPath();
-      ctx.moveTo(flameX, canvas.height);
-      ctx.quadraticCurveTo(
-        flameX + 20 + Math.sin(window.getGameTime() * 0.05 + i) * 15,
-        canvas.height - flameHeight / 2,
-        flameX + Math.sin(window.getGameTime() * 0.08 + i) * 10,
-        canvas.height - flameHeight
-      );
-      ctx.fillStyle = `rgba(255, ${150 + Math.random() * 100}, 0, 0.6)`;
-      ctx.fill();
-    }
+    // Efectos de fuego más visibles
+    for (let i = 0; i < 30; i++) {
+      const fireX = Math.random() * canvas.width;
+      const fireY = Math.random() * canvas.height;
+      const fireSize = 5 + Math.random() * 10;
 
-    // Chispas más intensas
-    for (let i = 0; i < 20; i++) {
-      const sparkX = Math.random() * canvas.width;
-      const sparkY = Math.random() * canvas.height;
-      const sparkSize = 3 + Math.random() * 4;
-
-      ctx.fillStyle = `rgba(255, ${200 + Math.random() * 55}, 0, ${
-        0.7 + Math.random() * 0.3
-      })`;
-      ctx.fillRect(sparkX, sparkY, sparkSize, sparkSize);
+      ctx.fillStyle = `rgba(255, ${150 + Math.random() * 100}, 0, 0.8)`;
+      ctx.fillRect(fireX, fireY, fireSize, fireSize);
     }
 
     ctx.restore();
