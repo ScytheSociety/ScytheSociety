@@ -51,7 +51,7 @@ const PowerUpManager = {
     const combo = window.ComboSystem ? window.ComboSystem.getCurrentCombo() : 0;
 
     // 🔥 PROBABILIDAD MUCHO MÁS BAJA
-    let baseChance = 0.0002; // Era 0.0005, ahora 0.0002 (60% menos frecuente)
+    let baseChance = 0.0004; // Era 0.0002, ahora 0.0004, un poquito mas frecuente
 
     // Aumentar según vidas perdidas
     if (playerLives <= 2) {
@@ -211,12 +211,12 @@ const PowerUpManager = {
   spawnPowerUp() {
     const canvas = window.getCanvas();
 
-    // 🔥 Power-ups CON DURACIÓN MUY CORTA
+    // 🔥 Power-ups CON DURACIÓN BALANCEADA
     const types = [
       { id: 0, name: "Balas Penetrantes", color: "#FFFF00", duration: 180 }, // 3 segundos
-      { id: 1, name: "Disparo Amplio", color: "#00FFFF", duration: 150 }, // 2.5 segundos
-      { id: 2, name: "Balas Explosivas", color: "#FF8800", duration: 210 }, // 3.5 segundos
-      { id: 3, name: "Disparo Rápido", color: "#FF00FF", duration: 120 }, // 2 segundos
+      { id: 1, name: "Disparo Amplio", color: "#00FFFF", duration: 240 }, // 4 segundos
+      { id: 2, name: "Balas Explosivas", color: "#FF8800", duration: 180 }, // 3 segundos
+      { id: 3, name: "Disparo Rápido", color: "#FF00FF", duration: 300 }, // 5 segundos
     ];
 
     const selectedType = types[Math.floor(Math.random() * types.length)];

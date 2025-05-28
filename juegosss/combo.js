@@ -234,10 +234,10 @@ const ComboSystem = {
    * 🎁 Activa bonificaciones especiales basadas en el combo actual
    */
   triggerComboBonus() {
-    // ===== SOLO BONIFICACIONES DE PUNTOS - NO MÁS ITEMS GRATIS =====
+    // ===== BONIFICACIONES DE PUNTOS =====
 
-    // Bonus de puntos cada 25 combos
-    if (this.currentCombo > 0 && this.currentCombo % 25 === 0) {
+    // Bonus de puntos cada 20 combos (era 25)
+    if (this.currentCombo > 0 && this.currentCombo % 20 === 0) {
       const bonusPoints = this.currentCombo * 10;
       window.setScore(window.getScore() + bonusPoints);
       UI.showScreenMessage(`💰 +${bonusPoints} BONUS!`, "#FFD700");
@@ -246,26 +246,38 @@ const ComboSystem = {
       );
     }
 
-    // ===== EVENTOS ESPECIALES MUY RAROS =====
-    // Solo tiempo lento cada 50 combos y con baja probabilidad
-    if (this.currentCombo === 50 || this.currentCombo === 100) {
-      if (Math.random() < 0.3) {
-        // Solo 30% de probabilidad
+    // ===== EVENTOS ESPECIALES MÁS FRECUENTES =====
+    // Tiempo lento cada 30 y 60 combos (era 50 y 100)
+    if (
+      this.currentCombo === 30 ||
+      this.currentCombo === 60 ||
+      this.currentCombo === 90
+    ) {
+      if (Math.random() < 0.5) {
+        // 50% de probabilidad (era 30%)
         this.triggerSlowMotion();
       }
     }
 
-    // Solo frenesí cada 75 combos
-    if (this.currentCombo === 75) {
-      if (Math.random() < 0.4) {
-        // Solo 40% de probabilidad
+    // Frenesí cada 40 y 80 combos (era 75)
+    if (this.currentCombo === 40 || this.currentCombo === 80) {
+      if (Math.random() < 0.6) {
+        // 60% probabilidad (era 40%)
         this.triggerFrenzyMode();
       }
     }
 
-    // MEGA BONUS muy raro cada 100 combos
-    if (this.currentCombo === 100) {
-      console.log("🌟 MEGA COMBO 100! Lluvia especial");
+    // Lluvia de meteoritos cada 35 y 70 combos
+    if (this.currentCombo === 35 || this.currentCombo === 70) {
+      if (Math.random() < 0.4) {
+        // 40% probabilidad
+        this.triggerMeteorShower();
+      }
+    }
+
+    // MEGA BONUS cada 50 combos (era 100)
+    if (this.currentCombo === 50 || this.currentCombo === 100) {
+      console.log("🌟 MEGA COMBO! Lluvia especial");
       this.triggerPowerUpRain();
     }
   },
@@ -323,6 +335,27 @@ const ComboSystem = {
     }, 15000);
 
     AudioManager.playSound("special");
+  },
+
+  /**
+   * ☄️ Lluvia de meteoritos
+   */
+  triggerMeteorShower() {
+    UI.showScreenMessage("☄️ ¡LLUVIA DE METEORITOS! ☄️", "#FF8800");
+
+    console.log("☄️ Iniciando lluvia de meteoritos - 6 enemigos especiales");
+
+    // Crear 6 enemigos meteorito con delay de 200ms entre cada uno
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => {
+        if (window.EnemyManager && window.EnemyManager.spawnMeteorEnemy) {
+          window.EnemyManager.spawnMeteorEnemy();
+        }
+      }, i * 200);
+    }
+
+    AudioManager.playSound("special");
+    console.log("☄️ Lluvia de meteoritos activada");
   },
 
   // ======================================================

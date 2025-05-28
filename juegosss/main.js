@@ -312,20 +312,16 @@ function gameLoop() {
  * 🔥 NUEVO: Dibuja efectos especiales en pantalla - CORREGIDO
  */
 function drawSpecialEffects(ctx) {
-  // 🌊 Efecto de tiempo lento - PANTALLA COMPLETAMENTE AZUL
+  // 🌊 Efecto de tiempo lento - AZUL SUBMARINO CON OPACIDAD PERFECTA
   if (window.slowMotionActive) {
     ctx.save();
 
-    // 🔥 OVERLAY AZUL SÚPER INTENSO QUE CUBRE TODO
-    ctx.fillStyle = "rgba(0, 120, 255, 0.6)"; // MUY AZUL Y OPACO
+    // 🔥 OVERLAY AZUL CON OPACIDAD BALANCEADA - SE VE EL JUEGO
+    ctx.fillStyle = "rgba(12, 56, 177, 0.49)"; // Opacidad reducida para visibilidad
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Segundo overlay más intenso
-    ctx.fillStyle = "rgba(0, 80, 200, 0.4)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Tercer overlay para el efecto submarino
-    ctx.fillStyle = "rgba(0, 150, 255, 0.3)";
+    // Segundo overlay sutil
+    ctx.fillStyle = "rgba(0, 149, 255, 0.23)"; // Muy sutil
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Burbujas grandes y visibles
@@ -336,7 +332,7 @@ function drawSpecialEffects(ctx) {
 
       ctx.beginPath();
       ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(200, 240, 255, 0.7)";
+      ctx.fillStyle = "rgba(60, 243, 234, 0.47)";
       ctx.fill();
       ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
       ctx.lineWidth = 3;
@@ -346,20 +342,16 @@ function drawSpecialEffects(ctx) {
     ctx.restore();
   }
 
-  // 🔥 Efecto de modo frenesí - PANTALLA COMPLETAMENTE ROJA
+  // 🔥 Efecto de modo frenesí - ROJO FUEGO CON OPACIDAD PERFECTA
   if (window.frenzyModeActive) {
     ctx.save();
 
-    // 🔥 OVERLAY ROJO SÚPER INTENSO QUE CUBRE TODO
-    ctx.fillStyle = "rgba(255, 80, 0, 0.5)"; // MUY ROJO Y OPACO
+    // 🔥 OVERLAY ROJO CON OPACIDAD BALANCEADA - SE VE EL JUEGO
+    ctx.fillStyle = "rgba(255, 60, 0, 0.36)"; // Opacidad reducida para visibilidad
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Segundo overlay más intenso
-    ctx.fillStyle = "rgba(200, 50, 0, 0.3)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Tercer overlay para el efecto de fuego
-    ctx.fillStyle = "rgba(255, 100, 0, 0.2)";
+    // Segundo overlay sutil
+    ctx.fillStyle = "rgba(200, 80, 0, 0.2)"; // Muy sutil
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Efectos de fuego más visibles
