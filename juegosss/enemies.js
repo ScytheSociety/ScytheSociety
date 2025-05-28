@@ -567,27 +567,6 @@ const EnemyManager = {
 
     console.log("👹 Sistema de enemigos ÉPICO reseteado");
   },
-
-  /**
-   * 🔥 NUEVO: Actualiza el escalado dinámico de los enemigos
-   */
-  updateDynamicScaling(enemy) {
-    if (!enemy.dynamicScaling.enabled) return;
-
-    const scaling = enemy.dynamicScaling;
-    scaling.pulseTimer += scaling.scaleSpeed;
-
-    // Calcular nueva escala usando función seno para suavidad
-    scaling.currentScale =
-      scaling.minScale +
-      (scaling.maxScale - scaling.minScale) *
-        (Math.sin(scaling.pulseTimer) * 0.5 + 0.5);
-
-    // Actualizar tamaño del enemigo
-    const newSize = scaling.baseSize * scaling.currentScale;
-    enemy.width = newSize;
-    enemy.height = newSize;
-  },
 };
 
 // Hacer disponible globalmente
