@@ -257,12 +257,13 @@ const UI = {
   },
 
   /**
-   * Actualiza el indicador de power-up activo
+   * 🔥 CORREGIDO: Actualiza el indicador de power-up activo con múltiples poderes
    */
   updatePowerUpIndicator() {
-    const activePowerUp = Player.getActivePowerUp();
+    // 🔥 NUEVO: Obtener TODOS los power-ups activos
+    const activePowerUps = Player.activePowerUps || [];
 
-    if (activePowerUp) {
+    if (activePowerUps.length > 0) {
       let indicator = document.getElementById("power-up-indicator");
 
       if (!indicator) {
@@ -274,30 +275,42 @@ const UI = {
         indicator.style.left = "20px";
         indicator.style.padding = "8px 15px";
         indicator.style.borderRadius = "20px";
-        indicator.style.fontSize = "14px";
+        indicator.style.fontSize = "12px";
         indicator.style.fontWeight = "bold";
         indicator.style.transition = "all 0.3s";
         indicator.style.zIndex = "100";
         indicator.style.fontFamily = '"Arial", sans-serif';
+        indicator.style.maxWidth = "200px";
         document.body.appendChild(indicator);
       }
 
-      // Actualizar contenido
-      const timeLeft = Math.ceil(Player.getPowerUpTimeLeft() / 60);
-      indicator.textContent = `${activePowerUp.name}: ${timeLeft}s`;
-      indicator.style.backgroundColor = activePowerUp.color;
-      indicator.style.color = "#FFFFFF";
-      indicator.style.boxShadow = `0 0 10px ${activePowerUp.color}`;
+      // 🔥 MOSTRAR TODOS LOS POWER-UPS ACTIVOS
+      let powerUpText = "";
+      let dominantColor = activePowerUps[0].type.color;
 
-      // Parpadeo cuando está por terminar
-      if (Player.getPowerUpTimeLeft() < 60) {
+      for (let i = 0; i < activePowerUps.length; i++) {
+        const powerUp = activePowerUps[i];
+        const timeLeft = Math.ceil(powerUp.timeLeft / 60);
+
+        if (i > 0) powerUpText += " + ";
+        powerUpText += `${powerUp.type.name}: ${timeLeft}s`;
+      }
+
+      indicator.textContent = powerUpText;
+      indicator.style.backgroundColor = dominantColor;
+      indicator.style.color = "#FFFFFF";
+      indicator.style.boxShadow = `0 0 10px ${dominantColor}`;
+
+      // Parpadeo cuando alguno está por terminar
+      const anyExpiring = activePowerUps.some((p) => p.timeLeft < 60);
+      if (anyExpiring) {
         indicator.style.opacity =
           Math.sin(window.getGameTime() * 0.2) * 0.5 + 0.5;
       } else {
         indicator.style.opacity = "1";
       }
     } else {
-      // Eliminar indicador si no hay power-up
+      // Eliminar indicador si no hay power-ups
       const indicator = document.getElementById("power-up-indicator");
       if (indicator && indicator.parentNode) {
         indicator.parentNode.removeChild(indicator);

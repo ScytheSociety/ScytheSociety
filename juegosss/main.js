@@ -312,55 +312,57 @@ function gameLoop() {
  * 🔥 NUEVO: Dibuja efectos especiales en pantalla - CORREGIDO
  */
 function drawSpecialEffects(ctx) {
-  // 🌊 Efecto de tiempo lento - AZUL SUBMARINO CON OPACIDAD PERFECTA
+  // 🌊 Efecto de tiempo lento - AZUL SUBMARINO MUY SUTIL
   if (window.slowMotionActive) {
     ctx.save();
 
-    // 🔥 OVERLAY AZUL CON OPACIDAD BALANCEADA - SE VE EL JUEGO
-    ctx.fillStyle = "rgba(12, 56, 177, 0.49)"; // Opacidad reducida para visibilidad
+    // 🔥 OVERLAY AZUL MUY SUTIL - CASI TRANSPARENTE
+    ctx.fillStyle = "rgba(0, 119, 255, 0.18)"; // Era 0.35, ahora 0.15
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Segundo overlay sutil
-    ctx.fillStyle = "rgba(0, 149, 255, 0.23)"; // Muy sutil
+    // Segundo overlay aún más sutil
+    ctx.fillStyle = "rgba(0, 180, 255, 0.08)"; // Era 0.15, ahora 0.08
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Burbujas grandes y visibles
-    for (let i = 0; i < 25; i++) {
+    // Burbujas sutiles y casi transparentes
+    for (let i = 0; i < 15; i++) {
+      // Menos burbujas
       const bubbleX = Math.random() * canvas.width;
       const bubbleY = Math.random() * canvas.height;
-      const bubbleSize = 20 + Math.random() * 40;
+      const bubbleSize = 15 + Math.random() * 25; // Más pequeñas
 
       ctx.beginPath();
       ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(60, 243, 234, 0.47)";
+      ctx.fillStyle = "rgba(200, 240, 255, 0.2)"; // Era 0.7, ahora 0.2
       ctx.fill();
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.3)"; // Era 0.8, ahora 0.3
+      ctx.lineWidth = 1; // Era 3, ahora 1
       ctx.stroke();
     }
 
     ctx.restore();
   }
 
-  // 🔥 Efecto de modo frenesí - ROJO FUEGO CON OPACIDAD PERFECTA
+  // 🔥 Efecto de modo frenesí - ROJO FUEGO MUY SUTIL
   if (window.frenzyModeActive) {
     ctx.save();
 
-    // 🔥 OVERLAY ROJO CON OPACIDAD BALANCEADA - SE VE EL JUEGO
-    ctx.fillStyle = "rgba(255, 60, 0, 0.36)"; // Opacidad reducida para visibilidad
+    // 🔥 OVERLAY ROJO MUY SUTIL - CASI TRANSPARENTE
+    ctx.fillStyle = "rgba(255, 80, 0, 0.18)"; // Era 0.3, ahora 0.18
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Segundo overlay sutil
-    ctx.fillStyle = "rgba(200, 80, 0, 0.2)"; // Muy sutil
+    // Segundo overlay aún más sutil
+    ctx.fillStyle = "rgba(200, 60, 0, 0.1)"; // Era 0.15, ahora 0.1
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Efectos de fuego más visibles
-    for (let i = 0; i < 30; i++) {
+    // Efectos de fuego sutiles
+    for (let i = 0; i < 20; i++) {
+      // Menos efectos
       const fireX = Math.random() * canvas.width;
       const fireY = Math.random() * canvas.height;
-      const fireSize = 5 + Math.random() * 10;
+      const fireSize = 3 + Math.random() * 6; // Más pequeños
 
-      ctx.fillStyle = `rgba(255, ${150 + Math.random() * 100}, 0, 0.8)`;
+      ctx.fillStyle = `rgba(255, ${150 + Math.random() * 100}, 0, 0.4)`; // Era 0.8, ahora 0.4
       ctx.fillRect(fireX, fireY, fireSize, fireSize);
     }
 
@@ -424,6 +426,27 @@ function checkCollisions() {
 }
 
 /**
+ * 🔥 NUEVO: Inicia el nivel del boss final
+ */
+function startBossLevel() {
+  console.log("👹 Iniciando nivel del Boss Final");
+
+  // Mantener level = 11 para el boss
+  level = 11;
+
+  // Limpiar enemigos restantes
+  clearRemainingEnemies();
+
+  // Inicializar boss
+  BossManager.init();
+
+  // Mostrar transición épica
+  UI.showLevelTransition("👹 BOSS FINAL 👹", () => {
+    console.log("👹 Boss Final iniciado en nivel 11");
+  });
+}
+
+/**
  * 🔥 NUEVO: Limpia enemigos restantes antes del boss
  */
 function clearRemainingEnemies() {
@@ -434,19 +457,9 @@ function clearRemainingEnemies() {
 function startLevel() {
   console.log(`🎯 Iniciando nivel ÉPICO ${level}`);
 
-  // 🔥 CONTROL DE NIVEL 10 - BOSS FINAL
-  if (level === 10) {
-    clearRemainingEnemies(); // Limpiar enemigos restantes
-    BossManager.init();
-    UI.showLevelTransition("BOSS FINAL", () => {
-      console.log(`👹 Boss Final iniciado`);
-    });
-    return;
-  }
-
-  // 🔥 CONTROL: No permitir nivel 11+
+  // 🔥 CONTROL: Solo niveles normales 1-10
   if (level > 10) {
-    victory(); // Forzar victoria
+    startBossLevel(); // Redirigir al boss
     return;
   }
 
@@ -464,8 +477,11 @@ function startLevel() {
 function nextLevel() {
   level++;
 
-  // 🔥 CONTROL ESTRICTO: Solo hasta nivel 10
-  if (level > 10) {
+  // 🔥 CORRECCIÓN: El boss aparece DESPUÉS de completar nivel 10
+  if (level === 11) {
+    // Nivel 11 = Boss Final
+    startBossLevel();
+  } else if (level > 11) {
     victory();
   } else {
     startLevel();
