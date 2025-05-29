@@ -45,7 +45,7 @@ const PowerUpManager = {
     // 🔥 Máximo 2 corazones en pantalla (era 3)
     if (this.hearts.length >= 2) return;
     // 🔥 NO CORAZONES DURANTE BOSS FINAL
-    if (window.getLevel() === 10) return;
+    if (window.getLevel() >= 11) return;
 
     const playerLives = Player.getLives();
     const combo = window.ComboSystem ? window.ComboSystem.getCurrentCombo() : 0;
@@ -409,7 +409,7 @@ const PowerUpManager = {
   },
 
   /**
-   * Dibuja los corazones con efectos épicos
+   * Dibuja los corazones con efectos épicos usando emoji
    */
   drawHearts(ctx) {
     for (const heart of this.hearts) {
@@ -421,29 +421,33 @@ const PowerUpManager = {
 
       const centerX = heart.x + heart.width / 2;
       const centerY = heart.y + heart.height / 2;
-      const size = heart.width / 2;
 
       // Efecto de pulsación más dramático
       const pulse = 1 + heart.glowIntensity * 0.15;
       ctx.translate(centerX, centerY);
       ctx.scale(pulse, pulse);
 
-      // Dibujar forma de corazón con gradiente
-      ctx.fillStyle = "#FF0000";
-      ctx.beginPath();
-      ctx.moveTo(0, -size / 4);
-      ctx.bezierCurveTo(size / 2, -size, size, -size / 4, 0, size);
-      ctx.bezierCurveTo(-size, -size / 4, -size / 2, -size, 0, -size / 4);
-      ctx.fill();
+      // 🔥 EMOJI DE CORAZÓN MÁS BONITO
+      ctx.font = `${heart.width * 0.8}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
 
-      // Brillo interior más intenso
-      ctx.fillStyle = `rgba(255, 170, 170, ${heart.glowIntensity})`;
+      // Sombra del emoji para mayor visibilidad
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillText("❤️", 2, 2); // Sombra desplazada
+
+      // Emoji principal
+      ctx.fillStyle = "#FF0000";
+      ctx.fillText("❤️", 0, 0);
+
+      // Efecto de brillo adicional alrededor del emoji
+      ctx.shadowColor = "#FF0000";
+      ctx.shadowBlur = 25 + heart.glowIntensity * 20;
+
+      // Segundo emoji más pequeño para efecto de brillo interno
       ctx.scale(0.7, 0.7);
-      ctx.beginPath();
-      ctx.moveTo(0, -size / 4);
-      ctx.bezierCurveTo(size / 2, -size, size, -size / 4, 0, size);
-      ctx.bezierCurveTo(-size, -size / 4, -size / 2, -size, 0, -size / 4);
-      ctx.fill();
+      ctx.fillStyle = `rgba(255, 255, 255, ${heart.glowIntensity * 0.3})`;
+      ctx.fillText("❤️", 0, 0);
 
       ctx.restore();
     }

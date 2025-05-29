@@ -8,6 +8,13 @@ const BossManager = {
   // ESTADO DEL BOSS
   // ======================================================
 
+  // Duración de cada fase en frames (60fps)
+  PHASE_DURATIONS: {
+    SUMMONING: 900, // 15 segundos (15 * 60fps)
+    MINES: 1500, // 25 segundos (25 * 60fps)
+    BULLETS: 2100, // 35 segundos (35 * 60fps)
+  },
+
   boss: null,
   active: false,
 
@@ -146,32 +153,56 @@ const BossManager = {
   updateIntelligentPhases() {
     const healthPercentage = this.currentHealth / this.maxHealth;
 
-    // Determinar fase según vida y estado
-    let targetPhase;
-    if (healthPercentage > 0.66) {
-      targetPhase = "SUMMONING"; // Fase 1: Solo invocaciones
-    } else if (healthPercentage > 0.33) {
-      targetPhase = "MINES"; // Fase 2: Minas + movimiento
-    } else {
-      targetPhase = "BULLETS"; // Fase 3: Balas Touhou + todo
+    // Determinar si debe activar fase según vida y si no hay fase activa
+    let shouldStartPhase = false;
+    let targetPhase = null;
+
+    if (
+      healthPercentage <= 0.75 &&
+      healthPercentage > 0.5 &&
+      this.currentPhase !== "SUMMONING" &&
+      !this.phaseActive
+    ) {
+      shouldStartPhase = true;
+      targetPhase = "SUMMONING";
+    } else if (
+      healthPercentage <= 0.5 &&
+      healthPercentage > 0.25 &&
+      this.currentPhase !== "MINES" &&
+      !this.phaseActive
+    ) {
+      shouldStartPhase = true;
+      targetPhase = "MINES";
+    } else if (
+      healthPercentage <= 0.25 &&
+      this.currentPhase !== "BULLETS" &&
+      !this.phaseActive
+    ) {
+      shouldStartPhase = true;
+      targetPhase = "BULLETS";
     }
 
-    // Cambiar fase si es necesario
-    if (this.currentPhase !== targetPhase && !this.phaseActive) {
+    // Iniciar fase si corresponde
+    if (shouldStartPhase) {
       this.changeIntelligentPhase(targetPhase);
     }
 
-    // Ejecutar fase actual
-    switch (this.currentPhase) {
-      case "SUMMONING":
-        this.executeSummoningPhase();
-        break;
-      case "MINES":
-        this.executeMinesPhase();
-        break;
-      case "BULLETS":
-        this.executeBulletsPhase();
-        break;
+    // Ejecutar fase actual si está activa
+    if (this.phaseActive) {
+      switch (this.currentPhase) {
+        case "SUMMONING":
+          this.executeSummoningPhase();
+          break;
+        case "MINES":
+          this.executeMinesPhase();
+          break;
+        case "BULLETS":
+          this.executeBulletsPhase();
+          break;
+      }
+    } else {
+      // Si no hay fase activa, perseguir al jugador
+      this.huntPlayer();
     }
   },
 
@@ -189,8 +220,10 @@ const BossManager = {
     this.mines = [];
     this.bulletPatterns = [];
 
-    // Volverse inmune durante cambio de fase
-    this.makeImmune(120); // 2 segundos
+    // Volverse inmune durante toda la fase
+    this.isImmune = true;
+    this.immunityTimer = 9999; // Inmunidad hasta que termine la fase
+    this.phaseActive = true;
 
     // Teletransportarse al centro para fase
     this.teleportToCenter();
@@ -244,14 +277,12 @@ const BossManager = {
 
     // Invocar enemigos cada 4 segundos
     if (this.phaseTimer % 240 === 0) {
-      // 4 segundos
       this.summonIntelligentEnemies(3);
-      this.makeImmune(120); // Inmune por 2 segundos tras invocar
     }
 
-    // Perseguir al jugador cuando no es inmune
-    if (!this.isImmune) {
-      this.huntPlayer();
+    // Verificar si la fase debe terminar
+    if (this.phaseTimer >= this.PHASE_DURATIONS.SUMMONING) {
+      this.endCurrentPhase();
     }
   },
 
@@ -263,18 +294,21 @@ const BossManager = {
 
     // Ciclo de minas cada 8 segundos
     if (this.phaseTimer % 480 === 0) {
-      // 8 segundos
       this.startMineSequence();
     }
 
     // Teletransporte más frecuente
-    if (!this.isImmune && this.phaseTimer % 180 === 0) {
-      // 3 segundos
+    if (this.phaseTimer % 180 === 0) {
       this.intelligentTeleport();
     }
 
     // Actualizar minas
     this.updateIntelligentMines();
+
+    // Verificar si la fase debe terminar
+    if (this.phaseTimer >= this.PHASE_DURATIONS.MINES) {
+      this.endCurrentPhase();
+    }
   },
 
   /**
@@ -285,19 +319,16 @@ const BossManager = {
 
     // Patrón de balas cada 6 segundos
     if (this.phaseTimer % 360 === 0) {
-      // 6 segundos
       this.startBulletPattern();
     }
 
     // Minas ocasionales
     if (this.phaseTimer % 600 === 0) {
-      // 10 segundos
       this.spawnQuickMines(2);
     }
 
     // Invocaciones ocasionales
     if (this.phaseTimer % 420 === 0) {
-      // 7 segundos
       this.summonIntelligentEnemies(2);
     }
 
@@ -305,10 +336,24 @@ const BossManager = {
     this.updateBulletPatterns();
     this.updateIntelligentMines();
 
-    // Movimiento más agresivo
-    if (!this.isImmune) {
-      this.aggressiveMovement();
+    // Verificar si la fase debe terminar
+    if (this.phaseTimer >= this.PHASE_DURATIONS.BULLETS) {
+      this.endCurrentPhase();
     }
+  },
+
+  endCurrentPhase() {
+    console.log(`👹 Terminando fase: ${this.currentPhase}`);
+    this.phaseActive = false;
+    this.isImmune = false;
+    this.immunityTimer = 0;
+    this.phaseTimer = 0;
+
+    // Limpiar sistemas de la fase
+    this.mines = [];
+    this.bulletPatterns = [];
+
+    UI.showScreenMessage("⚔️ BOSS VULNERABLE", "#00FF00");
   },
 
   /**
@@ -464,20 +509,20 @@ const BossManager = {
     const dy = playerCenterY - bossCenterY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    if (distance > 150) {
-      // Mantener distancia
-      const speed = this.boss.moveSpeed * 1.2;
-      this.boss.velocityX += (dx / distance) * speed * 0.3;
-      this.boss.velocityY += (dy / distance) * speed * 0.3;
+    // 🔥 PERSECUCIÓN CONSTANTE Y DIRECTA
+    if (distance > 100) {
+      // Mantener distancia mínima de 100px
+      const speed = this.boss.moveSpeed * 1.8; // Velocidad constante
+      this.boss.velocityX = (dx / distance) * speed;
+      this.boss.velocityY = (dy / distance) * speed;
     } else {
-      // Demasiado cerca, alejarse un poco
-      const speed = this.boss.moveSpeed * 0.8;
-      this.boss.velocityX -= (dx / distance) * speed * 0.2;
-      this.boss.velocityY -= (dy / distance) * speed * 0.2;
+      // Estar muy cerca - moverse en círculos pequeños
+      this.boss.velocityX *= 0.5;
+      this.boss.velocityY *= 0.5;
     }
 
-    // Limitar velocidad
-    const maxSpeed = this.boss.moveSpeed * 2;
+    // Limitar velocidad máxima
+    const maxSpeed = this.boss.moveSpeed * 2.5;
     const currentSpeed = Math.sqrt(
       this.boss.velocityX ** 2 + this.boss.velocityY ** 2
     );
@@ -631,6 +676,12 @@ const BossManager = {
 
     if (this.currentHealth <= 0) {
       console.log("👹 Boss ya está muerto");
+      return;
+    }
+
+    // 🔥 NUEVO: Inmune durante fases activas
+    if (this.phaseActive) {
+      console.log("👹 Boss inmune durante fase activa");
       return;
     }
 
@@ -1035,7 +1086,7 @@ const BossManager = {
     const barWidth = this.boss.width * 1.2; // Proporcional al boss
     const barHeight = 8; // Más delgada
     const x = this.boss.x + (this.boss.width - barWidth) / 2; // Centrada sobre el boss
-    const y = this.boss.y - 20; // Encima del boss
+    const y = this.boss.y + this.boss.height + 25; // Debajo del boss
 
     // Fondo de la barra con transparencia
     ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
@@ -1093,7 +1144,7 @@ const BossManager = {
 
     const healthText = `${this.currentHealth}/${this.maxHealth}`;
     const textX = this.boss.x + this.boss.width / 2;
-    const textY = y - 8;
+    const textY = y + barHeight + 18; // Texto debajo de la barra
 
     // Contorno negro
     ctx.strokeText(healthText, textX, textY);
