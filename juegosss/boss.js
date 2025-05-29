@@ -579,10 +579,20 @@ const BossManager = {
   // ======================================================
 
   /**
-   * El boss recibe daño
+   * El boss recibe daño - CORREGIDO PARA NIVEL 11
    */
   takeDamage(amount) {
-    if (!this.active || this.isImmune) return;
+    // 🔥 VERIFICAR SI ESTÁ ACTIVO Y NO INMUNE
+    if (!this.active || this.isImmune) {
+      console.log("👹 Boss no puede recibir daño - inactivo o inmune");
+      return;
+    }
+
+    // 🔥 VERIFICAR SI YA ESTÁ MUERTO
+    if (this.currentHealth <= 0) {
+      console.log("👹 Boss ya está muerto - no recibir más daño");
+      return;
+    }
 
     this.currentHealth = Math.max(0, this.currentHealth - amount);
 
@@ -603,22 +613,33 @@ const BossManager = {
     console.log(
       `👹 Boss recibió ${amount} daño. Vida: ${this.currentHealth}/${this.maxHealth}`
     );
+
+    // 🔥 VERIFICAR DERROTA INMEDIATAMENTE
+    if (this.currentHealth <= 0) {
+      console.log("👹 Boss vida = 0, iniciando derrota...");
+      setTimeout(() => this.defeat(), 100); // Pequeño delay para evitar problemas
+    }
   },
 
   /**
-   * Verifica si el boss está derrotado
+   * Verifica si el boss está derrotado - CORREGIDO
    */
   checkDefeat() {
-    if (this.currentHealth <= 0) {
+    if (this.currentHealth <= 0 && this.active) {
+      console.log("👹 Boss derrotado - iniciando secuencia de victoria");
       this.defeat();
     }
   },
 
   /**
-   * Boss derrotado
+   * Boss derrotado - CORREGIDO PARA NIVEL 11
    */
   defeat() {
+    console.log("👹 === BOSS DERROTADO EN NIVEL 11 ===");
+
+    // 🔥 MARCAR COMO INACTIVO INMEDIATAMENTE
     this.active = false;
+    this.currentHealth = 0;
 
     // 🔥 COMENTARIOS DE DERROTA
     this.sayRandomComment("derrota_boss");
@@ -626,22 +647,38 @@ const BossManager = {
     // Efectos de derrota
     UI.showScreenMessage("🏆 ¡BOSS DERROTADO! 🏆", "#FFD700");
 
-    // ... efectos visuales ...
+    // Efectos visuales más épicos
+    for (let i = 0; i < 10; i++) {
+      setTimeout(() => {
+        UI.createParticleEffect(
+          this.boss.x + this.boss.width / 2,
+          this.boss.y + this.boss.height / 2,
+          "#FFD700",
+          50
+        );
+      }, i * 200);
+    }
 
     // Puntos bonus masivos
     const bonusPoints = 5000;
     window.setScore(window.getScore() + bonusPoints);
     UI.showScreenMessage(`+${bonusPoints} PUNTOS BONUS!`, "#FFD700");
 
-    // Limpiar minas
+    // Limpiar minas y enemigos
     this.mines = [];
+    EnemyManager.enemies = [];
 
     AudioManager.playSound("victory");
 
-    // ⬅️ AQUÍ DEBE ESTAR LA LLAMADA A VICTORIA
-    setTimeout(() => window.victory(), 2000);
+    // ⬅️ LLAMADA A VICTORIA
+    setTimeout(() => {
+      console.log("🏆 Llamando a window.victory() desde nivel 11");
+      window.victory();
+    }, 2000);
 
-    console.log("🏆 Boss derrotado - ¡Victoria!");
+    console.log(
+      "🏆 Boss derrotado - secuencia de victoria iniciada desde nivel 11"
+    );
   },
 
   // ======================================================
@@ -649,10 +686,18 @@ const BossManager = {
   // ======================================================
 
   /**
-   * Dibuja el boss y sus elementos
+   * Dibuja el boss y sus elementos - CORREGIDO
    */
   draw(ctx) {
-    if (!this.active || !this.boss) return;
+    // 🔥 VERIFICAR SI ESTÁ ACTIVO Y TIENE BOSS
+    if (!this.active || !this.boss) {
+      console.log("👹 Boss no activo o no existe - no dibujar");
+      return;
+    }
+
+    console.log(
+      `👹 Dibujando boss en posición: (${this.boss.x}, ${this.boss.y})`
+    );
 
     // Dibujar boss
     this.drawBoss(ctx);
@@ -665,7 +710,7 @@ const BossManager = {
   },
 
   /**
-   * Dibuja el boss
+   * Dibuja el boss - CORREGIDO CON FALLBACK VISIBLE PARA NIVEL 11
    */
   drawBoss(ctx) {
     ctx.save();
@@ -680,7 +725,12 @@ const BossManager = {
       ctx.shadowBlur = 10 + this.boss.glowIntensity * 10;
     }
 
-    // 🔥 NUEVO: Animación del boss con frames
+    console.log(
+      `👹 Dibujando boss en nivel 11: (${this.boss.x}, ${this.boss.y}) tamaño ${this.boss.width}x${this.boss.height}`
+    );
+
+    // 🔥 INTENTAR ANIMACIÓN CON FRAMES
+    let bossDibujado = false;
     if (GameConfig.bossFrames && GameConfig.bossFrames.length > 0) {
       // Cambiar frame cada 15 frames del juego (4 FPS de animación)
       const frameIndex =
@@ -695,13 +745,90 @@ const BossManager = {
           this.boss.width,
           this.boss.height
         );
-      } else {
-        // Fallback al GIF estático
-        this.drawStaticBoss(ctx);
+        bossDibujado = true;
+        console.log(`👹 Boss dibujado con frame ${frameIndex} en nivel 11`);
       }
-    } else {
-      // Usar GIF estático o respaldo
-      this.drawStaticBoss(ctx);
+    }
+
+    // 🔥 FALLBACK AL GIF ESTÁTICO
+    if (
+      !bossDibujado &&
+      GameConfig.bossImage &&
+      GameConfig.bossImage.complete
+    ) {
+      ctx.drawImage(
+        GameConfig.bossImage,
+        this.boss.x,
+        this.boss.y,
+        this.boss.width,
+        this.boss.height
+      );
+      bossDibujado = true;
+      console.log("👹 Boss dibujado con imagen estática en nivel 11");
+    }
+
+    // 🔥 FALLBACK VISUAL GARANTIZADO (SIEMPRE VISIBLE)
+    if (!bossDibujado) {
+      console.log("👹 Usando fallback visual para boss en nivel 11");
+
+      // Fondo del boss MÁS VISIBLE
+      ctx.fillStyle = "#8B0000";
+      ctx.fillRect(this.boss.x, this.boss.y, this.boss.width, this.boss.height);
+
+      // Borde visible MÁS GRUESO
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(
+        this.boss.x,
+        this.boss.y,
+        this.boss.width,
+        this.boss.height
+      );
+
+      // Segundo borde rojo
+      ctx.strokeStyle = "#FF0000";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(
+        this.boss.x + 2,
+        this.boss.y + 2,
+        this.boss.width - 4,
+        this.boss.height - 4
+      );
+
+      // Detalles adicionales más visibles
+      ctx.fillStyle = "#FFFFFF";
+      const centerX = this.boss.x + this.boss.width / 2;
+      const centerY = this.boss.y + this.boss.height / 2;
+
+      // Ojos malvados más grandes
+      ctx.fillRect(centerX - 30, centerY - 30, 20, 20);
+      ctx.fillRect(centerX + 10, centerY - 30, 20, 20);
+
+      // Pupilas rojas
+      ctx.fillStyle = "#FF0000";
+      ctx.fillRect(centerX - 25, centerY - 25, 10, 10);
+      ctx.fillRect(centerX + 15, centerY - 25, 10, 10);
+
+      // Boca más grande
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(centerX - 25, centerY + 10, 50, 10);
+
+      // Texto "BOSS" para identificación
+      ctx.fillStyle = "#FFD700";
+      ctx.font = "bold 20px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("BOSS", centerX, centerY - 50);
+
+      // Texto de vida
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 14px Arial";
+      ctx.fillText(
+        `${this.currentHealth}/${this.maxHealth}`,
+        centerX,
+        centerY + 60
+      );
+
+      console.log("👹 Boss fallback dibujado correctamente en nivel 11");
     }
 
     ctx.restore();

@@ -237,7 +237,7 @@ function startGameLoop() {
 }
 
 /**
- * Bucle principal del juego - ÉPICO CON COMBOS
+ * Bucle principal del juego - CORREGIDO PARA NIVEL 11
  */
 function gameLoop() {
   if (gameEnded) return;
@@ -264,11 +264,21 @@ function gameLoop() {
     // Actualizar sistemas de juego
     Player.update();
     BulletManager.update();
-    EnemyManager.update();
+
+    // 🔥 ACTUALIZAR enemigos normales SOLO si NO es nivel 11, O si es nivel 11 para esbirros
+    if (level < 11) {
+      EnemyManager.update();
+    } else if (level === 11) {
+      // En nivel 11, solo actualizar enemigos si hay esbirros del boss
+      if (EnemyManager.enemies.length > 0) {
+        EnemyManager.update();
+      }
+    }
+
     PowerUpManager.update();
 
-    // Verificar boss si es nivel 10
-    if (level === 10) {
+    // 🔥 SOLO verificar boss si es nivel 11
+    if (level === 11) {
       BossManager.update();
     }
 
@@ -280,7 +290,7 @@ function gameLoop() {
     // Verificar colisiones
     checkCollisions();
 
-    // Verificar si el nivel está completo (solo niveles 1-10)
+    // 🔥 Verificar nivel completo SOLO para niveles 1-10
     if (level <= 10 && EnemyManager.isLevelComplete()) {
       nextLevel();
     }
@@ -288,10 +298,19 @@ function gameLoop() {
     // Dibujar elementos
     Player.draw(ctx);
     BulletManager.draw(ctx);
-    EnemyManager.draw(ctx);
+
+    // 🔥 Dibujar enemigos normales SOLO si NO es nivel 11, O si hay esbirros
+    if (level < 11) {
+      EnemyManager.draw(ctx);
+    } else if (level === 11 && EnemyManager.enemies.length > 0) {
+      // En nivel 11, solo dibujar si hay esbirros del boss
+      EnemyManager.draw(ctx);
+    }
+
     PowerUpManager.draw(ctx);
 
-    if (level === 10) {
+    // 🔥 SOLO dibujar boss si es nivel 11
+    if (level === 11) {
       BossManager.draw(ctx);
     }
 
@@ -373,17 +392,17 @@ function drawSpecialEffects(ctx) {
 }
 
 /**
- * Verificar todas las colisiones
+ * Verificar todas las colisiones - CORREGIDO PARA NIVEL 11
  */
 function checkCollisions() {
-  // Balas vs Enemigos (solo niveles 1-10)
+  // 🔥 Balas vs Enemigos (solo niveles 1-10)
   if (level <= 10) {
     const enemiesKilledByBullets = BulletManager.checkEnemyCollisions(
       EnemyManager.enemies
     );
   }
 
-  // Jugador vs Enemigos (solo niveles 1-10)
+  // 🔥 Jugador vs Enemigos (solo niveles 1-10)
   if (level <= 10) {
     if (Player.checkEnemyCollisions(EnemyManager.enemies)) {
       // El jugador fue golpeado
@@ -397,43 +416,71 @@ function checkCollisions() {
   // Jugador vs Power-ups (siempre)
   Player.checkPowerUpCollisions(PowerUpManager.powerUps);
 
-  // Jugador vs Hearts (siempre)
-  Player.checkHeartCollisions(PowerUpManager.hearts);
+  // Jugador vs Hearts (siempre, EXCEPTO en boss level 11)
+  if (level < 11) {
+    Player.checkHeartCollisions(PowerUpManager.hearts);
+  }
 
-  // Boss colisiones (solo nivel 11)
+  // 🔥 Boss colisiones (SOLO nivel 11)
   if (level === 11 && BossManager.isActive()) {
+    console.log("🔥 Verificando colisiones del boss en nivel 11");
+
+    // Balas vs Boss
     BulletManager.checkBossCollisions();
+
+    // Jugador vs Boss
     if (Player.checkBossCollisions()) {
       if (Player.getLives() <= 0) {
         gameOver();
         return; // ⬅️ IMPORTANTE: Salir inmediatamente
       }
     }
+
+    // 🔥 Jugador vs Esbirros del Boss (enemigos invocados en nivel 11)
+    if (EnemyManager.enemies.length > 0) {
+      if (Player.checkEnemyCollisions(EnemyManager.enemies)) {
+        if (Player.getLives() <= 0) {
+          gameOver();
+          return;
+        }
+      }
+
+      // 🔥 Balas vs Esbirros del Boss
+      BulletManager.checkEnemyCollisions(EnemyManager.enemies);
+    }
   }
 }
 
 /**
- * 🔥 Inicia el nivel del boss final
+ * 🔥 Inicia el nivel del boss final - CORREGIDO PARA NIVEL 11
  */
 function startBossLevel() {
-  console.log("👹 === INICIANDO BOSS FINAL ===");
+  console.log("👹 === INICIANDO BOSS FINAL NIVEL 11 ===");
 
   // 🔥 MANTENER level = 11 para el boss
-  level = 11;
+  // level ya es 11 aquí, NO cambiar
 
-  // Limpiar enemigos restantes
+  // 🔥 LIMPIAR TODOS LOS ENEMIGOS INMEDIATAMENTE
+  console.log(`🧹 Limpiando ${EnemyManager.enemies.length} enemigos restantes`);
   EnemyManager.enemies = [];
   EnemyManager.enemiesKilled = 0;
+  EnemyManager.spawnTimer = 0;
 
-  console.log("🧹 Enemigos normales eliminados");
+  // 🔥 DETENER EL SPAWN DE ENEMIGOS NORMALES completamente
+  EnemyManager.currentSpawnDelay = 999999; // Tiempo muy alto para evitar spawn
 
-  // Inicializar boss
-  BossManager.init();
+  console.log("🧹 Enemigos normales eliminados y spawn detenido para nivel 11");
 
-  // Mostrar transición épica
-  UI.showLevelTransition("👹 BOSS FINAL 👹", () => {
-    console.log("👹 Boss Final activo en nivel 11");
-  });
+  // 🔥 INICIALIZAR BOSS DESPUÉS DE UN PEQUEÑO DELAY
+  setTimeout(() => {
+    console.log("👹 Inicializando BossManager para nivel 11...");
+    BossManager.init();
+
+    // Mostrar transición épica
+    UI.showLevelTransition("👹 BOSS FINAL 👹", () => {
+      console.log("👹 Boss Final activo en nivel 11 - ¡Sistema completo!");
+    });
+  }, 500);
 }
 
 /**
@@ -462,7 +509,7 @@ function startLevel() {
 }
 
 /**
- * Avanzar al siguiente nivel
+ * Avanzar al siguiente nivel - CORREGIDO PARA NIVEL 11
  */
 function nextLevel() {
   console.log(`🎯 Completando nivel ${level}, avanzando...`);
@@ -476,7 +523,7 @@ function nextLevel() {
   }
   // Nivel 11: Boss Final
   else if (level === 11) {
-    console.log(`👹 ¡Tiempo del Boss Final!`);
+    console.log(`👹 ¡Tiempo del Boss Final! (Nivel ${level})`);
     startBossLevel();
   }
   // No debería llegar más allá del 11

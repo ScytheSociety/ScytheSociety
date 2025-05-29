@@ -253,9 +253,15 @@ const EnemyManager = {
   },
 
   /**
-   * Controla el spawn de enemigos - MÁS AGRESIVO
+   * Controla el spawn de enemigos - CORREGIDO PARA NIVEL 11
    */
   updateSpawning() {
+    // 🔥 NO SPAWNAR SI ES BOSS LEVEL (nivel 11)
+    if (window.getLevel() >= 11) {
+      console.log("🚫 No spawn de enemigos normales en nivel 11 (Boss level)");
+      return; // No hacer nada en boss level
+    }
+
     // No spawnar si el nivel está completo
     if (this.isLevelComplete()) return;
 
