@@ -485,6 +485,16 @@ const BulletManager = {
    * Verifica colisión entre dos objetos
    */
   checkCollision(obj1, obj2) {
+    // ⬅️ AGREGAR VALIDACIÓN PARA EVITAR ERROR
+    if (
+      !obj1 ||
+      !obj2 ||
+      typeof obj1.x === "undefined" ||
+      typeof obj2.x === "undefined"
+    ) {
+      return false;
+    }
+
     return (
       obj1.x < obj2.x + obj2.width &&
       obj1.x + obj1.width > obj2.x &&

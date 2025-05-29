@@ -280,8 +280,8 @@ function gameLoop() {
     // Verificar colisiones
     checkCollisions();
 
-    // Verificar si el nivel está completo
-    if (EnemyManager.isLevelComplete()) {
+    // Verificar si el nivel está completo (solo niveles 1-10)
+    if (level <= 10 && EnemyManager.isLevelComplete()) {
       nextLevel();
     }
 
@@ -376,51 +376,63 @@ function drawSpecialEffects(ctx) {
  * Verificar todas las colisiones
  */
 function checkCollisions() {
-  // Balas vs Enemigos
-  const enemiesKilledByBullets = BulletManager.checkEnemyCollisions(
-    EnemyManager.enemies
-  );
+  // Balas vs Enemigos (solo niveles 1-10)
+  if (level <= 10) {
+    const enemiesKilledByBullets = BulletManager.checkEnemyCollisions(
+      EnemyManager.enemies
+    );
+  }
 
-  // Jugador vs Enemigos
-  if (Player.checkEnemyCollisions(EnemyManager.enemies)) {
-    // El jugador fue golpeado (combo roto automáticamente en Player.takeDamage)
-    if (Player.getLives() <= 0) {
-      gameOver(); // ⬅️ ASEGURAR QUE ESTÉ AQUÍ
+  // Jugador vs Enemigos (solo niveles 1-10)
+  if (level <= 10) {
+    if (Player.checkEnemyCollisions(EnemyManager.enemies)) {
+      // El jugador fue golpeado
+      if (Player.getLives() <= 0) {
+        gameOver();
+        return; // ⬅️ IMPORTANTE: Salir inmediatamente
+      }
     }
   }
 
-  // Jugador vs Power-ups
+  // Jugador vs Power-ups (siempre)
   Player.checkPowerUpCollisions(PowerUpManager.powerUps);
 
-  // Jugador vs Hearts
+  // Jugador vs Hearts (siempre)
   Player.checkHeartCollisions(PowerUpManager.hearts);
 
-  // Si es nivel 11 (boss), verificar colisiones con boss
+  // Boss colisiones (solo nivel 11)
   if (level === 11 && BossManager.isActive()) {
-    // ⬅️ CAMBIO: Era 10, ahora 11
     BulletManager.checkBossCollisions();
-    Player.checkBossCollisions();
+    if (Player.checkBossCollisions()) {
+      if (Player.getLives() <= 0) {
+        gameOver();
+        return; // ⬅️ IMPORTANTE: Salir inmediatamente
+      }
+    }
   }
 }
 
 /**
- * 🔥 NUEVO: Inicia el nivel del boss final
+ * 🔥 Inicia el nivel del boss final
  */
 function startBossLevel() {
-  console.log("👹 Iniciando nivel del Boss Final");
+  console.log("👹 === INICIANDO BOSS FINAL ===");
 
-  // Mantener level = 11 para el boss
+  // 🔥 MANTENER level = 11 para el boss
   level = 11;
 
   // Limpiar enemigos restantes
-  clearRemainingEnemies();
+  EnemyManager.enemies = [];
+  EnemyManager.enemiesKilled = 0;
+
+  console.log("🧹 Enemigos normales eliminados");
 
   // Inicializar boss
   BossManager.init();
 
   // Mostrar transición épica
   UI.showLevelTransition("👹 BOSS FINAL 👹", () => {
-    console.log("👹 Boss Final iniciado en nivel 11");
+    console.log("👹 Boss Final activo en nivel 11");
   });
 }
 
@@ -433,11 +445,11 @@ function clearRemainingEnemies() {
 }
 
 function startLevel() {
-  console.log(`🎯 Iniciando nivel ÉPICO ${level}`);
+  console.log(`🎯 Iniciando nivel ${level}`);
 
-  // 🔥 CONTROL: Solo niveles normales 1-10
+  // 🔥 SOLO PARA NIVELES 1-10
   if (level > 10) {
-    startBossLevel(); // Redirigir al boss
+    console.log(`❌ Error: startLevel llamado con nivel ${level}`);
     return;
   }
 
@@ -445,7 +457,7 @@ function startLevel() {
   EnemyManager.setupLevel(level);
 
   UI.showLevelTransition(level, () => {
-    console.log(`✅ Nivel ÉPICO ${level} iniciado`);
+    console.log(`✅ Nivel ${level} iniciado correctamente`);
   });
 }
 
@@ -453,17 +465,25 @@ function startLevel() {
  * Avanzar al siguiente nivel
  */
 function nextLevel() {
+  console.log(`🎯 Completando nivel ${level}, avanzando...`);
+
   level++;
 
-  // Solo avanzar niveles normales del 1 al 10
+  // Niveles 1-10: Enemigos normales
   if (level <= 10) {
+    console.log(`📈 Iniciando nivel normal ${level}`);
     startLevel();
-  } else if (level === 11) {
-    // Después del nivel 10, viene el boss
+  }
+  // Nivel 11: Boss Final
+  else if (level === 11) {
+    console.log(`👹 ¡Tiempo del Boss Final!`);
     startBossLevel();
   }
-  // NO hay más niveles después del boss
-  // La victoria solo se activa desde BossManager.defeat()
+  // No debería llegar más allá del 11
+  else {
+    console.log(`❌ Error: Nivel ${level} no debería existir`);
+    victory(); // Por si acaso, dar victoria
+  }
 }
 
 /**

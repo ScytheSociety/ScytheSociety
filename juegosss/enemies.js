@@ -30,22 +30,12 @@ const EnemyManager = {
    * Configura el nivel actual - BALANCEADO
    */
   setupLevel(level) {
-    // 🔥 ENEMIGOS BALANCEADOS - Menos agresivo
-    const levelUpEnemies = [
-      80,
-      150,
-      250,
-      380,
-      540,
-      720,
-      920,
-      1150,
-      1400,
-      1700, // Reducido considerablemente
-    ];
-
+    // 🔥 USAR SOLO LA CONFIGURACIÓN DE CONFIG.JS
     this.enemiesRequired =
-      levelUpEnemies[level - 1] || levelUpEnemies[levelUpEnemies.length - 1];
+      GameConfig.LEVEL_CONFIG.enemiesPerLevel[level - 1] ||
+      GameConfig.LEVEL_CONFIG.enemiesPerLevel[
+        GameConfig.LEVEL_CONFIG.enemiesPerLevel.length - 1
+      ];
 
     // 🔥 Spawn BALANCEADO - Menos frecuente
     const baseSpawnRate = 70; // Era 50, ahora 70 (más lento)
