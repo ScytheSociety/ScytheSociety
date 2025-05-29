@@ -160,8 +160,8 @@ const BossManager = {
     if (
       healthPercentage <= 0.75 &&
       healthPercentage > 0.5 &&
-      this.currentPhase !== "SUMMONING" &&
-      !this.phaseActive
+      !this.phaseActive &&
+      (this.currentPhase === "SUMMONING" ? false : true) // Permitir activar SUMMONING
     ) {
       shouldStartPhase = true;
       targetPhase = "SUMMONING";
@@ -188,6 +188,7 @@ const BossManager = {
     }
 
     // Ejecutar fase actual si está activa
+    // Ejecutar fase actual si está activa
     if (this.phaseActive) {
       switch (this.currentPhase) {
         case "SUMMONING":
@@ -201,8 +202,25 @@ const BossManager = {
           break;
       }
     } else {
-      // Si no hay fase activa, perseguir al jugador
+      // 🔥 SIEMPRE perseguir cuando no hay fase activa
       this.huntPlayer();
+    }
+
+    // 🔥 AGREGAR: También perseguir durante SUMMONING (pero lento)
+    if (this.currentPhase === "SUMMONING" && this.phaseActive) {
+      const playerPos = Player.getPosition();
+      const bossCenterX = this.boss.x + this.boss.width / 2;
+      const bossCenterY = this.boss.y + this.boss.height / 2;
+
+      const dx = playerPos.x - bossCenterX;
+      const dy = playerPos.y - bossCenterY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance > 150) {
+        const slowSpeed = this.boss.moveSpeed * 0.8; // Movimiento lento durante invocación
+        this.boss.velocityX += (dx / distance) * slowSpeed * 0.1;
+        this.boss.velocityY += (dy / distance) * slowSpeed * 0.1;
+      }
     }
   },
 
@@ -322,14 +340,15 @@ const BossManager = {
       this.startBulletPattern();
     }
 
-    // Minas ocasionales
-    if (this.phaseTimer % 600 === 0) {
-      this.spawnQuickMines(2);
-    }
-
     // Invocaciones ocasionales
     if (this.phaseTimer % 420 === 0) {
       this.summonIntelligentEnemies(2);
+    }
+
+    // 🔥 NUEVO: Escudos protectores durante fase Touhou
+    if (this.phaseTimer % 300 === 0) {
+      // Cada 5 segundos
+      this.spawnProtectiveShield();
     }
 
     // Actualizar sistemas
@@ -342,6 +361,37 @@ const BossManager = {
     }
   },
 
+  /**
+   * 🔥 NUEVO: Spawn escudo protector durante fase Touhou
+   */
+  spawnProtectiveShield() {
+    const canvas = window.getCanvas();
+
+    // Crear power-up de escudo
+    const shieldPowerUp = {
+      x: Math.random() * (canvas.width - 60) + 30,
+      y: Math.random() * (canvas.height - 60) + 30,
+      width: 50,
+      height: 50,
+      velocityX: 0,
+      velocityY: 0,
+      type: {
+        id: 0, // Escudo
+        name: "Escudo Protector",
+        color: "#00FF00",
+        duration: 240, // 4 segundos
+      },
+      pulseTimer: 0,
+      glowIntensity: 1.0,
+      spawnTime: window.getGameTime(),
+    };
+
+    PowerUpManager.powerUps.push(shieldPowerUp);
+
+    UI.showScreenMessage("🛡️ ¡ESCUDO DISPONIBLE!", "#00FF00");
+    console.log("🛡️ Escudo protector spawneado durante fase Touhou");
+  },
+
   endCurrentPhase() {
     console.log(`👹 Terminando fase: ${this.currentPhase}`);
     this.phaseActive = false;
@@ -352,6 +402,11 @@ const BossManager = {
     // Limpiar sistemas de la fase
     this.mines = [];
     this.bulletPatterns = [];
+
+    // 🔥 NUEVO: Limpiar todos los intervalos activos
+    if (this.miningPhase) {
+      this.miningPhase = false;
+    }
 
     UI.showScreenMessage("⚔️ BOSS VULNERABLE", "#00FF00");
   },
@@ -429,8 +484,8 @@ const BossManager = {
    * 🔥 NUEVO: Movimiento inteligente del boss
    */
   updateIntelligentMovement() {
-    if (this.isImmune) {
-      // Movimiento mínimo cuando es inmune
+    if (this.isImmune && this.phaseActive) {
+      // Solo reducir movimiento durante fases activas
       this.boss.velocityX *= 0.95;
       this.boss.velocityY *= 0.95;
     } else {
@@ -1426,13 +1481,12 @@ const BossManager = {
         return;
       }
 
-      // Crear 3 balas por frame en espiral
-      for (let i = 0; i < 3; i++) {
-        const bulletAngle = angle + (i * Math.PI * 2) / 3;
-        this.createTouhouBullet(bulletAngle, 0.003, "#FF6B6B");
+      // Crear 2 balas por frame (menos densidad)
+      for (let i = 0; i < 2; i++) {
+        const bulletAngle = angle + (i * Math.PI * 2) / 2;
+        this.createTouhouBullet(bulletAngle, 0.002, "#FF6B6B"); // Más lento
       }
-
-      angle += 0.2;
+      angle += 0.15; // Rotación más lenta
       spiralTimer++;
     }, 50); // Cada 50ms
   },
@@ -1459,13 +1513,13 @@ const BossManager = {
    */
   createWallOfBullets() {
     const canvas = window.getCanvas();
-    const bulletCount = 15;
+    const bulletCount = 12;
     const playerPos = Player.getPosition();
 
-    // Crear espacio para esquivar cerca del jugador
+    // Crear espacio MÁS GRANDE para esquivar
     const safeZoneStart =
-      Math.floor((playerPos.x / canvas.width) * bulletCount) - 1;
-    const safeZoneEnd = safeZoneStart + 2;
+      Math.floor((playerPos.x / canvas.width) * bulletCount) - 2;
+    const safeZoneEnd = safeZoneStart + 4; // Espacio más amplio
 
     for (let i = 0; i < bulletCount; i++) {
       // No crear balas en la zona segura
@@ -1581,11 +1635,10 @@ const BossManager = {
       velocityX: Math.cos(angle) * speed * canvas.width,
       velocityY: Math.sin(angle) * speed * canvas.height,
       color: color,
-      life: 400, // Vida larga para cruzar pantalla
+      life: 500, // 🔥 Más vida para que crucen la pantalla
       type: "touhou",
       glowIntensity: 0,
     };
-
     this.bulletPatterns.push(bullet);
   },
 
@@ -1610,11 +1663,16 @@ const BossManager = {
       const playerPos = Player.getPosition();
       const playerSize = Player.getSize();
 
+      // 🔥 AGRANDAR ÁREA DE COLISIÓN DE LAS BALAS
+      const bulletHitbox = 8; // Área de colisión más grande
+      const playerHitbox = 4; // Reducir hitbox del jugador para ser más justo
+
       if (
-        bullet.x < playerPos.x + playerSize.width &&
-        bullet.x + bullet.width > playerPos.x &&
-        bullet.y < playerPos.y + playerSize.height &&
-        bullet.y + bullet.height > playerPos.y
+        bullet.x + bulletHitbox > playerPos.x - playerHitbox &&
+        bullet.x - bulletHitbox <
+          playerPos.x + playerSize.width + playerHitbox &&
+        bullet.y + bulletHitbox > playerPos.y - playerHitbox &&
+        bullet.y - bulletHitbox < playerPos.y + playerSize.height + playerHitbox
       ) {
         // Jugador golpeado por bala Touhou
         Player.takeDamage();
