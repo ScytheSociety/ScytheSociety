@@ -328,14 +328,6 @@ button:active,
   }
 }
 
-#game-info span {
-  margin: 5px;
-  color: var(--text-color);
-  text-shadow: 0 0 8px var(--accent-color);
-  font-weight: bold;
-  font-size: 1em;
-}
-
 /* =============================================== */
 /* GAME OVER COMPLETAMENTE REDISEÑADO */
 /* =============================================== */
@@ -594,63 +586,42 @@ button:active,
 /* =============================================== */
 
 #volume-control {
-  position: fixed;
-  top: 80px;
-  right: 15px;
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.9) 0%,
-    rgba(139, 0, 0, 0.8) 100%
-  );
-  padding: 12px;
-  border-radius: 12px;
-  border: 2px solid var(--secondary-color);
-  color: var(--text-color);
-  font-size: 14px;
-  z-index: 1001;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-family: "Arial", sans-serif;
-  backdrop-filter: blur(5px);
-  box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
+  position: fixed !important;
+  top: 60px !important;
+  right: 15px !important;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  max-width: 48px !important;
+  max-height: 48px !important;
+  border-radius: 50% !important;
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  border: 2px solid #8b0000 !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  cursor: pointer !important;
+  z-index: 1001 !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+  aspect-ratio: 1 / 1 !important;
+  overflow: hidden !important;
+  line-height: 1 !important;
 }
 
-#volume-control input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  cursor: pointer;
-  width: 90px;
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(
-    90deg,
-    var(--secondary-color) 0%,
-    var(--accent-color) 100%
-  );
+#volume-control:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.6) !important;
 }
 
-#volume-control input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 18px;
-  width: 18px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-color) 0%, #ff6666 100%);
-  cursor: pointer;
-  border: 2px solid var(--text-color);
-  box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
-}
-
-#volume-control input[type="range"]::-moz-range-thumb {
-  height: 18px;
-  width: 18px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-color) 0%, #ff6666 100%);
-  cursor: pointer;
-  border: 2px solid var(--text-color);
-  box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+#volume-control:active {
+  transform: scale(0.95) !important;
 }
 
 /* =============================================== */
@@ -773,11 +744,6 @@ button:active,
     gap: 15px;
   }
 
-  #game-info {
-    font-size: 0.85em;
-    padding: 8px;
-  }
-
   button,
   .gothic-button {
     padding: 10px 20px;
@@ -795,10 +761,13 @@ button:active,
   }
 
   #volume-control {
-    top: 70px;
-    right: 10px;
-    padding: 10px;
-    font-size: 12px;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    max-width: 44px !important;
+    max-height: 44px !important;
+    font-size: 14px !important;
   }
 
   .special-power-indicator {
@@ -812,12 +781,6 @@ button:active,
 @media (max-width: 480px) {
   h1 {
     font-size: 2em;
-  }
-
-  #game-info {
-    font-size: 0.75em;
-    flex-direction: column;
-    align-items: flex-start;
   }
 
   button,
@@ -843,13 +806,13 @@ button:active,
   }
 
   #volume-control {
-    top: 60px;
-    padding: 8px;
-    gap: 8px;
-  }
-
-  #volume-control input[type="range"] {
-    width: 60px;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    max-width: 40px !important;
+    max-height: 40px !important;
+    font-size: 12px !important;
   }
 
   .special-power-indicator {
