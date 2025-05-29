@@ -290,6 +290,13 @@ function gameLoop() {
     // Verificar colisiones
     checkCollisions();
 
+    // 🔥 VERIFICAR MUERTE DEL JUGADOR
+    if (Player.getLives() <= 0 && !gameEnded) {
+      console.log("💀 Detectada muerte del jugador en game loop");
+      gameOver();
+      return; // Salir inmediatamente
+    }
+
     // 🔥 Verificar nivel completo SOLO para niveles 1-10
     if (level <= 10 && EnemyManager.isLevelComplete()) {
       nextLevel();
@@ -394,7 +401,16 @@ function drawSpecialEffects(ctx) {
 /**
  * Verificar todas las colisiones - CORREGIDO PARA NIVEL 11
  */
+/**
+ * Verificar todas las colisiones - CORREGIDO PARA NIVEL 11 Y MUERTE
+ */
 function checkCollisions() {
+  // 🔥 VERIFICACIÓN INICIAL: Si el jugador ya está muerto, no verificar más colisiones
+  if (Player.getLives() <= 0) {
+    console.log("💀 Jugador ya muerto, saltando verificación de colisiones");
+    return;
+  }
+
   // 🔥 Balas vs Enemigos (solo niveles 1-10)
   if (level <= 10) {
     const enemiesKilledByBullets = BulletManager.checkEnemyCollisions(
@@ -406,7 +422,12 @@ function checkCollisions() {
   if (level <= 10) {
     if (Player.checkEnemyCollisions(EnemyManager.enemies)) {
       // El jugador fue golpeado
+      console.log(
+        `💔 Jugador golpeado por enemigo. Vidas restantes: ${Player.getLives()}`
+      );
+
       if (Player.getLives() <= 0) {
+        console.log("💀 Jugador murió por colisión con enemigo");
         gameOver();
         return; // ⬅️ IMPORTANTE: Salir inmediatamente
       }
@@ -428,9 +449,14 @@ function checkCollisions() {
     // Balas vs Boss
     BulletManager.checkBossCollisions();
 
-    // Jugador vs Boss
+    // Jugador vs Boss (colisión física)
     if (Player.checkBossCollisions()) {
+      console.log(
+        `💔 Jugador golpeado por boss físicamente. Vidas restantes: ${Player.getLives()}`
+      );
+
       if (Player.getLives() <= 0) {
+        console.log("💀 Jugador murió por colisión física con boss");
         gameOver();
         return; // ⬅️ IMPORTANTE: Salir inmediatamente
       }
@@ -439,7 +465,12 @@ function checkCollisions() {
     // 🔥 Jugador vs Esbirros del Boss (enemigos invocados en nivel 11)
     if (EnemyManager.enemies.length > 0) {
       if (Player.checkEnemyCollisions(EnemyManager.enemies)) {
+        console.log(
+          `💔 Jugador golpeado por esbirro del boss. Vidas restantes: ${Player.getLives()}`
+        );
+
         if (Player.getLives() <= 0) {
+          console.log("💀 Jugador murió por colisión con esbirro del boss");
           gameOver();
           return;
         }
@@ -448,6 +479,100 @@ function checkCollisions() {
       // 🔥 Balas vs Esbirros del Boss
       BulletManager.checkEnemyCollisions(EnemyManager.enemies);
     }
+
+    // 🔥 NUEVO: Jugador vs Minas del Boss
+    if (BossManager.getMines && BossManager.getMines().length > 0) {
+      const mines = BossManager.getMines();
+
+      for (let i = mines.length - 1; i >= 0; i--) {
+        const mine = mines[i];
+
+        // Solo verificar minas armadas
+        if (!mine.armed) continue;
+
+        const playerPos = Player.getPosition();
+        const playerSize = Player.getSize();
+
+        // Verificar si el jugador está en el radio de peligro de la mina
+        const playerCenterX = playerPos.x + playerSize.width / 2;
+        const playerCenterY = playerPos.y + playerSize.height / 2;
+        const mineCenterX = mine.x + mine.width / 2;
+        const mineCenterY = mine.y + mine.height / 2;
+
+        const distance = Math.sqrt(
+          Math.pow(playerCenterX - mineCenterX, 2) +
+            Math.pow(playerCenterY - mineCenterY, 2)
+        );
+
+        // Si el jugador está muy cerca de la mina (no necesariamente en el radio completo)
+        if (distance < mine.width) {
+          // Radio de colisión directo con la mina
+          console.log("💥 Jugador tocó una mina directamente");
+
+          // Hacer explotar la mina inmediatamente
+          mine.timer = 0;
+
+          // Dañar al jugador
+          Player.takeDamage();
+          console.log(
+            `💔 Jugador dañado por mina. Vidas restantes: ${Player.getLives()}`
+          );
+
+          if (Player.getLives() <= 0) {
+            console.log("💀 Jugador murió por tocar mina");
+            gameOver();
+            return;
+          }
+        }
+      }
+    }
+
+    // 🔥 NUEVO: Verificar balas Touhou (esto se maneja en boss.js pero agregamos verificación extra)
+    if (BossManager.bulletPatterns && BossManager.bulletPatterns.length > 0) {
+      const playerPos = Player.getPosition();
+      const playerSize = Player.getSize();
+
+      for (let i = BossManager.bulletPatterns.length - 1; i >= 0; i--) {
+        const bullet = BossManager.bulletPatterns[i];
+
+        // Verificación de colisión mejorada para balas pequeñas
+        const bulletHitbox = 8; // Área de colisión más grande para las balas
+        const playerHitbox = 4; // Reducir hitbox del jugador para ser más justo
+
+        if (
+          bullet.x + bulletHitbox > playerPos.x - playerHitbox &&
+          bullet.x - bulletHitbox <
+            playerPos.x + playerSize.width + playerHitbox &&
+          bullet.y + bulletHitbox > playerPos.y - playerHitbox &&
+          bullet.y - bulletHitbox <
+            playerPos.y + playerSize.height + playerHitbox
+        ) {
+          console.log("💥 Bala Touhou impactó al jugador en checkCollisions");
+
+          // Eliminar la bala
+          BossManager.bulletPatterns.splice(i, 1);
+
+          // Dañar al jugador
+          Player.takeDamage();
+          console.log(
+            `💔 Jugador dañado por bala Touhou. Vidas restantes: ${Player.getLives()}`
+          );
+
+          if (Player.getLives() <= 0) {
+            console.log("💀 Jugador murió por bala Touhou en checkCollisions");
+            gameOver();
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  // 🔥 VERIFICACIÓN FINAL: Double-check de muerte
+  if (Player.getLives() <= 0 && !gameEnded) {
+    console.log("💀 Verificación final detectó muerte del jugador");
+    gameOver();
+    return;
   }
 }
 
@@ -570,6 +695,12 @@ function drawBackground() {
 }
 
 function gameOver() {
+  // 🔥 PREVENIR MÚLTIPLES LLAMADAS
+  if (gameEnded) {
+    console.log("💀 Game over ya procesado, ignorando llamada duplicada");
+    return;
+  }
+
   gameEnded = true;
 
   // 🔥 COMENTARIO DEL BOSS SI ESTÁ ACTIVO

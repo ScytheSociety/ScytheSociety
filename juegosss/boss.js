@@ -1717,15 +1717,27 @@ const BossManager = {
       const playerHitbox = 4; // Reducir hitbox del jugador para ser más justo
 
       if (
-        bullet.x + bulletHitbox > playerPos.x - playerHitbox &&
-        bullet.x - bulletHitbox <
-          playerPos.x + playerSize.width + playerHitbox &&
-        bullet.y + bulletHitbox > playerPos.y - playerHitbox &&
-        bullet.y - bulletHitbox < playerPos.y + playerSize.height + playerHitbox
+        bullet.x < playerPos.x + playerSize.width &&
+        bullet.x + bullet.width > playerPos.x &&
+        bullet.y < playerPos.y + playerSize.height &&
+        bullet.y + bullet.height > playerPos.y
       ) {
         // Jugador golpeado por bala Touhou
-        Player.takeDamage();
+        console.log("💥 Bala Touhou impactó al jugador");
+        const playerDied = Player.takeDamage();
         this.bulletPatterns.splice(i, 1);
+
+        // 🔥 SI EL JUGADOR MURIÓ, DETENER TODO
+        if (Player.getLives() <= 0) {
+          console.log("💀 Jugador murió por bala Touhou");
+          setTimeout(() => {
+            if (window.gameOver) {
+              window.gameOver();
+            }
+          }, 100);
+          return; // Salir de la función inmediatamente
+        }
+
         continue;
       }
 

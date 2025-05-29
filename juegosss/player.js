@@ -323,6 +323,21 @@ const Player = {
     // Reducir vidas
     this.lives--;
 
+    // 🔥 VERIFICAR MUERTE INMEDIATAMENTE
+    if (this.lives <= 0) {
+      this.lives = 0; // Asegurar que no sea negativo
+      console.log("💀 Jugador ha muerto - activando game over");
+
+      // Activar game over inmediatamente
+      setTimeout(() => {
+        if (window.gameOver && typeof window.gameOver === "function") {
+          window.gameOver();
+        }
+      }, 100);
+
+      return true;
+    }
+
     // Invulnerabilidad temporal
     this.invulnerabilityTime = 120; // 2 segundos
     this.damaged = true;
@@ -643,7 +658,7 @@ const Player = {
     return this.avatar;
   },
   getLives() {
-    return this.lives;
+    return Math.max(0, this.lives); // Nunca retornar negativo
   },
   getPosition() {
     return { x: this.x, y: this.y };

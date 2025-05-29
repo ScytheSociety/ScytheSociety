@@ -241,6 +241,12 @@ const UI = {
     if (!livesDisplay) return;
 
     const lives = Math.max(0, Player.getLives()); // 🔥 NUNCA negativo
+
+    // 🔥 LOG PARA DEBUG
+    if (lives === 0) {
+      console.log("⚠️ UI detectó 0 vidas - debería activarse game over");
+    }
+
     let livesText = "";
 
     if (lives === 0) {
