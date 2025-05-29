@@ -65,7 +65,7 @@ const EnemyManager = {
   // ======================================================
 
   /**
-   * Crea un enemigo estándar - CON TAMAÑOS MÁS GRANDES Y ANIMACIÓN
+   * Crea un enemigo estándar - CON INICIALIZACIÓN GARANTIZADA DE dynamicScaling
    */
   spawnEnemy() {
     const canvas = window.getCanvas();
@@ -109,7 +109,7 @@ const EnemyManager = {
       spawnTime: window.getGameTime(),
       type: "normal",
 
-      // 🔥 NUEVO: Sistema de escalado dinámico
+      // 🔥 INICIALIZACIÓN GARANTIZADA: Sistema de escalado dinámico
       dynamicScaling: {
         enabled: Math.random() < 0.4, // 40% de enemigos tendrán escalado
         baseSize: enemySize,
@@ -139,7 +139,7 @@ const EnemyManager = {
   },
 
   /**
-   * Crea un enemigo simple para spawns extra
+   * Crea un enemigo simple para spawns extra - CON dynamicScaling GARANTIZADO
    */
   spawnSimpleEnemy() {
     const canvas = window.getCanvas();
@@ -165,7 +165,8 @@ const EnemyManager = {
       level: level,
       spawnTime: window.getGameTime(),
       type: "extra",
-      // 🔥 AGREGAR: Sistema de escalado dinámico para enemigos simples
+
+      // 🔥 INICIALIZACIÓN GARANTIZADA: Sistema de escalado dinámico para enemigos simples
       dynamicScaling: {
         enabled: Math.random() < 0.3, // 30% de enemigos simples
         baseSize: simpleEnemySize,
@@ -182,7 +183,7 @@ const EnemyManager = {
   },
 
   /**
-   * 🔥 NUEVO: Crea un enemigo meteorito súper agresivo
+   * 🔥 Crea un enemigo meteorito súper agresivo - CON dynamicScaling GARANTIZADO
    */
   spawnMeteorEnemy() {
     const canvas = window.getCanvas();
@@ -208,7 +209,8 @@ const EnemyManager = {
       spawnTime: window.getGameTime(),
       type: "meteor",
       isMeteor: true, // Flag especial
-      // 🔥 AGREGAR: Sistema de escalado dinámico para meteoritos
+
+      // 🔥 INICIALIZACIÓN GARANTIZADA: Sistema de escalado dinámico para meteoritos
       dynamicScaling: {
         enabled: Math.random() < 0.6, // 60% de meteoritos tendrán escalado
         baseSize: meteorSize,
@@ -465,10 +467,13 @@ const EnemyManager = {
   },
 
   /**
-   * 🔥 NUEVO: Actualiza el escalado dinámico de los enemigos
+   * 🔥 CORREGIDO: Actualiza el escalado dinámico de los enemigos
    */
   updateDynamicScaling(enemy) {
-    if (!enemy.dynamicScaling.enabled) return;
+    // 🔥 VERIFICAR QUE EXISTE dynamicScaling ANTES DE USARLO
+    if (!enemy.dynamicScaling || !enemy.dynamicScaling.enabled) {
+      return; // No hacer nada si no está habilitado o no existe
+    }
 
     const scaling = enemy.dynamicScaling;
     scaling.pulseTimer += scaling.scaleSpeed;
