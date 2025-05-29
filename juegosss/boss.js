@@ -41,56 +41,62 @@ const BossManager = {
   // ======================================================
 
   /**
-   * Inicializa el boss para el nivel 10
+   * Inicializa el boss para el nivel 11 - LIMPIO SIN DUPLICIDADES
    */
   init() {
     const canvas = window.getCanvas();
     const config = GameConfig.BOSS_CONFIG;
 
-    // 🔥 BOSS APARECE EN EL CENTRO SUPERIOR
+    // 🔥 BOSS MÁS GRANDE Y CON MUCHA MÁS VIDA
     this.boss = {
-      x: canvas.width / 2 - config.size / 2,
-      y: 50,
-      width: config.size,
-      height: config.size,
+      x: canvas.width / 2 - (config.size * 1.5) / 2,
+      y: 80,
+      width: config.size * 1.5, // 🔥 CORREGIDO: Era solo config.size
+      height: config.size * 1.5, // 🔥 CORREGIDO: Era solo config.size
       velocityX: 0,
       velocityY: 0,
-      targetX: canvas.width / 2 - config.size / 2,
-      targetY: 50,
+      targetX: canvas.width / 2 - (config.size * 1.5) / 2,
+      targetY: 80,
 
-      // Visual
+      // Visual mejorado
       color: "#8B0000",
       glowIntensity: 0,
 
-      // Comportamiento mejorado
-      moveSpeed: config.speed,
+      // Comportamiento más inteligente
+      moveSpeed: config.speed * 1.5,
       aggressionLevel: 1.0,
-      teleportCooldown: 0,
-      lastTeleport: 0,
+
+      // 🔥 NUEVO: Sistema de movimiento fluido
+      movementPattern: "hunting", // hunting, circling, teleporting
+      patternTimer: 0,
+      lastPatternChange: 0,
     };
 
-    // 🔥 MÁS VIDA PARA EL BOSS
-    this.maxHealth = 80; // Era 50, ahora 80
-    this.currentHealth = 80;
-
+    // 🔥 VIDA MASIVA PARA BOSS INTELIGENTE
+    this.maxHealth = 200;
+    this.currentHealth = 200;
     this.active = true;
-    // 🔥 NUEVOS: Sistema de comentarios
-    this.lastCommentTime = 0;
-    this.commentCooldown = 300; // 5 segundos entre comentarios
 
-    this.currentPhase = 1;
+    // 🔥 SISTEMA DE FASES INTELIGENTE
+    this.currentPhase = "SUMMONING"; // SUMMONING -> MINES -> BULLETS
+    this.phaseTimer = 0;
+    this.phaseActive = false;
+    this.phaseCooldown = 0;
+
+    // 🔥 SISTEMA DE BALAS TOUHOU
+    this.bulletPatterns = [];
+    this.patternType = "none";
+
+    // 🔥 SISTEMAS BÁSICOS (SOLO LOS NECESARIOS)
     this.isImmune = false;
     this.immunityTimer = 0;
-    this.summonTimer = 0;
-    this.teleportTimer = 0;
-    this.teleportCooldown = 0;
     this.mines = [];
     this.mineTimer = 0;
     this.miningPhase = false;
 
-    // 🔥 NUEVOS: Sistema de comentarios
+    // Comentarios y efectos
     this.lastCommentTime = 0;
-    this.commentCooldown = 300; // 5 segundos entre comentarios
+    this.commentCooldown = 300;
 
     // Efectos de entrada
     UI.showScreenMessage("👹 ¡EL REY DEL INFIERNO APARECE! 👹", "#FF0000");
@@ -104,7 +110,7 @@ const BossManager = {
       100
     );
 
-    console.log("👹 Boss inicializado - ¡Pelea final!");
+    console.log("👹 Boss INTELIGENTE inicializado - ¡Pelea épica!");
   },
 
   // ======================================================
@@ -112,68 +118,114 @@ const BossManager = {
   // ======================================================
 
   /**
-   * Actualiza el boss cada frame
+   * Actualiza el boss cada frame - SISTEMA INTELIGENTE POR FASES
    */
   update() {
     if (!this.active || !this.boss) return;
 
-    // Actualizar sistemas
-    this.updatePhase();
-    this.updateMovement();
+    // Actualizar sistemas básicos
     this.updateImmunity();
-    this.updateSummoning();
-    this.updateTeleport();
-    // 🔥 COMENTARIOS ALEATORIOS DURANTE COMBATE
-    if (Math.random() < 0.002) {
-      // 0.2% por frame
+    this.updateIntelligentMovement();
+
+    // 🔥 SISTEMA DE FASES INTELIGENTE
+    this.updateIntelligentPhases();
+
+    // Comentarios aleatorios ocasionales
+    if (Math.random() < 0.001) {
+      // Menos frecuente
       this.sayRandomComment("combate");
     }
-    this.updateMines();
 
-    // Verificar si está derrotado
+    // Verificar derrota
     this.checkDefeat();
   },
 
   /**
-   * Actualiza la fase actual del boss
+   * 🔥 NUEVO: Sistema de fases inteligente basado en vida
    */
-  updatePhase() {
+  updateIntelligentPhases() {
     const healthPercentage = this.currentHealth / this.maxHealth;
-    const config = GameConfig.BOSS_CONFIG.phases;
-    let newPhase = this.currentPhase;
 
-    // Determinar fase según salud
-    if (healthPercentage <= config.finalPhase.healthThreshold) {
-      newPhase = 4; // Fase final
-    } else if (healthPercentage <= config.phase3.healthThreshold) {
-      newPhase = 3;
-    } else if (healthPercentage <= config.phase2.healthThreshold) {
-      newPhase = 2;
+    // Determinar fase según vida y estado
+    let targetPhase;
+    if (healthPercentage > 0.66) {
+      targetPhase = "SUMMONING"; // Fase 1: Solo invocaciones
+    } else if (healthPercentage > 0.33) {
+      targetPhase = "MINES"; // Fase 2: Minas + movimiento
     } else {
-      newPhase = 1;
+      targetPhase = "BULLETS"; // Fase 3: Balas Touhou + todo
     }
 
-    // Cambio de fase
-    if (newPhase !== this.currentPhase) {
-      this.changePhase(newPhase);
+    // Cambiar fase si es necesario
+    if (this.currentPhase !== targetPhase && !this.phaseActive) {
+      this.changeIntelligentPhase(targetPhase);
     }
 
-    // Activar fase de minas al 10% de vida
-    if (healthPercentage <= 0.1 && !this.miningPhase) {
-      this.activateMiningPhase();
+    // Ejecutar fase actual
+    switch (this.currentPhase) {
+      case "SUMMONING":
+        this.executeSummoningPhase();
+        break;
+      case "MINES":
+        this.executeMinesPhase();
+        break;
+      case "BULLETS":
+        this.executeBulletsPhase();
+        break;
     }
   },
 
   /**
-   * Cambia a una nueva fase
+   * 🔥 NUEVO: Cambio inteligente de fase
    */
-  changePhase(newPhase) {
+  changeIntelligentPhase(newPhase) {
+    console.log(`👹 Boss cambiando a fase: ${newPhase}`);
+
     this.currentPhase = newPhase;
-    this.lastPhaseChange = window.getGameTime();
+    this.phaseTimer = 0;
+    this.phaseActive = true;
 
-    // Efectos visuales de cambio de fase
-    UI.showScreenMessage(`¡FASE ${newPhase}!`, "#FF0000");
+    // Limpiar sistemas anteriores
+    this.mines = [];
+    this.bulletPatterns = [];
 
+    // Volverse inmune durante cambio de fase
+    this.makeImmune(120); // 2 segundos
+
+    // Teletransportarse al centro para fase
+    this.teleportToCenter();
+
+    // Mensaje de fase
+    const phaseMessages = {
+      SUMMONING: "⚔️ FASE DE INVOCACIÓN",
+      MINES: "💣 FASE DE MINAS",
+      BULLETS: "🌟 FASE TOUHOU",
+    };
+
+    UI.showScreenMessage(phaseMessages[newPhase], "#FF0000");
+  },
+
+  /**
+   * 🔥 NUEVO: Teletransporte al centro para fases
+   */
+  teleportToCenter() {
+    const canvas = window.getCanvas();
+
+    // Efecto visual en posición actual
+    UI.createParticleEffect(
+      this.boss.x + this.boss.width / 2,
+      this.boss.y + this.boss.height / 2,
+      "#8B0000",
+      50
+    );
+
+    // Ir al centro
+    this.boss.x = canvas.width / 2 - this.boss.width / 2;
+    this.boss.y = canvas.height / 2 - this.boss.height / 2;
+    this.boss.targetX = this.boss.x;
+    this.boss.targetY = this.boss.y;
+
+    // Efecto visual en nueva posición
     UI.createParticleEffect(
       this.boss.x + this.boss.width / 2,
       this.boss.y + this.boss.height / 2,
@@ -181,74 +233,344 @@ const BossManager = {
       50
     );
 
-    // Volverse inmune temporalmente
-    const phaseConfig = this.getPhaseConfig();
-    this.makeImmune(phaseConfig.immunityDuration);
-
-    // Teletransportarse inmediatamente
-    if (newPhase >= 2) {
-      this.teleport();
-    }
-
-    console.log(`👹 Boss cambió a fase ${newPhase}`);
+    AudioManager.playSound("special");
   },
 
   /**
-   * Actualiza el movimiento del boss
+   * 🔥 FASE 1: Solo invocaciones + persecución
    */
-  updateMovement() {
+  executeSummoningPhase() {
+    this.phaseTimer++;
+
+    // Invocar enemigos cada 4 segundos
+    if (this.phaseTimer % 240 === 0) {
+      // 4 segundos
+      this.summonIntelligentEnemies(3);
+      this.makeImmune(120); // Inmune por 2 segundos tras invocar
+    }
+
+    // Perseguir al jugador cuando no es inmune
+    if (!this.isImmune) {
+      this.huntPlayer();
+    }
+  },
+
+  /**
+   * 🔥 FASE 2: Minas + teletransporte
+   */
+  executeMinesPhase() {
+    this.phaseTimer++;
+
+    // Ciclo de minas cada 8 segundos
+    if (this.phaseTimer % 480 === 0) {
+      // 8 segundos
+      this.startMineSequence();
+    }
+
+    // Teletransporte más frecuente
+    if (!this.isImmune && this.phaseTimer % 180 === 0) {
+      // 3 segundos
+      this.intelligentTeleport();
+    }
+
+    // Actualizar minas
+    this.updateIntelligentMines();
+  },
+
+  /**
+   * 🔥 FASE 3: Balas estilo Touhou + todo combinado
+   */
+  executeBulletsPhase() {
+    this.phaseTimer++;
+
+    // Patrón de balas cada 6 segundos
+    if (this.phaseTimer % 360 === 0) {
+      // 6 segundos
+      this.startBulletPattern();
+    }
+
+    // Minas ocasionales
+    if (this.phaseTimer % 600 === 0) {
+      // 10 segundos
+      this.spawnQuickMines(2);
+    }
+
+    // Invocaciones ocasionales
+    if (this.phaseTimer % 420 === 0) {
+      // 7 segundos
+      this.summonIntelligentEnemies(2);
+    }
+
+    // Actualizar sistemas
+    this.updateBulletPatterns();
+    this.updateIntelligentMines();
+
+    // Movimiento más agresivo
+    if (!this.isImmune) {
+      this.aggressiveMovement();
+    }
+  },
+
+  /**
+   * 🔥 NUEVO: Invocación inteligente de enemigos
+   */
+  summonIntelligentEnemies(count) {
     const canvas = window.getCanvas();
-    const phaseConfig = this.getPhaseConfig();
-    const speed = phaseConfig.moveSpeed * this.boss.aggressionLevel;
 
-    // Movimiento hacia el objetivo
-    const dx = this.boss.targetX - this.boss.x;
-    const dy = this.boss.targetY - this.boss.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    UI.showScreenMessage(`👹 ¡${count} ESBIRROS!`, "#FF4444");
 
-    if (distance > 5) {
-      this.boss.velocityX = (dx / distance) * speed;
-      this.boss.velocityY = (dy / distance) * speed;
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        // Enemigos más fuertes
+        const size = GameConfig.ENEMY_MIN_SIZE * 1.3;
+
+        // Posiciones estratégicas (esquinas)
+        const positions = [
+          { x: 50, y: 50 },
+          { x: canvas.width - 100, y: 50 },
+          { x: 50, y: canvas.height - 100 },
+          { x: canvas.width - 100, y: canvas.height - 100 },
+        ];
+
+        const pos = positions[i % positions.length];
+
+        const minion = {
+          x: pos.x,
+          y: pos.y,
+          width: size,
+          height: size,
+          velocityX: (Math.random() - 0.5) * 0.006 * canvas.height,
+          velocityY: (Math.random() - 0.5) * 0.006 * canvas.height,
+
+          image:
+            GameConfig.enemyImages[
+              Math.floor(Math.random() * GameConfig.enemyImages.length)
+            ],
+          speedFactor: 1.5, // Más agresivos
+          bounceCount: 0,
+          maxBounces: 8,
+
+          level: 10,
+          type: "boss_minion",
+          isBossMinion: true,
+
+          // Sistema de escalado
+          dynamicScaling: {
+            enabled: true,
+            baseSize: size,
+            currentScale: 1.0,
+            scaleDirection: 1,
+            scaleSpeed: 0.004,
+            minScale: 0.8,
+            maxScale: 1.3,
+            pulseTimer: 0,
+          },
+        };
+
+        EnemyManager.enemies.push(minion);
+        UI.createParticleEffect(
+          pos.x + size / 2,
+          pos.y + size / 2,
+          "#8B0000",
+          25
+        );
+      }, i * 300);
+    }
+
+    AudioManager.playSound("special");
+  },
+
+  /**
+   * 🔥 NUEVO: Movimiento inteligente del boss
+   */
+  updateIntelligentMovement() {
+    if (this.isImmune) {
+      // Movimiento mínimo cuando es inmune
+      this.boss.velocityX *= 0.95;
+      this.boss.velocityY *= 0.95;
     } else {
-      // Llegó al objetivo, elegir nuevo objetivo
-      this.chooseNewTarget();
+      // Cambiar patrón de movimiento cada 5 segundos
+      if (window.getGameTime() - this.lastPatternChange > 300) {
+        this.changeMovementPattern();
+      }
+
+      // Ejecutar patrón actual
+      switch (this.boss.movementPattern) {
+        case "hunting":
+          this.huntPlayer();
+          break;
+        case "circling":
+          this.circleAroundPlayer();
+          break;
+        case "teleporting":
+          this.teleportMovement();
+          break;
+      }
     }
 
     // Aplicar movimiento
     this.boss.x += this.boss.velocityX;
     this.boss.y += this.boss.velocityY;
 
-    // Mantener dentro de la pantalla
-    this.boss.x = Math.max(
-      0,
-      Math.min(canvas.width - this.boss.width, this.boss.x)
-    );
-    this.boss.y = Math.max(0, Math.min(canvas.height / 2, this.boss.y)); // Solo mitad superior
+    // Mantener en pantalla con rebote suave
+    const canvas = window.getCanvas();
+    if (this.boss.x < 0) {
+      this.boss.x = 0;
+      this.boss.velocityX = Math.abs(this.boss.velocityX) * 0.8;
+    }
+    if (this.boss.x + this.boss.width > canvas.width) {
+      this.boss.x = canvas.width - this.boss.width;
+      this.boss.velocityX = -Math.abs(this.boss.velocityX) * 0.8;
+    }
+    if (this.boss.y < 0) {
+      this.boss.y = 0;
+      this.boss.velocityY = Math.abs(this.boss.velocityY) * 0.8;
+    }
+    if (this.boss.y + this.boss.height > canvas.height) {
+      this.boss.y = canvas.height - this.boss.height;
+      this.boss.velocityY = -Math.abs(this.boss.velocityY) * 0.8;
+    }
 
-    // Actualizar efectos visuales
+    // Efectos visuales
     this.boss.glowIntensity = 0.5 + Math.sin(window.getGameTime() * 0.1) * 0.3;
   },
 
   /**
-   * Elige un nuevo objetivo de movimiento
+   * 🔥 Cambiar patrón de movimiento
    */
-  chooseNewTarget() {
-    const canvas = window.getCanvas();
-    const margin = this.boss.width;
+  changeMovementPattern() {
+    const patterns = ["hunting", "circling", "teleporting"];
+    const currentIndex = patterns.indexOf(this.boss.movementPattern);
+    this.boss.movementPattern = patterns[(currentIndex + 1) % patterns.length];
+    this.lastPatternChange = window.getGameTime();
+    this.patternTimer = 0;
 
-    // Posiciones predefinidas (esquinas y centro superior)
+    console.log(`👹 Boss cambió a patrón: ${this.boss.movementPattern}`);
+  },
+
+  /**
+   * 🔥 Perseguir al jugador inteligentemente
+   */
+  huntPlayer() {
+    const playerPos = Player.getPosition();
+    const playerSize = Player.getSize();
+
+    const playerCenterX = playerPos.x + playerSize.width / 2;
+    const playerCenterY = playerPos.y + playerSize.height / 2;
+    const bossCenterX = this.boss.x + this.boss.width / 2;
+    const bossCenterY = this.boss.y + this.boss.height / 2;
+
+    const dx = playerCenterX - bossCenterX;
+    const dy = playerCenterY - bossCenterY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance > 150) {
+      // Mantener distancia
+      const speed = this.boss.moveSpeed * 1.2;
+      this.boss.velocityX += (dx / distance) * speed * 0.3;
+      this.boss.velocityY += (dy / distance) * speed * 0.3;
+    } else {
+      // Demasiado cerca, alejarse un poco
+      const speed = this.boss.moveSpeed * 0.8;
+      this.boss.velocityX -= (dx / distance) * speed * 0.2;
+      this.boss.velocityY -= (dy / distance) * speed * 0.2;
+    }
+
+    // Limitar velocidad
+    const maxSpeed = this.boss.moveSpeed * 2;
+    const currentSpeed = Math.sqrt(
+      this.boss.velocityX ** 2 + this.boss.velocityY ** 2
+    );
+    if (currentSpeed > maxSpeed) {
+      this.boss.velocityX = (this.boss.velocityX / currentSpeed) * maxSpeed;
+      this.boss.velocityY = (this.boss.velocityY / currentSpeed) * maxSpeed;
+    }
+  },
+
+  /**
+   * 🔥 Círculos alrededor del jugador
+   */
+  circleAroundPlayer() {
+    this.patternTimer += 0.05;
+
+    const playerPos = Player.getPosition();
+    const playerSize = Player.getSize();
+    const playerCenterX = playerPos.x + playerSize.width / 2;
+    const playerCenterY = playerPos.y + playerSize.height / 2;
+
+    const radius = 200;
+    const targetX = playerCenterX + Math.cos(this.patternTimer) * radius;
+    const targetY = playerCenterY + Math.sin(this.patternTimer) * radius;
+
+    const dx = targetX - (this.boss.x + this.boss.width / 2);
+    const dy = targetY - (this.boss.y + this.boss.height / 2);
+
+    this.boss.velocityX = dx * 0.02;
+    this.boss.velocityY = dy * 0.02;
+  },
+
+  /**
+   * 🔥 Movimiento con teletransporte
+   */
+  teleportMovement() {
+    this.patternTimer++;
+
+    if (this.patternTimer > 120) {
+      // 2 segundos
+      this.intelligentTeleport();
+      this.patternTimer = 0;
+    }
+  },
+
+  /**
+   * 🔥 Teletransporte inteligente
+   */
+  intelligentTeleport() {
+    const canvas = window.getCanvas();
+    const playerPos = Player.getPosition();
+
+    // Efecto en posición actual
+    UI.createParticleEffect(
+      this.boss.x + this.boss.width / 2,
+      this.boss.y + this.boss.height / 2,
+      "#8B0000",
+      30
+    );
+
+    // Posiciones estratégicas cerca del jugador pero no encima
     const positions = [
-      { x: margin, y: 50 }, // Esquina superior izquierda
-      { x: canvas.width - margin - this.boss.width, y: 50 }, // Esquina superior derecha
-      { x: canvas.width / 2 - this.boss.width / 2, y: 50 }, // Centro superior
-      { x: canvas.width / 4 - this.boss.width / 2, y: 100 }, // Izquierda media
-      { x: (canvas.width * 3) / 4 - this.boss.width / 2, y: 100 }, // Derecha media
+      { x: playerPos.x - 200, y: playerPos.y - 150 },
+      { x: playerPos.x + 200, y: playerPos.y - 150 },
+      { x: playerPos.x, y: playerPos.y - 300 },
+      { x: playerPos.x - 150, y: playerPos.y + 150 },
+      { x: playerPos.x + 150, y: playerPos.y + 150 },
     ];
 
-    // Elegir posición aleatoria
-    const newTarget = positions[Math.floor(Math.random() * positions.length)];
-    this.boss.targetX = newTarget.x;
-    this.boss.targetY = newTarget.y;
+    // Filtrar posiciones válidas
+    const validPositions = positions.filter(
+      (pos) =>
+        pos.x >= 0 &&
+        pos.x + this.boss.width <= canvas.width &&
+        pos.y >= 0 &&
+        pos.y + this.boss.height <= canvas.height
+    );
+
+    if (validPositions.length > 0) {
+      const newPos =
+        validPositions[Math.floor(Math.random() * validPositions.length)];
+      this.boss.x = newPos.x;
+      this.boss.y = newPos.y;
+
+      // Efecto en nueva posición
+      UI.createParticleEffect(
+        this.boss.x + this.boss.width / 2,
+        this.boss.y + this.boss.height / 2,
+        "#FF0000",
+        30
+      );
+
+      AudioManager.playSound("special");
+    }
   },
 
   // ======================================================
@@ -285,339 +607,104 @@ const BossManager = {
   // SISTEMA DE INVOCACIÓN
   // ======================================================
 
-  /**
-   * Actualiza el sistema de invocación de enemigos
-   */
-  updateSummoning() {
-    if (this.isImmune) return; // No invocar mientras es inmune
-
-    const phaseConfig = this.getPhaseConfig();
-    const gameTime = window.getGameTime();
-
-    this.summonTimer++;
-
-    if (this.summonTimer >= phaseConfig.summonInterval) {
-      this.summonEnemies(phaseConfig.summonCount);
-      this.summonTimer = 0;
-      this.lastSummonTime = gameTime;
-
-      // Volverse inmune temporalmente después de invocar
-      this.makeImmune(phaseConfig.immunityDuration);
-    }
-  },
-
-  /**
-   * Invoca enemigos de diferentes niveles
-   */
-  summonEnemies(count) {
-    const canvas = window.getCanvas();
-
-    UI.showScreenMessage("👹 ¡INVOCANDO ESBIRROS!", "#FF4444");
-
-    for (let i = 0; i < count; i++) {
-      setTimeout(() => {
-        // Enemigos de niveles aleatorios (1-9)
-        const enemyLevel = 1 + Math.floor(Math.random() * 9);
-        const size = GameConfig.ENEMY_MIN_SIZE + Math.random() * 20;
-
-        // Posición aleatoria en los bordes
-        let x, y;
-        const side = Math.floor(Math.random() * 4);
-
-        switch (side) {
-          case 0: // Arriba
-            x = Math.random() * canvas.width;
-            y = -size;
-            break;
-          case 1: // Derecha
-            x = canvas.width;
-            y = Math.random() * canvas.height;
-            break;
-          case 2: // Abajo
-            x = Math.random() * canvas.width;
-            y = canvas.height;
-            break;
-          case 3: // Izquierda
-            x = -size;
-            y = Math.random() * canvas.height;
-            break;
-        }
-
-        // Crear enemigo súbdito
-        const minion = {
-          x: x,
-          y: y,
-          width: size,
-          height: size,
-          velocityX: (Math.random() - 0.5) * 0.004 * canvas.height,
-          velocityY: (Math.random() - 0.5) * 0.004 * canvas.height,
-
-          image:
-            GameConfig.enemyImages[
-              Math.min(enemyLevel - 1, GameConfig.enemyImages.length - 1)
-            ],
-          speedFactor: 1.2, // Más agresivos
-          bounceCount: 0,
-          maxBounces: 5,
-
-          level: enemyLevel,
-          type: "boss_minion",
-          isBossMinion: true,
-        };
-
-        EnemyManager.enemies.push(minion);
-
-        // Efecto visual de invocación
-        UI.createParticleEffect(x, y, "#8B0000", 20);
-      }, i * 200); // Espaciar invocaciones
-    }
-
-    AudioManager.playSound("special");
-    console.log(`👹 Boss invocó ${count} esbirros`);
-  },
-
   // ======================================================
   // SISTEMA DE TELETRANSPORTE
   // ======================================================
 
-  /**
-   * Actualiza el sistema de teletransporte
-   */
-  updateTeleport() {
-    const phaseConfig = this.getPhaseConfig();
-
-    if (!phaseConfig.teleportChance) return;
-
-    // Reducir cooldown
-    if (this.teleportCooldown > 0) {
-      this.teleportCooldown--;
-      return;
-    }
-
-    // Verificar si debe teletransportarse
-    this.teleportTimer++;
-
-    const shouldTeleport =
-      phaseConfig.teleportFrequency &&
-      this.teleportTimer >= phaseConfig.teleportFrequency;
-    const randomTeleport = Math.random() < phaseConfig.teleportChance;
-
-    if (shouldTeleport || randomTeleport) {
-      this.teleport();
-      this.teleportTimer = 0;
-      this.teleportCooldown = 60; // 1 segundo de cooldown
-    }
-  },
-
-  /**
-   * Teletransporta al boss
-   */
-  teleport() {
-    const canvas = window.getCanvas();
-
-    // Efecto visual en posición actual
-    UI.createParticleEffect(
-      this.boss.x + this.boss.width / 2,
-      this.boss.y + this.boss.height / 2,
-      "#8B0000",
-      50
-    );
-
-    // Nueva posición aleatoria
-    const margin = this.boss.width;
-    this.boss.x =
-      margin + Math.random() * (canvas.width - margin * 2 - this.boss.width);
-    this.boss.y = 50 + Math.random() * 100; // Parte superior
-
-    // Actualizar objetivo
-    this.boss.targetX = this.boss.x;
-    this.boss.targetY = this.boss.y;
-
-    // Efecto visual en nueva posición
-    UI.createParticleEffect(
-      this.boss.x + this.boss.width / 2,
-      this.boss.y + this.boss.height / 2,
-      "#FF0000",
-      50
-    );
-
-    UI.showScreenMessage("💨 TELETRANSPORTE 💨", "#FF00FF");
-    AudioManager.playSound("special");
-
-    console.log("💨 Boss se teletransportó");
-  },
-
   // ======================================================
   // SISTEMA DE MINAS
   // ======================================================
-
-  /**
-   * 🔥 NUEVO: Activa fase de minas con inmunidad
-   */
-  activateMiningPhase() {
-    this.miningPhase = true;
-    this.mineTimer = 0;
-
-    // 🔥 IR AL CENTRO DE LA PANTALLA
-    const canvas = window.getCanvas();
-    this.boss.targetX = canvas.width / 2 - this.boss.width / 2;
-    this.boss.targetY = canvas.height / 2 - this.boss.height / 2;
-
-    // 🔥 INMUNIDAD TOTAL DURANTE MINAS
-    this.makeImmune(600); // 10 segundos de inmunidad
-
-    UI.showScreenMessage("💣 ¡MODO MINAS ACTIVADO! 💣", "#FF8800");
-    this.sayRandomComment("combate");
-    console.log("💣 Fase de minas activada - Boss inmune");
-  },
-
-  /**
-   * Actualiza el sistema de minas
-   */
-  updateMines() {
-    if (!this.miningPhase) return;
-
-    const config = GameConfig.BOSS_CONFIG.phases.finalPhase;
-
-    // Crear nuevas minas
-    this.mineTimer++;
-    if (this.mineTimer >= config.mineInterval) {
-      this.spawnMine();
-      this.mineTimer = 0;
-    }
-
-    // Actualizar minas existentes
-    for (let i = this.mines.length - 1; i >= 0; i--) {
-      const mine = this.mines[i];
-
-      mine.timer--;
-
-      // Armar mina después de 1 segundo
-      if (!mine.armed && mine.timer <= config.mineExplosionDelay - 60) {
-        mine.armed = true;
-        console.log("💣 Mina armada");
-      }
-
-      // Explotar mina
-      if (mine.timer <= 0) {
-        this.explodeMine(i);
-      }
-    }
-  },
-
-  /**
-   * 🔥 NUEVO: Spawn mejorado de minas con área de peligro
-   */
-  spawnMine() {
-    const canvas = window.getCanvas();
-    const config = GameConfig.BOSS_CONFIG.phases.finalPhase;
-
-    const mine = {
-      x: 50 + Math.random() * (canvas.width - 100),
-      y: 50 + Math.random() * (canvas.height - 100),
-      width: 35,
-      height: 35,
-      timer: config.mineExplosionDelay,
-      armed: false,
-      blinkTimer: 0,
-
-      // 🔥 NUEVO: Área de peligro visual
-      dangerRadius: config.mineDamageRadius,
-      showDangerZone: true,
-    };
-
-    this.mines.push(mine);
-
-    UI.createParticleEffect(mine.x + 17, mine.y + 17, "#FF8800", 15);
-    UI.showScreenMessage("💣 ¡MINA COLOCADA!", "#FF8800");
-
-    console.log("💣 Nueva mina con zona de peligro colocada");
-  },
-
-  /**
-   * Explota una mina
-   */
-  explodeMine(index) {
-    if (index < 0 || index >= this.mines.length) return;
-
-    const mine = this.mines[index];
-    const config = GameConfig.BOSS_CONFIG.phases.finalPhase;
-
-    // Crear explosión
-    UI.createExplosionEffect(mine.x + mine.width / 2, mine.y + mine.height / 2);
-
-    // Verificar daño al jugador
-    const player = Player;
-    const playerPos = player.getPosition();
-    const playerSize = player.getSize();
-
-    const distance = Math.sqrt(
-      Math.pow(
-        playerPos.x + playerSize.width / 2 - (mine.x + mine.width / 2),
-        2
-      ) +
-        Math.pow(
-          playerPos.y + playerSize.height / 2 - (mine.y + mine.height / 2),
-          2
-        )
-    );
-
-    if (distance < config.mineDamageRadius) {
-      player.takeDamage();
-      console.log("💥 Jugador dañado por mina");
-    }
-
-    // Eliminar mina
-    this.mines.splice(index, 1);
-
-    AudioManager.playSound("explosion");
-    console.log("💥 Mina explotó");
-  },
 
   // ======================================================
   // SISTEMA DE DAÑO
   // ======================================================
 
   /**
-   * El boss recibe daño - CORREGIDO PARA NIVEL 11
+   * 🔥 CORREGIR: takeDamage() con reacciones inteligentes completas
    */
   takeDamage(amount) {
-    // 🔥 VERIFICAR SI ESTÁ ACTIVO Y NO INMUNE
+    // Verificaciones básicas
     if (!this.active || this.isImmune) {
-      console.log("👹 Boss no puede recibir daño - inactivo o inmune");
+      console.log("👹 Boss inmune - no recibe daño");
       return;
     }
 
-    // 🔥 VERIFICAR SI YA ESTÁ MUERTO
     if (this.currentHealth <= 0) {
-      console.log("👹 Boss ya está muerto - no recibir más daño");
+      console.log("👹 Boss ya está muerto");
       return;
     }
 
-    this.currentHealth = Math.max(0, this.currentHealth - amount);
+    // 🔥 DAÑO REDUCIDO PARA MAYOR DURACIÓN
+    const reducedDamage = Math.max(1, Math.floor(amount * 0.7)); // 30% menos daño
+    this.currentHealth = Math.max(0, this.currentHealth - reducedDamage);
 
     // Aumentar agresividad según daño recibido
     const healthPercentage = this.currentHealth / this.maxHealth;
-    this.boss.aggressionLevel = 1.0 + (1.0 - healthPercentage) * 0.5;
+    this.boss.aggressionLevel = 1.0 + (1.0 - healthPercentage) * 0.8;
 
-    // Efecto visual de daño
+    // Efecto visual de daño más sutil
     UI.createParticleEffect(
       this.boss.x + this.boss.width / 2,
       this.boss.y + this.boss.height / 2,
       "#FFFF00",
-      15
+      8
     );
 
     AudioManager.playSound("hit");
 
     console.log(
-      `👹 Boss recibió ${amount} daño. Vida: ${this.currentHealth}/${this.maxHealth}`
+      `👹 Boss recibió ${reducedDamage} daño. Vida: ${this.currentHealth}/${
+        this.maxHealth
+      } (${Math.round(healthPercentage * 100)}%)`
     );
 
-    // 🔥 VERIFICAR DERROTA INMEDIATAMENTE
+    // 🔥 REACCIONES INTELIGENTES AL DAÑO
+    this.reactToDamage(healthPercentage);
+
+    // 🔥 VERIFICAR DERROTA
     if (this.currentHealth <= 0) {
-      console.log("👹 Boss vida = 0, iniciando derrota...");
-      setTimeout(() => this.defeat(), 100); // Pequeño delay para evitar problemas
+      console.log("👹 Boss derrotado!");
+      setTimeout(() => this.defeat(), 200);
+    }
+  },
+
+  /**
+   * 🔥 NUEVA: Reacciones inteligentes al recibir daño
+   */
+  reactToDamage(healthPercentage) {
+    // Teletransporte defensivo si vida muy baja
+    if (healthPercentage < 0.2 && Math.random() < 0.3) {
+      this.intelligentTeleport();
+      UI.showScreenMessage("👹 ¡Teletransporte defensivo!", "#FF00FF");
+    }
+
+    // Invocación de emergencia
+    if (healthPercentage < 0.15 && Math.random() < 0.2) {
+      this.summonIntelligentEnemies(2);
+      UI.showScreenMessage("👹 ¡Refuerzos de emergencia!", "#FF0000");
+    }
+
+    // Comentarios según el daño
+    if (Math.random() < 0.1) {
+      if (healthPercentage > 0.5) {
+        this.sayRandomComment("combate");
+      } else {
+        // Comentarios más desesperados
+        const desperateComments = [
+          "¡Impossible! ¿Cómo me hieren?",
+          "¡No puede ser! ¡Soy invencible!",
+          "¡Mi poder se desvanece!",
+          "¡Esto no debería pasar!",
+          "¡Malditos mortales!",
+          "¡No me derrotarán tan fácil!",
+        ];
+
+        const randomComment =
+          desperateComments[
+            Math.floor(Math.random() * desperateComments.length)
+          ];
+        UI.showScreenMessage(`👹: "${randomComment}"`, "#FF0000");
+      }
     }
   },
 
@@ -686,55 +773,168 @@ const BossManager = {
   // ======================================================
 
   /**
-   * Dibuja el boss y sus elementos - CORREGIDO
+   * Dibuja el boss y todos sus elementos - SISTEMA COMPLETO
    */
   draw(ctx) {
-    // 🔥 VERIFICAR SI ESTÁ ACTIVO Y TIENE BOSS
-    if (!this.active || !this.boss) {
-      console.log("👹 Boss no activo o no existe - no dibujar");
-      return;
-    }
+    if (!this.active || !this.boss) return;
 
-    console.log(
-      `👹 Dibujando boss en posición: (${this.boss.x}, ${this.boss.y})`
-    );
+    // Dibujar balas Touhou primero (atrás)
+    this.drawBulletPatterns(ctx);
+
+    // Dibujar minas con zonas de peligro
+    this.drawIntelligentMines(ctx);
 
     // Dibujar boss
     this.drawBoss(ctx);
 
-    // Dibujar barra de vida
+    // Dibujar barra de vida que sigue al boss
     this.drawHealthBar(ctx);
-
-    // Dibujar minas
-    this.drawMines(ctx);
   },
 
   /**
-   * Dibuja el boss - CORREGIDO CON FALLBACK VISIBLE PARA NIVEL 11
+   * 🔥 NUEVO: Dibujar minas inteligentes con zonas de peligro mejoradas
+   */
+  drawIntelligentMines(ctx) {
+    for (const mine of this.mines) {
+      ctx.save();
+
+      // 🔥 ZONA DE PELIGRO MÁS VISIBLE
+      if (mine.showDangerZone) {
+        ctx.beginPath();
+        ctx.arc(
+          mine.x + mine.width / 2,
+          mine.y + mine.height / 2,
+          mine.dangerRadius,
+          0,
+          Math.PI * 2
+        );
+
+        // Color según fase
+        if (mine.warningPhase) {
+          // Rojo parpadeante en fase de advertencia
+          const alpha = 0.3 + Math.sin(mine.blinkTimer * 0.5) * 0.2;
+          ctx.strokeStyle = `rgba(255, 0, 0, ${alpha})`;
+          ctx.fillStyle = `rgba(255, 0, 0, ${alpha * 0.1})`;
+          ctx.fill();
+        } else {
+          // Naranja normal
+          ctx.strokeStyle = "rgba(255, 136, 0, 0.6)";
+          ctx.fillStyle = "rgba(255, 136, 0, 0.05)";
+          ctx.fill();
+        }
+
+        ctx.setLineDash([8, 8]);
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 🔥 MINA MÁS VISIBLE
+      let mineColor = mine.armed ? "#FF0000" : "#FF8800";
+
+      // Parpadeo intenso cuando está por explotar
+      if (mine.timer < 60) {
+        const blinkIntensity = mine.blinkTimer % 10 < 5;
+        ctx.globalAlpha = blinkIntensity ? 1.0 : 0.3;
+        mineColor = "#FFFFFF"; // Blanco al parpadear
+      }
+
+      // Sombra para la mina
+      ctx.shadowColor = mineColor;
+      ctx.shadowBlur = 15;
+
+      // Cuerpo de la mina
+      ctx.fillStyle = mineColor;
+      ctx.fillRect(mine.x, mine.y, mine.width, mine.height);
+
+      // Borde visible
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(mine.x, mine.y, mine.width, mine.height);
+
+      // Indicador central
+      ctx.fillStyle = "#FFFFFF";
+      const centerSize = mine.width * 0.3;
+      ctx.fillRect(
+        mine.x + (mine.width - centerSize) / 2,
+        mine.y + (mine.height - centerSize) / 2,
+        centerSize,
+        centerSize
+      );
+
+      // 🔥 CONTADOR DE TIEMPO VISIBLE
+      if (mine.timer < 180) {
+        // Mostrar en los últimos 3 segundos
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 14px Arial";
+        ctx.textAlign = "center";
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 2;
+
+        const timeLeft = Math.ceil(mine.timer / 60);
+        const textX = mine.x + mine.width / 2;
+        const textY = mine.y - 10;
+
+        ctx.strokeText(timeLeft.toString(), textX, textY);
+        ctx.fillText(timeLeft.toString(), textX, textY);
+      }
+
+      ctx.restore();
+    }
+  },
+
+  /**
+   * 🔥 Dibujar boss con efectos mejorados según fase
    */
   drawBoss(ctx) {
     ctx.save();
 
-    // Efecto de inmunidad
+    // 🔥 EFECTOS SEGÚN FASE Y ESTADO
     if (this.isImmune) {
       ctx.shadowColor = "#00FFFF";
-      ctx.shadowBlur = 20;
-      ctx.globalAlpha = 0.7 + Math.sin(window.getGameTime() * 0.3) * 0.3;
+      ctx.shadowBlur = 25;
+      ctx.globalAlpha = 0.8 + Math.sin(window.getGameTime() * 0.4) * 0.2;
     } else {
-      ctx.shadowColor = this.boss.color;
-      ctx.shadowBlur = 10 + this.boss.glowIntensity * 10;
+      // Color según vida
+      const healthPercentage = this.currentHealth / this.maxHealth;
+      if (healthPercentage < 0.3) {
+        ctx.shadowColor = "#FF0000";
+        ctx.shadowBlur = 20 + Math.sin(window.getGameTime() * 0.3) * 10;
+      } else {
+        ctx.shadowColor = this.boss.color;
+        ctx.shadowBlur = 15 + this.boss.glowIntensity * 10;
+      }
     }
 
-    console.log(
-      `👹 Dibujando boss en nivel 11: (${this.boss.x}, ${this.boss.y}) tamaño ${this.boss.width}x${this.boss.height}`
-    );
+    // 🔥 AURA SEGÚN FASE
+    const phaseColors = {
+      SUMMONING: "#8B0000",
+      MINES: "#FF8800",
+      BULLETS: "#9B59B6",
+    };
 
-    // 🔥 INTENTAR ANIMACIÓN CON FRAMES
+    const auraColor = phaseColors[this.currentPhase] || "#8B0000";
+
+    // Dibujar aura de fase
+    ctx.beginPath();
+    ctx.arc(
+      this.boss.x + this.boss.width / 2,
+      this.boss.y + this.boss.height / 2,
+      this.boss.width * 0.8,
+      0,
+      Math.PI * 2
+    );
+    ctx.strokeStyle = `${auraColor}60`;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    console.log(`👹 Dibujando boss en fase ${this.currentPhase}`);
+
+    // Intentar dibujar con frames animados
     let bossDibujado = false;
     if (GameConfig.bossFrames && GameConfig.bossFrames.length > 0) {
-      // Cambiar frame cada 15 frames del juego (4 FPS de animación)
       const frameIndex =
-        Math.floor(window.getGameTime() / 15) % GameConfig.bossFrames.length;
+        Math.floor(window.getGameTime() / 12) % GameConfig.bossFrames.length;
       const currentFrame = GameConfig.bossFrames[frameIndex];
 
       if (currentFrame && currentFrame.complete) {
@@ -746,11 +946,10 @@ const BossManager = {
           this.boss.height
         );
         bossDibujado = true;
-        console.log(`👹 Boss dibujado con frame ${frameIndex} en nivel 11`);
       }
     }
 
-    // 🔥 FALLBACK AL GIF ESTÁTICO
+    // Fallback a imagen estática
     if (
       !bossDibujado &&
       GameConfig.bossImage &&
@@ -764,18 +963,15 @@ const BossManager = {
         this.boss.height
       );
       bossDibujado = true;
-      console.log("👹 Boss dibujado con imagen estática en nivel 11");
     }
 
-    // 🔥 FALLBACK VISUAL GARANTIZADO (SIEMPRE VISIBLE)
+    // Fallback visual garantizado
     if (!bossDibujado) {
-      console.log("👹 Usando fallback visual para boss en nivel 11");
-
-      // Fondo del boss MÁS VISIBLE
-      ctx.fillStyle = "#8B0000";
+      // Cuerpo principal
+      ctx.fillStyle = auraColor;
       ctx.fillRect(this.boss.x, this.boss.y, this.boss.width, this.boss.height);
 
-      // Borde visible MÁS GRUESO
+      // Bordes múltiples
       ctx.strokeStyle = "#FFFFFF";
       ctx.lineWidth = 4;
       ctx.strokeRect(
@@ -785,207 +981,683 @@ const BossManager = {
         this.boss.height
       );
 
-      // Segundo borde rojo
       ctx.strokeStyle = "#FF0000";
       ctx.lineWidth = 2;
       ctx.strokeRect(
-        this.boss.x + 2,
-        this.boss.y + 2,
-        this.boss.width - 4,
-        this.boss.height - 4
+        this.boss.x + 3,
+        this.boss.y + 3,
+        this.boss.width - 6,
+        this.boss.height - 6
       );
 
-      // Detalles adicionales más visibles
-      ctx.fillStyle = "#FFFFFF";
+      // Características faciales mejoradas
       const centerX = this.boss.x + this.boss.width / 2;
       const centerY = this.boss.y + this.boss.height / 2;
 
-      // Ojos malvados más grandes
-      ctx.fillRect(centerX - 30, centerY - 30, 20, 20);
-      ctx.fillRect(centerX + 10, centerY - 30, 20, 20);
-
-      // Pupilas rojas
+      // Ojos más grandes y expresivos
       ctx.fillStyle = "#FF0000";
-      ctx.fillRect(centerX - 25, centerY - 25, 10, 10);
-      ctx.fillRect(centerX + 15, centerY - 25, 10, 10);
+      ctx.fillRect(centerX - 35, centerY - 35, 25, 25);
+      ctx.fillRect(centerX + 10, centerY - 35, 25, 25);
 
-      // Boca más grande
+      // Pupilas brillantes
       ctx.fillStyle = "#FFFFFF";
-      ctx.fillRect(centerX - 25, centerY + 10, 50, 10);
+      ctx.fillRect(centerX - 30, centerY - 30, 15, 15);
+      ctx.fillRect(centerX + 15, centerY - 30, 15, 15);
 
-      // Texto "BOSS" para identificación
+      // Boca amenazante
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(centerX - 30, centerY + 15, 60, 15);
+
+      // Dientes
+      ctx.fillStyle = "#FFFFFF";
+      for (let i = 0; i < 6; i++) {
+        ctx.fillRect(centerX - 25 + i * 8, centerY + 18, 4, 8);
+      }
+
+      // Texto identificativo
       ctx.fillStyle = "#FFD700";
-      ctx.font = "bold 20px Arial";
+      ctx.font = "bold 18px Arial";
       ctx.textAlign = "center";
-      ctx.fillText("BOSS", centerX, centerY - 50);
-
-      // Texto de vida
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 14px Arial";
-      ctx.fillText(
-        `${this.currentHealth}/${this.maxHealth}`,
-        centerX,
-        centerY + 60
-      );
-
-      console.log("👹 Boss fallback dibujado correctamente en nivel 11");
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 2;
+      ctx.strokeText("BOSS", centerX, centerY - 60);
+      ctx.fillText("BOSS", centerX, centerY - 60);
     }
 
     ctx.restore();
   },
 
-  // 🔥 NUEVO: Función auxiliar para dibujar boss estático
-  drawStaticBoss(ctx) {
-    if (GameConfig.bossImage && GameConfig.bossImage.complete) {
-      ctx.drawImage(
-        GameConfig.bossImage,
-        this.boss.x,
-        this.boss.y,
-        this.boss.width,
-        this.boss.height
-      );
+  /**
+   * 🔥 NUEVO: Dibuja la barra de vida que SIGUE AL BOSS y es más pequeña
+   */
+  drawHealthBar(ctx) {
+    // 🔥 BARRA MÁS PEQUEÑA QUE SIGUE AL BOSS
+    const barWidth = this.boss.width * 1.2; // Proporcional al boss
+    const barHeight = 8; // Más delgada
+    const x = this.boss.x + (this.boss.width - barWidth) / 2; // Centrada sobre el boss
+    const y = this.boss.y - 20; // Encima del boss
+
+    // Fondo de la barra con transparencia
+    ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+    ctx.fillRect(x - 2, y - 2, barWidth + 4, barHeight + 4);
+
+    // Borde más sutil
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, barWidth, barHeight);
+
+    // 🔥 BARRA DE VIDA CON SEGMENTOS
+    const healthPercentage = this.currentHealth / this.maxHealth;
+    const healthWidth = barWidth * healthPercentage;
+
+    // Color según vida restante con transición suave
+    let healthColor;
+    if (healthPercentage > 0.6) {
+      healthColor = "#00FF00"; // Verde
+    } else if (healthPercentage > 0.3) {
+      healthColor = "#FFFF00"; // Amarillo
+    } else if (healthPercentage > 0.15) {
+      healthColor = "#FF8800"; // Naranja
     } else {
-      // Respaldo visual
-      ctx.fillStyle = this.boss.color;
-      ctx.fillRect(this.boss.x, this.boss.y, this.boss.width, this.boss.height);
+      healthColor = "#FF0000"; // Rojo crítico
+    }
 
-      // Detalles adicionales
-      ctx.fillStyle = "#FFFFFF";
-      const centerX = this.boss.x + this.boss.width / 2;
-      const centerY = this.boss.y + this.boss.height / 2;
+    // Barra de vida principal
+    ctx.fillStyle = healthColor;
+    ctx.fillRect(x, y, healthWidth, barHeight);
 
-      // Ojos malvados
-      ctx.fillRect(centerX - 20, centerY - 20, 10, 10);
-      ctx.fillRect(centerX + 10, centerY - 20, 10, 10);
+    // 🔥 EFECTO DE PULSACIÓN EN VIDA BAJA
+    if (healthPercentage < 0.3) {
+      const pulseAlpha = 0.3 + Math.sin(window.getGameTime() * 0.2) * 0.3;
+      ctx.fillStyle = `rgba(255, 0, 0, ${pulseAlpha})`;
+      ctx.fillRect(x, y, healthWidth, barHeight);
+    }
 
-      // Boca
-      ctx.fillRect(centerX - 15, centerY + 10, 30, 5);
+    // 🔥 SEGMENTOS DE VIDA (líneas divisorias)
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+    ctx.lineWidth = 1;
+    for (let i = 1; i < 4; i++) {
+      const segmentX = x + (barWidth / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(segmentX, y);
+      ctx.lineTo(segmentX, y + barHeight);
+      ctx.stroke();
+    }
+
+    // 🔥 TEXTO DE VIDA MÁS PEQUEÑO Y ENCIMA
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 10px Arial";
+    ctx.textAlign = "center";
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 2;
+
+    const healthText = `${this.currentHealth}/${this.maxHealth}`;
+    const textX = this.boss.x + this.boss.width / 2;
+    const textY = y - 8;
+
+    // Contorno negro
+    ctx.strokeText(healthText, textX, textY);
+    // Texto blanco
+    ctx.fillText(healthText, textX, textY);
+
+    // 🔥 INDICADOR DE FASE MÁS PEQUEÑO
+    ctx.font = "bold 8px Arial";
+    ctx.fillStyle = this.isImmune ? "#00FFFF" : "#FFD700";
+    const phaseText = this.isImmune
+      ? `INMUNE - ${this.currentPhase}`
+      : this.currentPhase;
+
+    // Contorno
+    ctx.strokeText(phaseText, textX, textY - 12);
+    // Texto
+    ctx.fillText(phaseText, textX, textY - 12);
+
+    // 🔥 INDICADOR DE INMUNIDAD VISUAL
+    if (this.isImmune) {
+      ctx.strokeStyle = "#00FFFF";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([3, 3]);
+      ctx.strokeRect(x - 3, y - 3, barWidth + 6, barHeight + 6);
+      ctx.setLineDash([]); // Restaurar línea sólida
     }
   },
 
   /**
-   * 🔥 NUEVO: Dibuja la barra de vida ABAJO del boss
+   * 🔥 NUEVO: Inicia secuencia inteligente de minas
    */
-  drawHealthBar(ctx) {
+  startMineSequence() {
+    console.log("💣 Boss iniciando secuencia de minas inteligente");
+
+    this.miningPhase = true;
+    this.mineTimer = 0;
+
+    // Volverse inmune durante toda la secuencia
+    this.makeImmune(480); // 8 segundos de inmunidad total
+
+    // Ir al centro para lanzar minas
+    this.teleportToCenter();
+
+    UI.showScreenMessage("💣 ¡SECUENCIA DE MINAS ACTIVADA!", "#FF8800");
+
+    // Programar 6 minas con patrón inteligente
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => {
+        this.spawnIntelligentMine();
+      }, i * 800); // Una mina cada 0.8 segundos
+    }
+
+    // Terminar secuencia después de las explosiones
+    setTimeout(() => {
+      this.endMineSequence();
+    }, 8000);
+  },
+
+  /**
+   * 🔥 Crear mina inteligente con zona de peligro
+   */
+  spawnIntelligentMine() {
     const canvas = window.getCanvas();
-    const barWidth = canvas.width * 0.4; // Más pequeña
-    const barHeight = 15; // Más delgada
-    const x = (canvas.width - barWidth) / 2;
-    const y = this.boss.y + this.boss.height + 15; // ABAJO del boss
+    const playerPos = Player.getPosition();
 
-    // Fondo de la barra
-    ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-    ctx.fillRect(x - 3, y - 3, barWidth + 6, barHeight + 6);
+    // Posiciones estratégicas que bloquean rutas de escape
+    const strategicPositions = [
+      // Cerca del jugador pero no encima
+      { x: playerPos.x + 100, y: playerPos.y + 100 },
+      { x: playerPos.x - 100, y: playerPos.y + 100 },
+      { x: playerPos.x, y: playerPos.y + 150 },
+      { x: playerPos.x, y: playerPos.y - 150 },
+      // Centros estratégicos
+      { x: canvas.width / 4, y: canvas.height / 2 },
+      { x: (canvas.width * 3) / 4, y: canvas.height / 2 },
+    ];
 
-    // Borde
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, barWidth, barHeight);
+    const position =
+      strategicPositions[this.mines.length % strategicPositions.length];
 
-    // Vida actual
-    const healthPercentage = this.currentHealth / this.maxHealth;
-    const healthWidth = barWidth * healthPercentage;
+    // Ajustar posición para que esté dentro de la pantalla
+    const adjustedX = Math.max(60, Math.min(canvas.width - 60, position.x));
+    const adjustedY = Math.max(60, Math.min(canvas.height - 60, position.y));
 
-    // Color según vida restante
-    let healthColor = "#00FF00";
-    if (healthPercentage < 0.3) healthColor = "#FF0000";
-    else if (healthPercentage < 0.6) healthColor = "#FFFF00";
+    const mine = {
+      x: adjustedX - 20,
+      y: adjustedY - 20,
+      width: 40,
+      height: 40,
+      timer: 240, // 4 segundos para explotar
+      armed: false,
+      blinkTimer: 0,
 
-    ctx.fillStyle = healthColor;
-    ctx.fillRect(x, y, healthWidth, barHeight);
+      // Zona de peligro más clara
+      dangerRadius: 100,
+      showDangerZone: true,
+      warningPhase: false, // Para cambiar color antes de explotar
+    };
 
-    // Texto más pequeño
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 12px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(
-      `${this.currentHealth}/${this.maxHealth}`,
-      canvas.width / 2,
-      y + barHeight / 2 + 4
+    this.mines.push(mine);
+
+    // Efectos visuales mejorados
+    UI.createParticleEffect(adjustedX, adjustedY, "#FF8800", 20);
+    UI.showScreenMessage("💣 ¡MINA COLOCADA!", "#FF8800");
+
+    console.log(`💣 Mina inteligente colocada en (${adjustedX}, ${adjustedY})`);
+  },
+
+  /**
+   * 🔥 Actualizar minas inteligentes
+   */
+  updateIntelligentMines() {
+    for (let i = this.mines.length - 1; i >= 0; i--) {
+      const mine = this.mines[i];
+
+      mine.timer--;
+      mine.blinkTimer++;
+
+      // Armar mina después de 1 segundo
+      if (!mine.armed && mine.timer <= 180) {
+        mine.armed = true;
+        console.log("💣 Mina armada y peligrosa");
+      }
+
+      // Fase de advertencia (últimos 2 segundos)
+      if (mine.timer <= 120) {
+        mine.warningPhase = true;
+      }
+
+      // Explotar mina
+      if (mine.timer <= 0) {
+        this.explodeIntelligentMine(i);
+      }
+    }
+  },
+
+  /**
+   * 🔥 Explosión inteligente de mina
+   */
+  explodeIntelligentMine(index) {
+    if (index < 0 || index >= this.mines.length) return;
+
+    const mine = this.mines[index];
+
+    console.log(`💥 Mina inteligente explotando en (${mine.x}, ${mine.y})`);
+
+    // Efecto visual más espectacular
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => {
+        UI.createParticleEffect(
+          mine.x + mine.width / 2,
+          mine.y + mine.height / 2,
+          i % 2 === 0 ? "#FF8800" : "#FF0000",
+          30
+        );
+      }, i * 100);
+    }
+
+    // Verificar daño al jugador
+    const player = Player;
+    const playerPos = player.getPosition();
+    const playerSize = player.getSize();
+
+    const distance = Math.sqrt(
+      Math.pow(
+        playerPos.x + playerSize.width / 2 - (mine.x + mine.width / 2),
+        2
+      ) +
+        Math.pow(
+          playerPos.y + playerSize.height / 2 - (mine.y + mine.height / 2),
+          2
+        )
     );
 
-    // Indicador de fase más pequeño
-    ctx.font = "bold 10px Arial";
-    ctx.fillText(
-      `FASE ${this.currentPhase}`,
-      canvas.width / 2,
-      y + barHeight + 15
+    if (distance < mine.dangerRadius) {
+      player.takeDamage();
+      UI.showScreenMessage("💥 ¡DAÑADO POR MINA!", "#FF0000");
+      console.log("💥 Jugador dañado por explosión de mina");
+    }
+
+    // Eliminar mina
+    this.mines.splice(index, 1);
+
+    AudioManager.playSound("explosion");
+  },
+
+  /**
+   * 🔥 Terminar secuencia de minas
+   */
+  endMineSequence() {
+    console.log("💣 Secuencia de minas terminada");
+
+    this.miningPhase = false;
+    this.mines = []; // Limpiar minas restantes
+
+    UI.showScreenMessage("⚔️ ¡BOSS VULNERABLE OTRA VEZ!", "#00FF00");
+
+    // El boss vuelve a ser vulnerable y móvil
+    this.isImmune = false;
+    this.immunityTimer = 0;
+  },
+
+  /**
+   * 🔥 Minas rápidas para fase final
+   */
+  spawnQuickMines(count) {
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const canvas = window.getCanvas();
+
+        const mine = {
+          x: 100 + Math.random() * (canvas.width - 200),
+          y: 100 + Math.random() * (canvas.height - 200),
+          width: 30,
+          height: 30,
+          timer: 180, // 3 segundos solamente
+          armed: true,
+          blinkTimer: 0,
+          dangerRadius: 80,
+          showDangerZone: true,
+          warningPhase: true, // Inmediatamente en advertencia
+        };
+
+        this.mines.push(mine);
+        UI.createParticleEffect(mine.x + 15, mine.y + 15, "#FF4400", 15);
+      }, i * 200);
+    }
+
+    UI.showScreenMessage("💣 ¡MINAS RÁPIDAS!", "#FF4400");
+  },
+
+  /**
+   * 🔥 NUEVO: Sistema de balas estilo Touhou
+   */
+  startBulletPattern() {
+    const patterns = ["spiral", "walls", "cross", "rain"];
+    this.patternType = patterns[Math.floor(Math.random() * patterns.length)];
+
+    console.log(`🌟 Boss iniciando patrón: ${this.patternType}`);
+
+    // Volverse inmune durante el patrón
+    this.makeImmune(300); // 5 segundos
+
+    // Ir al centro para mejor posicionamiento
+    this.teleportToCenter();
+
+    switch (this.patternType) {
+      case "spiral":
+        this.createSpiralPattern();
+        break;
+      case "walls":
+        this.createWallPattern();
+        break;
+      case "cross":
+        this.createCrossPattern();
+        break;
+      case "rain":
+        this.createRainPattern();
+        break;
+    }
+
+    UI.showScreenMessage(
+      `🌟 PATRÓN ${this.patternType.toUpperCase()}!`,
+      "#FFD700"
     );
   },
 
   /**
-   * 🔥 NUEVO: Dibuja zona de peligro de las minas
+   * 🔥 Patrón espiral de balas
    */
-  drawMines(ctx) {
-    for (const mine of this.mines) {
+  createSpiralPattern() {
+    let angle = 0;
+    let spiralTimer = 0;
+
+    const spiralInterval = setInterval(() => {
+      if (!this.active || spiralTimer > 240) {
+        // 4 segundos
+        clearInterval(spiralInterval);
+        return;
+      }
+
+      // Crear 3 balas por frame en espiral
+      for (let i = 0; i < 3; i++) {
+        const bulletAngle = angle + (i * Math.PI * 2) / 3;
+        this.createTouhouBullet(bulletAngle, 0.003, "#FF6B6B");
+      }
+
+      angle += 0.2;
+      spiralTimer++;
+    }, 50); // Cada 50ms
+  },
+
+  /**
+   * 🔥 Patrón de muros con espacios
+   */
+  createWallPattern() {
+    let wallCount = 0;
+
+    const wallInterval = setInterval(() => {
+      if (!this.active || wallCount >= 4) {
+        clearInterval(wallInterval);
+        return;
+      }
+
+      this.createWallOfBullets();
+      wallCount++;
+    }, 1000); // Un muro cada segundo
+  },
+
+  /**
+   * 🔥 Crear muro de balas con espacios para esquivar
+   */
+  createWallOfBullets() {
+    const canvas = window.getCanvas();
+    const bulletCount = 15;
+    const playerPos = Player.getPosition();
+
+    // Crear espacio para esquivar cerca del jugador
+    const safeZoneStart =
+      Math.floor((playerPos.x / canvas.width) * bulletCount) - 1;
+    const safeZoneEnd = safeZoneStart + 2;
+
+    for (let i = 0; i < bulletCount; i++) {
+      // No crear balas en la zona segura
+      if (i >= safeZoneStart && i <= safeZoneEnd) continue;
+
+      const x = (canvas.width / bulletCount) * i;
+      const bullet = {
+        x: x,
+        y: -20,
+        width: 12,
+        height: 12,
+        velocityX: 0,
+        velocityY: 0.004 * canvas.height,
+        color: "#4ECDC4",
+        life: 300,
+        type: "touhou",
+      };
+
+      this.bulletPatterns.push(bullet);
+    }
+
+    console.log("🧱 Muro de balas creado con zona segura");
+  },
+
+  /**
+   * 🔥 Patrón en cruz
+   */
+  createCrossPattern() {
+    let crossTimer = 0;
+
+    const crossInterval = setInterval(() => {
+      if (!this.active || crossTimer > 180) {
+        // 3 segundos
+        clearInterval(crossInterval);
+        return;
+      }
+
+      // Disparar en 4 direcciones principales
+      const directions = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
+
+      directions.forEach((angle) => {
+        this.createTouhouBullet(angle, 0.004, "#9B59B6");
+      });
+
+      // Direcciones diagonales cada 30 frames
+      if (crossTimer % 30 === 0) {
+        const diagonals = [
+          Math.PI / 4,
+          (3 * Math.PI) / 4,
+          (5 * Math.PI) / 4,
+          (7 * Math.PI) / 4,
+        ];
+        diagonals.forEach((angle) => {
+          this.createTouhouBullet(angle, 0.003, "#E74C3C");
+        });
+      }
+
+      crossTimer++;
+    }, 100); // Cada 100ms
+  },
+
+  /**
+   * 🔥 Patrón de lluvia dirigida
+   */
+  createRainPattern() {
+    let rainTimer = 0;
+
+    const rainInterval = setInterval(() => {
+      if (!this.active || rainTimer > 200) {
+        // 3.3 segundos
+        clearInterval(rainInterval);
+        return;
+      }
+
+      // Disparar hacia la posición del jugador con dispersión
+      const playerPos = Player.getPosition();
+      const playerSize = Player.getSize();
+
+      const targetX = playerPos.x + playerSize.width / 2;
+      const targetY = playerPos.y + playerSize.height / 2;
+
+      const bossCenterX = this.boss.x + this.boss.width / 2;
+      const bossCenterY = this.boss.y + this.boss.height / 2;
+
+      const baseAngle = Math.atan2(
+        targetY - bossCenterY,
+        targetX - bossCenterX
+      );
+
+      // Crear 3 balas con ligera dispersión
+      for (let i = 0; i < 3; i++) {
+        const spreadAngle = baseAngle + (Math.random() - 0.5) * 0.5;
+        this.createTouhouBullet(spreadAngle, 0.005, "#F39C12");
+      }
+
+      rainTimer++;
+    }, 80); // Cada 80ms
+  },
+
+  /**
+   * 🔥 Crear bala Touhou individual
+   */
+  createTouhouBullet(angle, speed, color) {
+    const canvas = window.getCanvas();
+    const bossCenterX = this.boss.x + this.boss.width / 2;
+    const bossCenterY = this.boss.y + this.boss.height / 2;
+
+    const bullet = {
+      x: bossCenterX - 6,
+      y: bossCenterY - 6,
+      width: 12,
+      height: 12,
+      velocityX: Math.cos(angle) * speed * canvas.width,
+      velocityY: Math.sin(angle) * speed * canvas.height,
+      color: color,
+      life: 400, // Vida larga para cruzar pantalla
+      type: "touhou",
+      glowIntensity: 0,
+    };
+
+    this.bulletPatterns.push(bullet);
+  },
+
+  /**
+   * 🔥 Actualizar todas las balas Touhou
+   */
+  updateBulletPatterns() {
+    const canvas = window.getCanvas();
+
+    for (let i = this.bulletPatterns.length - 1; i >= 0; i--) {
+      const bullet = this.bulletPatterns[i];
+
+      // Mover bala
+      bullet.x += bullet.velocityX;
+      bullet.y += bullet.velocityY;
+      bullet.life--;
+
+      // Efecto de brillo
+      bullet.glowIntensity = 0.5 + Math.sin(window.getGameTime() * 0.3) * 0.3;
+
+      // Verificar colisión con jugador
+      const playerPos = Player.getPosition();
+      const playerSize = Player.getSize();
+
+      if (
+        bullet.x < playerPos.x + playerSize.width &&
+        bullet.x + bullet.width > playerPos.x &&
+        bullet.y < playerPos.y + playerSize.height &&
+        bullet.y + bullet.height > playerPos.y
+      ) {
+        // Jugador golpeado por bala Touhou
+        Player.takeDamage();
+        this.bulletPatterns.splice(i, 1);
+        continue;
+      }
+
+      // Eliminar balas fuera de pantalla o sin vida
+      if (
+        bullet.life <= 0 ||
+        bullet.x < -50 ||
+        bullet.x > canvas.width + 50 ||
+        bullet.y < -50 ||
+        bullet.y > canvas.height + 50
+      ) {
+        this.bulletPatterns.splice(i, 1);
+      }
+    }
+  },
+
+  /**
+   * 🔥 Dibujar balas Touhou
+   */
+  drawBulletPatterns(ctx) {
+    for (const bullet of this.bulletPatterns) {
       ctx.save();
 
-      // 🔥 DIBUJAR ZONA DE PELIGRO ROJA
-      if (mine.showDangerZone) {
-        ctx.beginPath();
-        ctx.arc(
-          mine.x + mine.width / 2,
-          mine.y + mine.height / 2,
-          mine.dangerRadius,
-          0,
-          Math.PI * 2
-        );
-        ctx.strokeStyle = "#FF0000";
-        ctx.setLineDash([5, 5]); // Línea punteada
-        ctx.lineWidth = 2;
-        ctx.globalAlpha = 0.6;
-        ctx.stroke();
-        ctx.setLineDash([]); // Restaurar línea sólida
-      }
+      // Efecto de brillo
+      ctx.shadowColor = bullet.color;
+      ctx.shadowBlur = 8 + bullet.glowIntensity * 5;
 
-      // Parpadeo cuando está por explotar
-      const timeLeft = mine.timer;
-      if (timeLeft < 60) {
-        mine.blinkTimer++;
-        if (mine.blinkTimer % 8 < 4) {
-          ctx.globalAlpha = 0.3;
-        }
-      }
+      // Dibujar bala circular con brillo
+      ctx.fillStyle = bullet.color;
+      ctx.beginPath();
+      ctx.arc(
+        bullet.x + bullet.width / 2,
+        bullet.y + bullet.height / 2,
+        bullet.width / 2,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
 
-      // Color según estado
-      ctx.fillStyle = mine.armed ? "#FF0000" : "#FF8800";
-      ctx.shadowColor = ctx.fillStyle;
-      ctx.shadowBlur = 12;
-
-      // Dibujar mina más grande
-      ctx.fillRect(mine.x, mine.y, mine.width, mine.height);
-
-      // Indicador visual
+      // Núcleo brillante
       ctx.fillStyle = "#FFFFFF";
-      ctx.fillRect(mine.x + 12, mine.y + 12, 11, 11);
+      ctx.beginPath();
+      ctx.arc(
+        bullet.x + bullet.width / 2,
+        bullet.y + bullet.height / 2,
+        bullet.width / 4,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
 
       ctx.restore();
+    }
+  },
+
+  /**
+   * 🔥 AGREGAR: Movimiento agresivo para fase final
+   */
+  aggressiveMovement() {
+    const playerPos = Player.getPosition();
+    const playerSize = Player.getSize();
+
+    const playerCenterX = playerPos.x + playerSize.width / 2;
+    const playerCenterY = playerPos.y + playerSize.height / 2;
+    const bossCenterX = this.boss.x + this.boss.width / 2;
+    const bossCenterY = this.boss.y + this.boss.height / 2;
+
+    const dx = playerCenterX - bossCenterX;
+    const dy = playerCenterY - bossCenterY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Movimiento más agresivo y rápido
+    const speed = this.boss.moveSpeed * 2.0;
+    this.boss.velocityX += (dx / distance) * speed * 0.4;
+    this.boss.velocityY += (dy / distance) * speed * 0.4;
+
+    // Límite de velocidad más alto
+    const maxSpeed = this.boss.moveSpeed * 3;
+    const currentSpeed = Math.sqrt(
+      this.boss.velocityX ** 2 + this.boss.velocityY ** 2
+    );
+    if (currentSpeed > maxSpeed) {
+      this.boss.velocityX = (this.boss.velocityX / currentSpeed) * maxSpeed;
+      this.boss.velocityY = (this.boss.velocityY / currentSpeed) * maxSpeed;
     }
   },
 
   // ======================================================
   // UTILIDADES Y GETTERS
   // ======================================================
-
-  /**
-   * Obtiene la configuración de la fase actual
-   */
-  getPhaseConfig() {
-    const config = GameConfig.BOSS_CONFIG.phases;
-
-    switch (this.currentPhase) {
-      case 1:
-        return config.phase1;
-      case 2:
-        return config.phase2;
-      case 3:
-        return config.phase3;
-      case 4:
-        return config.finalPhase;
-      default:
-        return config.phase1;
-    }
-  },
 
   /**
    * Verifica colisión entre dos objetos
@@ -1023,24 +1695,38 @@ const BossManager = {
   },
 
   /**
-   * Resetea el sistema del boss
+   * Resetea el sistema del boss - LIMPIO
    */
   reset() {
     this.boss = null;
     this.active = false;
-    this.currentHealth = 50;
-    this.maxHealth = 50;
-    this.currentPhase = 1;
+
+    // Sistema de vida
+    this.currentHealth = 200;
+    this.maxHealth = 200;
+
+    // Sistema de fases inteligente
+    this.currentPhase = "SUMMONING";
+    this.phaseTimer = 0;
+    this.phaseActive = false;
+    this.phaseCooldown = 0;
+
+    // Sistemas de ataque
+    this.bulletPatterns = [];
+    this.patternType = "none";
+
+    // Estado básico
     this.isImmune = false;
     this.immunityTimer = 0;
-    this.summonTimer = 0;
-    this.teleportTimer = 0;
-    this.teleportCooldown = 0;
     this.mines = [];
     this.mineTimer = 0;
     this.miningPhase = false;
 
-    console.log("👹 Sistema del boss reseteado");
+    // Comentarios
+    this.lastCommentTime = 0;
+    this.commentCooldown = 300;
+
+    console.log("👹 Sistema del boss inteligente reseteado");
   },
 
   /**
