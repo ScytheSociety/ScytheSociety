@@ -344,7 +344,7 @@ const BulletManager = {
   },
 
   /**
-   * Verifica colisiones de un array de balas
+   * 🔥 CORREGIDO: Verificar colisiones de un array de balas - NO resetear contador en boss level
    */
   checkBulletCollisions(bulletArray, enemies, isSpecial) {
     let enemiesKilled = 0;
@@ -399,8 +399,17 @@ const BulletManager = {
           window.ComboSystem.addKill();
         }
 
-        // Notificar al EnemyManager
-        EnemyManager.enemiesKilled++;
+        // 🔥 CORRECCIÓN: Solo incrementar contador global si NO es esbirro del boss
+        if (!enemy.isBossMinion) {
+          EnemyManager.enemiesKilled++;
+          console.log(
+            `🎯 Enemigo normal eliminado. Total: ${EnemyManager.enemiesKilled}`
+          );
+        } else {
+          console.log(
+            `👹 Esbirro del boss eliminado (no cuenta para total global)`
+          );
+        }
 
         // Calcular puntos con combo
         const basePoints = 10 * window.getLevel();
@@ -437,7 +446,7 @@ const BulletManager = {
   },
 
   /**
-   * Crea una explosión épica
+   * 🔥 CORREGIDO: Crear explosión épica - NO incrementar contador para esbirros
    */
   createExplosion(center, enemies) {
     const explosionRadius = 140; // Radio más grande
@@ -461,8 +470,17 @@ const BulletManager = {
       if (distance < explosionRadius) {
         enemies.splice(i, 1);
 
-        // Notificar al EnemyManager
-        EnemyManager.enemiesKilled++;
+        // 🔥 CORRECCIÓN: Solo incrementar contador global si NO es esbirro del boss
+        if (!enemy.isBossMinion) {
+          EnemyManager.enemiesKilled++;
+          console.log(
+            `💥 Enemigo normal eliminado por explosión. Total: ${EnemyManager.enemiesKilled}`
+          );
+        } else {
+          console.log(
+            `💥 Esbirro del boss eliminado por explosión (no cuenta para total)`
+          );
+        }
 
         // 🔥 INCREMENTAR COMBO
         if (window.ComboSystem) {

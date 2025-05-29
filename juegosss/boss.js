@@ -408,7 +408,7 @@ const BossManager = {
   },
 
   /**
-   * 🔥 NUEVO: Invocación inteligente de enemigos
+   * 🔥 CORREGIDO: Invocación inteligente de enemigos SIN resetear contador global
    */
   summonIntelligentEnemies(count) {
     const canvas = window.getCanvas();
@@ -1692,7 +1692,7 @@ const BossManager = {
   },
 
   /**
-   * 🔥 Actualizar todas las balas Touhou
+   * 🔥 CORREGIDO: Actualizar balas Touhou con mejor manejo de muerte
    */
   updateBulletPatterns() {
     const canvas = window.getCanvas();
@@ -1708,37 +1708,42 @@ const BossManager = {
       // Efecto de brillo
       bullet.glowIntensity = 0.5 + Math.sin(window.getGameTime() * 0.3) * 0.3;
 
-      // Verificar colisión con jugador
-      const playerPos = Player.getPosition();
-      const playerSize = Player.getSize();
+      // 🔥 VERIFICACIÓN MEJORADA: Solo verificar colisión si el jugador está vivo
+      if (Player.getLives() > 0) {
+        const playerPos = Player.getPosition();
+        const playerSize = Player.getSize();
 
-      // 🔥 AGRANDAR ÁREA DE COLISIÓN DE LAS BALAS
-      const bulletHitbox = 8; // Área de colisión más grande
-      const playerHitbox = 4; // Reducir hitbox del jugador para ser más justo
+        // Verificar colisión con hitbox más precisa
+        if (
+          bullet.x < playerPos.x + playerSize.width &&
+          bullet.x + bullet.width > playerPos.x &&
+          bullet.y < playerPos.y + playerSize.height &&
+          bullet.y + bullet.height > playerPos.y
+        ) {
+          console.log("💥 Bala Touhou impactó al jugador");
 
-      if (
-        bullet.x < playerPos.x + playerSize.width &&
-        bullet.x + bullet.width > playerPos.x &&
-        bullet.y < playerPos.y + playerSize.height &&
-        bullet.y + bullet.height > playerPos.y
-      ) {
-        // Jugador golpeado por bala Touhou
-        console.log("💥 Bala Touhou impactó al jugador");
-        const playerDied = Player.takeDamage();
-        this.bulletPatterns.splice(i, 1);
+          // Eliminar la bala ANTES de aplicar daño
+          this.bulletPatterns.splice(i, 1);
 
-        // 🔥 SI EL JUGADOR MURIÓ, DETENER TODO
-        if (Player.getLives() <= 0) {
-          console.log("💀 Jugador murió por bala Touhou");
-          setTimeout(() => {
-            if (window.gameOver) {
-              window.gameOver();
-            }
-          }, 100);
-          return; // Salir de la función inmediatamente
+          // 🔥 APLICAR DAÑO Y VERIFICAR RESULTADO
+          const playerDied = Player.takeDamage();
+
+          // 🔥 VERIFICACIÓN INMEDIATA: Si el jugador murió, activar game over
+          if (Player.getLives() <= 0) {
+            console.log(
+              "💀 Jugador murió por bala Touhou - activando game over inmediatamente"
+            );
+            // Usar setTimeout para evitar conflictos de estado
+            setTimeout(() => {
+              if (window.gameOver && typeof window.gameOver === "function") {
+                window.gameOver();
+              }
+            }, 50); // 50ms de delay para asegurar que el estado se actualice
+            return; // Salir inmediatamente de la función
+          }
+
+          continue; // Continuar con la siguiente bala
         }
-
-        continue;
       }
 
       // Eliminar balas fuera de pantalla o sin vida

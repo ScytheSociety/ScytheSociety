@@ -399,10 +399,7 @@ function drawSpecialEffects(ctx) {
 }
 
 /**
- * Verificar todas las colisiones - CORREGIDO PARA NIVEL 11
- */
-/**
- * Verificar todas las colisiones - CORREGIDO PARA NIVEL 11 Y MUERTE
+ * 🔥 CORREGIDO: Verificar colisiones con mejor manejo de muerte del jugador
  */
 function checkCollisions() {
   // 🔥 VERIFICACIÓN INICIAL: Si el jugador ya está muerto, no verificar más colisiones
@@ -527,7 +524,7 @@ function checkCollisions() {
       }
     }
 
-    // 🔥 NUEVO: Verificar balas Touhou (esto se maneja en boss.js pero agregamos verificación extra)
+    // 🔥 VERIFICACIÓN MEJORADA: Balas Touhou vs Jugador
     if (BossManager.bulletPatterns && BossManager.bulletPatterns.length > 0) {
       const playerPos = Player.getPosition();
       const playerSize = Player.getSize();
@@ -535,40 +532,44 @@ function checkCollisions() {
       for (let i = BossManager.bulletPatterns.length - 1; i >= 0; i--) {
         const bullet = BossManager.bulletPatterns[i];
 
-        // Verificación de colisión mejorada para balas pequeñas
-        const bulletHitbox = 8; // Área de colisión más grande para las balas
-        const playerHitbox = 4; // Reducir hitbox del jugador para ser más justo
-
+        // Verificación de colisión precisa para balas pequeñas
         if (
-          bullet.x + bulletHitbox > playerPos.x - playerHitbox &&
-          bullet.x - bulletHitbox <
-            playerPos.x + playerSize.width + playerHitbox &&
-          bullet.y + bulletHitbox > playerPos.y - playerHitbox &&
-          bullet.y - bulletHitbox <
-            playerPos.y + playerSize.height + playerHitbox
+          bullet.x < playerPos.x + playerSize.width &&
+          bullet.x + bullet.width > playerPos.x &&
+          bullet.y < playerPos.y + playerSize.height &&
+          bullet.y + bullet.height > playerPos.y
         ) {
           console.log("💥 Bala Touhou impactó al jugador en checkCollisions");
 
-          // Eliminar la bala
+          // Eliminar la bala ANTES de aplicar daño
           BossManager.bulletPatterns.splice(i, 1);
 
-          // Dañar al jugador
+          // 🔥 APLICAR DAÑO DIRECTAMENTE Y VERIFICAR RESULTADO INMEDIATO
+          const previousLives = Player.getLives();
           Player.takeDamage();
+          const currentLives = Player.getLives();
+
           console.log(
-            `💔 Jugador dañado por bala Touhou. Vidas restantes: ${Player.getLives()}`
+            `💔 Vida antes: ${previousLives}, después: ${currentLives}`
           );
 
-          if (Player.getLives() <= 0) {
-            console.log("💀 Jugador murió por bala Touhou en checkCollisions");
-            gameOver();
-            return;
+          // 🔥 VERIFICACIÓN INMEDIATA Y EXPLÍCITA
+          if (currentLives <= 0) {
+            console.log(
+              "💀 Jugador murió por bala Touhou - activando game over AHORA"
+            );
+            // Usar setTimeout muy corto para evitar condiciones de carrera
+            setTimeout(() => {
+              gameOver();
+            }, 10);
+            return; // Salir inmediatamente
           }
         }
       }
     }
   }
 
-  // 🔥 VERIFICACIÓN FINAL: Double-check de muerte
+  // 🔥 VERIFICACIÓN FINAL: Double-check de muerte (solo si no se ejecutó antes)
   if (Player.getLives() <= 0 && !gameEnded) {
     console.log("💀 Verificación final detectó muerte del jugador");
     gameOver();
