@@ -82,8 +82,8 @@ const EnemyManager = {
     const level = window.getLevel();
 
     // 🔥 TAMAÑOS BALANCEADOS - NO TAN GRANDES
-    const baseMinSize = 45; // Reducido de 60 a 45
-    const baseMaxSize = 75; // Reducido de 100 a 75
+    const baseMinSize = 35; // Reducido de 40 a 35px
+    const baseMaxSize = 65; // Reducido de 80 a 65px
 
     // Crecimiento progresivo más controlado por nivel
     const sizeBonus = level * 5; // Reducido de 8 a 5px por nivel
@@ -309,6 +309,8 @@ const EnemyManager = {
 
     // 🔥 Factor de tiempo lento si está activo
     const slowFactor = window.slowMotionActive ? window.slowMotionFactor : 1.0;
+    // Aplicar factor lento a TODOS los movimientos de rebote también
+    const bounceSlowFactor = slowFactor;
 
     for (let i = 0; i < this.enemies.length; i++) {
       const enemy = this.enemies[i];
@@ -326,12 +328,14 @@ const EnemyManager = {
 
       // Rebotes en paredes laterales
       if (enemy.x <= 0) {
-        enemy.velocityX = Math.abs(enemy.velocityX) * bounceMultiplierX;
+        enemy.velocityX =
+          Math.abs(enemy.velocityX) * bounceMultiplierX * bounceSlowFactor;
         enemy.x = 0;
         enemy.velocityY *= 0.9 + Math.random() * 0.2;
         enemy.bounceCount++;
       } else if (enemy.x + enemy.width >= canvas.width) {
-        enemy.velocityX = -Math.abs(enemy.velocityX) * bounceMultiplierX;
+        enemy.velocityX =
+          -Math.abs(enemy.velocityX) * bounceMultiplierX * bounceSlowFactor;
         enemy.x = canvas.width - enemy.width;
         enemy.velocityY *= 0.9 + Math.random() * 0.2;
         enemy.bounceCount++;
@@ -339,14 +343,16 @@ const EnemyManager = {
 
       // Rebote en techo
       if (enemy.y <= 0) {
-        enemy.velocityY = Math.abs(enemy.velocityY) * bounceMultiplierY;
+        enemy.velocityY =
+          Math.abs(enemy.velocityY) * bounceMultiplierY * bounceSlowFactor;
         enemy.y = 0;
         enemy.bounceCount++;
       }
 
       // Rebote en suelo - SIEMPRE hacia arriba
       if (enemy.y + enemy.height >= canvas.height) {
-        enemy.velocityY = -Math.abs(enemy.velocityY) * bounceMultiplierY;
+        enemy.velocityY =
+          -Math.abs(enemy.velocityY) * bounceMultiplierY * bounceSlowFactor;
         enemy.y = canvas.height - enemy.height;
         enemy.velocityX += (Math.random() - 0.5) * (canvas.width * 0.004); // Más variación
         enemy.bounceCount++;

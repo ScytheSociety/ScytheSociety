@@ -575,7 +575,7 @@ const UI = {
         position: relative;
         overflow: hidden;
       ">
-        🔥 ¡COMENZAR BATALLA! 🔥
+        ✅ ¡AHORA VE A JUGAR! ✅
       </button>
     </div>
 
@@ -814,16 +814,20 @@ const UI = {
     volumeButton.style.position = "fixed";
     volumeButton.style.top = "60px";
     volumeButton.style.right = "15px";
-    volumeButton.style.width = "50px";
-    volumeButton.style.height = "50px";
+    volumeButton.style.width = "45px";
+    volumeButton.style.height = "45px";
     volumeButton.style.borderRadius = "50%";
-    volumeButton.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+    volumeButton.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
     volumeButton.style.border = "2px solid #8B0000";
     volumeButton.style.color = "#FFFFFF";
-    volumeButton.style.fontSize = "18px";
+    volumeButton.style.fontSize = "16px";
     volumeButton.style.cursor = "pointer";
     volumeButton.style.zIndex = "1001";
     volumeButton.style.transition = "all 0.3s ease";
+    volumeButton.style.display = "flex";
+    volumeButton.style.alignItems = "center";
+    volumeButton.style.justifyContent = "center";
+    volumeButton.style.boxShadow = "0 2px 8px rgba(0,0,0,0.5)";
     volumeButton.textContent = "🔊";
 
     let volumeStates = [1.0, 0.5, 0.25, 0.0]; // 100%, 50%, 25%, mute

@@ -77,8 +77,8 @@ const ComboSystem = {
 
     // 🔥 POSICIÓN Y TAMAÑO CORREGIDOS
     this.comboDisplay.style.position = "fixed";
-    this.comboDisplay.style.bottom = "120px"; // MÁS ARRIBA, no tapa el poder especial
-    this.comboDisplay.style.left = "15px"; // Más cerca del borde
+    this.comboDisplay.style.bottom = "25px"; // Mismo nivel que poder especial
+    this.comboDisplay.style.left = "15px"; // Paralelo al botón de poder
     this.comboDisplay.style.backgroundColor = "rgba(0, 0, 0, 0.85)";
     this.comboDisplay.style.color = "#FFFFFF";
     this.comboDisplay.style.padding = "6px 10px"; // MÁS PEQUEÑO
@@ -494,7 +494,7 @@ const ComboSystem = {
     console.log("🌊 Activando tiempo lento submarino por 8 segundos");
 
     window.slowMotionActive = true;
-    window.slowMotionFactor = 0.12;
+    window.slowMotionFactor = 0.08;
 
     setTimeout(() => {
       window.slowMotionActive = false;

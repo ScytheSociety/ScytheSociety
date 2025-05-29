@@ -168,10 +168,24 @@ input:focus {
 
 .button-container {
   display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.main-play-button {
+  font-size: 1.3em !important;
+  padding: 18px 35px !important;
+  min-width: 200px !important;
+  transform: scale(1.1);
+}
+
+.secondary-buttons {
+  display: flex;
   gap: 20px;
-  margin-top: 15px;
-  flex-wrap: wrap;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 button,

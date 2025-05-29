@@ -209,13 +209,10 @@ function startGame() {
   // Configurar controles
   Player.setupControls(canvas);
 
-  // Mostrar instrucciones épicas
-  UI.showInstructions(() => {
-    // Callback cuando se confirman las instrucciones
-    startGameLoop();
-  });
+  // Iniciar directamente el juego (SIN instrucciones)
+  startGameLoop();
 
-  console.log("🚀 Juego ÉPICO iniciado");
+  console.log("🚀 Juego ÉPICO iniciado directamente");
 }
 
 /**

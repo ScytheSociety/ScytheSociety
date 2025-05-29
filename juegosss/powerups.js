@@ -213,7 +213,7 @@ const PowerUpManager = {
 
     // 🔥 Power-ups CON DURACIÓN BALANCEADA
     const types = [
-      { id: 0, name: "Balas Penetrantes", color: "#FFFF00", duration: 180 }, // 3 segundos
+      { id: 0, name: "Escudo Protector", color: "#00FF00", duration: 180 }, // 3 segundos
       { id: 1, name: "Disparo Amplio", color: "#00FFFF", duration: 240 }, // 4 segundos
       { id: 2, name: "Balas Explosivas", color: "#FF8800", duration: 180 }, // 3 segundos
       { id: 3, name: "Disparo Rápido", color: "#FF00FF", duration: 300 }, // 5 segundos
@@ -389,8 +389,8 @@ const PowerUpManager = {
       let symbol = "?";
       switch (powerUp.type.id) {
         case 0:
-          symbol = "→";
-          break; // Penetrante
+          symbol = "🛡️";
+          break; // Escudo
         case 1:
           symbol = "↑";
           break; // Amplio

@@ -593,7 +593,7 @@ const Player = {
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
       ctx.strokeStyle = `${powerUp.type.color}40`; // 25% opacity
-      ctx.lineWidth = 8;
+      ctx.lineWidth = 5;
       ctx.stroke();
 
       // Círculo de progreso
@@ -607,7 +607,7 @@ const Player = {
           -Math.PI / 2 + Math.PI * 2 * timeProgress
         );
         ctx.strokeStyle = powerUp.type.color;
-        ctx.lineWidth = 8;
+        ctx.lineWidth = 5;
         ctx.stroke();
       }
     }
