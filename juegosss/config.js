@@ -121,12 +121,12 @@ const GameConfig = {
 
     // Tipos de power-ups
     types: {
-      PENETRATING: {
-        id: 0,
-        name: "Balas Penetrantes",
-        color: "#FFFF00",
-        duration: 8000, // 8 segundos
-        description: "Las balas atraviesan hasta 3 enemigos",
+      SHIELD: {
+        id: 0, // Mantener el mismo ID para no romper el sistema
+        name: "Escudo Protector",
+        color: "#00FF00",
+        duration: 4000, // 4 segundos
+        description: "Inmunidad total al daño",
       },
       WIDE_SHOT: {
         id: 1,

@@ -260,61 +260,11 @@ const UI = {
    * 🔥 CORREGIDO: Actualiza el indicador de power-up activo con múltiples poderes
    */
   updatePowerUpIndicator() {
-    // 🔥 NUEVO: Obtener TODOS los power-ups activos
-    const activePowerUps = Player.activePowerUps || [];
-
-    if (activePowerUps.length > 0) {
-      let indicator = document.getElementById("power-up-indicator");
-
-      if (!indicator) {
-        // Crear indicador
-        indicator = document.createElement("div");
-        indicator.id = "power-up-indicator";
-        indicator.style.position = "fixed";
-        indicator.style.bottom = "20px";
-        indicator.style.left = "20px";
-        indicator.style.padding = "8px 15px";
-        indicator.style.borderRadius = "20px";
-        indicator.style.fontSize = "12px";
-        indicator.style.fontWeight = "bold";
-        indicator.style.transition = "all 0.3s";
-        indicator.style.zIndex = "100";
-        indicator.style.fontFamily = '"Arial", sans-serif';
-        indicator.style.maxWidth = "200px";
-        document.body.appendChild(indicator);
-      }
-
-      // 🔥 MOSTRAR TODOS LOS POWER-UPS ACTIVOS
-      let powerUpText = "";
-      let dominantColor = activePowerUps[0].type.color;
-
-      for (let i = 0; i < activePowerUps.length; i++) {
-        const powerUp = activePowerUps[i];
-        const timeLeft = Math.ceil(powerUp.timeLeft / 60);
-
-        if (i > 0) powerUpText += " + ";
-        powerUpText += `${powerUp.type.name}: ${timeLeft}s`;
-      }
-
-      indicator.textContent = powerUpText;
-      indicator.style.backgroundColor = dominantColor;
-      indicator.style.color = "#FFFFFF";
-      indicator.style.boxShadow = `0 0 10px ${dominantColor}`;
-
-      // Parpadeo cuando alguno está por terminar
-      const anyExpiring = activePowerUps.some((p) => p.timeLeft < 60);
-      if (anyExpiring) {
-        indicator.style.opacity =
-          Math.sin(window.getGameTime() * 0.2) * 0.5 + 0.5;
-      } else {
-        indicator.style.opacity = "1";
-      }
-    } else {
-      // Eliminar indicador si no hay power-ups
-      const indicator = document.getElementById("power-up-indicator");
-      if (indicator && indicator.parentNode) {
-        indicator.parentNode.removeChild(indicator);
-      }
+    // Ya no necesitamos indicador separado,
+    // los círculos de tiempo están en el personaje
+    const indicator = document.getElementById("power-up-indicator");
+    if (indicator && indicator.parentNode) {
+      indicator.parentNode.removeChild(indicator);
     }
   },
 
@@ -447,6 +397,23 @@ const UI = {
     }
   },
 
+  /**
+   * Determina el color de texto apropiado según el fondo
+   */
+  getContrastColor(backgroundColor) {
+    // Convertir hex a RGB
+    const hex = backgroundColor.replace("#", "");
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+
+    // Calcular luminancia
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // Retornar negro o blanco según luminancia
+    return luminance > 0.5 ? "#000000" : "#FFFFFF";
+  },
+
   // ======================================================
   // PANTALLAS Y MODALES - CORREGIDO
   // ======================================================
@@ -544,8 +511,8 @@ const UI = {
         justify-content: center;
         font-size: 11px;
       ">
-        <span style="background: rgba(255,255,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,255,0,0.5);">
-          🟡 Penetrantes
+        <span style="background: rgba(0,255,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(0,255,0,0.5);">
+          🟢 Escudo (4s)
         </span>
         <span style="background: rgba(0,255,255,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(0,255,255,0.5);">
           🔵 Amplio (7 balas)
@@ -555,9 +522,6 @@ const UI = {
         </span>
         <span style="background: rgba(255,0,255,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,0,255,0.5);">
           🟣 Súper Rápido
-        </span>
-        <span style="background: rgba(0,255,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(0,255,0,0.5);">
-          🟢 Escudo Total
         </span>
       </div>
     </div>
@@ -845,61 +809,51 @@ const UI = {
    * Crea control de volumen
    */
   createVolumeControl() {
-    const volumeContainer = document.createElement("div");
-    volumeContainer.id = "volume-control";
-    volumeContainer.style.position = "fixed";
-    volumeContainer.style.top = "80px";
-    volumeContainer.style.right = "10px";
-    volumeContainer.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-    volumeContainer.style.padding = "10px";
-    volumeContainer.style.borderRadius = "10px";
-    volumeContainer.style.border = "2px solid #8B0000";
-    volumeContainer.style.color = "#FFFFFF";
-    volumeContainer.style.fontSize = "14px";
-    volumeContainer.style.zIndex = "1001";
-    volumeContainer.style.display = "flex";
-    volumeContainer.style.alignItems = "center";
-    volumeContainer.style.gap = "10px";
-    volumeContainer.style.fontFamily = '"Arial", sans-serif';
+    const volumeButton = document.createElement("button");
+    volumeButton.id = "volume-control";
+    volumeButton.style.position = "fixed";
+    volumeButton.style.top = "60px";
+    volumeButton.style.right = "15px";
+    volumeButton.style.width = "50px";
+    volumeButton.style.height = "50px";
+    volumeButton.style.borderRadius = "50%";
+    volumeButton.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+    volumeButton.style.border = "2px solid #8B0000";
+    volumeButton.style.color = "#FFFFFF";
+    volumeButton.style.fontSize = "18px";
+    volumeButton.style.cursor = "pointer";
+    volumeButton.style.zIndex = "1001";
+    volumeButton.style.transition = "all 0.3s ease";
+    volumeButton.textContent = "🔊";
 
-    const volumeIcon = document.createElement("span");
-    volumeIcon.textContent = "🔊";
-    volumeIcon.style.fontSize = "18px";
+    let volumeStates = [1.0, 0.5, 0.25, 0.0]; // 100%, 50%, 25%, mute
+    let currentStateIndex = 0;
 
-    const volumeSlider = document.createElement("input");
-    volumeSlider.type = "range";
-    volumeSlider.min = "0";
-    volumeSlider.max = "100";
-    volumeSlider.value = "50";
-    volumeSlider.style.width = "80px";
-    volumeSlider.style.cursor = "pointer";
+    volumeButton.addEventListener("click", () => {
+      currentStateIndex = (currentStateIndex + 1) % volumeStates.length;
+      const newVolume = volumeStates[currentStateIndex];
 
-    const volumeText = document.createElement("span");
-    volumeText.textContent = "50%";
-    volumeText.style.minWidth = "35px";
-    volumeText.style.textAlign = "center";
+      AudioManager.setMasterVolume(newVolume);
 
-    volumeSlider.addEventListener("input", (e) => {
-      const volume = parseInt(e.target.value);
-      AudioManager.setMasterVolume(volume / 100);
-      volumeText.textContent = `${volume}%`;
-
-      if (volume === 0) {
-        volumeIcon.textContent = "🔇";
-      } else if (volume < 30) {
-        volumeIcon.textContent = "🔈";
-      } else if (volume < 70) {
-        volumeIcon.textContent = "🔉";
+      // Cambiar icono según volumen
+      if (newVolume === 0) {
+        volumeButton.textContent = "🔇";
+      } else if (newVolume <= 0.25) {
+        volumeButton.textContent = "🔈";
+      } else if (newVolume <= 0.5) {
+        volumeButton.textContent = "🔉";
       } else {
-        volumeIcon.textContent = "🔊";
+        volumeButton.textContent = "🔊";
       }
+
+      // Efecto visual
+      volumeButton.style.transform = "scale(1.1)";
+      setTimeout(() => {
+        volumeButton.style.transform = "scale(1)";
+      }, 150);
     });
 
-    volumeContainer.appendChild(volumeIcon);
-    volumeContainer.appendChild(volumeSlider);
-    volumeContainer.appendChild(volumeText);
-
-    document.body.appendChild(volumeContainer);
+    document.body.appendChild(volumeButton);
   },
 
   // ======================================================
@@ -966,6 +920,15 @@ const UI = {
     }
 
     console.log("🎨 Sistema de UI reseteado");
+  },
+
+  /**
+   * Muestra instrucciones desde el menú principal
+   */
+  showInstructionsFromMenu() {
+    this.showInstructions(() => {
+      // No hacer nada, solo cerrar
+    });
   },
 };
 

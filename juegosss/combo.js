@@ -305,31 +305,29 @@ const ComboSystem = {
    * Disparo súper rápido por 30 segundos
    */
   triggerFrenzyMode() {
+    // Verificar si ya hay otro evento activo
+    if (window.slowMotionActive || window.frenzyModeActive) {
+      console.log("🚫 Evento bloqueado: Ya hay otro evento activo");
+      return;
+    }
+
     UI.showScreenMessage("⚡ ¡MODO FRENESÍ! ⚡", "#FF00FF");
-
-    // 🔥 NUEVO: Activar flag para efectos visuales
     window.frenzyModeActive = true;
-
     console.log(
       "⚡ Iniciando modo frenesí - disparo súper rápido por 15 segundos"
     );
 
-    // ===== GUARDAR INTERVALO ORIGINAL =====
     const originalInterval = BulletManager.autoShootInterval;
-
-    // ===== PARAR DISPARO NORMAL =====
     BulletManager.stopAutoShoot();
 
-    // ===== INICIAR DISPARO SÚPER RÁPIDO =====
     const frenzyInterval = setInterval(() => {
       BulletManager.shootBullet();
-    }, 30); // Disparar cada 30ms (súper rápido)
+    }, 30);
 
-    // ===== RESTAURAR DESPUÉS DE 15 SEGUNDOS =====
     setTimeout(() => {
       clearInterval(frenzyInterval);
       BulletManager.startAutoShoot();
-      window.frenzyModeActive = false; // 🔥 DESACTIVAR FLAG
+      window.frenzyModeActive = false;
       UI.showScreenMessage("Frenesí terminado", "#FFFFFF");
       console.log("⚡ Modo frenesí terminado - disparo normal restaurado");
     }, 15000);
@@ -482,19 +480,22 @@ const ComboSystem = {
   },
 
   /**
-   * 🐢 Tiempo lento épico
+   * 🌊 Tiempo lento épico
    * Ralentiza todo el juego por 8 segundos
    */
   triggerSlowMotion() {
-    UI.showScreenMessage("🌊 ¡TIEMPO SUBMARINO! 🌊", "#0080FF");
+    // Verificar si ya hay otro evento activo
+    if (window.slowMotionActive || window.frenzyModeActive) {
+      console.log("🚫 Evento bloqueado: Ya hay otro evento activo");
+      return;
+    }
 
+    UI.showScreenMessage("🌊 ¡TIEMPO SUBMARINO! 🌊", "#0080FF");
     console.log("🌊 Activando tiempo lento submarino por 8 segundos");
 
-    // ===== ACTIVAR MODO LENTO GLOBAL =====
     window.slowMotionActive = true;
-    window.slowMotionFactor = 0.12; // Aún más lento para el efecto submarino
+    window.slowMotionFactor = 0.12;
 
-    // ===== DURACIÓN DE 8 SEGUNDOS =====
     setTimeout(() => {
       window.slowMotionActive = false;
       window.slowMotionFactor = 1.0;
@@ -502,7 +503,7 @@ const ComboSystem = {
       console.log(
         "🌊 Tiempo submarino terminado - velocidad normal restaurada"
       );
-    }, 8000); // 8 segundos
+    }, 8000);
 
     AudioManager.playSound("special");
   },

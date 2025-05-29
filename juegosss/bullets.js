@@ -108,11 +108,8 @@ const BulletManager = {
       // 🔥 SISTEMA ACUMULABLE - aplicar todos los efectos
       for (const powerUp of activePowerUps) {
         switch (powerUp.id) {
-          case 0: // Penetrante
-            bulletConfig.penetrating = true;
-            bulletConfig.penetrationCount = 4;
-            bulletConfig.shouldBounce = true;
-            bulletConfig.lifeTime = 300;
+          case 0: // Escudo (ya no hay balas penetrantes)
+            // No hacer nada con las balas, el escudo se maneja en player.js
             break;
 
           case 1: // Disparo Amplio
@@ -265,7 +262,6 @@ const BulletManager = {
   update() {
     this.updateRegularBullets();
     this.updateSpecialBullets();
-    this.updatePenetratingBullets(); // 🔥 NUEVO
     this.cleanupBullets();
   },
 
@@ -295,41 +291,6 @@ const BulletManager = {
       // Mover bala
       bullet.x += bullet.velocityX;
       bullet.y += bullet.velocityY;
-    }
-  },
-
-  /**
-   * 🔥 NUEVO: Actualiza balas penetrantes que rebotan
-   */
-  updatePenetratingBullets() {
-    const canvas = window.getCanvas();
-
-    for (let i = 0; i < this.bullets.length; i++) {
-      const bullet = this.bullets[i];
-
-      if (bullet.penetrating && bullet.shouldBounce) {
-        // Rebotes en paredes
-        if (bullet.x <= 0 || bullet.x + bullet.width >= canvas.width) {
-          bullet.velocityX *= -1;
-          bullet.bounceCount = (bullet.bounceCount || 0) + 1;
-        }
-
-        if (bullet.y <= 0 || bullet.y + bullet.height >= canvas.height) {
-          bullet.velocityY *= -1;
-          bullet.bounceCount = (bullet.bounceCount || 0) + 1;
-        }
-
-        // Reducir tiempo de vida con cada rebote
-        if (bullet.bounceCount && bullet.bounceCount > 0) {
-          bullet.lifeTime = (bullet.lifeTime || 300) - 2; // Reducir vida
-
-          if (bullet.lifeTime <= 0) {
-            this.bullets.splice(i, 1);
-            i--;
-            continue;
-          }
-        }
-      }
     }
   },
 

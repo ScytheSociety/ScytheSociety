@@ -248,8 +248,30 @@ const Player = {
     // Actualizar efectos visuales
     this.updatePowerUpVisuals();
 
+    // Manejar escudo protector
+    if (powerUpType.id === 0) {
+      // Escudo
+      this.activateShield(powerUpType.duration);
+    }
+
     // Mostrar todos los poderes activos
     this.showActivePowerUpsSummary();
+  },
+
+  /**
+   * Activa el escudo protector
+   */
+  activateShield(duration) {
+    this.invulnerabilityTime = Math.max(this.invulnerabilityTime, duration);
+    UI.showScreenMessage("🛡️ ESCUDO ACTIVADO", "#00FF00");
+    console.log("🛡️ Escudo protector activado");
+  },
+
+  /**
+   * Verifica si el escudo está activo
+   */
+  isShieldActive() {
+    return this.invulnerabilityTime > 0;
   },
 
   /**
@@ -561,32 +583,33 @@ const Player = {
       ctx.stroke();
     }
 
-    // 🔥 NUEVO: Múltiples auras para power-ups acumulables
-    for (let i = 0; i < this.powerUpVisualEffects.length; i++) {
-      const effect = this.powerUpVisualEffects[i];
-      const auraSize = this.width * effect.radius;
-      const pulse = 0.5 + Math.sin(window.getGameTime() * 0.25 + i) * 0.3;
+    // 🔥 NUEVO: Círculos de tiempo para power-ups
+    for (let i = 0; i < this.activePowerUps.length; i++) {
+      const powerUp = this.activePowerUps[i];
+      const radius = this.width * (0.7 + i * 0.15); // Radios crecientes
+      const timeProgress = powerUp.timeLeft / powerUp.type.duration;
 
+      // Círculo completo (fondo)
       ctx.beginPath();
-      ctx.arc(centerX, centerY, auraSize, 0, Math.PI * 2);
-      ctx.strokeStyle = `${effect.color}${Math.floor(
-        pulse * effect.intensity * 255
-      )
-        .toString(16)
-        .padStart(2, "0")}`;
-      ctx.lineWidth = 3 + i;
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `${powerUp.type.color}40`; // 25% opacity
+      ctx.lineWidth = 8;
       ctx.stroke();
 
-      // Aura exterior
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, auraSize * 1.2, 0, Math.PI * 2);
-      ctx.strokeStyle = `${effect.color}${Math.floor(
-        pulse * effect.intensity * 128
-      )
-        .toString(16)
-        .padStart(2, "0")}`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      // Círculo de progreso
+      if (timeProgress > 0) {
+        ctx.beginPath();
+        ctx.arc(
+          centerX,
+          centerY,
+          radius,
+          -Math.PI / 2,
+          -Math.PI / 2 + Math.PI * 2 * timeProgress
+        );
+        ctx.strokeStyle = powerUp.type.color;
+        ctx.lineWidth = 8;
+        ctx.stroke();
+      }
     }
 
     // 🔥 EFECTO ESPECIAL: Aura de combo alto

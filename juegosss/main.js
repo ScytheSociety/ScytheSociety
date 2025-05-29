@@ -312,33 +312,13 @@ function gameLoop() {
  * 🔥 NUEVO: Dibuja efectos especiales en pantalla - CORREGIDO
  */
 function drawSpecialEffects(ctx) {
-  // 🌊 Efecto de tiempo lento - AZUL SUBMARINO MUY SUTIL
+  // 🌊 Efecto de tiempo lento - SOLO OVERLAY AZUL SUTIL
   if (window.slowMotionActive) {
     ctx.save();
 
-    // 🔥 OVERLAY AZUL MUY SUTIL - CASI TRANSPARENTE
-    ctx.fillStyle = "rgba(0, 119, 255, 0.18)"; // Era 0.35, ahora 0.15
+    // Overlay azul muy sutil
+    ctx.fillStyle = "rgba(0, 119, 255, 0.15)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Segundo overlay aún más sutil
-    ctx.fillStyle = "rgba(0, 180, 255, 0.08)"; // Era 0.15, ahora 0.08
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Burbujas sutiles y casi transparentes
-    for (let i = 0; i < 15; i++) {
-      // Menos burbujas
-      const bubbleX = Math.random() * canvas.width;
-      const bubbleY = Math.random() * canvas.height;
-      const bubbleSize = 15 + Math.random() * 25; // Más pequeñas
-
-      ctx.beginPath();
-      ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(200, 240, 255, 0.2)"; // Era 0.7, ahora 0.2
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.3)"; // Era 0.8, ahora 0.3
-      ctx.lineWidth = 1; // Era 3, ahora 1
-      ctx.stroke();
-    }
 
     ctx.restore();
   }
@@ -805,7 +785,7 @@ async function viewRanking() {
 
     const rankingContainer = document.getElementById("ranking-container");
     rankingContainer.style.display = "block";
-    rankingContainer.innerHTML = `<h2>⌛ Cargando ranking ÉPICO... ⌛</h2>`;
+    rankingContainer.innerHTML = `<h2>⌛ Cargando ranking... ⌛</h2>`;
 
     const response = await fetch(WEBAPP_URL);
     const result = await response.json();
@@ -941,5 +921,7 @@ window.isGameEnded = () => gameEnded;
 window.slowMotionActive = slowMotionActive;
 window.slowMotionFactor = slowMotionFactor;
 window.frenzyModeActive = frenzyModeActive;
+// Función para mostrar instrucciones desde menú
+window.showInstructions = () => UI.showInstructionsFromMenu();
 
 console.log("📁 main.js ÉPICO cargado y listo para la acción!");
