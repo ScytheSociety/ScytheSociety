@@ -121,7 +121,7 @@ h1 {
 .avatar-input-container {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px; /* ⬅️ CAMBIO: Era 5px, ahora 8px */
 }
 
 input {
@@ -152,9 +152,14 @@ input:focus {
 }
 
 #avatar {
-  width: 50px;
+  width: 60px; /* ⬅️ CAMBIO: Era 50px, ahora 60px */
+  height: 50px; /* ⬅️ NUEVO: Altura fija */
   text-align: center;
-  font-size: 1.3em;
+  font-size: 1.4em; /* ⬅️ CAMBIO: Era 1.3em, ahora 1.4em */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px; /* ⬅️ NUEVO: Padding interno */
 }
 
 #name {
@@ -171,21 +176,29 @@ input:focus {
   flex-direction: column;
   gap: 15px;
   align-items: center;
-  margin-top: 20px;
+  margin-top: 25px;
+  width: 100%;
+  max-width: 600px; /* ⬅️ NUEVO: Mismo ancho que inputs */
 }
 
-.main-play-button {
-  font-size: 1.3em !important;
-  padding: 18px 35px !important;
-  min-width: 200px !important;
-  transform: scale(1.1);
-}
-
-.secondary-buttons {
+.main-buttons-row {
   display: flex;
-  gap: 20px;
+  gap: 15px;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+}
+
+.main-button {
+  flex: 1; /* ⬅️ NUEVO: Todos los botones del mismo ancho */
+  min-width: 0; /* ⬅️ NUEVO: Permite que flex funcione */
+  height: 50px; /* ⬅️ NUEVO: Altura fija */
+  font-size: 0.95em !important;
+  padding: 8px 12px !important;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
+  text-align: center;
 }
 
 button,
@@ -314,6 +327,17 @@ button:active,
     font-size: 0.8em;
     margin: 0 2px;
   }
+
+  .main-buttons-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .main-button {
+    width: 100%;
+    min-width: 200px;
+    height: 45px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -325,6 +349,12 @@ button:active,
   #game-info > div {
     font-size: 0.75em;
     margin: 0 1px;
+  }
+
+  .main-button {
+    font-size: 0.85em !important;
+    height: 42px;
+    min-width: 180px;
   }
 }
 
@@ -505,9 +535,10 @@ button:active,
 
 .emoji-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(5, 1fr); /* ⬅️ CAMBIO: Era 6, ahora 5 */
+  gap: 10px; /* Espacio entre emojis */
   margin: 20px 0;
+  justify-items: center;
 }
 
 .emoji-option {

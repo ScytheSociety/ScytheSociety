@@ -32,10 +32,10 @@
             </div>
         </div>
         <div class="button-container">
-            <button onclick="startGame()" class="gothic-button main-play-button">🎮 JUGAR</button>
-            <div class="secondary-buttons">
-                <button onclick="showInstructions()" class="gothic-button">📖 Instrucciones</button>
-                <button onclick="viewRanking()" class="gothic-button">🏆 Ranking</button>
+            <div class="main-buttons-row">
+                <button onclick="startGame()" class="gothic-button main-button">🎮 JUGAR</button>
+                <button onclick="showInstructions()" class="gothic-button main-button">📖 INSTRUCCIONES</button>
+                <button onclick="viewRanking()" class="gothic-button main-button">🏆 RANKING</button>
             </div>
         </div>
     </div>
@@ -73,7 +73,7 @@
 
     <!-- Ranking Container (MEJORADO) -->
     <div id="ranking-container" style="display: none;">
-        <h2>⌛ Cargando ranking... ⌛</h2>
+        <h2>⌛ Cargando Ranking... ⌛</h2>
     </div>
 
     <!-- Emoji Picker Modal -->
@@ -81,32 +81,40 @@
         <div class="emoji-picker-content">
             <h3>Selecciona un emoji</h3>
             <div class="emoji-grid">
-                <!-- Common gothic/horror themed emojis -->
+                <!-- Fila 1 -->
                 <span class="emoji-option" onclick="selectEmoji('👹')">👹</span>
                 <span class="emoji-option" onclick="selectEmoji('👺')">👺</span>
                 <span class="emoji-option" onclick="selectEmoji('👻')">👻</span>
                 <span class="emoji-option" onclick="selectEmoji('💀')">💀</span>
                 <span class="emoji-option" onclick="selectEmoji('☠️')">☠️</span>
-                <span class="emoji-option" onclick="selectEmoji('👽')">👽</span>
+
+                <!-- Fila 2 -->
+                <span class="emoji-option" onclick="selectEmoji('🎀')">🎀</span>
                 <span class="emoji-option" onclick="selectEmoji('👾')">👾</span>
                 <span class="emoji-option" onclick="selectEmoji('🤖')">🤖</span>
                 <span class="emoji-option" onclick="selectEmoji('🎃')">🎃</span>
                 <span class="emoji-option" onclick="selectEmoji('🧛')">🧛</span>
+
+                <!-- Fila 3 -->
                 <span class="emoji-option" onclick="selectEmoji('🧟')">🧟</span>
                 <span class="emoji-option" onclick="selectEmoji('🔥')">🔥</span>
                 <span class="emoji-option" onclick="selectEmoji('⚡')">⚡</span>
-                <span class="emoji-option" onclick="selectEmoji('🌑')">🌑</span>
+                <span class="emoji-option" onclick="selectEmoji('🌷')">🌷</span>
                 <span class="emoji-option" onclick="selectEmoji('🦇')">🦇</span>
-                <span class="emoji-option" onclick="selectEmoji('🕸️')">🕸️</span>
-                <!-- AÑADIDOS NUEVOS -->
+
+                <!-- Fila 4 -->
+                <span class="emoji-option" onclick="selectEmoji('🧁')">🧁</span>
                 <span class="emoji-option" onclick="selectEmoji('😈')">😈</span>
                 <span class="emoji-option" onclick="selectEmoji('🎯')">🎯</span>
                 <span class="emoji-option" onclick="selectEmoji('💎')">💎</span>
                 <span class="emoji-option" onclick="selectEmoji('🗡️')">🗡️</span>
+
+                <!-- Fila 5 -->
                 <span class="emoji-option" onclick="selectEmoji('🛡️')">🛡️</span>
                 <span class="emoji-option" onclick="selectEmoji('🚀')">🚀</span>
                 <span class="emoji-option" onclick="selectEmoji('💥')">💥</span>
                 <span class="emoji-option" onclick="selectEmoji('⭐')">⭐</span>
+                <span class="emoji-option" onclick="selectEmoji('🎮')">🎮</span>
             </div>
             <button onclick="closeEmojiPicker()" class="gothic-button">Cerrar</button>
         </div>

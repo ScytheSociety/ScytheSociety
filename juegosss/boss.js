@@ -626,15 +626,7 @@ const BossManager = {
     // Efectos de derrota
     UI.showScreenMessage("🏆 ¡BOSS DERROTADO! 🏆", "#FFD700");
 
-    // Explosión masiva
-    for (let i = 0; i < 10; i++) {
-      setTimeout(() => {
-        UI.createExplosionEffect(
-          this.boss.x + Math.random() * this.boss.width,
-          this.boss.y + Math.random() * this.boss.height
-        );
-      }, i * 100);
-    }
+    // ... efectos visuales ...
 
     // Puntos bonus masivos
     const bonusPoints = 5000;
@@ -645,6 +637,8 @@ const BossManager = {
     this.mines = [];
 
     AudioManager.playSound("victory");
+
+    // ⬅️ AQUÍ DEBE ESTAR LA LLAMADA A VICTORIA
     setTimeout(() => window.victory(), 2000);
 
     console.log("🏆 Boss derrotado - ¡Victoria!");

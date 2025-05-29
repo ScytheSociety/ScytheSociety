@@ -454,15 +454,15 @@ function startLevel() {
 function nextLevel() {
   level++;
 
-  // 🔥 CORRECCIÓN: El boss aparece DESPUÉS de completar nivel 10
-  if (level === 11) {
-    // Nivel 11 = Boss Final
-    startBossLevel();
-  } else if (level > 11) {
-    victory();
-  } else {
+  // Solo avanzar niveles normales del 1 al 10
+  if (level <= 10) {
     startLevel();
+  } else if (level === 11) {
+    // Después del nivel 10, viene el boss
+    startBossLevel();
   }
+  // NO hay más niveles después del boss
+  // La victoria solo se activa desde BossManager.defeat()
 }
 
 /**
@@ -505,25 +505,15 @@ function gameOver() {
   gameEnded = true;
 
   // 🔥 COMENTARIO DEL BOSS SI ESTÁ ACTIVO
-  if (level === 10 && BossManager.isActive()) {
+  if (level === 11 && BossManager.isActive()) {
+    // ⬅️ CAMBIAR DE 10 a 11
     BossManager.sayRandomComment("victoria_boss");
   }
 
-  // Detener TODOS los intervalos y sistemas
-  if (gameInterval) {
-    clearInterval(gameInterval);
-    gameInterval = null;
-  }
+  // ... resto del código ...
 
-  BulletManager.stopAutoShoot();
-  AudioManager.stopBackgroundMusic();
-
-  // Limpiar sistemas completamente
-  ComboSystem.cleanup();
-
-  // Mostrar pantalla de game over
-  const maxCombo = ComboSystem.getMaxCombo();
-  UI.showGameOver(false, score, level, maxCombo);
+  // ⬅️ IMPORTANTE: Asegurar que sea DERROTA FALSE
+  UI.showGameOver(false, score, level, maxCombo); // FALSE = Game Over
   AudioManager.playSound("gameOver");
 
   console.log(`💀 Game Over - Combo máximo: ${maxCombo}`);
@@ -546,7 +536,9 @@ function victory() {
 
   // Celebración épica con combo
   const maxCombo = ComboSystem.getMaxCombo();
-  UI.showGameOver(true, score, level, maxCombo);
+
+  // ⬅️ IMPORTANTE: Asegurar que sea VICTORIA TRUE
+  UI.showGameOver(true, score, level, maxCombo); // TRUE = Victoria
   AudioManager.playSound("victory");
 
   // Efecto de celebración más épico
@@ -782,7 +774,7 @@ async function viewRanking() {
 
     const rankingContainer = document.getElementById("ranking-container");
     rankingContainer.style.display = "block";
-    rankingContainer.innerHTML = `<h2>⌛ Cargando ranking... ⌛</h2>`;
+    rankingContainer.innerHTML = `<h2>⌛ Cargando Ranking... ⌛</h2>`;
 
     const response = await fetch(WEBAPP_URL);
     const result = await response.json();
@@ -795,7 +787,7 @@ async function viewRanking() {
 
     if (players.length === 0) {
       rankingContainer.innerHTML = `
-                <h2>📊 Ranking ÉPICO de Jugadores</h2>
+                <h2>📊 Ranking de Jugadores</h2>
                 <p style="text-align: center;">No hay puntuaciones registradas aún.</p>
                 <div style="text-align: center; margin-top: 20px;">
                     <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
@@ -831,7 +823,7 @@ async function viewRanking() {
 
     // 🔥 TABLA CORREGIDA - MOSTRAR ENEMIGOS MATADOS EN LUGAR DE COMBO MAX
     rankingContainer.innerHTML = `
-            <h2>🏆 Ranking ÉPICO de Jugadores 🏆</h2>
+            <h2>🏆 Ranking de Jugadores 🏆</h2>
             <table>
                 <tr>
                     <th>Pos</th>
