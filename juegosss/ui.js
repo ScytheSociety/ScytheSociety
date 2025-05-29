@@ -240,14 +240,14 @@ const UI = {
     const livesDisplay = document.getElementById("player-lives");
     if (!livesDisplay) return;
 
-    const lives = Player.getLives();
+    const lives = Math.max(0, Player.getLives()); // 🔥 NUNCA negativo
     let livesText = "";
 
-    if (lives <= 7) {
-      // Hasta 7 vidas: mostrar en línea horizontal
+    if (lives === 0) {
+      livesText = "💀 GAME OVER"; // Mostrar mensaje cuando no hay vidas
+    } else if (lives <= 7) {
       livesText = "💀".repeat(lives);
     } else {
-      // Más de 7 vidas: primera fila con 7, resto en segunda fila
       const firstRow = "💀".repeat(7);
       const secondRow = "💀".repeat(lives - 7);
       livesText = firstRow + "<br>" + secondRow;

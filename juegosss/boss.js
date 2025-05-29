@@ -84,8 +84,8 @@ const BossManager = {
     this.currentHealth = 200;
     this.active = true;
 
-    // 🔥 SISTEMA DE FASES INTELIGENTE
-    this.currentPhase = "SUMMONING"; // SUMMONING -> MINES -> BULLETS
+    // 🔥 SISTEMA DE FASES INTELIGENTE - EMPEZAR SIN FASE
+    this.currentPhase = "HUNTING"; // Empezar persiguiendo
     this.phaseTimer = 0;
     this.phaseActive = false;
     this.phaseCooldown = 0;
@@ -153,41 +153,54 @@ const BossManager = {
   updateIntelligentPhases() {
     const healthPercentage = this.currentHealth / this.maxHealth;
 
-    // Determinar si debe activar fase según vida y si no hay fase activa
+    console.log(
+      `👹 Boss vida: ${Math.round(healthPercentage * 100)}% - Fase actual: ${
+        this.currentPhase
+      } - Fase activa: ${this.phaseActive}`
+    );
+
+    // 🔥 VERIFICAR ACTIVACIÓN DE FASES
     let shouldStartPhase = false;
     let targetPhase = null;
 
+    // FASE SUMMONING al 75%
     if (
       healthPercentage <= 0.75 &&
       healthPercentage > 0.5 &&
-      !this.phaseActive &&
-      (this.currentPhase === "SUMMONING" ? false : true) // Permitir activar SUMMONING
+      !this.phaseActive
     ) {
-      shouldStartPhase = true;
-      targetPhase = "SUMMONING";
-    } else if (
+      if (this.currentPhase !== "SUMMONING") {
+        shouldStartPhase = true;
+        targetPhase = "SUMMONING";
+        console.log("👹 Activando fase SUMMONING");
+      }
+    }
+    // FASE MINES al 50%
+    else if (
       healthPercentage <= 0.5 &&
       healthPercentage > 0.25 &&
-      this.currentPhase !== "MINES" &&
       !this.phaseActive
     ) {
-      shouldStartPhase = true;
-      targetPhase = "MINES";
-    } else if (
-      healthPercentage <= 0.25 &&
-      this.currentPhase !== "BULLETS" &&
-      !this.phaseActive
-    ) {
-      shouldStartPhase = true;
-      targetPhase = "BULLETS";
+      if (this.currentPhase !== "MINES") {
+        shouldStartPhase = true;
+        targetPhase = "MINES";
+        console.log("👹 Activando fase MINES");
+      }
+    }
+    // FASE BULLETS al 25%
+    else if (healthPercentage <= 0.25 && !this.phaseActive) {
+      if (this.currentPhase !== "BULLETS") {
+        shouldStartPhase = true;
+        targetPhase = "BULLETS";
+        console.log("👹 Activando fase BULLETS");
+      }
     }
 
     // Iniciar fase si corresponde
-    if (shouldStartPhase) {
+    if (shouldStartPhase && targetPhase) {
       this.changeIntelligentPhase(targetPhase);
     }
 
-    // Ejecutar fase actual si está activa
     // Ejecutar fase actual si está activa
     if (this.phaseActive) {
       switch (this.currentPhase) {
@@ -202,25 +215,8 @@ const BossManager = {
           break;
       }
     } else {
-      // 🔥 SIEMPRE perseguir cuando no hay fase activa
+      // 🔥 PERSEGUIR JUGADOR cuando no hay fase activa
       this.huntPlayer();
-    }
-
-    // 🔥 AGREGAR: También perseguir durante SUMMONING (pero lento)
-    if (this.currentPhase === "SUMMONING" && this.phaseActive) {
-      const playerPos = Player.getPosition();
-      const bossCenterX = this.boss.x + this.boss.width / 2;
-      const bossCenterY = this.boss.y + this.boss.height / 2;
-
-      const dx = playerPos.x - bossCenterX;
-      const dy = playerPos.y - bossCenterY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      if (distance > 150) {
-        const slowSpeed = this.boss.moveSpeed * 0.8; // Movimiento lento durante invocación
-        this.boss.velocityX += (dx / distance) * slowSpeed * 0.1;
-        this.boss.velocityY += (dy / distance) * slowSpeed * 0.1;
-      }
     }
   },
 
@@ -417,19 +413,25 @@ const BossManager = {
   summonIntelligentEnemies(count) {
     const canvas = window.getCanvas();
 
-    UI.showScreenMessage(`👹 ¡${count} ESBIRROS!`, "#FF4444");
+    UI.showScreenMessage(
+      `👹 ¡${count} ESBIRROS DE TODOS LOS NIVELES!`,
+      "#FF4444"
+    );
 
     for (let i = 0; i < count; i++) {
       setTimeout(() => {
-        // Enemigos más fuertes
-        const size = GameConfig.ENEMY_MIN_SIZE * 1.3;
+        // 🔥 ENEMIGOS DE NIVELES ALEATORIOS (1-10)
+        const randomLevel = 1 + Math.floor(Math.random() * 10);
+        const size = GameConfig.ENEMY_MIN_SIZE + randomLevel * 3; // Tamaño según nivel
 
-        // Posiciones estratégicas (esquinas)
+        // Posiciones estratégicas mejoradas
         const positions = [
           { x: 50, y: 50 },
           { x: canvas.width - 100, y: 50 },
           { x: 50, y: canvas.height - 100 },
           { x: canvas.width - 100, y: canvas.height - 100 },
+          { x: canvas.width / 4, y: 50 },
+          { x: (canvas.width * 3) / 4, y: 50 },
         ];
 
         const pos = positions[i % positions.length];
@@ -439,18 +441,19 @@ const BossManager = {
           y: pos.y,
           width: size,
           height: size,
-          velocityX: (Math.random() - 0.5) * 0.006 * canvas.height,
-          velocityY: (Math.random() - 0.5) * 0.006 * canvas.height,
+          velocityX: (Math.random() - 0.5) * 0.008 * canvas.height,
+          velocityY: (Math.random() - 0.5) * 0.008 * canvas.height,
 
+          // 🔥 IMAGEN SEGÚN NIVEL ALEATORIO
           image:
             GameConfig.enemyImages[
-              Math.floor(Math.random() * GameConfig.enemyImages.length)
+              Math.min(randomLevel - 1, GameConfig.enemyImages.length - 1)
             ],
-          speedFactor: 1.5, // Más agresivos
+          speedFactor: 1.0 + randomLevel * 0.1, // Más rápidos según nivel
           bounceCount: 0,
-          maxBounces: 8,
+          maxBounces: 5 + randomLevel,
 
-          level: 10,
+          level: randomLevel, // 🔥 NIVEL ALEATORIO
           type: "boss_minion",
           isBossMinion: true,
 
@@ -474,7 +477,9 @@ const BossManager = {
           "#8B0000",
           25
         );
-      }, i * 300);
+
+        console.log(`👹 Esbirro nivel ${randomLevel} invocado`);
+      }, i * 400); // 400ms entre cada invocación
     }
 
     AudioManager.playSound("special");
@@ -484,12 +489,19 @@ const BossManager = {
    * 🔥 NUEVO: Movimiento inteligente del boss
    */
   updateIntelligentMovement() {
-    if (this.isImmune && this.phaseActive) {
-      // Solo reducir movimiento durante fases activas
-      this.boss.velocityX *= 0.95;
-      this.boss.velocityY *= 0.95;
-    } else {
-      // Cambiar patrón de movimiento cada 5 segundos
+    // 🔥 SIEMPRE APLICAR MOVIMIENTO (excepto cuando está completamente inmóvil)
+
+    // Solo reducir movimiento durante fases específicas, no eliminarlo
+    let movementFactor = 1.0;
+    if (
+      this.phaseActive &&
+      (this.currentPhase === "MINES" || this.currentPhase === "BULLETS")
+    ) {
+      movementFactor = 0.3; // Movimiento reducido pero no eliminado
+    }
+
+    // 🔥 CAMBIAR PATRÓN SOLO CUANDO NO HAY FASE ACTIVA
+    if (!this.phaseActive) {
       if (window.getGameTime() - this.lastPatternChange > 300) {
         this.changeMovementPattern();
       }
@@ -506,11 +518,14 @@ const BossManager = {
           this.teleportMovement();
           break;
       }
+    } else {
+      // 🔥 DURANTE FASES: Solo perseguir lentamente
+      this.huntPlayerSlow();
     }
 
-    // Aplicar movimiento
-    this.boss.x += this.boss.velocityX;
-    this.boss.y += this.boss.velocityY;
+    // 🔥 APLICAR MOVIMIENTO CON FACTOR
+    this.boss.x += this.boss.velocityX * movementFactor;
+    this.boss.y += this.boss.velocityY * movementFactor;
 
     // Mantener en pantalla con rebote suave
     const canvas = window.getCanvas();
@@ -584,6 +599,40 @@ const BossManager = {
     if (currentSpeed > maxSpeed) {
       this.boss.velocityX = (this.boss.velocityX / currentSpeed) * maxSpeed;
       this.boss.velocityY = (this.boss.velocityY / currentSpeed) * maxSpeed;
+    }
+  },
+
+  /**
+   * 🔥 NUEVO: Perseguir jugador lentamente durante fases
+   */
+  huntPlayerSlow() {
+    const playerPos = Player.getPosition();
+    const playerSize = Player.getSize();
+
+    const playerCenterX = playerPos.x + playerSize.width / 2;
+    const playerCenterY = playerPos.y + playerSize.height / 2;
+    const bossCenterX = this.boss.x + this.boss.width / 2;
+    const bossCenterY = this.boss.y + this.boss.height / 2;
+
+    const dx = playerCenterX - bossCenterX;
+    const dy = playerCenterY - bossCenterY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Movimiento lento durante fases
+    if (distance > 200) {
+      const slowSpeed = this.boss.moveSpeed * 0.8;
+      this.boss.velocityX += (dx / distance) * slowSpeed * 0.2;
+      this.boss.velocityY += (dy / distance) * slowSpeed * 0.2;
+    }
+
+    // Limitar velocidad lenta
+    const maxSlowSpeed = this.boss.moveSpeed * 1.5;
+    const currentSpeed = Math.sqrt(
+      this.boss.velocityX ** 2 + this.boss.velocityY ** 2
+    );
+    if (currentSpeed > maxSlowSpeed) {
+      this.boss.velocityX = (this.boss.velocityX / currentSpeed) * maxSlowSpeed;
+      this.boss.velocityY = (this.boss.velocityY / currentSpeed) * maxSlowSpeed;
     }
   },
 
