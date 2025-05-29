@@ -385,7 +385,7 @@ function checkCollisions() {
   if (Player.checkEnemyCollisions(EnemyManager.enemies)) {
     // El jugador fue golpeado (combo roto automáticamente en Player.takeDamage)
     if (Player.getLives() <= 0) {
-      gameOver();
+      gameOver(); // ⬅️ ASEGURAR QUE ESTÉ AQUÍ
     }
   }
 
@@ -395,8 +395,9 @@ function checkCollisions() {
   // Jugador vs Hearts
   Player.checkHeartCollisions(PowerUpManager.hearts);
 
-  // Si es nivel 10, verificar colisiones con boss
-  if (level === 10 && BossManager.isActive()) {
+  // Si es nivel 11 (boss), verificar colisiones con boss
+  if (level === 11 && BossManager.isActive()) {
+    // ⬅️ CAMBIO: Era 10, ahora 11
     BulletManager.checkBossCollisions();
     Player.checkBossCollisions();
   }
@@ -506,14 +507,27 @@ function gameOver() {
 
   // 🔥 COMENTARIO DEL BOSS SI ESTÁ ACTIVO
   if (level === 11 && BossManager.isActive()) {
-    // ⬅️ CAMBIAR DE 10 a 11
+    // ⬅️ CAMBIO: Era 10, ahora 11
     BossManager.sayRandomComment("victoria_boss");
   }
 
-  // ... resto del código ...
+  // 🔥 OBTENER COMBO MÁXIMO ANTES DE LIMPIAR
+  const maxCombo = ComboSystem ? ComboSystem.getMaxCombo() : 0; // ⬅️ CORRECCIÓN
 
-  // ⬅️ IMPORTANTE: Asegurar que sea DERROTA FALSE
-  UI.showGameOver(false, score, level, maxCombo); // FALSE = Game Over
+  // Detener TODOS los intervalos y sistemas
+  if (gameInterval) {
+    clearInterval(gameInterval);
+    gameInterval = null;
+  }
+
+  BulletManager.stopAutoShoot();
+  AudioManager.stopBackgroundMusic();
+
+  // Limpiar sistemas completamente DESPUÉS de obtener el combo
+  ComboSystem.cleanup();
+
+  // Mostrar pantalla de game over
+  UI.showGameOver(false, score, level, maxCombo); // ⬅️ AHORA SÍ ESTÁ DEFINIDO
   AudioManager.playSound("gameOver");
 
   console.log(`💀 Game Over - Combo máximo: ${maxCombo}`);
@@ -525,6 +539,9 @@ function gameOver() {
 function victory() {
   gameEnded = true;
 
+  // 🔥 OBTENER COMBO MÁXIMO ANTES DE LIMPIAR
+  const maxCombo = ComboSystem ? ComboSystem.getMaxCombo() : 0; // ⬅️ CORRECCIÓN
+
   // Detener TODOS los intervalos y sistemas
   if (gameInterval) {
     clearInterval(gameInterval);
@@ -535,10 +552,7 @@ function victory() {
   AudioManager.stopBackgroundMusic();
 
   // Celebración épica con combo
-  const maxCombo = ComboSystem.getMaxCombo();
-
-  // ⬅️ IMPORTANTE: Asegurar que sea VICTORIA TRUE
-  UI.showGameOver(true, score, level, maxCombo); // TRUE = Victoria
+  UI.showGameOver(true, score, level, maxCombo); // ⬅️ TRUE = Victoria
   AudioManager.playSound("victory");
 
   // Efecto de celebración más épico

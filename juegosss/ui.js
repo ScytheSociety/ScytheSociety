@@ -489,7 +489,7 @@ const UI = {
         <div style="line-height: 1.4;">
           <div>❤️ <strong>Vidas:</strong> 7 inicial (máx. 14)</div>
           <div>🎮 <strong>Niveles:</strong> 10 épicos</div>
-          <div>👹 <strong>Boss Final:</strong> Nivel 10</div>
+          <div>👹 <strong>Boss Final:</strong> Nivel 11</div>
           <div>⚡ <strong>Poder:</strong> Cada 15 enemigos</div>
         </div>
       </div>
