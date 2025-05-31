@@ -16,6 +16,7 @@ const UI = {
    */
   init() {
     this.createVolumeControl();
+    this.createTotalEnemiesDisplay();
     this.setupEventListeners();
     console.log("🎨 Sistema de UI inicializado");
   },
@@ -206,9 +207,20 @@ const UI = {
       timeElement.textContent = `Tiempo: ${Math.floor(gameTime / 60)}s`;
     }
 
+    // Actualizar contador para pasar de nivel
     const enemiesElement = document.getElementById("enemies-killed");
     if (enemiesElement) {
-      enemiesElement.textContent = `Enemigos: ${EnemyManager.getEnemiesKilled()}`;
+      if (level <= 10) {
+        enemiesElement.textContent = `Nivel: ${EnemyManager.getEnemiesKilled()}/${EnemyManager.getEnemiesRequired()}`;
+      } else {
+        enemiesElement.textContent = `Boss Final`;
+      }
+    }
+
+    // Actualizar contador total
+    const totalDisplay = document.getElementById("total-enemies-display");
+    if (totalDisplay && window.getTotalEnemiesKilled) {
+      totalDisplay.textContent = `Total: ${window.getTotalEnemiesKilled()}`;
     }
   },
 
@@ -874,6 +886,32 @@ const UI = {
     document.body.appendChild(volumeButton);
   },
 
+  /**
+   * Crea el display del contador total de enemigos
+   */
+  createTotalEnemiesDisplay() {
+    const totalDisplay = document.createElement("div");
+    totalDisplay.id = "total-enemies-display";
+    totalDisplay.style.position = "fixed";
+    totalDisplay.style.bottom = "70px"; // Arriba del combo
+    totalDisplay.style.left = "15px";
+    totalDisplay.style.backgroundColor = "rgba(0, 0, 0, 0.85)";
+    totalDisplay.style.color = "#FFFFFF";
+    totalDisplay.style.padding = "4px 8px";
+    totalDisplay.style.borderRadius = "4px";
+    totalDisplay.style.fontSize = "10px";
+    totalDisplay.style.fontWeight = "bold";
+    totalDisplay.style.fontFamily = '"Arial", sans-serif';
+    totalDisplay.style.border = "1px solid #FF0000";
+    totalDisplay.style.boxShadow = "0 0 5px rgba(255, 0, 0, 0.3)";
+    totalDisplay.style.zIndex = "1000";
+    totalDisplay.style.minWidth = "70px";
+    totalDisplay.style.textAlign = "center";
+    totalDisplay.textContent = "Total: 0";
+
+    document.body.appendChild(totalDisplay);
+  },
+
   // ======================================================
   // EMOJI PICKER
   // ======================================================
@@ -937,9 +975,14 @@ const UI = {
       powerUpIndicator.parentNode.removeChild(powerUpIndicator);
     }
 
+    // Resetear display total
+    const totalDisplay = document.getElementById("total-enemies-display");
+    if (totalDisplay) {
+      totalDisplay.textContent = "Total: 0";
+    }
+
     console.log("🎨 Sistema de UI reseteado");
   },
-
   /**
    * Muestra instrucciones desde el menú principal
    */

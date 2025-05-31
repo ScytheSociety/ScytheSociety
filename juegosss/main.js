@@ -14,6 +14,9 @@ let level = 1;
 let score = 0;
 let gameEnded = false;
 
+// Contador total de TODOS los enemigos eliminados (para Excel)
+let totalEnemiesKilled = 0;
+
 // 🔥 Variables para efectos especiales globales
 let slowMotionActive = false;
 let slowMotionFactor = 1.0;
@@ -793,6 +796,10 @@ function resetGameState() {
   gameTime = 0;
   level = 1;
   score = 0;
+  totalEnemiesKilled = 0; // 🔥 NUEVO: Resetear contador total
+
+  // 🔥 NUEVO: Resetear contador total de enemigos
+  totalEnemiesKilled = 0;
 
   // 🔥 Resetear efectos especiales
   slowMotionActive = false;
@@ -806,7 +813,7 @@ function resetGameState() {
   PowerUpManager.reset();
   BossManager.reset();
   UI.reset();
-  ComboSystem.reset(); // 🔥 NUEVO
+  ComboSystem.reset();
 
   console.log("🔄 Estado del juego ÉPICO reseteado");
 }
@@ -858,31 +865,31 @@ async function saveScore() {
   try {
     const playerName = Player.getName();
     const playerAvatar = Player.getAvatar();
-    const enemiesKilled = EnemyManager.getEnemiesKilled();
-    const maxCombo = ComboSystem.getMaxCombo(); // 🔥 OBTENER COMBO MÁXIMO
+    const enemiesKilled = totalEnemiesKilled; // Total de enemigos para Excel
+    const maxCombo = ComboSystem.getMaxCombo();
 
     // Validar datos antes de enviar
     if (!playerName || !playerAvatar) {
       throw new Error("Datos del jugador incompletos");
     }
 
-    // 🔥 CORRECCIÓN: Obtener status sin acceder al DOM problemático
+    // Obtener status del juego
     let gameStatus = "Derrota";
     if (level >= GameConfig.MAX_LEVELS) {
       gameStatus = "Victoria";
     }
 
-    // 🔥 CREAR URL CON PARÁMETROS CORRECTOS
+    // Crear URL con parámetros
     const params = new URLSearchParams();
     params.append("action", "save");
     params.append("date", new Date().toISOString());
     params.append("avatar", playerAvatar);
     params.append("name", playerName);
     params.append("level", level);
-    params.append("enemiesKilled", enemiesKilled); // 🔥 ENVIAR ENEMIGOS MATADOS
+    params.append("enemiesKilled", enemiesKilled); // 🔥 CORRECCIÓN: Variable correcta
     params.append("time", Math.floor(gameTime / 60));
     params.append("score", score);
-    params.append("maxCombo", maxCombo); // 🔥 ENVIAR COMBO MÁXIMO
+    params.append("maxCombo", maxCombo);
     params.append("status", gameStatus);
 
     const urlWithParams = `${WEBAPP_URL}?${params.toString()}`;
@@ -890,7 +897,7 @@ async function saveScore() {
 
     // Timeout para la petición
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch(urlWithParams, {
       signal: controller.signal,
@@ -1097,6 +1104,12 @@ async function viewRanking() {
   }
 }
 
+// Función para incrementar contador total de enemigos
+function incrementTotalEnemiesKilled() {
+  totalEnemiesKilled++;
+  console.log(`🎯 Total enemigos eliminados: ${totalEnemiesKilled}`);
+}
+
 // ======================================================
 // FUNCIONES GLOBALES EXPUESTAS
 // ======================================================
@@ -1109,6 +1122,7 @@ window.nextLevel = nextLevel;
 window.saveScore = saveScore;
 window.saveAndViewRanking = saveAndViewRanking;
 window.viewRanking = viewRanking;
+window.incrementTotalEnemiesKilled = incrementTotalEnemiesKilled;
 
 // Getters para otros módulos
 window.getCanvas = () => canvas;
@@ -1118,6 +1132,7 @@ window.getLevel = () => level;
 window.getScore = () => score;
 window.setScore = (newScore) => (score = newScore);
 window.isGameEnded = () => gameEnded;
+window.getTotalEnemiesKilled = () => totalEnemiesKilled;
 
 // 🔥 NUEVAS variables globales para efectos especiales
 window.slowMotionActive = slowMotionActive;

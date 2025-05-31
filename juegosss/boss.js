@@ -819,6 +819,13 @@ const BossManager = {
     // 🔥 VERIFICAR DERROTA
     if (this.currentHealth <= 0) {
       console.log("👹 Boss derrotado!");
+
+      // 🔥 Contar al boss como enemigo eliminado en el total
+      if (window.incrementTotalEnemiesKilled) {
+        window.incrementTotalEnemiesKilled();
+        console.log("👑 Boss eliminado y contado en total global");
+      }
+
       setTimeout(() => this.defeat(), 200);
     }
   },
