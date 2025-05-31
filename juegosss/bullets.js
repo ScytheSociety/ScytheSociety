@@ -405,18 +405,23 @@ const BulletManager = {
         }
 
         // Contador para pasar de nivel: solo enemigos del nivel actual
-        if (!enemy.isBossMinion && enemy.level === window.getLevel()) {
-          EnemyManager.enemiesKilled++;
-          console.log(
-            `🎯 Enemigo del nivel ${enemy.level} eliminado. Para pasar nivel: ${EnemyManager.enemiesKilled}/${EnemyManager.enemiesRequired}`
-          );
-        } else if (enemy.isBossMinion) {
-          console.log(
-            `👹 Esbirro del boss eliminado (NO cuenta para pasar nivel, SÍ para total)`
-          );
+        if (!enemy.isBossMinion) {
+          // Verificar si el enemigo pertenece al nivel actual
+          const enemyLevel = enemy.level || window.getLevel(); // Fallback al nivel actual
+
+          if (enemyLevel === window.getLevel()) {
+            EnemyManager.enemiesKilled++;
+            console.log(
+              `🎯 Enemigo del nivel ${enemyLevel} eliminado. Para pasar nivel: ${EnemyManager.enemiesKilled}/${EnemyManager.enemiesRequired}`
+            );
+          } else {
+            console.log(
+              `🎯 Enemigo de nivel anterior (${enemyLevel}) eliminado (NO cuenta para pasar nivel, SÍ para total)`
+            );
+          }
         } else {
           console.log(
-            `🎯 Enemigo de nivel anterior eliminado (NO cuenta para pasar nivel, SÍ para total)`
+            `👹 Esbirro del boss eliminado (NO cuenta para pasar nivel, SÍ para total)`
           );
         }
 
@@ -485,18 +490,23 @@ const BulletManager = {
         }
 
         // Contador para pasar de nivel: solo enemigos del nivel actual
-        if (!enemy.isBossMinion && enemy.level === window.getLevel()) {
-          EnemyManager.enemiesKilled++;
-          console.log(
-            `💥 Enemigo del nivel ${enemy.level} eliminado por explosión. Para pasar nivel: ${EnemyManager.enemiesKilled}/${EnemyManager.enemiesRequired}`
-          );
-        } else if (enemy.isBossMinion) {
-          console.log(
-            `💥 Esbirro del boss eliminado por explosión (NO cuenta para pasar nivel, SÍ para total)`
-          );
+        if (!enemy.isBossMinion) {
+          // Verificar si el enemigo pertenece al nivel actual
+          const enemyLevel = enemy.level || window.getLevel(); // Fallback al nivel actual
+
+          if (enemyLevel === window.getLevel()) {
+            EnemyManager.enemiesKilled++;
+            console.log(
+              `💥 Enemigo del nivel ${enemyLevel} eliminado por explosión. Para pasar nivel: ${EnemyManager.enemiesKilled}/${EnemyManager.enemiesRequired}`
+            );
+          } else {
+            console.log(
+              `💥 Enemigo de nivel anterior (${enemyLevel}) eliminado por explosión (NO cuenta para pasar nivel, SÍ para total)`
+            );
+          }
         } else {
           console.log(
-            `💥 Enemigo de nivel anterior eliminado por explosión (NO cuenta para pasar nivel, SÍ para total)`
+            `💥 Esbirro del boss eliminado por explosión (NO cuenta para pasar nivel, SÍ para total)`
           );
         }
 
@@ -657,6 +667,9 @@ const BulletManager = {
 
     const boss = BossManager.getBoss();
     if (!boss) return;
+
+    // Verificar que estamos en nivel de boss
+    if (window.getLevel() !== 11) return;
 
     // Verificar balas normales contra boss
     for (let i = this.bullets.length - 1; i >= 0; i--) {
