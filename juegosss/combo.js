@@ -75,28 +75,35 @@ const ComboSystem = {
     this.comboDisplay = document.createElement("div");
     this.comboDisplay.id = "combo-display";
 
-    // 🔥 POSICIÓN Y TAMAÑO CORREGIDOS
+    // 🔥 ESTILO NEÓN CURSIVO SIN MARCO
     this.comboDisplay.style.position = "fixed";
-    this.comboDisplay.style.bottom = "25px"; // Mismo nivel que poder especial
-    this.comboDisplay.style.left = "15px"; // Paralelo al botón de poder
-    this.comboDisplay.style.backgroundColor = "rgba(0, 0, 0, 0.85)";
-    this.comboDisplay.style.color = "#FFFFFF";
-    this.comboDisplay.style.padding = "6px 10px"; // MÁS PEQUEÑO
-    this.comboDisplay.style.borderRadius = "6px"; // MÁS PEQUEÑO
-    this.comboDisplay.style.fontSize = "12px"; // MÁS PEQUEÑO
+    this.comboDisplay.style.bottom = "25px";
+    this.comboDisplay.style.left = "15px";
+    this.comboDisplay.style.backgroundColor = "transparent"; // Sin fondo
+    this.comboDisplay.style.border = "none"; // Sin borde
+    this.comboDisplay.style.boxShadow = "none"; // Sin sombra de caja
+    this.comboDisplay.style.color = "#FFD700";
+    this.comboDisplay.style.fontSize = "32px"; // Más grande para efecto neón
     this.comboDisplay.style.fontWeight = "bold";
-    this.comboDisplay.style.fontFamily = '"Arial", sans-serif';
-    this.comboDisplay.style.border = "1px solid #FFD700"; // Borde más sutil
-    this.comboDisplay.style.boxShadow = "0 0 8px rgba(255, 215, 0, 0.4)"; // Sombra más sutil
+    this.comboDisplay.style.fontFamily = '"Arial", cursive'; // Cursiva
+    this.comboDisplay.style.fontStyle = "italic"; // Asegurar cursiva
     this.comboDisplay.style.zIndex = "1000";
-    this.comboDisplay.style.minWidth = "80px"; // MÁS PEQUEÑO
-    this.comboDisplay.style.textAlign = "center";
     this.comboDisplay.style.display = "none";
-    this.comboDisplay.style.transition = "all 0.2s ease"; // Más rápido
+    this.comboDisplay.style.transition = "all 0.3s ease";
+
+    // ⬅️ EFECTO NEÓN ÉPICO
+    this.comboDisplay.style.textShadow = `
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 15px currentColor,
+    0 0 20px currentColor,
+    0 0 35px currentColor,
+    0 0 40px currentColor
+  `;
 
     document.body.appendChild(this.comboDisplay);
 
-    console.log("✅ Display del combo pequeño y elegante creado");
+    console.log("✅ Display del combo neón cursivo creado");
   },
 
   // ======================================================
@@ -359,37 +366,45 @@ const ComboSystem = {
     }
 
     const threshold = this.getCurrentThreshold();
-    const multiplier = threshold.multiplier.toFixed(1);
 
     this.comboDisplay.style.display = "block";
 
-    // 🔥 CONTENIDO MÁS COMPACTO
-    this.comboDisplay.innerHTML = `
-    <div style="font-size: 10px;">COMBO</div>
-    <div style="font-size: 16px; margin: 1px 0;">${this.currentCombo}</div>
-    <div style="font-size: 9px;">${multiplier}x</div>
+    // 🔥 SOLO EL NÚMERO GRANDE EN NEÓN CURSIVO
+    this.comboDisplay.textContent = this.currentCombo;
+
+    // Actualizar color neón
+    this.comboDisplay.style.color = threshold.color;
+
+    // ⬅️ EFECTO NEÓN DINÁMICO SEGÚN EL THRESHOLD
+    this.comboDisplay.style.textShadow = `
+    0 0 5px ${threshold.color},
+    0 0 10px ${threshold.color},
+    0 0 15px ${threshold.color},
+    0 0 20px ${threshold.color},
+    0 0 35px ${threshold.color},
+    0 0 40px ${threshold.color}
   `;
 
-    // Actualizar colores
-    this.comboDisplay.style.color = threshold.color;
-    this.comboDisplay.style.borderColor = threshold.color;
-    this.comboDisplay.style.boxShadow = `0 0 8px ${threshold.color}`;
-
-    // Efecto sutil para combos altos
+    // Efecto de crecimiento para combos altos
     if (this.currentCombo >= 20) {
+      this.comboDisplay.style.fontSize = "36px";
       this.comboDisplay.style.animation =
         "pulse 0.8s ease-in-out infinite alternate";
+    } else if (this.currentCombo >= 10) {
+      this.comboDisplay.style.fontSize = "34px";
+      this.comboDisplay.style.animation = "none";
     } else {
+      this.comboDisplay.style.fontSize = "32px";
       this.comboDisplay.style.animation = "none";
     }
 
-    // Efecto de escala MÁS SUTIL
-    this.comboDisplay.style.transform = "scale(1.05)";
+    // Efecto de escala al obtener nuevo combo
+    this.comboDisplay.style.transform = "scale(1.2)";
     setTimeout(() => {
       if (this.comboDisplay) {
         this.comboDisplay.style.transform = "scale(1)";
       }
-    }, 150);
+    }, 200);
   },
 
   // ======================================================

@@ -224,17 +224,18 @@ function startGame() {
 function startGameLoop() {
   gameEnded = false;
 
-  // Iniciar disparo automático
+  // Código existente...
   BulletManager.startAutoShoot();
-
-  // Iniciar música de fondo
   AudioManager.startBackgroundMusic();
-
-  // Iniciar bucle principal
-  gameInterval = setInterval(gameLoop, 1000 / 60); // 60 FPS
-
-  // Iniciar primer nivel
+  gameInterval = setInterval(gameLoop, 1000 / 60);
   startLevel();
+
+  // ⬅️ AGREGAR ESTAS LÍNEAS AL FINAL:
+  // Mostrar contador total solo durante el juego
+  const totalDisplay = document.getElementById("total-enemies-display");
+  if (totalDisplay) {
+    totalDisplay.style.display = "block";
+  }
 
   console.log("🔄 Bucle de juego ÉPICO iniciado");
 }
@@ -650,15 +651,15 @@ function nextLevel() {
     console.log(`📈 Iniciando nivel normal ${level}`);
     startLevel();
   }
-  // Nivel 11: Boss Final
+  // Nivel 11: Boss Final - NO VICTORIA AUTOMÁTICA
   else if (level === 11) {
     console.log(`👹 ¡Tiempo del Boss Final! (Nivel ${level})`);
     startBossLevel();
   }
-  // No debería llegar más allá del 11
+  // Si por alguna razón se llega más allá del 11, es error
   else {
     console.log(`❌ Error: Nivel ${level} no debería existir`);
-    victory(); // Por si acaso, dar victoria
+    // NO llamar victory() aquí, solo log de error
   }
 }
 
@@ -842,6 +843,13 @@ function backToMenu() {
   document.getElementById("main-menu").style.display = "block";
 
   UI.centerMainMenu();
+
+  // ⬅️ AGREGAR ESTA LÍNEA AL FINAL:
+  // Ocultar contador total fuera del juego
+  const totalDisplay = document.getElementById("total-enemies-display");
+  if (totalDisplay) {
+    totalDisplay.style.display = "none";
+  }
 }
 
 // ======================================================

@@ -886,17 +886,17 @@ const BossManager = {
   defeat() {
     console.log("👹 === BOSS DERROTADO EN NIVEL 11 ===");
 
-    // 🔥 MARCAR COMO INACTIVO INMEDIATAMENTE
+    // Marcar como inactivo inmediatamente
     this.active = false;
     this.currentHealth = 0;
 
-    // 🔥 COMENTARIOS DE DERROTA
+    // Comentarios de derrota
     this.sayRandomComment("derrota_boss");
 
     // Efectos de derrota
     UI.showScreenMessage("🏆 ¡BOSS DERROTADO! 🏆", "#FFD700");
 
-    // Efectos visuales más épicos
+    // Efectos visuales épicos
     for (let i = 0; i < 10; i++) {
       setTimeout(() => {
         UI.createParticleEffect(
@@ -908,26 +908,24 @@ const BossManager = {
       }, i * 200);
     }
 
-    // Puntos bonus masivos
+    // Puntos bonus
     const bonusPoints = 5000;
     window.setScore(window.getScore() + bonusPoints);
     UI.showScreenMessage(`+${bonusPoints} PUNTOS BONUS!`, "#FFD700");
 
-    // Limpiar minas y enemigos
+    // Limpiar sistemas
     this.mines = [];
     EnemyManager.enemies = [];
 
     AudioManager.playSound("victory");
 
-    // ⬅️ LLAMADA A VICTORIA
+    // ⬅️ ESTA ES LA ÚNICA LLAMADA A VICTORY QUE DEBE EXISTIR
     setTimeout(() => {
-      console.log("🏆 Llamando a window.victory() desde nivel 11");
+      console.log("🏆 Llamando a window.victory() desde boss derrotado");
       window.victory();
     }, 2000);
 
-    console.log(
-      "🏆 Boss derrotado - secuencia de victoria iniciada desde nivel 11"
-    );
+    console.log("🏆 Boss derrotado - secuencia de victoria iniciada");
   },
 
   // ======================================================

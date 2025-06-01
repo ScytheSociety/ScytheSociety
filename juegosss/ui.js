@@ -893,7 +893,7 @@ const UI = {
     const totalDisplay = document.createElement("div");
     totalDisplay.id = "total-enemies-display";
     totalDisplay.style.position = "fixed";
-    totalDisplay.style.bottom = "70px"; // Arriba del combo
+    totalDisplay.style.bottom = "90px"; // ⬅️ CAMBIO: Era 70px, ahora 90px (más arriba)
     totalDisplay.style.left = "15px";
     totalDisplay.style.backgroundColor = "rgba(0, 0, 0, 0.85)";
     totalDisplay.style.color = "#FFFFFF";
@@ -907,6 +907,7 @@ const UI = {
     totalDisplay.style.zIndex = "1000";
     totalDisplay.style.minWidth = "70px";
     totalDisplay.style.textAlign = "center";
+    totalDisplay.style.display = "none"; // ⬅️ NUEVO: Oculto por defecto
     totalDisplay.textContent = "Total: 0";
 
     document.body.appendChild(totalDisplay);
