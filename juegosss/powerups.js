@@ -392,10 +392,10 @@ const PowerUpManager = {
           symbol = "🛡️";
           break; // Escudo
         case 1:
-          symbol = "↑";
+          symbol = "🌟";
           break; // Amplio
         case 2:
-          symbol = "✺";
+          symbol = "💥";
           break; // Explosivo
         case 3:
           symbol = "⚡";

@@ -153,6 +153,8 @@ const BulletManager = {
 
             fromSpecialPower: false,
             level: level,
+            rotation: 0,
+            spinSpeed: 0.2 + Math.random() * 0.1,
           };
 
           this.bullets.push(bullet);
@@ -178,6 +180,8 @@ const BulletManager = {
 
             fromSpecialPower: false,
             level: level,
+            rotation: 0,
+            spinSpeed: 0.2 + Math.random() * 0.1,
           };
 
           this.bullets.push(bullet);
@@ -228,6 +232,8 @@ const BulletManager = {
         life: 4000 / 16.67, // 4 segundos en frames (más duración)
 
         level: window.getLevel(),
+        rotation: 0,
+        spinSpeed: 0.3 + Math.random() * 0.2,
       };
 
       this.specialBullets.push(specialBullet);
@@ -275,6 +281,8 @@ const BulletManager = {
       // Movimiento más fluido
       bullet.x += bullet.velocityX;
       bullet.y += bullet.velocityY;
+
+      bullet.rotation += bullet.spinSpeed || 0.2;
     }
   },
 
@@ -291,6 +299,8 @@ const BulletManager = {
       // Mover bala
       bullet.x += bullet.velocityX;
       bullet.y += bullet.velocityY;
+
+      bullet.rotation += bullet.spinSpeed || 0.2;
     }
   },
 
@@ -584,12 +594,12 @@ const BulletManager = {
       }
 
       // Rotación basada en dirección
-      const angle =
-        Math.atan2(bullet.velocityY, bullet.velocityX) + Math.PI / 2;
+      // Usar rotación continua para efecto de giro
+      const spinAngle = bullet.rotation || 0;
 
       // Trasladar y rotar
       ctx.translate(bullet.x + bullet.width / 2, bullet.y + bullet.height / 2);
-      ctx.rotate(angle);
+      ctx.rotate(spinAngle);
 
       // Dibujar bala
       if (GameConfig.bulletImage && GameConfig.bulletImage.complete) {

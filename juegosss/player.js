@@ -78,25 +78,33 @@ const Player = {
     });
 
     // Controles táctiles mejorados
-    if (GameConfig.isTouch) {
-      canvas.addEventListener("touchmove", (e) => {
-        e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const touch = e.touches[0];
-        this.mouseX = touch.clientX - rect.left;
-        this.mouseY = touch.clientY - rect.top - 80; // Offset para no tapar
-        this.updatePosition();
-      });
+    let lastTapTime = 0;
+    const doubleTapDelay = 300;
 
-      canvas.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const touch = e.touches[0];
-        this.mouseX = touch.clientX - rect.left;
-        this.mouseY = touch.clientY - rect.top - 80;
-        this.updatePosition();
-      });
-    }
+    canvas.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      const currentTime = Date.now();
+
+      // Verificar doble toque
+      if (currentTime - lastTapTime < doubleTapDelay) {
+        if (
+          BulletManager.isSpecialPowerReady() &&
+          !BulletManager.isSpecialPowerActive()
+        ) {
+          BulletManager.activateSpecialPower();
+          return; // Salir para no actualizar posición
+        }
+      }
+
+      lastTapTime = currentTime;
+
+      // Código original de posición
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      this.mouseX = touch.clientX - rect.left;
+      this.mouseY = touch.clientY - rect.top - 80;
+      this.updatePosition();
+    });
 
     // Poder especial con espacio
     window.addEventListener("keydown", (e) => {

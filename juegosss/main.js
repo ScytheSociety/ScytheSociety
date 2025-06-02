@@ -775,6 +775,14 @@ function restartGame() {
   }
 
   resetGameState();
+  // Asegurar que el sistema de combos se reinicie correctamente
+  if (window.ComboSystem) {
+    ComboSystem.reset();
+    // Recrear el display si no existe
+    setTimeout(() => {
+      ComboSystem.createComboDisplay();
+    }, 100);
+  }
   startGame();
 }
 

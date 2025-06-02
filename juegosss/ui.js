@@ -132,14 +132,17 @@ const UI = {
     messageElement.style.fontWeight = "bold";
     messageElement.style.textShadow = "2px 2px 4px rgba(0,0,0,0.9)";
     messageElement.style.zIndex = "1000";
-    messageElement.style.backgroundColor = "rgba(0,0,0,0.8)";
-    messageElement.style.padding = "4px 12px";
-    messageElement.style.borderRadius = "6px";
+    messageElement.style.backgroundColor = "rgba(0,0,0,0.6)"; // Más transparente
+    messageElement.style.border = "none"; // Quitar borde completamente
+    messageElement.style.borderRadius = "8px"; // Mantener bordes redondeados
     messageElement.style.border = `1px solid ${color}`;
     messageElement.style.maxWidth = "300px";
     messageElement.style.textAlign = "center";
     messageElement.style.fontFamily = '"Arial", sans-serif';
     messageElement.style.transition = "all 0.3s ease";
+    messageElement.style.animation = "messageSlideIn 0.4s ease-out";
+    messageElement.style.letterSpacing = "1px";
+    messageElement.style.textTransform = "uppercase";
 
     document.body.appendChild(messageElement);
 
@@ -1003,3 +1006,23 @@ window.selectEmoji = (emoji) => UI.selectEmoji(emoji);
 window.UI = UI;
 
 console.log("🎨 ui.js cargado - Sistema de UI corregido");
+
+// AGREGAR AQUÍ (después del console.log final):
+const style = document.createElement("style");
+style.textContent = `
+@keyframes messageSlideIn {
+    0% { 
+        opacity: 0; 
+        transform: translateX(-50%) translateY(-20px) scale(0.8); 
+    }
+    100% { 
+        opacity: 1; 
+        transform: translateX(-50%) translateY(0) scale(1); 
+    }
+}
+@keyframes messagePulse {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.05); }
+}
+`;
+document.head.appendChild(style);
