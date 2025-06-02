@@ -132,10 +132,11 @@ const UI = {
     messageElement.style.fontWeight = "bold";
     messageElement.style.textShadow = "2px 2px 4px rgba(0,0,0,0.9)";
     messageElement.style.zIndex = "1000";
-    messageElement.style.backgroundColor = "rgba(0,0,0,0.6)"; // Más transparente
-    messageElement.style.border = "none"; // Quitar borde completamente
-    messageElement.style.borderRadius = "8px"; // Mantener bordes redondeados
-    messageElement.style.border = `1px solid ${color}`;
+    messageElement.style.backgroundColor = "transparent";
+    messageElement.style.padding = "0";
+    messageElement.style.borderRadius = "0";
+    messageElement.style.border = "none";
+    messageElement.style.outline = "none";
     messageElement.style.maxWidth = "300px";
     messageElement.style.textAlign = "center";
     messageElement.style.fontFamily = '"Arial", sans-serif';
@@ -143,6 +144,9 @@ const UI = {
     messageElement.style.animation = "messageSlideIn 0.4s ease-out";
     messageElement.style.letterSpacing = "1px";
     messageElement.style.textTransform = "uppercase";
+    messageElement.style.boxShadow = "none";
+    messageElement.style.webkitBoxShadow = "none";
+    messageElement.style.mozBoxShadow = "none";
 
     document.body.appendChild(messageElement);
 
