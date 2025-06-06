@@ -66,7 +66,7 @@ const Player = {
   },
 
   /**
-   * Configura los controles del jugador
+   * Configura los controles del jugador - CORREGIDO PARA MÓVIL
    */
   setupControls(canvas) {
     // Controles de mouse
@@ -77,36 +77,75 @@ const Player = {
       this.updatePosition();
     });
 
-    // Controles táctiles mejorados
+    // ⭐ CONTROLES TÁCTILES CORREGIDOS
     let lastTapTime = 0;
     const doubleTapDelay = 300;
+    let isMoving = false;
 
-    canvas.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      const currentTime = Date.now();
+    // Touch Move - Movimiento principal
+    canvas.addEventListener(
+      "touchmove",
+      (e) => {
+        e.preventDefault();
+        if (e.touches.length > 0) {
+          const rect = canvas.getBoundingClientRect();
+          const touch = e.touches[0];
 
-      // Verificar doble toque
-      if (currentTime - lastTapTime < doubleTapDelay) {
-        if (
-          BulletManager.isSpecialPowerReady() &&
-          !BulletManager.isSpecialPowerActive()
-        ) {
-          BulletManager.activateSpecialPower();
-          return; // Salir para no actualizar posición
+          // ⭐ USAR LAS COORDENADAS EXACTAS DEL TOQUE
+          this.mouseX = touch.clientX - rect.left;
+          this.mouseY = touch.clientY - rect.top;
+
+          this.updatePosition();
+          isMoving = true;
         }
-      }
+      },
+      { passive: false }
+    );
 
-      lastTapTime = currentTime;
+    // Touch Start - Detección de doble tap y posición inicial
+    canvas.addEventListener(
+      "touchstart",
+      (e) => {
+        e.preventDefault();
+        const currentTime = Date.now();
 
-      // Código original de posición
-      const rect = canvas.getBoundingClientRect();
-      const touch = e.touches[0];
-      this.mouseX = touch.clientX - rect.left;
-      this.mouseY = touch.clientY - rect.top - 80;
-      this.updatePosition();
-    });
+        // Verificar doble toque para poder especial
+        if (currentTime - lastTapTime < doubleTapDelay && !isMoving) {
+          if (
+            BulletManager.isSpecialPowerReady() &&
+            !BulletManager.isSpecialPowerActive()
+          ) {
+            BulletManager.activateSpecialPower();
+            console.log("⚡ Poder especial activado por doble tap");
+            return; // Salir para no actualizar posición
+          }
+        }
 
-    // Poder especial con espacio
+        lastTapTime = currentTime;
+
+        // ⭐ ACTUALIZAR POSICIÓN INMEDIATAMENTE AL TOCAR
+        if (e.touches.length > 0) {
+          const rect = canvas.getBoundingClientRect();
+          const touch = e.touches[0];
+          this.mouseX = touch.clientX - rect.left;
+          this.mouseY = touch.clientY - rect.top;
+          this.updatePosition();
+        }
+      },
+      { passive: false }
+    );
+
+    // Touch End - Detener movimiento
+    canvas.addEventListener(
+      "touchend",
+      (e) => {
+        e.preventDefault();
+        isMoving = false;
+      },
+      { passive: false }
+    );
+
+    // Poder especial con espacio (teclado)
     window.addEventListener("keydown", (e) => {
       if (
         e.key === " " &&
@@ -118,7 +157,7 @@ const Player = {
       }
     });
 
-    console.log("🎮 Controles ÉPICOS configurados");
+    console.log("🎮 Controles ÉPICOS configurados con táctil corregido");
   },
 
   /**
@@ -315,7 +354,7 @@ const Player = {
   // ======================================================
 
   /**
-   * El jugador recibe daño - ROMPE EL COMBO
+   * El jugador recibe daño - CORREGIDO PARA ACTIVAR GAME OVER INMEDIATO
    */
   takeDamage() {
     // Si es invulnerable, no recibir daño
@@ -331,17 +370,19 @@ const Player = {
     // Reducir vidas
     this.lives--;
 
-    // 🔥 VERIFICAR MUERTE INMEDIATAMENTE
+    // ⭐ VERIFICAR MUERTE INMEDIATAMENTE Y ACTIVAR GAME OVER
     if (this.lives <= 0) {
       this.lives = 0; // Asegurar que no sea negativo
-      console.log("💀 Jugador ha muerto - activando game over");
+      console.log("💀 Jugador ha muerto - activando game over INMEDIATAMENTE");
 
-      // Activar game over inmediatamente
-      setTimeout(() => {
-        if (window.gameOver && typeof window.gameOver === "function") {
-          window.gameOver();
-        }
-      }, 100);
+      // ⭐ ACTIVAR GAME OVER SIN DELAY
+      if (
+        window.gameOver &&
+        typeof window.gameOver === "function" &&
+        !window.isGameEnded()
+      ) {
+        window.gameOver();
+      }
 
       return true;
     }
@@ -357,7 +398,7 @@ const Player = {
 
     console.log(`💔 Jugador dañado. Vidas: ${this.lives}. Combo roto.`);
 
-    return true;
+    return false;
   },
 
   /**

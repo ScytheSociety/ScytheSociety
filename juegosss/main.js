@@ -873,7 +873,7 @@ let scoreAlreadySaved = false;
 let isSaving = false;
 
 /**
- * Guarda la puntuación - CORREGIDO PARA ENVIAR ENEMIGOS MATADOS
+ * Guarda la puntuación - CORREGIDO PARA VICTORIA SOLO CON BOSS MUERTO
  */
 async function saveScore() {
   console.log("🚀 Guardando puntuación...");
@@ -881,7 +881,7 @@ async function saveScore() {
   try {
     const playerName = Player.getName();
     const playerAvatar = Player.getAvatar();
-    const enemiesKilled = totalEnemiesKilled; // Total de enemigos para Excel
+    const enemiesKilled = totalEnemiesKilled;
     const maxCombo = ComboSystem.getMaxCombo();
 
     // Validar datos antes de enviar
@@ -889,10 +889,24 @@ async function saveScore() {
       throw new Error("Datos del jugador incompletos");
     }
 
-    // Obtener status del juego
+    // ⭐ CORREGIR LÓGICA DE VICTORIA: Solo si boss fue derrotado
     let gameStatus = "Derrota";
-    if (level >= GameConfig.MAX_LEVELS) {
+
+    // ⭐ Victoria SOLO si el boss está inactivo (fue derrotado) Y estamos en nivel 11+
+    if (
+      level >= 11 &&
+      BossManager &&
+      !BossManager.isActive() &&
+      BossManager.getBossHealth() <= 0
+    ) {
       gameStatus = "Victoria";
+      console.log("🏆 Victoria registrada: Boss derrotado en nivel 11+");
+    } else {
+      console.log(
+        `💀 Derrota registrada: Nivel ${level}, Boss activo: ${
+          BossManager ? BossManager.isActive() : "N/A"
+        }`
+      );
     }
 
     // Crear URL con parámetros
@@ -902,7 +916,7 @@ async function saveScore() {
     params.append("avatar", playerAvatar);
     params.append("name", playerName);
     params.append("level", level);
-    params.append("enemiesKilled", enemiesKilled); // 🔥 CORRECCIÓN: Variable correcta
+    params.append("enemiesKilled", enemiesKilled);
     params.append("time", Math.floor(gameTime / 60));
     params.append("score", score);
     params.append("maxCombo", maxCombo);

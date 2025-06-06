@@ -253,29 +253,47 @@ const UI = {
   },
 
   /**
-   * Actualiza la visualización de vidas
+   * Actualiza la visualización de vidas - CORREGIDO PARA GAME OVER
    */
   updateLivesDisplay() {
     const livesDisplay = document.getElementById("player-lives");
     if (!livesDisplay) return;
 
-    const lives = Math.max(0, Player.getLives()); // 🔥 NUNCA negativo
+    const lives = Math.max(0, Player.getLives());
 
-    // 🔥 LOG PARA DEBUG
-    if (lives === 0) {
-      console.log("⚠️ UI detectó 0 vidas - debería activarse game over");
+    // ⭐ CORREGIR: Verificar si el juego ha terminado
+    if (window.isGameEnded && window.isGameEnded()) {
+      livesDisplay.innerHTML = "💀 GAME OVER";
+      livesDisplay.style.color = "#FF0000";
+      livesDisplay.style.fontWeight = "bold";
+      return;
     }
 
     let livesText = "";
 
     if (lives === 0) {
-      livesText = "💀 GAME OVER"; // Mostrar mensaje cuando no hay vidas
+      // ⭐ MOSTRAR GAME OVER INMEDIATAMENTE CUANDO NO HAY VIDAS
+      livesText = "💀 GAME OVER";
+      livesDisplay.style.color = "#FF0000";
+      livesDisplay.style.fontWeight = "bold";
+
+      // ⭐ ACTIVAR GAME OVER SI NO SE HA ACTIVADO AÚN
+      if (window.gameOver && !window.isGameEnded()) {
+        console.log("💀 UI detectó 0 vidas - activando game over");
+        setTimeout(() => {
+          window.gameOver();
+        }, 100);
+      }
     } else if (lives <= 7) {
       livesText = "💀".repeat(lives);
+      livesDisplay.style.color = "#FFFFFF";
+      livesDisplay.style.fontWeight = "normal";
     } else {
       const firstRow = "💀".repeat(7);
       const secondRow = "💀".repeat(lives - 7);
       livesText = firstRow + "<br>" + secondRow;
+      livesDisplay.style.color = "#FFFFFF";
+      livesDisplay.style.fontWeight = "normal";
     }
 
     livesDisplay.innerHTML = livesText;
