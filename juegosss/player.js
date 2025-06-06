@@ -66,10 +66,10 @@ const Player = {
   },
 
   /**
-   * Configura los controles del jugador - CORREGIDO PARA MÓVIL
+   * Configura los controles del jugador - CORREGIDO CON OFFSET PARA MÓVIL
    */
   setupControls(canvas) {
-    // Controles de mouse
+    // Controles de mouse (sin cambios)
     canvas.addEventListener("mousemove", (e) => {
       const rect = canvas.getBoundingClientRect();
       this.mouseX = e.clientX - rect.left;
@@ -77,12 +77,15 @@ const Player = {
       this.updatePosition();
     });
 
-    // ⭐ CONTROLES TÁCTILES CORREGIDOS
+    // ⭐ CONTROLES TÁCTILES CON OFFSET PARA VER EL PERSONAJE
     let lastTapTime = 0;
     const doubleTapDelay = 300;
     let isMoving = false;
 
-    // Touch Move - Movimiento principal
+    // ⭐ OFFSET PARA QUE EL PERSONAJE ESTÉ ARRIBA DEL DEDO
+    const TOUCH_OFFSET_Y = -80; // El personaje aparecerá 80px ARRIBA del dedo
+
+    // Touch Move - Movimiento principal con offset
     canvas.addEventListener(
       "touchmove",
       (e) => {
@@ -91,9 +94,9 @@ const Player = {
           const rect = canvas.getBoundingClientRect();
           const touch = e.touches[0];
 
-          // ⭐ USAR LAS COORDENADAS EXACTAS DEL TOQUE
+          // ⭐ APLICAR OFFSET: Personaje arriba del dedo
           this.mouseX = touch.clientX - rect.left;
-          this.mouseY = touch.clientY - rect.top;
+          this.mouseY = touch.clientY - rect.top + TOUCH_OFFSET_Y; // Offset hacia arriba
 
           this.updatePosition();
           isMoving = true;
@@ -102,7 +105,7 @@ const Player = {
       { passive: false }
     );
 
-    // Touch Start - Detección de doble tap y posición inicial
+    // Touch Start - Detección de doble tap y posición inicial con offset
     canvas.addEventListener(
       "touchstart",
       (e) => {
@@ -123,12 +126,15 @@ const Player = {
 
         lastTapTime = currentTime;
 
-        // ⭐ ACTUALIZAR POSICIÓN INMEDIATAMENTE AL TOCAR
+        // ⭐ ACTUALIZAR POSICIÓN CON OFFSET AL TOCAR
         if (e.touches.length > 0) {
           const rect = canvas.getBoundingClientRect();
           const touch = e.touches[0];
+
+          // ⭐ APLICAR OFFSET: Personaje arriba del dedo
           this.mouseX = touch.clientX - rect.left;
-          this.mouseY = touch.clientY - rect.top;
+          this.mouseY = touch.clientY - rect.top + TOUCH_OFFSET_Y; // Offset hacia arriba
+
           this.updatePosition();
         }
       },
@@ -157,7 +163,9 @@ const Player = {
       }
     });
 
-    console.log("🎮 Controles ÉPICOS configurados con táctil corregido");
+    console.log(
+      "🎮 Controles táctiles configurados con offset -80px para visibilidad"
+    );
   },
 
   /**
