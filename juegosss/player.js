@@ -83,7 +83,7 @@ const Player = {
     let isMoving = false;
 
     // ⭐ OFFSET PARA QUE EL PERSONAJE ESTÉ ARRIBA DEL DEDO
-    const TOUCH_OFFSET_Y = -80; // El personaje aparecerá 80px ARRIBA del dedo
+    const TOUCH_OFFSET_Y = -100; // El personaje aparecerá 80px ARRIBA del dedo
 
     // Touch Move - Movimiento principal con offset
     canvas.addEventListener(
