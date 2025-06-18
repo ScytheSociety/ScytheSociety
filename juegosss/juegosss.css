@@ -1,11 +1,11 @@
 /* 
- * Hell Shooter - Gothic Themed Game
- * CSS Completo con Mejoras Visuales Épicas
- * Versión Final Optimizada y Responsive
+ * Hell Shooter - Professional Gothic Themed Game
+ * CSS Completo con Logo, Fondo y Diseño Profesional
+ * Versión Profesional y Seria
  */
 
 /* =============================================== */
-/* VARIABLES GLOBALES Y BASE */
+/* VARIABLES GLOBALES Y TIPOGRAFÍA PROFESIONAL */
 /* =============================================== */
 
 :root {
@@ -21,15 +21,21 @@
   --warning-color: #ff9800;
   --info-color: #607d8b;
   --gold-color: #ffd700;
+  --professional-font: "Cinzel", serif;
+  --gothic-font: "Creepster", cursive;
+  --section-spacing: 30px;
 }
 
-/* Base Styles Mejorados */
+/* =============================================== */
+/* BASE STYLES PROFESIONALES */
+/* =============================================== */
+
 * {
   box-sizing: border-box;
 }
 
 body {
-  font-family: "Arial", sans-serif;
+  font-family: var(--professional-font);
   text-align: center;
   background-color: var(--primary-color);
   color: var(--text-color);
@@ -38,15 +44,50 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-image: url("/api/placeholder/800/600");
+  position: relative;
+}
+
+/* =============================================== */
+/* FONDO DE PANTALLA COMPLETO */
+/* =============================================== */
+
+#background-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url("../imagenes/imagenesjuegosss/fondo-hell-shooter.jpg"); /* ⬅️ TU IMAGEN DE FONDO AQUÍ */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
+  z-index: -2;
+}
+
+#background-overlay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(139, 0, 0, 0) 50%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  z-index: 1;
+}
+
+/* Ocultar fondo durante el juego */
+#game-area:not([style*="display: none"]) ~ #background-overlay {
+  display: none;
 }
 
 /* =============================================== */
-/* MENÚ PRINCIPAL MEJORADO */
+/* MENÚ PRINCIPAL PROFESIONAL */
 /* =============================================== */
 
 #main-menu {
@@ -54,151 +95,268 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  gap: 25px;
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.9) 0%,
-    rgba(139, 0, 0, 0.8) 100%
-  );
-  backdrop-filter: blur(10px);
+  gap: var(--section-spacing);
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+  padding-top: 40px;
 }
 
-h1 {
+/* =============================================== */
+/* LOGO DEL JUEGO */
+/* =============================================== */
+
+.game-logo-container {
+  width: 100%;
+  max-width: 400px;
   margin-bottom: 15px;
-  font-size: 3.2em;
-  text-shadow: 0 0 20px var(--accent-color), 0 0 40px var(--accent-color);
-  letter-spacing: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
+.game-logo {
+  max-width: 100%;
+  height: auto;
+  max-height: 200px;
+  border: none;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  transition: all 0.5s ease;
+  filter: none;
+}
+
+.game-logo:hover {
+  transform: scale(1.05);
+}
+
+/* =============================================== */
+/* TÍTULO Y SUBTÍTULO PROFESIONALES */
+/* =============================================== */
+
+.game-title-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.game-title {
+  margin: 0 0 10px 0;
+  font-size: 3.5em;
+  font-family: var(--gothic-font);
+  text-shadow: 0 0 20px var(--accent-color), 0 0 40px var(--accent-color),
+    2px 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 4px;
   color: var(--accent-color);
-  font-weight: bold;
-  animation: titleGlow 3s ease-in-out infinite alternate;
+  font-weight: 700;
+  animation: titleGlow 4s ease-in-out infinite alternate;
+  line-height: 1.1;
+}
+
+.game-subtitle {
+  font-size: 1.2em;
+  color: var(--gold-color);
+  font-family: var(--professional-font);
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 1px 1px 2px rgba(0, 0, 0, 0.8);
+  letter-spacing: 2px;
+  margin: 0;
+  opacity: 0.9;
 }
 
 @keyframes titleGlow {
   0% {
-    text-shadow: 0 0 20px var(--accent-color), 0 0 40px var(--accent-color);
+    text-shadow: 0 0 20px var(--accent-color), 0 0 40px var(--accent-color),
+      2px 2px 4px rgba(0, 0, 0, 0.8);
   }
   100% {
     text-shadow: 0 0 30px var(--accent-color), 0 0 60px var(--accent-color),
-      0 0 80px var(--accent-color);
+      0 0 80px var(--accent-color), 2px 2px 4px rgba(0, 0, 0, 0.8);
   }
 }
 
 /* =============================================== */
-/* CONTROLES DE ENTRADA MEJORADOS */
+/* SECCIONES ORGANIZADAS */
+/* =============================================== */
+
+.input-section,
+.main-buttons-section,
+.secondary-buttons-section {
+  width: 100%;
+  max-width: 700px;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(139, 0, 0, 0.3) 50%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  border: 2px solid var(--border-color);
+  border-radius: 15px;
+  padding: 25px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.1);
+}
+
+.section-title {
+  color: var(--accent-color);
+  font-family: var(--professional-font);
+  font-size: 1.4em;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+  text-shadow: 0 0 10px var(--accent-color);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* =============================================== */
+/* CONTROLES DE ENTRADA PROFESIONALES */
 /* =============================================== */
 
 .input-container {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 0;
   width: 100%;
-  max-width: 600px;
-  margin-bottom: 15px;
+  max-width: 700px;
 }
 
 .input-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 25px;
+  gap: 30px;
 }
 
 .input-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
 }
 
 .input-group label {
-  color: var(--accent-color);
-  font-weight: bold;
+  color: var(--gold-color);
+  font-family: var(--professional-font);
+  font-weight: 600;
   font-size: 1.1em;
-  text-shadow: 0 0 5px var(--accent-color);
+  text-shadow: 0 0 5px var(--gold-color);
+  letter-spacing: 1px;
 }
 
 .avatar-input-container {
   display: flex;
   align-items: center;
-  gap: 8px; /* ⬅️ CAMBIO: Era 5px, ahora 8px */
+  gap: 10px;
 }
 
 input {
-  padding: 10px 15px;
+  padding: 12px 18px;
   border: 2px solid var(--border-color);
   background: linear-gradient(
     135deg,
     var(--input-bg) 0%,
-    rgba(26, 26, 26, 0.8) 100%
+    rgba(26, 26, 26, 0.9) 100%
   );
   color: var(--text-color);
-  border-radius: 8px;
-  font-family: "Arial", sans-serif;
-  font-size: 1em;
-  transition: all 0.3s ease;
+  border-radius: 10px;
+  font-family: var(--professional-font);
+  font-size: 1.1em;
+  font-weight: 600;
+  transition: all 0.4s ease;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
 }
 
 input:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.6), inset 0 2px 5px rgba(0, 0, 0, 0.5);
   background: linear-gradient(
     135deg,
-    rgba(26, 26, 26, 0.9) 0%,
+    rgba(26, 26, 26, 0.95) 0%,
     rgba(139, 0, 0, 0.2) 100%
   );
-  transform: scale(1.02);
+  transform: scale(1.03);
 }
 
 #avatar {
-  width: 60px; /* ⬅️ CAMBIO: Era 50px, ahora 60px */
-  height: 50px; /* ⬅️ NUEVO: Altura fija */
+  width: 70px;
+  height: 55px;
   text-align: center;
-  font-size: 1.4em; /* ⬅️ CAMBIO: Era 1.3em, ahora 1.4em */
+  font-size: 1.5em;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px; /* ⬅️ NUEVO: Padding interno */
+  padding: 10px;
 }
 
 #name {
-  width: 120px;
+  width: 140px;
   text-align: center;
 }
 
 /* =============================================== */
-/* BOTONES MEJORADOS */
+/* BOTONES PROFESIONALES */
 /* =============================================== */
 
 .button-container {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 25px;
   align-items: center;
-  margin-top: 25px;
   width: 100%;
-  max-width: 600px; /* ⬅️ NUEVO: Mismo ancho que inputs */
+  max-width: 700px;
 }
 
-.main-buttons-row {
+.main-buttons-row,
+.secondary-buttons-row {
   display: flex;
-  gap: 15px;
-  justify-content: space-between;
+  gap: 20px;
+  justify-content: center;
   width: 100%;
   align-items: center;
 }
 
-.main-button {
-  flex: 1; /* ⬅️ NUEVO: Todos los botones del mismo ancho */
-  min-width: 0; /* ⬅️ NUEVO: Permite que flex funcione */
-  height: 50px; /* ⬅️ NUEVO: Altura fija */
-  font-size: 0.95em !important;
-  padding: 8px 12px !important;
+.main-button,
+.secondary-button {
+  flex: 1;
+  min-width: 0;
+  height: 60px;
+  font-size: 1em;
+  padding: 12px 15px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
+  gap: 4px;
+}
+
+.primary-action {
+  background: linear-gradient(
+    135deg,
+    var(--accent-color) 0%,
+    #cc0000 50%,
+    var(--accent-color) 100%
+  ) !important;
+  border-color: var(--accent-color) !important;
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.7) !important;
+}
+
+.secondary-button {
+  height: 50px;
+  font-size: 0.9em;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 0, 0, 0.8) 0%,
+    rgba(170, 0, 0, 0.8) 100%
+  );
 }
 
 button,
@@ -209,19 +367,27 @@ button,
     var(--hover-color) 100%
   );
   color: var(--text-color);
-  padding: 12px 25px;
+  padding: 15px 25px;
   border: 2px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 1.1em;
-  font-weight: bold;
-  transition: all 0.3s ease;
+  font-family: var(--professional-font);
+  font-weight: 600;
+  transition: all 0.4s ease;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  min-width: 140px;
-  font-family: "Arial", sans-serif;
+  letter-spacing: 1.5px;
+  min-width: 160px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6),
+    inset 0 1px 3px rgba(255, 255, 255, 0.1);
+}
+
+button i,
+.gothic-button i {
+  font-size: 1.2em;
+  margin-bottom: 2px;
 }
 
 button:hover,
@@ -231,27 +397,31 @@ button:hover,
     var(--hover-color) 0%,
     var(--accent-color) 100%
   );
-  box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
-  transform: translateY(-3px);
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.8), 0 8px 20px rgba(0, 0, 0, 0.8);
+  transform: translateY(-4px);
   border-color: var(--accent-color);
 }
 
 button:active,
 .gothic-button:active {
-  transform: translateY(-1px);
-  box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.6), 0 4px 10px rgba(0, 0, 0, 0.6);
 }
 
 #emoji-button {
-  padding: 10px;
-  min-width: 50px;
+  padding: 12px;
+  min-width: 55px;
+  height: 55px;
   background: linear-gradient(
     135deg,
     var(--input-bg) 0%,
-    rgba(26, 26, 26, 0.8) 100%
+    rgba(26, 26, 26, 0.9) 100%
   );
   border: 2px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #emoji-button:hover {
@@ -264,6 +434,33 @@ button:active,
 }
 
 /* =============================================== */
+/* INFORMACIÓN DEL JUEGO EN PIE */
+/* =============================================== */
+
+.game-info-footer {
+  margin-top: auto;
+  padding: 15px;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(139, 0, 0, 0.4) 100%
+  );
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(5px);
+}
+
+.version-info {
+  color: var(--gold-color);
+  font-family: var(--professional-font);
+  font-size: 0.9em;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 1px;
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.8);
+}
+
+/* =============================================== */
 /* ÁREA DE JUEGO OPTIMIZADA */
 /* =============================================== */
 
@@ -273,6 +470,7 @@ button:active,
   display: flex;
   flex-direction: column;
   position: relative;
+  background-color: #111;
 }
 
 #game-canvas {
@@ -316,50 +514,8 @@ button:active,
   flex-shrink: 1;
 }
 
-@media (max-width: 768px) {
-  #game-info {
-    font-size: 0.75em;
-    padding: 6px 8px;
-    justify-content: space-around;
-  }
-
-  #game-info > div {
-    font-size: 0.8em;
-    margin: 0 2px;
-  }
-
-  .main-buttons-row {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .main-button {
-    width: 100%;
-    min-width: 200px;
-    height: 45px;
-  }
-}
-
-@media (max-width: 480px) {
-  #game-info {
-    font-size: 0.7em;
-    padding: 5px 6px;
-  }
-
-  #game-info > div {
-    font-size: 0.75em;
-    margin: 0 1px;
-  }
-
-  .main-button {
-    font-size: 0.85em !important;
-    height: 42px;
-    min-width: 180px;
-  }
-}
-
 /* =============================================== */
-/* GAME OVER COMPLETAMENTE REDISEÑADO */
+/* GAME OVER PROFESIONAL */
 /* =============================================== */
 
 #game-over {
@@ -374,7 +530,7 @@ button:active,
   min-width: 350px;
   max-width: 450px;
   width: 90vw;
-  animation: gameOverAppear 0.5s ease-out;
+  animation: gameOverAppear 0.6s ease-out;
 }
 
 @keyframes gameOverAppear {
@@ -388,10 +544,8 @@ button:active,
   }
 }
 
-/* Los estilos internos del game over se manejan con JavaScript inline */
-
 /* =============================================== */
-/* RANKING MEJORADO */
+/* RANKING PROFESIONAL */
 /* =============================================== */
 
 #ranking-container {
@@ -417,6 +571,7 @@ button:active,
   color: var(--accent-color);
   margin-bottom: 25px;
   font-size: 2.2em;
+  font-family: var(--professional-font);
   text-shadow: 0 0 15px var(--accent-color);
   font-weight: bold;
 }
@@ -441,6 +596,7 @@ button:active,
   border: 1px solid rgba(255, 0, 0, 0.3);
   text-align: center;
   transition: all 0.3s ease;
+  font-family: var(--professional-font);
 }
 
 #ranking-container th {
@@ -494,7 +650,7 @@ button:active,
 }
 
 /* =============================================== */
-/* EMOJI PICKER MEJORADO */
+/* EMOJI PICKER PROFESIONAL */
 /* =============================================== */
 
 #emoji-picker {
@@ -508,7 +664,7 @@ button:active,
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(8px);
 }
 
 .emoji-picker-content {
@@ -518,36 +674,40 @@ button:active,
     rgba(139, 0, 0, 0.9) 100%
   );
   border: 3px solid var(--border-color);
-  border-radius: 15px;
-  padding: 25px;
-  max-width: 450px;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 500px;
   width: 90%;
-  box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+  box-shadow: 0 0 40px rgba(255, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.1);
 }
 
 .emoji-picker-content h3 {
   color: var(--accent-color);
   text-align: center;
-  margin-bottom: 20px;
-  font-size: 1.3em;
+  margin-bottom: 25px;
+  font-size: 1.4em;
+  font-family: var(--professional-font);
+  font-weight: 600;
   text-shadow: 0 0 10px var(--accent-color);
+  letter-spacing: 1px;
 }
 
 .emoji-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr); /* ⬅️ CAMBIO: Era 6, ahora 5 */
-  gap: 10px; /* Espacio entre emojis */
-  margin: 20px 0;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin: 25px 0;
   justify-items: center;
 }
 
 .emoji-option {
-  font-size: 2em;
+  font-size: 2.2em;
   cursor: pointer;
-  padding: 12px;
-  border-radius: 10px;
-  transition: all 0.3s ease;
+  padding: 15px;
+  border-radius: 12px;
+  transition: all 0.4s ease;
   border: 2px solid transparent;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .emoji-option:hover {
@@ -557,36 +717,38 @@ button:active,
     var(--hover-color) 100%
   );
   border-color: var(--accent-color);
-  transform: scale(1.2);
-  box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+  transform: scale(1.25);
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
 }
 
 /* =============================================== */
-/* INDICADOR DE PODER ESPECIAL MEJORADO */
+/* INDICADOR DE PODER ESPECIAL PROFESIONAL */
 /* =============================================== */
 
 .special-power-indicator {
   position: fixed;
-  bottom: 25px;
-  right: 25px;
+  bottom: 30px;
+  right: 30px;
   background: linear-gradient(
     135deg,
     rgba(139, 0, 0, 0.9) 0%,
-    rgba(255, 0, 0, 0.7) 100%
+    rgba(255, 0, 0, 0.8) 100%
   );
-  padding: 15px;
+  padding: 18px;
   border-radius: 50%;
   border: 3px solid var(--border-color);
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 1.2em;
+  font-size: 1.3em;
   font-weight: bold;
+  font-family: var(--professional-font);
   z-index: 100;
-  box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
-  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.7),
+    inset 0 0 10px rgba(255, 255, 255, 0.1);
+  transition: all 0.4s ease;
   cursor: pointer;
 }
 
@@ -594,53 +756,59 @@ button:active,
   background: linear-gradient(
     135deg,
     rgba(255, 0, 0, 0.9) 0%,
-    rgba(255, 100, 0, 0.8) 100%
+    rgba(255, 100, 0, 0.9) 100%
   );
-  animation: powerPulse 1s infinite;
-  transform: scale(1.1);
+  animation: powerPulse 1.2s infinite;
+  transform: scale(1.15);
 }
 
 @keyframes powerPulse {
   0%,
   100% {
-    box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
-    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.7),
+      inset 0 0 10px rgba(255, 255, 255, 0.1);
+    transform: scale(1.15);
   }
   50% {
-    box-shadow: 0 0 25px rgba(255, 0, 0, 0.9), 0 0 35px rgba(255, 100, 0, 0.7);
-    transform: scale(1.15);
+    box-shadow: 0 0 35px rgba(255, 0, 0, 0.9), 0 0 50px rgba(255, 100, 0, 0.8),
+      inset 0 0 15px rgba(255, 255, 255, 0.2);
+    transform: scale(1.2);
   }
 }
 
 /* =============================================== */
-/* CONTROL DE VOLUMEN MEJORADO */
+/* CONTROL DE VOLUMEN PROFESIONAL */
 /* =============================================== */
 
 #volume-control {
   position: fixed !important;
-  top: 60px !important;
-  right: 15px !important;
-  width: 48px !important;
-  height: 48px !important;
-  min-width: 48px !important;
-  min-height: 48px !important;
-  max-width: 48px !important;
-  max-height: 48px !important;
+  top: 65px !important;
+  right: 50px !important;
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  max-width: 52px !important;
+  max-height: 52px !important;
   border-radius: 50% !important;
-  background-color: rgba(0, 0, 0, 0.9) !important;
-  border: 2px solid #8b0000 !important;
-  color: #ffffff !important;
-  font-size: 16px !important;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(139, 0, 0, 0.8) 100%
+  ) !important;
+  border: 2px solid var(--border-color) !important;
+  color: var(--text-color) !important;
+  font-size: 18px !important;
   cursor: pointer !important;
   z-index: 1001 !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.4s ease !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   box-sizing: border-box !important;
   padding: 0 !important;
   margin: 0 !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), inset 0 0 10px rgba(255, 0, 0, 0.1) !important;
   aspect-ratio: 1 / 1 !important;
   overflow: hidden !important;
   line-height: 1 !important;
@@ -648,7 +816,9 @@ button:active,
 
 #volume-control:hover {
   transform: scale(1.1) !important;
-  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.6) !important;
+  box-shadow: 0 6px 20px rgba(139, 0, 0, 0.8),
+    inset 0 0 15px rgba(255, 0, 0, 0.2) !important;
+  border-color: var(--accent-color) !important;
 }
 
 #volume-control:active {
@@ -656,7 +826,7 @@ button:active,
 }
 
 /* =============================================== */
-/* ANIMACIONES GENERALES */
+/* ANIMACIONES PROFESIONALES */
 /* =============================================== */
 
 @keyframes pulse {
@@ -696,6 +866,16 @@ button:active,
   }
 }
 
+@keyframes professionalFloat {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
 /* =============================================== */
 /* EFECTOS ESPECIALES DE PANTALLA */
 /* =============================================== */
@@ -713,7 +893,7 @@ button:active,
   );
   pointer-events: none;
   z-index: 999;
-  backdrop-filter: blur(1px);
+  backdrop-filter: blur(2px);
 }
 
 .screen-effect-frenzy {
@@ -729,7 +909,7 @@ button:active,
   );
   pointer-events: none;
   z-index: 999;
-  animation: pulse 0.5s infinite alternate;
+  animation: pulse 0.6s infinite alternate;
 }
 
 .screen-effect-combo {
@@ -740,16 +920,16 @@ button:active,
   height: 100%;
   background: radial-gradient(
     circle,
-    rgba(255, 215, 0, 0.1) 0%,
+    rgba(255, 215, 0, 0.15) 0%,
     transparent 70%
   );
   pointer-events: none;
   z-index: 999;
-  animation: sparkle 1s infinite;
+  animation: sparkle 1.2s infinite;
 }
 
 /* =============================================== */
-/* COMBO DISPLAY MEJORADO */
+/* COMBO DISPLAY PROFESIONAL */
 /* =============================================== */
 
 #combo-display {
@@ -759,36 +939,196 @@ button:active,
   outline: none !important;
   padding: 0 !important;
   margin: 0 !important;
+  font-family: var(--professional-font) !important;
 }
 
 /* =============================================== */
-/* RESPONSIVE DESIGN COMPLETO */
+/* PIE DE PÁGINA SCYTHE SOCIETY */
+/* =============================================== */
+
+#scythe-footer {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: #888;
+  font-size: 13px;
+  font-family: var(--professional-font);
+  font-weight: 600;
+  text-shadow: 0 0 8px #000;
+  z-index: 100;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(139, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+  animation: fadeIn 3s ease-in;
+}
+
+/* =============================================== */
+/* TICKER DE MÚSICA PROFESIONAL */
+/* =============================================== */
+
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+#music-ticker {
+  position: fixed !important;
+  top: 125px !important;
+  right: 70px !important;
+  left: auto !important;
+  transform: translateX(50%) !important;
+  width: 52px !important;
+  height: 14px !important;
+  text-align: center !important;
+  transition: opacity 0.4s ease;
+  font-family: var(--professional-font);
+  border-radius: 8px;
+  z-index: 1000 !important;
+}
+
+#music-ticker:hover {
+  background: rgba(139, 0, 0, 0.95) !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.5) !important;
+}
+
+/* =============================================== */
+/* RESPONSIVE DESIGN PROFESIONAL */
 /* =============================================== */
 
 @media (max-width: 768px) {
-  h1 {
-    font-size: 2.5em;
+  .game-title {
+    font-size: 2.8em;
+  }
+
+  .game-subtitle {
+    font-size: 1em;
+  }
+
+  .game-logo {
+    max-height: 150px;
   }
 
   .input-row {
     flex-direction: column;
+    gap: 20px;
+  }
+
+  .main-buttons-row,
+  .secondary-buttons-row {
+    flex-direction: column;
     gap: 15px;
   }
 
-  button,
-  .gothic-button {
-    padding: 10px 20px;
-    font-size: 1em;
-    min-width: 120px;
+  .main-button,
+  .secondary-button {
+    width: 100%;
+    min-width: 200px;
+    height: 55px;
+  }
+
+  .section-title {
+    font-size: 1.2em;
+  }
+
+  .input-section,
+  .main-buttons-section,
+  .secondary-buttons-section {
+    padding: 20px;
+  }
+
+  #game-info {
+    font-size: 0.75em;
+    padding: 6px 8px;
+    justify-content: space-around;
+  }
+
+  #game-info > div {
+    font-size: 0.8em;
+    margin: 0 2px;
+  }
+
+  #volume-control {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    max-width: 48px !important;
+    max-height: 48px !important;
+    font-size: 16px !important;
+  }
+
+  .special-power-indicator {
+    width: 70px;
+    height: 70px;
+    bottom: 25px;
+    right: 25px;
   }
 
   .emoji-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
   }
 
-  #game-over {
-    width: 95vw;
-    max-width: 400px;
+  .emoji-option {
+    font-size: 1.8em;
+    padding: 12px;
+  }
+
+  #scythe-footer {
+    font-size: 11px;
+    bottom: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-title {
+    font-size: 2.2em;
+    letter-spacing: 2px;
+  }
+
+  .game-subtitle {
+    font-size: 0.9em;
+  }
+
+  .game-logo {
+    max-height: 120px;
+  }
+
+  .main-button,
+  .secondary-button {
+    height: 50px;
+    font-size: 0.9em;
+    min-width: 180px;
+  }
+
+  .section-title {
+    font-size: 1.1em;
+  }
+
+  .input-section,
+  .main-buttons-section,
+  .secondary-buttons-section {
+    padding: 18px;
+  }
+
+  #game-info {
+    font-size: 0.7em;
+    padding: 5px 6px;
+  }
+
+  #game-info > div {
+    font-size: 0.75em;
+    margin: 0 1px;
   }
 
   #volume-control {
@@ -804,21 +1144,7 @@ button:active,
   .special-power-indicator {
     width: 60px;
     height: 60px;
-    bottom: 20px;
-    right: 20px;
-  }
-}
-
-@media (max-width: 480px) {
-  h1 {
-    font-size: 2em;
-  }
-
-  button,
-  .gothic-button {
-    padding: 8px 15px;
-    font-size: 0.9em;
-    min-width: 100px;
+    font-size: 1.1em;
   }
 
   .emoji-grid {
@@ -827,29 +1153,14 @@ button:active,
   }
 
   .emoji-option {
-    font-size: 1.5em;
-    padding: 8px;
+    font-size: 1.6em;
+    padding: 10px;
   }
 
-  #game-over {
-    width: 98vw;
-    max-width: 350px;
-  }
-
-  #volume-control {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    max-width: 40px !important;
-    max-height: 40px !important;
-    font-size: 12px !important;
-  }
-
-  .special-power-indicator {
-    width: 50px;
-    height: 50px;
-    font-size: 1em;
+  #scythe-footer {
+    font-size: 10px;
+    bottom: 8px;
+    padding: 6px 12px;
   }
 }
 
@@ -888,180 +1199,69 @@ button:active,
 }
 
 .fade-in {
-  animation: fadeIn 0.5s ease-in;
+  animation: fadeIn 0.6s ease-in;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
 .scale-hover:hover {
   transform: scale(1.05);
-  transition: transform 0.3s ease;
+  transition: transform 0.4s ease;
 }
 
 /* Scroll personalizado para ranking */
-#ranking-container::-webkit-scrollbar {
-  width: 8px;
+#ranking-container::-webkit-scrollbar,
+#story-modal::-webkit-scrollbar,
+#music-modal::-webkit-scrollbar {
+  width: 10px;
 }
 
-#ranking-container::-webkit-scrollbar-track {
+#ranking-container::-webkit-scrollbar-track,
+#story-modal::-webkit-scrollbar-track,
+#music-modal::-webkit-scrollbar-track {
   background: rgba(139, 0, 0, 0.2);
-  border-radius: 4px;
+  border-radius: 5px;
 }
 
-#ranking-container::-webkit-scrollbar-thumb {
+#ranking-container::-webkit-scrollbar-thumb,
+#story-modal::-webkit-scrollbar-thumb,
+#music-modal::-webkit-scrollbar-thumb {
   background: linear-gradient(
     180deg,
     var(--accent-color) 0%,
     var(--secondary-color) 100%
   );
-  border-radius: 4px;
+  border-radius: 5px;
 }
 
-#ranking-container::-webkit-scrollbar-thumb:hover {
+#ranking-container::-webkit-scrollbar-thumb:hover,
+#story-modal::-webkit-scrollbar-thumb:hover,
+#music-modal::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #ff6666 0%, var(--accent-color) 100%);
 }
 
 /* =============================================== */
-/* BOTONES SECUNDARIOS DEL MENÚ */
-/* =============================================== */
-
-.secondary-buttons-row {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  width: 100%;
-  max-width: 600px;
-  margin-top: 15px;
-}
-
-/* =============================================== */
-/* PIE DE PÁGINA SCYTHE SOCIETY */
-/* =============================================== */
-
-#scythe-footer {
-  animation: fadeIn 2s ease-in;
-}
-
-@media (max-width: 768px) {
-  #scythe-footer {
-    font-size: 10px;
-    bottom: 5px;
-  }
-}
-
-/* =============================================== */
-/* MODALES DE HISTORIA Y MÚSICA */
-/* =============================================== */
-
-#story-modal::-webkit-scrollbar,
-#music-modal::-webkit-scrollbar {
-  width: 8px;
-}
-
-#story-modal::-webkit-scrollbar-track,
-#music-modal::-webkit-scrollbar-track {
-  background: rgba(139, 0, 0, 0.2);
-  border-radius: 4px;
-}
-
-#story-modal::-webkit-scrollbar-thumb,
-#music-modal::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #ff0000 0%, #8b0000 100%);
-  border-radius: 4px;
-}
-
-/* =============================================== */
-/* BOTONES DE YAN KEN PO */
-/* =============================================== */
-
-#yankenpo-container button:hover {
-  animation: pulse 0.5s infinite;
-}
-
-#yankenpo-container button:active {
-  transform: scale(0.95) !important;
-}
-
-/* Efecto de línea roja warning */
-@keyframes redLineWarning {
-  0%,
-  100% {
-    opacity: 0.3;
-  }
-  50% {
-    opacity: 0.9;
-  }
-}
-
-/* =============================================== */
-/* TICKER DE MÚSICA */
-/* =============================================== */
-
-@keyframes tickerScroll {
-  0% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
-
-#music-ticker {
-  transition: opacity 0.3s ease;
-}
-
-#music-ticker:hover {
-  background: rgba(139, 0, 0, 0.95) !important;
-  border-color: #ff0000 !important;
-}
-
-/* Responsive para el ticker */
-@media (max-width: 768px) {
-  #music-ticker {
-    top: 108px !important;
-    right: 15px !important;
-    width: 44px !important;
-    height: 14px !important;
-  }
-
-  #ticker-text {
-    font-size: 7px !important;
-  }
-}
-
-@media (max-width: 480px) {
-  #music-ticker {
-    top: 104px !important;
-    right: 15px !important;
-    width: 40px !important;
-    height: 12px !important;
-  }
-
-  #ticker-text {
-    font-size: 6px !important;
-  }
-}
-
-/* =============================================== */
-/* CORRECCIÓN BOTÓN X CIRCULAR EN MODALES */
+/* CORRECCIONES FINALES DE MODALES */
 /* =============================================== */
 
 #story-modal button[onclick*="closeStory"],
 #music-modal button[onclick*="closeMusicSelector"] {
   border-radius: 50% !important;
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  min-height: 32px !important;
-  max-width: 32px !important;
-  max-height: 32px !important;
+  width: 35px !important;
+  height: 35px !important;
+  min-width: 35px !important;
+  min-height: 35px !important;
+  max-width: 35px !important;
+  max-height: 35px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -1071,4 +1271,46 @@ button:active,
   line-height: 1 !important;
   aspect-ratio: 1 / 1 !important;
   overflow: hidden !important;
+  font-size: 16px !important;
+  transition: all 0.3s ease !important;
+}
+
+#story-modal button[onclick*="closeStory"]:hover,
+#music-modal button[onclick*="closeMusicSelector"]:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.6) !important;
+}
+
+/* =============================================== */
+/* EFECTOS ADICIONALES PROFESIONALES */
+/* =============================================== */
+
+.game-logo {
+  animation: professionalFloat 6s ease-in-out infinite;
+}
+
+.primary-action {
+  animation: pulse 2s infinite;
+}
+
+.input-section,
+.main-buttons-section,
+.secondary-buttons-section {
+  animation: fadeIn 0.8s ease-out;
+}
+
+/* Efecto de carga elegante */
+@keyframes elegantLoader {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(0.98);
+  }
 }

@@ -5,43 +5,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Hell Shooter - Versión 22nd Aniversario Ragnarok Online</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     <link rel="stylesheet" href="juegosss.css">
     <!-- Font Awesome for emoji picker button -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts para tipografía profesional -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Creepster&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
+    <!-- Fondo de pantalla completo -->
+    <div id="background-overlay"></div>
+
     <!-- Main Menu Screen -->
     <div id="main-menu">
-        <h1>👹 Hell Shooter 💀</h1>
+        <!-- Logo del juego -->
+        <div class="game-logo-container">
+            <img src="../imagenes/imagenesjuegosss/logo-hell-shooter.png" alt="Hell Shooter Logo" class="game-logo"
+                id="game-logo">
+        </div>
+
+        <!-- Título del juego -->
+        <div class="game-title-container">
+            <h1 class="game-title">👹 Hell Shooter 💀</h1>
+            <p class="game-subtitle">22nd Aniversario Ragnarok Online</p>
+        </div>
+
+        <!-- Controles de entrada organizados -->
         <div class="input-container">
-            <div class="input-row">
-                <div class="input-group">
-                    <label for="name">Nombre:</label>
-                    <input type="text" id="name" maxlength="4" minlength="3" placeholder="Max 4">
-                </div>
-                <div class="input-group">
-                    <label for="avatar">Avatar:</label>
-                    <div class="avatar-input-container">
-                        <input type="text" id="avatar" maxlength="2" minlength="1" placeholder="1-2">
-                        <button id="emoji-button" type="button">
-                            <i class="fas fa-smile"></i>
-                        </button>
+            <div class="input-section">
+                <h3 class="section-title">Configuración del Jugador</h3>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="name">Nombre:</label>
+                        <input type="text" id="name" maxlength="4" minlength="3" placeholder="Max 4">
+                    </div>
+                    <div class="input-group">
+                        <label for="avatar">Avatar:</label>
+                        <div class="avatar-input-container">
+                            <input type="text" id="avatar" maxlength="2" minlength="1" placeholder="1-2">
+                            <button id="emoji-button" type="button" title="Seleccionar Emoji">
+                                <i class="fas fa-smile"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Botones principales organizados -->
         <div class="button-container">
-            <div class="main-buttons-row">
-                <button onclick="startGame()" class="gothic-button main-button">🎮 JUGAR</button>
-                <button onclick="showInstructions()" class="gothic-button main-button">📖 INSTRUCCIONES</button>
-                <button onclick="viewRanking()" class="gothic-button main-button">🏆 RANKING</button>
+            <div class="main-buttons-section">
+                <h3 class="section-title">Menú Principal</h3>
+                <div class="main-buttons-row">
+                    <button onclick="startGame()" class="gothic-button main-button primary-action">
+                        <i class="fas fa-play"></i>
+                        <span>JUGAR</span>
+                    </button>
+                    <button onclick="showInstructions()" class="gothic-button main-button">
+                        <i class="fas fa-book"></i>
+                        <span>INSTRUCCIONES</span>
+                    </button>
+                    <button onclick="viewRanking()" class="gothic-button main-button">
+                        <i class="fas fa-trophy"></i>
+                        <span>RANKING</span>
+                    </button>
+                </div>
             </div>
-            <!-- Agregar debajo una nueva fila de botones -->
-            <div class="secondary-buttons-row" style="margin-top: 15px;">
-                <button onclick="showStory()" class="gothic-button main-button">📜 HISTORIA</button>
-                <button onclick="showMusicSelector()" class="gothic-button main-button">🎵 MÚSICA</button>
+
+            <!-- Botones secundarios -->
+            <div class="secondary-buttons-section">
+                <div class="secondary-buttons-row">
+                    <button onclick="showStory()" class="gothic-button secondary-button">
+                        <i class="fas fa-scroll"></i>
+                        <span>HISTORIA</span>
+                    </button>
+                    <button onclick="showMusicSelector()" class="gothic-button secondary-button">
+                        <i class="fas fa-music"></i>
+                        <span>MÚSICA</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -150,19 +196,7 @@
     <script src="main.js"></script>
 
     <!-- Footer de Scythe Society -->
-    <footer id="scythe-footer" style="
-    position: fixed;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    color: #666;
-    font-size: 12px;
-    font-family: 'Arial', sans-serif;
-    text-shadow: 0 0 5px #000;
-    z-index: 100;
-    pointer-events: none;
-">
+    <footer id="scythe-footer">
         <span style="color: #8B0000;">♰</span>
         Creado con amor por la comunidad
         <span style="color: #FF0000; font-weight: bold;">Scythe Society</span>
