@@ -2055,7 +2055,259 @@ const BossManager = {
   },
 
   // ======================================================
-  // 🔥 LÍNEAS ROJAS COMPLETAMENTE ALEATORIAS
+  // 🔥 FASE DEL HILO ROJO - CICLO CORRECTO
+  // ======================================================
+
+  /**
+   * Inicia la fase del hilo rojo con ciclo continuo
+   */
+  startRedLinePhase() {
+    console.log("🔴 === INICIANDO FASE DEL HILO ROJO ===");
+
+    this.redLinePhase = true;
+    this.isImmune = true;
+    this.immunityTimer = 9999; // Inmune durante toda la fase
+
+    // Detener movimiento del boss
+    this.boss.velocityX = 0;
+    this.boss.velocityY = 0;
+
+    // 🔥 Ralentizar MUCHÍSIMO al jugador
+    Player.moveSpeed = 0.1; // 10 veces más lento
+    console.log(
+      "🐌 Jugador ralentizado SÚPER lento durante fase del hilo rojo"
+    );
+
+    // Anunciar fase
+    UI.showScreenMessage("🔴 FASE DEL HILO ROJO 🔴", "#FF0000");
+
+    // Iniciar el primer ciclo
+    setTimeout(() => {
+      this.startRedLineCycle();
+    }, 1000);
+  },
+
+  /**
+   * Inicia un ciclo completo de hilo rojo
+   */
+  startRedLineCycle() {
+    console.log("🔄 Iniciando nuevo ciclo de hilo rojo");
+
+    // Generar nueva línea aleatoria
+    this.generateSimpleRedLine();
+
+    // PASO 1: Mostrar línea brevemente y que desaparezca
+    this.showLineQuickly();
+  },
+
+  /**
+   * Muestra la línea brevemente y la hace desaparecer
+   */
+  showLineQuickly() {
+    console.log("🔴 Mostrando línea rápidamente...");
+
+    this.showingPreview = true;
+
+    // Mostrar por solo 1 segundo
+    setTimeout(() => {
+      this.showingPreview = false;
+      console.log("🔴 Línea desaparecida - boss iniciará movimiento");
+
+      // Inmediatamente después iniciar movimiento del boss
+      setTimeout(() => {
+        this.startRedLineMovement();
+      }, 200); // Pequeño delay para transición
+    }, 1000); // Solo 1 segundo para ver la línea
+  },
+
+  /**
+   * Inicia el movimiento del boss por la línea
+   */
+  startRedLineMovement() {
+    if (this.redLinePath.length === 0) {
+      console.error("🔴 Error: No hay línea roja generada");
+      this.endRedLinePhase();
+      return;
+    }
+
+    this.redLineIndex = 0;
+    this.redLineSpeed = 4; // Velocidad constante
+    this.redLineMoving = true;
+
+    // Posicionar boss al inicio de la línea
+    const startPoint = this.redLinePath[0];
+    this.boss.x = startPoint.x - this.boss.width / 2;
+    this.boss.y = startPoint.y - this.boss.height / 2;
+
+    console.log("🔴 Boss iniciando movimiento por la línea");
+  },
+
+  /**
+   * Actualiza la fase del hilo rojo
+   */
+  updateRedLine() {
+    if (!this.redLineMoving) return;
+
+    // Verificar si completó el recorrido
+    if (this.redLineIndex >= this.redLinePath.length - 1) {
+      this.endRedLineMovement();
+      return;
+    }
+
+    // Mover el boss por la línea
+    const currentPoint = this.redLinePath[this.redLineIndex];
+    this.boss.x = currentPoint.x - this.boss.width / 2;
+    this.boss.y = currentPoint.y - this.boss.height / 2;
+
+    // Verificar colisión con el jugador
+    if (this.checkCollisionWithPlayer()) {
+      console.log("💥 Jugador golpeado por el hilo rojo");
+
+      // Aplicar daño al jugador
+      Player.takeDamage();
+
+      // Efecto visual
+      UI.createParticleEffect(
+        this.boss.x + this.boss.width / 2,
+        this.boss.y + this.boss.height / 2,
+        "#FF0000",
+        20
+      );
+    }
+
+    // Avanzar en la línea
+    this.redLineIndex += this.redLineSpeed;
+  },
+
+  /**
+   * Termina el movimiento de la línea (no la fase completa)
+   */
+  endRedLineMovement() {
+    console.log("🔴 Boss terminó el recorrido - iniciando pausa vulnerable");
+
+    this.redLineMoving = false;
+    this.redLinePath = []; // Limpiar la línea anterior
+    this.redLineIndex = 0;
+
+    // Boss se vuelve vulnerable por 1 segundo
+    this.isImmune = false;
+    this.immunityTimer = 0;
+
+    // Detener movimiento del boss
+    this.boss.velocityX = 0;
+    this.boss.velocityY = 0;
+
+    // Mensaje de vulnerable + comentario aleatorio del boss
+    UI.showScreenMessage("⚔️ ¡BOSS VULNERABLE! (1s)", "#00FF00");
+    this.sayRandomComment("combate"); // Comentario aleatorio
+
+    // Después de 1 segundo, verificar si continúa o va a Yan Ken Po
+    setTimeout(() => {
+      const healthPercentage = this.currentHealth / this.maxHealth;
+
+      if (healthPercentage <= 0.03) {
+        // Ir a fase final Yan Ken Po
+        console.log("🎮 Vida muy baja - iniciando Yan Ken Po");
+        this.endRedLinePhase(); // Limpiar fase de hilo rojo
+        this.startFinalPhase();
+      } else {
+        // Continuar con otro ciclo de hilo rojo
+        console.log("🔄 Continuando con nuevo ciclo de hilo rojo");
+        this.isImmune = true; // Volver a ser inmune
+        this.immunityTimer = 9999;
+
+        setTimeout(() => {
+          this.startRedLineCycle(); // Nuevo ciclo
+        }, 500); // Pequeño delay antes del siguiente ciclo
+      }
+    }, 1000); // 1 segundo vulnerable
+  },
+
+  /**
+   * Termina completamente la fase del hilo rojo
+   */
+  endRedLinePhase() {
+    console.log("🔴 Terminando COMPLETAMENTE la fase del hilo rojo");
+
+    this.redLinePhase = false;
+    this.redLineMoving = false;
+    this.showingPreview = false;
+    this.redLinePath = [];
+    this.redLineIndex = 0;
+
+    // 🔥 RESTAURAR velocidad normal del jugador
+    Player.moveSpeed = 1.0;
+    console.log("🏃 Velocidad del jugador restaurada a normal");
+
+    // Boss se vuelve vulnerable
+    this.isImmune = false;
+    this.immunityTimer = 0;
+  },
+
+  /**
+   * Maneja la derrota de Yan Ken Po del jugador (volver a hilo rojo)
+   */
+  handleYanKenPoLoss() {
+    UI.showScreenMessage("¡PERDISTE! Nueva fase de hilo rojo", "#FF0000");
+
+    console.log("🎮 Yan Ken Po perdido - volviendo a fase de hilo rojo");
+
+    // Limpiar sistema Yan Ken Po
+    this.endYanKenPoPhase();
+
+    // Resetear para nueva fase de hilo rojo
+    this.yanKenPoPhase = false;
+    this.yanKenPoRound = 0;
+
+    // Iniciar nueva fase de hilo rojo después de un delay
+    setTimeout(() => {
+      this.startRedLinePhase(); // Reiniciar fase completa de hilo rojo
+    }, 2000);
+  },
+
+  /**
+   * Dibuja la línea roja (solo durante preview breve)
+   */
+  drawRedLine(ctx) {
+    if (this.redLinePath.length === 0) return;
+
+    ctx.save();
+
+    // Solo mostrar línea durante el preview rápido
+    if (this.showingPreview) {
+      // Línea roja brillante para memorizar rápidamente
+      ctx.strokeStyle = "#FF0000";
+      ctx.lineWidth = 8;
+      ctx.shadowColor = "#FF0000";
+      ctx.shadowBlur = 20;
+
+      ctx.beginPath();
+      for (let i = 0; i < this.redLinePath.length; i++) {
+        const point = this.redLinePath[i];
+        if (i === 0) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      }
+      ctx.stroke();
+
+      // Efecto de parpadeo intenso para llamar la atención
+      const pulse = Math.sin(window.getGameTime() * 0.5) * 0.4 + 0.6;
+      ctx.globalAlpha = pulse;
+      ctx.strokeStyle = "#FFFF00";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    }
+
+    // NO mostrar estela durante el movimiento para mayor dificultad
+    // El jugador debe recordar la línea
+
+    ctx.restore();
+  },
+
+  // ======================================================
+  // FUNCIONES DE LÍNEAS ALEATORIAS (sin cambios)
   // ======================================================
 
   /**
@@ -2304,237 +2556,6 @@ const BossManager = {
     }
 
     return points;
-  },
-
-  /**
-   * Inicia la fase del hilo rojo simplificada
-   */
-  startRedLinePhase() {
-    console.log("🔴 === INICIANDO FASE DEL HILO ROJO ===");
-
-    this.redLinePhase = true;
-    this.isImmune = true;
-    this.immunityTimer = 9999; // Inmune durante toda la fase
-
-    // Detener movimiento del boss
-    this.boss.velocityX = 0;
-    this.boss.velocityY = 0;
-
-    // 🔥 Ralentizar MUCHÍSIMO al jugador
-    Player.moveSpeed = 0.1; // 10 veces más lento
-    console.log(
-      "🐌 Jugador ralentizado SÚPER lento durante fase del hilo rojo"
-    );
-
-    // Generar línea completamente aleatoria
-    this.generateSimpleRedLine();
-
-    // Anunciar fase
-    UI.showScreenMessage("🔴 FASE DEL HILO ROJO 🔴", "#FF0000");
-
-    // Mostrar línea por 2.5 segundos para memorizar
-    this.showRedLinePreview();
-
-    // Después de 2.5 segundos, ocultar línea e iniciar movimiento
-    setTimeout(() => {
-      this.hideRedLinePreview();
-
-      setTimeout(() => {
-        this.startRedLineMovement();
-      }, 500); // 0.5 segundos más para prepararse
-    }, 2500); // Aumentado a 2.5 segundos para líneas más complejas
-  },
-
-  /**
-   * Muestra la línea roja para memorizar
-   */
-  showRedLinePreview() {
-    this.showingPreview = true;
-    console.log("🔴 Mostrando preview de la línea roja aleatoria");
-  },
-
-  /**
-   * Oculta el preview de la línea
-   */
-  hideRedLinePreview() {
-    this.showingPreview = false;
-    UI.showScreenMessage("🔴 ¡MEMORIZA EL PATRÓN!", "#FFFF00");
-    console.log("🔴 Preview oculto - ¡hora de memorizar!");
-  },
-
-  /**
-   * Inicia el movimiento del boss por la línea
-   */
-  startRedLineMovement() {
-    if (this.redLinePath.length === 0) {
-      console.error("🔴 Error: No hay línea roja generada");
-      this.endRedLinePhase();
-      return;
-    }
-
-    this.redLineIndex = 0;
-    this.redLineSpeed = 4; // Velocidad más rápida para líneas complejas
-    this.redLineMoving = true;
-
-    // Posicionar boss al inicio de la línea
-    const startPoint = this.redLinePath[0];
-    this.boss.x = startPoint.x - this.boss.width / 2;
-    this.boss.y = startPoint.y - this.boss.height / 2;
-
-    UI.showScreenMessage("🔴 ¡EL HILO SE MUEVE!", "#FF0000");
-    AudioManager.playSound("special");
-
-    console.log("🔴 Boss iniciando movimiento por la línea aleatoria");
-  },
-
-  /**
-   * Actualiza la fase del hilo rojo
-   */
-  updateRedLine() {
-    if (!this.redLineMoving) return;
-
-    // Verificar si completó el recorrido
-    if (this.redLineIndex >= this.redLinePath.length - 1) {
-      this.endRedLinePhase();
-      return;
-    }
-
-    // Mover el boss por la línea
-    const currentPoint = this.redLinePath[this.redLineIndex];
-    this.boss.x = currentPoint.x - this.boss.width / 2;
-    this.boss.y = currentPoint.y - this.boss.height / 2;
-
-    // Verificar colisión con el jugador
-    if (this.checkCollisionWithPlayer()) {
-      console.log("💥 Jugador golpeado por el hilo rojo");
-
-      // Aplicar daño al jugador
-      Player.takeDamage();
-
-      // Efecto visual
-      UI.createParticleEffect(
-        this.boss.x + this.boss.width / 2,
-        this.boss.y + this.boss.height / 2,
-        "#FF0000",
-        20
-      );
-
-      // Continuar el movimiento (no detener por golpear)
-    }
-
-    // Avanzar en la línea
-    this.redLineIndex += this.redLineSpeed;
-  },
-
-  /**
-   * Termina la fase del hilo rojo
-   */
-  endRedLinePhase() {
-    console.log("🔴 Terminando fase del hilo rojo");
-
-    this.redLinePhase = false;
-    this.redLineMoving = false;
-    this.showingPreview = false;
-    this.redLinePath = [];
-    this.redLineIndex = 0;
-
-    // 🔥 RESTAURAR velocidad normal del jugador
-    Player.moveSpeed = 1.0;
-    console.log("🏃 Velocidad del jugador restaurada a normal");
-
-    // Boss se vuelve vulnerable por 3 segundos
-    this.isImmune = false;
-    this.immunityTimer = 0;
-
-    // Posicionar boss en el centro para la pausa
-    const canvas = window.getCanvas();
-    this.boss.x = canvas.width / 2 - this.boss.width / 2;
-    this.boss.y = canvas.height / 2 - this.boss.height / 2;
-    this.boss.velocityX = 0;
-    this.boss.velocityY = 0;
-
-    UI.showScreenMessage("⚔️ ¡BOSS VULNERABLE! (3s)", "#00FF00");
-
-    // Después de 3 segundos, verificar si continúa o va a Yan Ken Po
-    setTimeout(() => {
-      const healthPercentage = this.currentHealth / this.maxHealth;
-
-      if (healthPercentage <= 0.03) {
-        // Ir a fase final Yan Ken Po
-        this.startFinalPhase();
-      } else {
-        // Repetir fase del hilo rojo con nueva línea aleatoria
-        UI.showScreenMessage("🔴 ¡NUEVO HILO ROJO!", "#FF8800");
-        setTimeout(() => {
-          this.startRedLinePhase();
-        }, 1000);
-      }
-    }, 3000);
-  },
-
-  /**
-   * Dibuja la línea roja
-   */
-  drawRedLine(ctx) {
-    if (this.redLinePath.length === 0) return;
-
-    ctx.save();
-
-    // Solo mostrar línea durante el preview
-    if (this.showingPreview) {
-      // Línea roja brillante para memorizar
-      ctx.strokeStyle = "#FF0000";
-      ctx.lineWidth = 6;
-      ctx.shadowColor = "#FF0000";
-      ctx.shadowBlur = 12;
-
-      ctx.beginPath();
-      for (let i = 0; i < this.redLinePath.length; i++) {
-        const point = this.redLinePath[i];
-        if (i === 0) {
-          ctx.moveTo(point.x, point.y);
-        } else {
-          ctx.lineTo(point.x, point.y);
-        }
-      }
-      ctx.stroke();
-
-      // Efecto de parpadeo
-      const pulse = Math.sin(window.getGameTime() * 0.3) * 0.3 + 0.7;
-      ctx.globalAlpha = pulse;
-      ctx.strokeStyle = "#FFFF00";
-      ctx.lineWidth = 3;
-      ctx.stroke();
-    }
-
-    // Durante el movimiento, mostrar solo la estela
-    if (this.redLineMoving && this.redLineIndex > 0) {
-      ctx.globalAlpha = 1;
-      ctx.strokeStyle = "rgba(255, 0, 0, 0.8)";
-      ctx.lineWidth = 8;
-      ctx.shadowColor = "#FF0000";
-      ctx.shadowBlur = 15;
-
-      // Dibujar estela de los últimos 20 puntos
-      const startIndex = Math.max(0, this.redLineIndex - 20);
-
-      ctx.beginPath();
-      for (
-        let i = startIndex;
-        i <= this.redLineIndex && i < this.redLinePath.length;
-        i++
-      ) {
-        const point = this.redLinePath[i];
-        if (i === startIndex) {
-          ctx.moveTo(point.x, point.y);
-        } else {
-          ctx.lineTo(point.x, point.y);
-        }
-      }
-      ctx.stroke();
-    }
-
-    ctx.restore();
   },
 
   // ======================================================
