@@ -31,7 +31,7 @@ const AudioManager = {
     const soundDefinitions = {
       shoot: { file: "sounds/shoot.mp3", baseVolume: 0.3 },
       hit: { file: "sounds/hit.mp3", baseVolume: 0.2 },
-      gameOver: { file: "sounds/gameover.mp3", baseVolume: 0.7 },
+      gameOver: { file: "sounds/gameover.mp3", baseVolume: 0.8 },
       victory: { file: "sounds/victory.mp3", baseVolume: 0.8 },
       levelUp: { file: "sounds/levelup.mp3", baseVolume: 0.6 },
       background: { file: "sounds/background.mp3", baseVolume: 0.4 },

@@ -204,9 +204,9 @@ const StorySystem = {
     const tracks = [
       { file: "background.mp3", name: "Elegía - Azkal", icon: "🎵" },
       { file: "bgm_menu.mp3", name: "Payon Theme - Hell", icon: "🎹" },
-      { file: "bgm_battle1.mp3", name: "Batalla Intensa", icon: "⚔️" },
+      { file: "bgm_battle1.mp3", name: "Niflheim Theme - Hell", icon: "👹" },
       { file: "bgm_battle2.mp3", name: "Depair - Mintjam Arrange", icon: "🗡️" },
-      { file: "bgm_boss.mp3", name: "Dreamers - Destructive Ange", icon: "👹" },
+      { file: "bgm_boss.mp3", name: "Dreamers - Destructive Ange", icon: "⚔️" },
       { file: "bgm_epic.mp3", name: "Retro Metro - Shade", icon: "🔥" },
     ];
 
