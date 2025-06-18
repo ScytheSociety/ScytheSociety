@@ -67,7 +67,7 @@ const Player = {
   },
 
   /**
-   * Configura los controles del jugador - CORREGIDO CON OFFSET PARA MÓVIL
+   * Configura los controles del jugador - MEJORADO CON DETECCIÓN TAP/DRAG
    */
   setupControls(canvas) {
     // Controles de mouse (sin cambios)
@@ -82,72 +82,95 @@ const Player = {
     let lastTapTime = 0;
     const doubleTapDelay = 300;
     let isMoving = false;
+    let touchStartPos = { x: 0, y: 0 };
+    let touchMoved = false;
 
     // ⭐ OFFSET PARA QUE EL PERSONAJE ESTÉ ARRIBA DEL DEDO
-    const TOUCH_OFFSET_Y = -100; // El personaje aparecerá 80px ARRIBA del dedo
+    const TOUCH_OFFSET_Y = -100;
 
-    // Touch Move - Movimiento principal con offset
+    // Touch Start - Registrar posición inicial
     canvas.addEventListener(
-      "touchmove",
+      "touchstart",
       (e) => {
         e.preventDefault();
+
         if (e.touches.length > 0) {
           const rect = canvas.getBoundingClientRect();
           const touch = e.touches[0];
 
-          // ⭐ APLICAR OFFSET: Personaje arriba del dedo
-          this.mouseX = touch.clientX - rect.left;
-          this.mouseY = touch.clientY - rect.top + TOUCH_OFFSET_Y; // Offset hacia arriba
+          touchStartPos = {
+            x: touch.clientX - rect.left,
+            y: touch.clientY - rect.top,
+          };
+          touchMoved = false;
 
-          this.updatePosition();
-          isMoving = true;
+          // NO mover el personaje inmediatamente en Yan Ken Po
+          if (!window.BossManager || !window.BossManager.yanKenPoPhase) {
+            isMoving = true;
+          }
         }
       },
       { passive: false }
     );
 
-    // Touch Start - Detección de doble tap y posición inicial con offset
+    // Touch Move - Solo mover si se arrastra
     canvas.addEventListener(
-      "touchstart",
+      "touchmove",
       (e) => {
         e.preventDefault();
+
+        if (e.touches.length > 0 && isMoving) {
+          const rect = canvas.getBoundingClientRect();
+          const touch = e.touches[0];
+
+          const currentPos = {
+            x: touch.clientX - rect.left,
+            y: touch.clientY - rect.top,
+          };
+
+          // Verificar si realmente se movió (más de 10 píxeles)
+          const distance = Math.sqrt(
+            Math.pow(currentPos.x - touchStartPos.x, 2) +
+              Math.pow(currentPos.y - touchStartPos.y, 2)
+          );
+
+          if (distance > 10) {
+            touchMoved = true;
+
+            // Solo mover el personaje si no estamos en Yan Ken Po
+            if (!window.BossManager || !window.BossManager.yanKenPoPhase) {
+              this.mouseX = currentPos.x;
+              this.mouseY = currentPos.y + TOUCH_OFFSET_Y;
+              this.updatePosition();
+            }
+          }
+        }
+      },
+      { passive: false }
+    );
+
+    // Touch End
+    canvas.addEventListener(
+      "touchend",
+      (e) => {
+        e.preventDefault();
+
         const currentTime = Date.now();
 
-        // Verificar doble toque para poder especial
-        if (currentTime - lastTapTime < doubleTapDelay && !isMoving) {
+        // Si no se movió, verificar doble tap para poder especial
+        if (!touchMoved && currentTime - lastTapTime < doubleTapDelay) {
           if (
             BulletManager.isSpecialPowerReady() &&
             !BulletManager.isSpecialPowerActive()
           ) {
             BulletManager.activateSpecialPower();
             console.log("⚡ Poder especial activado por doble tap");
-            return; // Salir para no actualizar posición
           }
         }
 
         lastTapTime = currentTime;
-
-        // ⭐ ACTUALIZAR POSICIÓN CON OFFSET AL TOCAR
-        if (e.touches.length > 0) {
-          const rect = canvas.getBoundingClientRect();
-          const touch = e.touches[0];
-
-          // ⭐ APLICAR OFFSET: Personaje arriba del dedo
-          this.mouseX = touch.clientX - rect.left;
-          this.mouseY = touch.clientY - rect.top + TOUCH_OFFSET_Y; // Offset hacia arriba
-
-          this.updatePosition();
-        }
-      },
-      { passive: false }
-    );
-
-    // Touch End - Detener movimiento
-    canvas.addEventListener(
-      "touchend",
-      (e) => {
-        e.preventDefault();
         isMoving = false;
+        touchMoved = false;
       },
       { passive: false }
     );
@@ -165,7 +188,7 @@ const Player = {
     });
 
     console.log(
-      "🎮 Controles táctiles configurados con offset -80px para visibilidad"
+      "🎮 Controles táctiles mejorados con detección tap/drag y offset -100px"
     );
   },
 

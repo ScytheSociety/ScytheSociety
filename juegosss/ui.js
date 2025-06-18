@@ -16,6 +16,7 @@ const UI = {
    */
   init() {
     this.createVolumeControl();
+    this.createMusicTicker(); // ← AGREGAR ESTA LÍNEA
     this.createTotalEnemiesDisplay();
     this.setupEventListeners();
     console.log("🎨 Sistema de UI inicializado");
@@ -909,6 +910,54 @@ const UI = {
     });
 
     document.body.appendChild(volumeButton);
+  },
+
+  /**
+   * Crea el ticker de música debajo del botón de volumen
+   */
+  createMusicTicker() {
+    const musicTicker = document.createElement("div");
+    musicTicker.id = "music-ticker";
+    musicTicker.style.cssText = `
+    position: fixed;
+    top: 112px;
+    right: 15px;
+    width: 48px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid #8B0000;
+    border-radius: 4px;
+    overflow: hidden;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+  `;
+
+    const tickerText = document.createElement("div");
+    tickerText.id = "ticker-text";
+    tickerText.style.cssText = `
+    white-space: nowrap;
+    color: #FFFFFF;
+    font-size: 8px;
+    font-weight: bold;
+    font-family: "Arial", sans-serif;
+    animation: tickerScroll 8s linear infinite;
+    transform: translateX(100%);
+  `;
+
+    tickerText.textContent = "Azkal - Elegía";
+    musicTicker.appendChild(tickerText);
+    document.body.appendChild(musicTicker);
+  },
+
+  /**
+   * Actualiza el texto del ticker de música
+   */
+  updateMusicTicker(trackName) {
+    const tickerText = document.getElementById("ticker-text");
+    if (tickerText) {
+      tickerText.textContent = trackName;
+    }
   },
 
   /**

@@ -999,3 +999,46 @@ button:active,
     opacity: 0.9;
   }
 }
+
+/* =============================================== */
+/* TICKER DE MÚSICA */
+/* =============================================== */
+
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+#music-ticker {
+  transition: opacity 0.3s ease;
+}
+
+#music-ticker:hover {
+  background: rgba(139, 0, 0, 0.9) !important;
+  border-color: #ff0000 !important;
+}
+
+@media (max-width: 768px) {
+  #music-ticker {
+    top: 108px !important;
+    right: 15px !important;
+    width: 44px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #music-ticker {
+    top: 104px !important;
+    right: 15px !important;
+    width: 40px !important;
+    height: 18px !important;
+  }
+
+  #ticker-text {
+    font-size: 7px !important;
+  }
+}

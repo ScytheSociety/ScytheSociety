@@ -155,11 +155,14 @@ const StorySystem = {
                     color: white;
                     border: none;
                     border-radius: 50%;
-                    width: 40px;
-                    height: 40px;
-                    font-size: 20px;
+                    width: 30px;
+                    height: 30px;
+                    font-size: 16px;
                     cursor: pointer;
-                ">✕</button>
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    ">✕</button>
 
                 <h2 style="
                     text-align: center;
@@ -200,7 +203,7 @@ const StorySystem = {
                     color: #AAA;
                     font-size: 14px;
                 ">
-                    <p>Música actual: <span id="current-track" style="color: #FFD700;">Tema Original</span></p>
+                    <p>Música actual: <span id="current-track" style="color: #FFD700;">Azkal - Elegía</span></p>
                 </div>
             </div>
         `;
@@ -233,12 +236,31 @@ window.selectMusic = (trackFile) => {
   AudioManager.sounds.background.audio.src = `sounds/${trackFile}`;
   AudioManager.sounds.background.audio.load();
 
-  // Actualizar display
-  const trackName = trackFile
-    .replace(".mp3", "")
-    .replace("bgm_", "")
-    .replace("_", " ");
-  document.getElementById("current-track").textContent = trackName;
+  // Mapear nombres de archivos a nombres legibles
+  const trackNames = {
+    "background.mp3": "Azkal - Elegía",
+    "bgm_menu.mp3": "Menú Épico",
+    "bgm_battle1.mp3": "Batalla Intensa",
+    "bgm_battle2.mp3": "Batalla Heroica",
+    "bgm_boss.mp3": "Boss Final",
+    "bgm_epic.mp3": "Épica Total",
+  };
+
+  const displayName = trackNames[trackFile] || "Tema Original";
+
+  // Actualizar ticker de música
+  if (UI && UI.updateMusicTicker) {
+    UI.updateMusicTicker(displayName);
+  }
+
+  // Actualizar display en selector
+  const currentTrackElement = document.getElementById("current-track");
+  if (currentTrackElement) {
+    currentTrackElement.textContent = displayName;
+  }
 
   console.log(`🎵 Música cambiada a: ${trackFile}`);
+
+  // Cerrar modal
+  window.closeMusicSelector();
 };

@@ -2065,69 +2065,214 @@ const BossManager = {
     this.isImmune = true;
     this.immunityTimer = 9999;
 
-    // Generar trayectoria con rebotes
+    // Generar trayectoria compleja
     this.generateRedLinePath();
 
     // Ralentizar al jugador
     Player.moveSpeed *= this.playerSlowFactor;
 
-    UI.showScreenMessage("🔴 ¡TRAYECTORIA MORTAL! ¡ESCAPA!", "#FF0000");
+    UI.showScreenMessage("🔴 ¡MEMORIZA EL PATRÓN!", "#FF0000");
 
-    // Dar 3 segundos al jugador para ver la línea
+    // Mostrar la línea por 4 segundos para memorizar
     setTimeout(() => {
-      this.startRedLineMovement();
-    }, 3000);
+      // Borrar la línea visualmente (pero mantenerla en memoria)
+      this.hideRedLine = true;
+      UI.showScreenMessage("🔴 ¡ESCAPA!", "#FF0000");
+
+      // Iniciar movimiento después de 1 segundo más
+      setTimeout(() => {
+        this.startRedLineMovement();
+      }, 1000);
+    }, 4000);
   },
 
   generateRedLinePath() {
     const canvas = window.getCanvas();
     this.redLinePath = [];
 
-    // Punto inicial: posición actual del boss
-    let currentX = this.boss.x + this.boss.width / 2;
-    let currentY = this.boss.y + this.boss.height / 2;
+    // Patrones predefinidos más complejos
+    const patterns = ["S", "M", "Z", "W", "SPIRAL", "ZIGZAG"];
+    const selectedPattern =
+      patterns[Math.floor(Math.random() * patterns.length)];
 
-    // Velocidad inicial aleatoria
+    console.log(`🔴 Generando patrón: ${selectedPattern}`);
+
+    // Generar puntos según el patrón
+    switch (selectedPattern) {
+      case "S":
+        this.generateSPattern(canvas);
+        break;
+      case "M":
+        this.generateMPattern(canvas);
+        break;
+      case "Z":
+        this.generateZPattern(canvas);
+        break;
+      case "W":
+        this.generateWPattern(canvas);
+        break;
+      case "SPIRAL":
+        this.generateSpiralPattern(canvas);
+        break;
+      case "ZIGZAG":
+        this.generateZigzagPattern(canvas);
+        break;
+    }
+
+    // Agregar rebotes adicionales al final del patrón
+    this.addBouncingSegment(canvas);
+  },
+
+  generateSPattern(canvas) {
+    const segments = 4;
+    const amplitude = canvas.width * 0.3;
+    const segmentHeight = canvas.height / segments;
+
+    for (let i = 0; i < 300; i++) {
+      const t = i / 299;
+      const y = t * canvas.height;
+      const x = canvas.width / 2 + Math.sin(t * Math.PI * segments) * amplitude;
+      this.redLinePath.push({ x, y });
+    }
+  },
+
+  generateMPattern(canvas) {
+    const peaks = 3;
+    const peakWidth = canvas.width / (peaks * 2);
+
+    for (let i = 0; i < 300; i++) {
+      const t = i / 299;
+      const segmentIndex = Math.floor(t * peaks * 2);
+      const segmentProgress = (t * peaks * 2) % 1;
+
+      let x, y;
+      if (segmentIndex % 2 === 0) {
+        // Subida
+        x = segmentIndex * peakWidth + segmentProgress * peakWidth;
+        y = canvas.height - segmentProgress * canvas.height * 0.8;
+      } else {
+        // Bajada
+        x = segmentIndex * peakWidth + segmentProgress * peakWidth;
+        y = canvas.height * 0.2 + segmentProgress * canvas.height * 0.8;
+      }
+
+      this.redLinePath.push({ x, y });
+    }
+  },
+
+  generateZPattern(canvas) {
+    const points = [
+      { x: canvas.width * 0.1, y: canvas.height * 0.2 },
+      { x: canvas.width * 0.9, y: canvas.height * 0.2 },
+      { x: canvas.width * 0.1, y: canvas.height * 0.8 },
+      { x: canvas.width * 0.9, y: canvas.height * 0.8 },
+    ];
+
+    for (let segment = 0; segment < 3; segment++) {
+      const start = points[segment];
+      const end = points[segment + 1];
+
+      for (let i = 0; i < 100; i++) {
+        const t = i / 99;
+        this.redLinePath.push({
+          x: start.x + (end.x - start.x) * t,
+          y: start.y + (end.y - start.y) * t,
+        });
+      }
+    }
+  },
+
+  generateWPattern(canvas) {
+    const peaks = 4;
+    const peakWidth = canvas.width / peaks;
+
+    for (let i = 0; i < 400; i++) {
+      const t = i / 399;
+      const x = t * canvas.width;
+      const peakIndex = Math.floor(t * peaks);
+      const peakProgress = (t * peaks) % 1;
+
+      let y;
+      if (peakIndex % 2 === 0) {
+        y = canvas.height * 0.8 - peakProgress * canvas.height * 0.6;
+      } else {
+        y = canvas.height * 0.2 + peakProgress * canvas.height * 0.6;
+      }
+
+      this.redLinePath.push({ x, y });
+    }
+  },
+
+  generateSpiralPattern(canvas) {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const maxRadius = Math.min(canvas.width, canvas.height) * 0.4;
+
+    for (let i = 0; i < 400; i++) {
+      const t = i / 399;
+      const angle = t * Math.PI * 6; // 3 vueltas completas
+      const radius = t * maxRadius;
+
+      this.redLinePath.push({
+        x: centerX + Math.cos(angle) * radius,
+        y: centerY + Math.sin(angle) * radius,
+      });
+    }
+  },
+
+  generateZigzagPattern(canvas) {
+    const zigzags = 8;
+    const amplitude = canvas.width * 0.4;
+
+    for (let i = 0; i < 400; i++) {
+      const t = i / 399;
+      const y = t * canvas.height;
+      const zigzagProgress = (t * zigzags) % 1;
+
+      let x;
+      if (Math.floor(t * zigzags) % 2 === 0) {
+        x = canvas.width * 0.3 + zigzagProgress * amplitude;
+      } else {
+        x = canvas.width * 0.7 - zigzagProgress * amplitude;
+      }
+
+      this.redLinePath.push({ x, y });
+    }
+  },
+
+  addBouncingSegment(canvas) {
+    // Agregar segmento final con rebotes
+    const lastPoint = this.redLinePath[this.redLinePath.length - 1];
+    let x = lastPoint.x;
+    let y = lastPoint.y;
     let vx = (Math.random() - 0.5) * 20;
     let vy = (Math.random() - 0.5) * 20;
 
-    // Generar 200 puntos con rebotes
-    for (let i = 0; i < 200; i++) {
-      this.redLinePath.push({ x: currentX, y: currentY });
-
-      // Siguiente posición
-      currentX += vx;
-      currentY += vy;
+    for (let i = 0; i < 100; i++) {
+      x += vx;
+      y += vy;
 
       // Rebotes en paredes
-      if (
-        currentX <= this.boss.width / 2 ||
-        currentX >= canvas.width - this.boss.width / 2
-      ) {
-        vx = -vx * 1.1; // Acelerar en rebotes
-        currentX = Math.max(
+      if (x <= this.boss.width / 2 || x >= canvas.width - this.boss.width / 2) {
+        vx = -vx * 1.1;
+        x = Math.max(
           this.boss.width / 2,
-          Math.min(canvas.width - this.boss.width / 2, currentX)
+          Math.min(canvas.width - this.boss.width / 2, x)
         );
       }
 
       if (
-        currentY <= this.boss.height / 2 ||
-        currentY >= canvas.height - this.boss.height / 2
+        y <= this.boss.height / 2 ||
+        y >= canvas.height - this.boss.height / 2
       ) {
         vy = -vy * 1.1;
-        currentY = Math.max(
+        y = Math.max(
           this.boss.height / 2,
-          Math.min(canvas.height - this.boss.height / 2, currentY)
+          Math.min(canvas.height - this.boss.height / 2, y)
         );
       }
 
-      // Limitar velocidad máxima
-      const speed = Math.sqrt(vx * vx + vy * vy);
-      if (speed > 30) {
-        vx = (vx / speed) * 30;
-        vy = (vy / speed) * 30;
-      }
+      this.redLinePath.push({ x, y });
     }
   },
 
@@ -2163,6 +2308,7 @@ const BossManager = {
 
     this.redLinePhase = false;
     this.redLinePath = [];
+    this.hideRedLine = false; // Resetear visibilidad
     this.isImmune = false;
     this.immunityTimer = 0;
 
@@ -2207,30 +2353,36 @@ const BossManager = {
     const container = document.createElement("div");
     container.id = "yankenpo-container";
     container.style.cssText = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: flex;
-      gap: 20px;
-      z-index: 1000;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        gap: 20px;
+        z-index: 1000;
     `;
 
-    // Crear 3 botones
+    // Crear 3 botones con números
     this.yanKenPoChoices.forEach((choice, index) => {
       const button = document.createElement("button");
-      button.textContent = choice;
+      button.innerHTML = `
+            <div style="font-size: 40px;">${choice}</div>
+            <div style="font-size: 16px; margin-top: 5px;">${index + 1}</div>
+        `;
       button.style.cssText = `
-        width: 80px;
-        height: 80px;
-        font-size: 40px;
-        border-radius: 50%;
-        border: 3px solid #FFD700;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        cursor: pointer;
-        transition: all 0.3s;
-      `;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 3px solid #FFD700;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        `;
 
       button.onmouseover = () => {
         button.style.transform = "scale(1.2)";
@@ -2249,14 +2401,38 @@ const BossManager = {
 
     document.body.appendChild(container);
 
+    // Agregar listener de teclado para PC
+    this.yanKenPoKeyListener = (e) => {
+      if (this.playerChoice !== null) return;
+
+      if (e.key === "1") this.playerChooseYanKenPo(0);
+      else if (e.key === "2") this.playerChooseYanKenPo(1);
+      else if (e.key === "3") this.playerChooseYanKenPo(2);
+    };
+
+    window.addEventListener("keydown", this.yanKenPoKeyListener);
+
+    // Desactivar movimiento del jugador durante Yan Ken Po
+    this.originalPlayerControls = Player.setupControls;
+    Player.setupControls = () => {}; // Desactivar controles temporalmente
+
     // Mostrar ronda
-    UI.showScreenMessage(`Ronda ${this.yanKenPoRound + 1}/3`, "#FFFFFF");
+    UI.showScreenMessage(
+      `Ronda ${this.yanKenPoRound + 1}/3 - Presiona 1, 2 o 3`,
+      "#FFFFFF"
+    );
   },
 
   playerChooseYanKenPo(choiceIndex) {
     if (this.playerChoice !== null) return; // Ya eligió
 
     this.playerChoice = choiceIndex;
+
+    // Remover listener de teclado
+    if (this.yanKenPoKeyListener) {
+      window.removeEventListener("keydown", this.yanKenPoKeyListener);
+      this.yanKenPoKeyListener = null;
+    }
 
     // Boss elige aleatoriamente
     this.bossChoice = Math.floor(Math.random() * 3);
@@ -2267,6 +2443,26 @@ const BossManager = {
 
     // Mostrar elecciones
     this.showYanKenPoResult();
+  },
+
+  endYanKenPoPhase() {
+    // Restaurar controles del jugador
+    if (this.originalPlayerControls) {
+      Player.setupControls = this.originalPlayerControls;
+      Player.setupControls(window.getCanvas());
+    }
+
+    // Limpiar listener si quedó activo
+    if (this.yanKenPoKeyListener) {
+      window.removeEventListener("keydown", this.yanKenPoKeyListener);
+      this.yanKenPoKeyListener = null;
+    }
+
+    // Limpiar botones
+    const container = document.getElementById("yankenpo-container");
+    if (container) container.remove();
+
+    this.yanKenPoPhase = false;
   },
 
   showYanKenPoResult() {
@@ -2376,32 +2572,18 @@ const BossManager = {
   drawRedLine(ctx) {
     ctx.save();
 
-    // Dibujar la línea completa en rojo transparente
-    ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
-    ctx.lineWidth = 10;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-
-    ctx.beginPath();
-    for (let i = 0; i < this.redLinePath.length; i++) {
-      const point = this.redLinePath[i];
-      if (i === 0) {
-        ctx.moveTo(point.x, point.y);
-      } else {
-        ctx.lineTo(point.x, point.y);
-      }
-    }
-    ctx.stroke();
-
-    // Dibujar la parte ya recorrida más brillante
-    if (this.redLineIndex > 0) {
-      ctx.strokeStyle = "rgba(255, 0, 0, 0.9)";
+    // Solo dibujar si no está oculta
+    if (!this.hideRedLine) {
+      // Dibujar la línea completa en rojo transparente
+      ctx.strokeStyle = "rgba(255, 0, 0, 0.6)";
       ctx.lineWidth = 15;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
       ctx.shadowColor = "#FF0000";
       ctx.shadowBlur = 20;
 
       ctx.beginPath();
-      for (let i = 0; i <= this.redLineIndex; i++) {
+      for (let i = 0; i < this.redLinePath.length; i++) {
         const point = this.redLinePath[i];
         if (i === 0) {
           ctx.moveTo(point.x, point.y);
@@ -2410,13 +2592,39 @@ const BossManager = {
         }
       }
       ctx.stroke();
+
+      // Efecto de parpadeo mientras se muestra
+      const pulse = Math.sin(window.getGameTime() * 0.2) * 0.3 + 0.7;
+      ctx.globalAlpha = pulse;
+      ctx.strokeStyle = "#FFFF00";
+      ctx.lineWidth = 5;
+      ctx.stroke();
     }
 
-    // Efecto de advertencia parpadeante
-    if (this.redLinePhase && !this.redLineSpeed) {
-      const pulse = Math.sin(window.getGameTime() * 0.3) * 0.5 + 0.5;
-      ctx.strokeStyle = `rgba(255, 255, 0, ${pulse})`;
+    // Siempre dibujar una pequeña estela detrás del boss cuando se mueve
+    if (this.redLineSpeed > 0 && this.redLineIndex > 0) {
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = "rgba(255, 0, 0, 0.8)";
       ctx.lineWidth = 20;
+      ctx.shadowColor = "#FF0000";
+      ctx.shadowBlur = 30;
+
+      // Dibujar solo los últimos 20 puntos como estela
+      const startIndex = Math.max(0, this.redLineIndex - 20);
+
+      ctx.beginPath();
+      for (
+        let i = startIndex;
+        i <= this.redLineIndex && i < this.redLinePath.length;
+        i++
+      ) {
+        const point = this.redLinePath[i];
+        if (i === startIndex) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      }
       ctx.stroke();
     }
 
