@@ -141,7 +141,7 @@ const StorySystem = {
 
     const tracks = [
       { file: "background.mp3", name: "Azkal - Elegía", icon: "🎵" },
-      { file: "bgm_menu.mp3", name: "Menú Épico", icon: "🎹" },
+      { file: "bgm_menu.mp3", name: "Hell - Payon Theme", icon: "🎹" },
       { file: "bgm_battle1.mp3", name: "Batalla Intensa", icon: "⚔️" },
       { file: "bgm_battle2.mp3", name: "Batalla Heroica", icon: "🗡️" },
       { file: "bgm_boss.mp3", name: "Boss Final", icon: "👹" },
