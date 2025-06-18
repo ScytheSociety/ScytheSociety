@@ -2641,13 +2641,23 @@ const BossManager = {
 
     document.body.appendChild(container);
 
-    // Agregar listener de teclado para PC
+    // 🔥 LISTENER DE TECLADO CORREGIDO - DETECTA AMBOS TIPOS DE TECLAS
     this.yanKenPoKeyListener = (e) => {
       if (this.playerChoice !== null) return;
 
-      if (e.key === "1") this.playerChooseYanKenPo(0);
-      else if (e.key === "2") this.playerChooseYanKenPo(1);
-      else if (e.key === "3") this.playerChooseYanKenPo(2);
+      console.log(`🎮 Tecla presionada: "${e.key}" (código: ${e.code})`);
+
+      // Detectar tanto las teclas de arriba como las del numpad
+      if (e.key === "1" || e.code === "Digit1" || e.code === "Numpad1") {
+        console.log("🎮 Detectado: Piedra (1)");
+        this.playerChooseYanKenPo(0);
+      } else if (e.key === "2" || e.code === "Digit2" || e.code === "Numpad2") {
+        console.log("🎮 Detectado: Papel (2)");
+        this.playerChooseYanKenPo(1);
+      } else if (e.key === "3" || e.code === "Digit3" || e.code === "Numpad3") {
+        console.log("🎮 Detectado: Tijera (3)");
+        this.playerChooseYanKenPo(2);
+      }
     };
 
     window.addEventListener("keydown", this.yanKenPoKeyListener);
