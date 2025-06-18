@@ -146,7 +146,7 @@ const StorySystem = {
       { file: "bgm_battle2.mp3", name: "Depair - Mintjam Arrange", icon: "🗡️" },
       {
         file: "bgm_boss.mp3",
-        name: "Dreamer's Dream - Destructive Ange",
+        name: "Dreamer's - Destructive Ange",
         icon: "👹",
       },
       { file: "bgm_epic.mp3", name: "Retro Metro - Shade", icon: "🔥" },
