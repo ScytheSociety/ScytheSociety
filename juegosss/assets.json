@@ -9,7 +9,8 @@
     "../imagenes/imagenesjuegosss/levelbg7.jpg",
     "../imagenes/imagenesjuegosss/levelbg8.jpg",
     "../imagenes/imagenesjuegosss/levelbg9.jpg",
-    "../imagenes/imagenesjuegosss/levelbg10.jpg"
+    "../imagenes/imagenesjuegosss/levelbg10.jpg",
+    "../imagenes/imagenesjuegosss/levelbg11.jpg"
   ],
   "enemies": [
     "../imagenes/imagenesjuegosss/enemy1.gif",

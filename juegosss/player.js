@@ -11,6 +11,7 @@ const Player = {
   // Información básica
   name: "",
   avatar: "",
+  moveSpeed: 1.0, // Factor de velocidad normal
 
   // Posición y dimensiones
   x: 0,
@@ -172,8 +173,12 @@ const Player = {
    * Actualiza la posición del jugador
    */
   updatePosition() {
-    this.x = this.mouseX - this.width / 2;
-    this.y = this.mouseY - this.height / 2;
+    // Aplicar factor de velocidad
+    const deltaX = (this.mouseX - this.width / 2 - this.x) * this.moveSpeed;
+    const deltaY = (this.mouseY - this.height / 2 - this.y) * this.moveSpeed;
+
+    this.x += deltaX * 0.15; // Suavizado
+    this.y += deltaY * 0.15;
 
     // Mantener dentro de los límites del canvas
     const canvas = window.getCanvas();

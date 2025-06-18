@@ -37,6 +37,11 @@
                 <button onclick="showInstructions()" class="gothic-button main-button">📖 INSTRUCCIONES</button>
                 <button onclick="viewRanking()" class="gothic-button main-button">🏆 RANKING</button>
             </div>
+            <!-- Agregar debajo una nueva fila de botones -->
+            <div class="secondary-buttons-row" style="margin-top: 15px;">
+                <button onclick="showStory()" class="gothic-button main-button">📜 HISTORIA</button>
+                <button onclick="showMusicSelector()" class="gothic-button main-button">🎵 MÚSICA</button>
+            </div>
         </div>
     </div>
 
@@ -138,9 +143,30 @@
     <script src="enemies.js"></script>
     <script src="boss.js"></script>
     <script src="powerups.js"></script>
+    <script src="story.js"></script>
 
     <!-- 4. Sistema principal (debe cargarse al final) -->
     <script src="main.js"></script>
+
+    <!-- Footer de Scythe Society -->
+    <footer id="scythe-footer" style="
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: #666;
+    font-size: 12px;
+    font-family: 'Arial', sans-serif;
+    text-shadow: 0 0 5px #000;
+    z-index: 100;
+    pointer-events: none;
+">
+        <span style="color: #8B0000;">♰</span>
+        Creado con amor por la comunidad
+        <span style="color: #FF0000; font-weight: bold;">Scythe Society</span>
+        <span style="color: #8B0000;">♰</span>
+    </footer>
 
 </body>
 

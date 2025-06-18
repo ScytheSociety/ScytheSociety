@@ -43,6 +43,21 @@ const BossManager = {
   mineTimer: 0,
   miningPhase: false,
 
+  // 🔥 NUEVO: Sistema de línea roja
+  redLinePhase: false,
+  redLinePath: [],
+  redLineIndex: 0,
+  redLineSpeed: 0,
+  playerSlowFactor: 0.2, // Jugador se mueve al 20% de velocidad
+
+  // 🔥 NUEVO: Sistema de Yan Ken Po
+  yanKenPoPhase: false,
+  yanKenPoRound: 0,
+  yanKenPoChoices: ["✊", "✋", "✌️"], // Piedra, Papel, Tijera
+  bossChoice: null,
+  playerChoice: null,
+  yanKenPoButtons: [],
+
   // ======================================================
   // INICIALIZACIÓN
   // ======================================================
@@ -132,14 +147,42 @@ const BossManager = {
 
     // Actualizar sistemas básicos
     this.updateImmunity();
-    this.updateIntelligentMovement();
+
+    // 🔥 NUEVO: Verificar fase final (3% de vida)
+    if (
+      this.currentHealth <= 6 &&
+      !this.yanKenPoPhase &&
+      this.currentPhase !== "FINAL"
+    ) {
+      this.startFinalPhase();
+      return;
+    }
+
+    // 🔥 NUEVO: Manejar fase de Yan Ken Po
+    if (this.yanKenPoPhase) {
+      this.updateYanKenPo();
+      return;
+    }
+
+    // 🔥 NUEVO: Manejar fase de línea roja
+    if (this.redLinePhase) {
+      this.updateRedLine();
+      return;
+    }
+
+    // Actualizar movimiento inteligente solo si no hay fases especiales activas
+    if (!this.yanKenPoPhase && !this.redLinePhase) {
+      this.updateIntelligentMovement();
+    }
 
     // 🔥 SISTEMA DE FASES INTELIGENTE
     this.updateIntelligentPhases();
 
+    // 🔥 IMPORTANTE: Las minas deben seguir activas aunque termine la fase
+    this.updateIntelligentMines();
+
     // Comentarios aleatorios ocasionales
     if (Math.random() < 0.001) {
-      // Menos frecuente
       this.sayRandomComment("combate");
     }
 
@@ -159,7 +202,18 @@ const BossManager = {
       } - Fase activa: ${this.phaseActive}`
     );
 
-    // 🔥 VERIFICAR ACTIVACIÓN DE FASES
+    // 🔥 NUEVO: Verificar fase de línea roja al 10%
+    if (
+      healthPercentage <= 0.1 &&
+      healthPercentage > 0.03 &&
+      !this.redLinePhase &&
+      this.currentPhase !== "REDLINE"
+    ) {
+      this.startRedLinePhase();
+      return;
+    }
+
+    // 🔥 VERIFICAR ACTIVACIÓN DE FASES NORMALES
     let shouldStartPhase = false;
     let targetPhase = null;
 
@@ -167,7 +221,8 @@ const BossManager = {
     if (
       healthPercentage <= 0.75 &&
       healthPercentage > 0.5 &&
-      !this.phaseActive
+      !this.phaseActive &&
+      !this.redLinePhase
     ) {
       if (this.currentPhase !== "SUMMONING") {
         shouldStartPhase = true;
@@ -179,7 +234,8 @@ const BossManager = {
     else if (
       healthPercentage <= 0.5 &&
       healthPercentage > 0.25 &&
-      !this.phaseActive
+      !this.phaseActive &&
+      !this.redLinePhase
     ) {
       if (this.currentPhase !== "MINES") {
         shouldStartPhase = true;
@@ -188,7 +244,12 @@ const BossManager = {
       }
     }
     // FASE BULLETS al 25%
-    else if (healthPercentage <= 0.25 && !this.phaseActive) {
+    else if (
+      healthPercentage <= 0.25 &&
+      healthPercentage > 0.1 &&
+      !this.phaseActive &&
+      !this.redLinePhase
+    ) {
       if (this.currentPhase !== "BULLETS") {
         shouldStartPhase = true;
         targetPhase = "BULLETS";
@@ -214,7 +275,7 @@ const BossManager = {
           this.executeBulletsPhase();
           break;
       }
-    } else {
+    } else if (!this.redLinePhase && !this.yanKenPoPhase) {
       // 🔥 PERSEGUIR JUGADOR cuando no hay fase activa
       this.huntPlayer();
     }
@@ -789,6 +850,12 @@ const BossManager = {
       return;
     }
 
+    // 🔥 NUEVO: Durante fase final, no recibir daño normal
+    if (this.yanKenPoPhase) {
+      console.log("👹 Boss inmune durante Yan Ken Po");
+      return;
+    }
+
     // 🔥 DAÑO REDUCIDO PARA MAYOR DURACIÓN
     const reducedDamage = Math.max(1, Math.floor(amount * 0.7)); // 30% menos daño
     this.currentHealth = Math.max(0, this.currentHealth - reducedDamage);
@@ -938,17 +1005,31 @@ const BossManager = {
   draw(ctx) {
     if (!this.active || !this.boss) return;
 
-    // Dibujar balas Touhou primero (atrás)
+    // 🔥 NUEVO: Dibujar línea roja si está activa
+    if (this.redLinePhase && this.redLinePath.length > 0) {
+      this.drawRedLine(ctx);
+    }
+
+    // Dibujar balas Touhou
     this.drawBulletPatterns(ctx);
 
-    // Dibujar minas con zonas de peligro
+    // Dibujar minas
     this.drawIntelligentMines(ctx);
 
     // Dibujar boss
     this.drawBoss(ctx);
 
-    // Dibujar barra de vida que sigue al boss
+    // Dibujar barra de vida
     this.drawHealthBar(ctx);
+
+    // 🔥 NUEVO: Dibujar indicador de Yan Ken Po
+    if (
+      this.yanKenPoPhase &&
+      this.bossChoice !== null &&
+      this.playerChoice === null
+    ) {
+      this.drawBossChoice(ctx);
+    }
   },
 
   /**
@@ -1971,6 +2052,391 @@ const BossManager = {
 
     this.lastCommentTime = currentTime;
     console.log(`👹 Boss dice: ${randomComment}`);
+  },
+
+  // ======================================================
+  // 🔥 NUEVA FASE: LÍNEA ROJA
+  // ======================================================
+
+  startRedLinePhase() {
+    console.log("🔴 Iniciando fase de línea roja");
+
+    this.redLinePhase = true;
+    this.isImmune = true;
+    this.immunityTimer = 9999;
+
+    // Generar trayectoria con rebotes
+    this.generateRedLinePath();
+
+    // Ralentizar al jugador
+    Player.moveSpeed *= this.playerSlowFactor;
+
+    UI.showScreenMessage("🔴 ¡TRAYECTORIA MORTAL! ¡ESCAPA!", "#FF0000");
+
+    // Dar 3 segundos al jugador para ver la línea
+    setTimeout(() => {
+      this.startRedLineMovement();
+    }, 3000);
+  },
+
+  generateRedLinePath() {
+    const canvas = window.getCanvas();
+    this.redLinePath = [];
+
+    // Punto inicial: posición actual del boss
+    let currentX = this.boss.x + this.boss.width / 2;
+    let currentY = this.boss.y + this.boss.height / 2;
+
+    // Velocidad inicial aleatoria
+    let vx = (Math.random() - 0.5) * 20;
+    let vy = (Math.random() - 0.5) * 20;
+
+    // Generar 200 puntos con rebotes
+    for (let i = 0; i < 200; i++) {
+      this.redLinePath.push({ x: currentX, y: currentY });
+
+      // Siguiente posición
+      currentX += vx;
+      currentY += vy;
+
+      // Rebotes en paredes
+      if (
+        currentX <= this.boss.width / 2 ||
+        currentX >= canvas.width - this.boss.width / 2
+      ) {
+        vx = -vx * 1.1; // Acelerar en rebotes
+        currentX = Math.max(
+          this.boss.width / 2,
+          Math.min(canvas.width - this.boss.width / 2, currentX)
+        );
+      }
+
+      if (
+        currentY <= this.boss.height / 2 ||
+        currentY >= canvas.height - this.boss.height / 2
+      ) {
+        vy = -vy * 1.1;
+        currentY = Math.max(
+          this.boss.height / 2,
+          Math.min(canvas.height - this.boss.height / 2, currentY)
+        );
+      }
+
+      // Limitar velocidad máxima
+      const speed = Math.sqrt(vx * vx + vy * vy);
+      if (speed > 30) {
+        vx = (vx / speed) * 30;
+        vy = (vy / speed) * 30;
+      }
+    }
+  },
+
+  startRedLineMovement() {
+    this.redLineIndex = 0;
+    this.redLineSpeed = 5; // Puntos por frame
+    AudioManager.playSound("special");
+  },
+
+  updateRedLine() {
+    if (this.redLineIndex >= this.redLinePath.length - 1) {
+      this.endRedLinePhase();
+      return;
+    }
+
+    // Mover el boss por la línea
+    const targetPoint = this.redLinePath[this.redLineIndex];
+    this.boss.x = targetPoint.x - this.boss.width / 2;
+    this.boss.y = targetPoint.y - this.boss.height / 2;
+
+    // Verificar colisión con el jugador
+    if (this.checkCollisionWithPlayer()) {
+      Player.takeDamage();
+      UI.showScreenMessage("💥 ¡GOLPEADO!", "#FF0000");
+    }
+
+    // Avanzar en la línea
+    this.redLineIndex += this.redLineSpeed;
+  },
+
+  endRedLinePhase() {
+    console.log("🔴 Fase de línea roja terminada");
+
+    this.redLinePhase = false;
+    this.redLinePath = [];
+    this.isImmune = false;
+    this.immunityTimer = 0;
+
+    // Restaurar velocidad del jugador
+    Player.moveSpeed /= this.playerSlowFactor;
+
+    UI.showScreenMessage("⚔️ ¡BOSS VULNERABLE!", "#00FF00");
+  },
+
+  // ======================================================
+  // 🔥 NUEVA FASE FINAL: YAN KEN PO
+  // ======================================================
+
+  startFinalPhase() {
+    console.log("🎮 Iniciando fase final: YAN KEN PO");
+
+    this.currentPhase = "FINAL";
+    this.yanKenPoPhase = true;
+    this.yanKenPoRound = 0;
+    this.isImmune = true;
+    this.immunityTimer = 9999;
+
+    // Limpiar otros sistemas
+    this.mines = [];
+    this.bulletPatterns = [];
+
+    // Mover al centro
+    this.teleportToCenter();
+
+    UI.showScreenMessage("🎮 ¡FASE FINAL: YAN KEN PO!", "#FFD700");
+
+    // Crear botones después de un delay
+    setTimeout(() => {
+      this.createYanKenPoButtons();
+    }, 1000);
+  },
+
+  createYanKenPoButtons() {
+    const canvas = window.getCanvas();
+
+    // Crear contenedor de botones
+    const container = document.createElement("div");
+    container.id = "yankenpo-container";
+    container.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      gap: 20px;
+      z-index: 1000;
+    `;
+
+    // Crear 3 botones
+    this.yanKenPoChoices.forEach((choice, index) => {
+      const button = document.createElement("button");
+      button.textContent = choice;
+      button.style.cssText = `
+        width: 80px;
+        height: 80px;
+        font-size: 40px;
+        border-radius: 50%;
+        border: 3px solid #FFD700;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s;
+      `;
+
+      button.onmouseover = () => {
+        button.style.transform = "scale(1.2)";
+        button.style.boxShadow = "0 0 20px #FFD700";
+      };
+
+      button.onmouseout = () => {
+        button.style.transform = "scale(1)";
+        button.style.boxShadow = "none";
+      };
+
+      button.onclick = () => this.playerChooseYanKenPo(index);
+
+      container.appendChild(button);
+    });
+
+    document.body.appendChild(container);
+
+    // Mostrar ronda
+    UI.showScreenMessage(`Ronda ${this.yanKenPoRound + 1}/3`, "#FFFFFF");
+  },
+
+  playerChooseYanKenPo(choiceIndex) {
+    if (this.playerChoice !== null) return; // Ya eligió
+
+    this.playerChoice = choiceIndex;
+
+    // Boss elige aleatoriamente
+    this.bossChoice = Math.floor(Math.random() * 3);
+
+    // Ocultar botones
+    const container = document.getElementById("yankenpo-container");
+    if (container) container.style.display = "none";
+
+    // Mostrar elecciones
+    this.showYanKenPoResult();
+  },
+
+  showYanKenPoResult() {
+    const choices = this.yanKenPoChoices;
+    const playerEmoji = choices[this.playerChoice];
+    const bossEmoji = choices[this.bossChoice];
+
+    UI.showScreenMessage(`TÚ: ${playerEmoji} vs BOSS: ${bossEmoji}`, "#FFFFFF");
+
+    // Determinar ganador (0=piedra, 1=papel, 2=tijera)
+    let playerWins = false;
+
+    if (this.playerChoice === this.bossChoice) {
+      UI.showScreenMessage("¡EMPATE! Repite", "#FFFF00");
+      setTimeout(() => this.repeatYanKenPo(), 2000);
+      return;
+    }
+
+    if (
+      (this.playerChoice === 0 && this.bossChoice === 2) || // Piedra vs Tijera
+      (this.playerChoice === 1 && this.bossChoice === 0) || // Papel vs Piedra
+      (this.playerChoice === 2 && this.bossChoice === 1)
+    ) {
+      // Tijera vs Papel
+      playerWins = true;
+    }
+
+    if (playerWins) {
+      this.handleYanKenPoWin();
+    } else {
+      this.handleYanKenPoLoss();
+    }
+  },
+
+  handleYanKenPoWin() {
+    UI.showScreenMessage("¡GANASTE! Boss -1% vida", "#00FF00");
+
+    this.currentHealth -= 2; // 1% de 200
+    this.yanKenPoRound++;
+
+    // Verificar si el boss murió
+    if (this.currentHealth <= 0) {
+      this.defeat();
+      return;
+    }
+
+    // Verificar si completamos las 3 rondas
+    if (this.yanKenPoRound >= 3) {
+      UI.showScreenMessage("¡BOSS DERROTADO!", "#FFD700");
+      setTimeout(() => this.defeat(), 2000);
+    } else {
+      // Siguiente ronda
+      setTimeout(() => this.nextYanKenPoRound(), 2000);
+    }
+  },
+
+  handleYanKenPoLoss() {
+    UI.showScreenMessage("¡PERDISTE! Prepárate...", "#FF0000");
+
+    // Limpiar botones
+    const container = document.getElementById("yankenpo-container");
+    if (container) container.remove();
+
+    // Volver a fase de línea roja
+    this.yanKenPoPhase = false;
+    setTimeout(() => this.startRedLinePhase(), 2000);
+  },
+
+  repeatYanKenPo() {
+    this.playerChoice = null;
+    this.bossChoice = null;
+
+    // Mostrar botones de nuevo
+    const container = document.getElementById("yankenpo-container");
+    if (container) container.style.display = "flex";
+  },
+
+  nextYanKenPoRound() {
+    this.playerChoice = null;
+    this.bossChoice = null;
+
+    // Recrear botones
+    const oldContainer = document.getElementById("yankenpo-container");
+    if (oldContainer) oldContainer.remove();
+
+    this.createYanKenPoButtons();
+  },
+
+  updateYanKenPo() {
+    // El sistema de Yan Ken Po se maneja principalmente con eventos de botones
+    // Esta función puede estar vacía o manejar animaciones del boss
+  },
+
+  checkCollisionWithPlayer() {
+    const player = Player;
+    const playerPos = player.getPosition();
+    const playerSize = player.getSize();
+
+    return (
+      this.boss.x < playerPos.x + playerSize.width &&
+      this.boss.x + this.boss.width > playerPos.x &&
+      this.boss.y < playerPos.y + playerSize.height &&
+      this.boss.y + this.boss.height > playerPos.y
+    );
+  },
+
+  drawRedLine(ctx) {
+    ctx.save();
+
+    // Dibujar la línea completa en rojo transparente
+    ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
+    ctx.lineWidth = 10;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    ctx.beginPath();
+    for (let i = 0; i < this.redLinePath.length; i++) {
+      const point = this.redLinePath[i];
+      if (i === 0) {
+        ctx.moveTo(point.x, point.y);
+      } else {
+        ctx.lineTo(point.x, point.y);
+      }
+    }
+    ctx.stroke();
+
+    // Dibujar la parte ya recorrida más brillante
+    if (this.redLineIndex > 0) {
+      ctx.strokeStyle = "rgba(255, 0, 0, 0.9)";
+      ctx.lineWidth = 15;
+      ctx.shadowColor = "#FF0000";
+      ctx.shadowBlur = 20;
+
+      ctx.beginPath();
+      for (let i = 0; i <= this.redLineIndex; i++) {
+        const point = this.redLinePath[i];
+        if (i === 0) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      }
+      ctx.stroke();
+    }
+
+    // Efecto de advertencia parpadeante
+    if (this.redLinePhase && !this.redLineSpeed) {
+      const pulse = Math.sin(window.getGameTime() * 0.3) * 0.5 + 0.5;
+      ctx.strokeStyle = `rgba(255, 255, 0, ${pulse})`;
+      ctx.lineWidth = 20;
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  },
+
+  drawBossChoice(ctx) {
+    const centerX = this.boss.x + this.boss.width / 2;
+    const centerY = this.boss.y - 50;
+
+    ctx.save();
+    ctx.font = "bold 60px Arial";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 3;
+
+    ctx.strokeText("?", centerX, centerY);
+    ctx.fillText("?", centerX, centerY);
+    ctx.restore();
   },
 };
 

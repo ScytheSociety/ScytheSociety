@@ -927,3 +927,75 @@ button:active,
 #ranking-container::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #ff6666 0%, var(--accent-color) 100%);
 }
+
+/* =============================================== */
+/* BOTONES SECUNDARIOS DEL MENÚ */
+/* =============================================== */
+
+.secondary-buttons-row {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  width: 100%;
+  max-width: 600px;
+  margin-top: 15px;
+}
+
+/* =============================================== */
+/* PIE DE PÁGINA SCYTHE SOCIETY */
+/* =============================================== */
+
+#scythe-footer {
+  animation: fadeIn 2s ease-in;
+}
+
+@media (max-width: 768px) {
+  #scythe-footer {
+    font-size: 10px;
+    bottom: 5px;
+  }
+}
+
+/* =============================================== */
+/* MODALES DE HISTORIA Y MÚSICA */
+/* =============================================== */
+
+#story-modal::-webkit-scrollbar,
+#music-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+#story-modal::-webkit-scrollbar-track,
+#music-modal::-webkit-scrollbar-track {
+  background: rgba(139, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+#story-modal::-webkit-scrollbar-thumb,
+#music-modal::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ff0000 0%, #8b0000 100%);
+  border-radius: 4px;
+}
+
+/* =============================================== */
+/* BOTONES DE YAN KEN PO */
+/* =============================================== */
+
+#yankenpo-container button:hover {
+  animation: pulse 0.5s infinite;
+}
+
+#yankenpo-container button:active {
+  transform: scale(0.95) !important;
+}
+
+/* Efecto de línea roja warning */
+@keyframes redLineWarning {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
