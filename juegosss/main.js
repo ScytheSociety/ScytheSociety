@@ -226,7 +226,10 @@ function startGameLoop() {
 
   // Código existente...
   BulletManager.startAutoShoot();
-  AudioManager.startBackgroundMusic();
+  // Solo iniciar música si no está reproduciéndose ya
+  if (!AudioManager.isBackgroundMusicPlaying()) {
+    AudioManager.startBackgroundMusic();
+  }
   gameInterval = setInterval(gameLoop, 1000 / 60);
   startLevel();
 
@@ -724,7 +727,7 @@ function gameOver() {
   }
 
   BulletManager.stopAutoShoot();
-  AudioManager.stopBackgroundMusic();
+  //AudioManager.stopBackgroundMusic();
 
   // Limpiar sistemas completamente DESPUÉS de obtener el combo
   ComboSystem.cleanup();
@@ -752,7 +755,7 @@ function victory() {
   }
 
   BulletManager.stopAutoShoot();
-  AudioManager.stopBackgroundMusic();
+  //AudioManager.stopBackgroundMusic();
 
   // Celebración épica con combo
   UI.showGameOver(true, score, level, maxCombo); // ⬅️ TRUE = Victoria
@@ -836,7 +839,7 @@ function cleanupGame() {
   }
 
   BulletManager.stopAutoShoot();
-  AudioManager.stopBackgroundMusic();
+  //AudioManager.stopBackgroundMusic();
   ComboSystem.cleanup(); // 🔥 NUEVO
 }
 
@@ -1172,3 +1175,6 @@ window.frenzyModeActive = frenzyModeActive;
 window.showInstructions = () => UI.showInstructionsFromMenu();
 
 console.log("📁 main.js ÉPICO cargado y listo para la acción!");
+
+// Variable global para trackear la música actual
+window.currentMusicTrack = "Azkal - Elegía";

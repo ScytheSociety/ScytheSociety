@@ -923,14 +923,15 @@ const UI = {
     top: 112px;
     right: 15px;
     width: 48px;
-    height: 20px;
-    background: rgba(0, 0, 0, 0.85);
+    height: 16px;
+    background: rgba(0, 0, 0, 0.9);
     border: 1px solid #8B0000;
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
     z-index: 1000;
     display: flex;
     align-items: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
   `;
 
     const tickerText = document.createElement("div");
@@ -941,13 +942,25 @@ const UI = {
     font-size: 8px;
     font-weight: bold;
     font-family: "Arial", sans-serif;
-    animation: tickerScroll 8s linear infinite;
+    animation: tickerScroll 10s linear infinite;
     transform: translateX(100%);
+    text-shadow: 0 0 2px #000;
   `;
 
-    tickerText.textContent = "Azkal - Elegía";
+    tickerText.textContent = window.currentMusicTrack || "Azkal - Elegía";
     musicTicker.appendChild(tickerText);
     document.body.appendChild(musicTicker);
+  },
+
+  /**
+   * Actualiza el texto del ticker de música
+   */
+  updateMusicTicker(trackName) {
+    const tickerText = document.getElementById("ticker-text");
+    if (tickerText) {
+      tickerText.textContent = trackName;
+      console.log(`🎵 Ticker actualizado: ${trackName}`);
+    }
   },
 
   /**

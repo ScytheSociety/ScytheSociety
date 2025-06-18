@@ -190,6 +190,12 @@ const AudioManager = {
       return;
     }
 
+    // Si ya está sonando, no reiniciar
+    if (this.backgroundMusicPlaying) {
+      console.log("🎵 Música ya está reproduciéndose");
+      return;
+    }
+
     const bgMusic = this.sounds.background.audio;
     bgMusic.volume = this.sounds.background.baseVolume * this.masterVolume;
 

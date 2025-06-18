@@ -43,10 +43,21 @@ const StorySystem = {
                     color: white;
                     border: none;
                     border-radius: 50%;
-                    width: 40px;
-                    height: 40px;
-                    font-size: 20px;
+                    width: 32px;
+                    height: 32px;
+                    min-width: 32px;
+                    min-height: 32px;
+                    max-width: 32px;
+                    max-height: 32px;
+                    font-size: 18px;
                     cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-sizing: border-box;
+                    padding: 0;
+                    line-height: 1;
+                    aspect-ratio: 1 / 1;
                 ">✕</button>
 
                 <h2 style="
@@ -137,6 +148,12 @@ const StorySystem = {
       { file: "bgm_epic.mp3", name: "Épica Total", icon: "🔥" },
     ];
 
+    // Obtener la canción actual
+    let currentTrack = "Azkal - Elegía"; // Por defecto
+    if (window.currentMusicTrack) {
+      currentTrack = window.currentMusicTrack;
+    }
+
     musicModal.innerHTML = `
             <div style="
                 background: linear-gradient(135deg, #1a0000 0%, #4a0000 100%);
@@ -155,14 +172,22 @@ const StorySystem = {
                     color: white;
                     border: none;
                     border-radius: 50%;
-                    width: 30px;
-                    height: 30px;
-                    font-size: 16px;
+                    width: 32px;
+                    height: 32px;
+                    min-width: 32px;
+                    min-height: 32px;
+                    max-width: 32px;
+                    max-height: 32px;
+                    font-size: 18px;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    ">✕</button>
+                    box-sizing: border-box;
+                    padding: 0;
+                    line-height: 1;
+                    aspect-ratio: 1 / 1;
+                ">✕</button>
 
                 <h2 style="
                     text-align: center;
@@ -175,7 +200,7 @@ const StorySystem = {
                     ${tracks
                       .map(
                         (track, index) => `
-                        <button onclick="selectMusic('${track.file}')" style="
+                        <button onclick="selectMusic('${track.file}', '${track.name}')" style="
                             background: linear-gradient(135deg, #2a0000 0%, #5a0000 100%);
                             color: white;
                             border: 2px solid #8B0000;
@@ -203,7 +228,7 @@ const StorySystem = {
                     color: #AAA;
                     font-size: 14px;
                 ">
-                    <p>Música actual: <span id="current-track" style="color: #FFD700;">Azkal - Elegía</span></p>
+                    <p>Música actual: <span id="current-track" style="color: #FFD700;">${currentTrack}</span></p>
                 </div>
             </div>
         `;
@@ -226,8 +251,10 @@ window.closeMusicSelector = () => {
   if (modal) modal.remove();
 };
 
-window.selectMusic = (trackFile) => {
-  // Detener música actual
+window.selectMusic = (trackFile, trackName) => {
+  console.log(`🎵 Cambiando música a: ${trackName} (${trackFile})`);
+
+  // Detener música actual SOLO para cambiar
   if (AudioManager.sounds.background) {
     AudioManager.stopBackgroundMusic();
   }
@@ -236,31 +263,30 @@ window.selectMusic = (trackFile) => {
   AudioManager.sounds.background.audio.src = `sounds/${trackFile}`;
   AudioManager.sounds.background.audio.load();
 
-  // Mapear nombres de archivos a nombres legibles
-  const trackNames = {
-    "background.mp3": "Azkal - Elegía",
-    "bgm_menu.mp3": "Menú Épico",
-    "bgm_battle1.mp3": "Batalla Intensa",
-    "bgm_battle2.mp3": "Batalla Heroica",
-    "bgm_boss.mp3": "Boss Final",
-    "bgm_epic.mp3": "Épica Total",
-  };
+  // Guardar el nombre de la pista actual globalmente
+  window.currentMusicTrack = trackName;
 
-  const displayName = trackNames[trackFile] || "Tema Original";
+  // INICIAR la nueva música inmediatamente
+  setTimeout(() => {
+    AudioManager.startBackgroundMusic();
+    console.log(`🎵 Nueva música iniciada: ${trackName}`);
+  }, 100);
 
   // Actualizar ticker de música
-  if (UI && UI.updateMusicTicker) {
-    UI.updateMusicTicker(displayName);
+  if (window.UI && window.UI.updateMusicTicker) {
+    window.UI.updateMusicTicker(trackName);
   }
 
   // Actualizar display en selector
   const currentTrackElement = document.getElementById("current-track");
   if (currentTrackElement) {
-    currentTrackElement.textContent = displayName;
+    currentTrackElement.textContent = trackName;
   }
 
-  console.log(`🎵 Música cambiada a: ${trackFile}`);
+  console.log(`🎵 Música configurada: ${trackName}`);
 
-  // Cerrar modal
-  window.closeMusicSelector();
+  // Cerrar modal después de un pequeño delay
+  setTimeout(() => {
+    window.closeMusicSelector();
+  }, 300);
 };

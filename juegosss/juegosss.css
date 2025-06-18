@@ -1018,15 +1018,21 @@ button:active,
 }
 
 #music-ticker:hover {
-  background: rgba(139, 0, 0, 0.9) !important;
+  background: rgba(139, 0, 0, 0.95) !important;
   border-color: #ff0000 !important;
 }
 
+/* Responsive para el ticker */
 @media (max-width: 768px) {
   #music-ticker {
     top: 108px !important;
     right: 15px !important;
     width: 44px !important;
+    height: 14px !important;
+  }
+
+  #ticker-text {
+    font-size: 7px !important;
   }
 }
 
@@ -1035,10 +1041,34 @@ button:active,
     top: 104px !important;
     right: 15px !important;
     width: 40px !important;
-    height: 18px !important;
+    height: 12px !important;
   }
 
   #ticker-text {
-    font-size: 7px !important;
+    font-size: 6px !important;
   }
+}
+
+/* =============================================== */
+/* CORRECCIÓN BOTÓN X CIRCULAR EN MODALES */
+/* =============================================== */
+
+#story-modal button[onclick*="closeStory"],
+#music-modal button[onclick*="closeMusicSelector"] {
+  border-radius: 50% !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+  aspect-ratio: 1 / 1 !important;
+  overflow: hidden !important;
 }

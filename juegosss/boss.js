@@ -2055,267 +2055,486 @@ const BossManager = {
   },
 
   // ======================================================
-  // 🔥 NUEVA FASE: LÍNEA ROJA
+  // 🔥 LÍNEAS ROJAS COMPLETAMENTE ALEATORIAS
   // ======================================================
 
-  startRedLinePhase() {
-    console.log("🔴 Iniciando fase de línea roja");
-
-    this.redLinePhase = true;
-    this.isImmune = true;
-    this.immunityTimer = 9999;
-
-    // Generar trayectoria compleja
-    this.generateRedLinePath();
-
-    // Ralentizar al jugador
-    Player.moveSpeed *= this.playerSlowFactor;
-
-    UI.showScreenMessage("🔴 ¡MEMORIZA EL PATRÓN!", "#FF0000");
-
-    // Mostrar la línea por 4 segundos para memorizar
-    setTimeout(() => {
-      // Borrar la línea visualmente (pero mantenerla en memoria)
-      this.hideRedLine = true;
-      UI.showScreenMessage("🔴 ¡ESCAPA!", "#FF0000");
-
-      // Iniciar movimiento después de 1 segundo más
-      setTimeout(() => {
-        this.startRedLineMovement();
-      }, 1000);
-    }, 4000);
-  },
-
-  generateRedLinePath() {
+  /**
+   * Genera una línea completamente aleatoria (sin patrones)
+   */
+  generateSimpleRedLine() {
     const canvas = window.getCanvas();
     this.redLinePath = [];
 
-    // Patrones predefinidos más complejos
-    const patterns = ["S", "M", "Z", "W", "SPIRAL", "ZIGZAG"];
-    const selectedPattern =
-      patterns[Math.floor(Math.random() * patterns.length)];
+    console.log("🔴 Generando línea COMPLETAMENTE ALEATORIA");
 
-    console.log(`🔴 Generando patrón: ${selectedPattern}`);
-
-    // Generar puntos según el patrón
-    switch (selectedPattern) {
-      case "S":
-        this.generateSPattern(canvas);
-        break;
-      case "M":
-        this.generateMPattern(canvas);
-        break;
-      case "Z":
-        this.generateZPattern(canvas);
-        break;
-      case "W":
-        this.generateWPattern(canvas);
-        break;
-      case "SPIRAL":
-        this.generateSpiralPattern(canvas);
-        break;
-      case "ZIGZAG":
-        this.generateZigzagPattern(canvas);
-        break;
-    }
-
-    // Agregar rebotes adicionales al final del patrón
-    this.addBouncingSegment(canvas);
+    // Generar línea aleatoria verdadera
+    this.generateTrueRandomLine(canvas);
   },
 
-  generateSPattern(canvas) {
-    const segments = 4;
-    const amplitude = canvas.width * 0.3;
-    const segmentHeight = canvas.height / segments;
+  /**
+   * Genera una línea verdaderamente aleatoria
+   */
+  generateTrueRandomLine(canvas) {
+    // Punto de inicio aleatorio en los bordes
+    const startPoint = this.getRandomBorderPoint(canvas);
 
-    for (let i = 0; i < 300; i++) {
-      const t = i / 299;
-      const y = t * canvas.height;
-      const x = canvas.width / 2 + Math.sin(t * Math.PI * segments) * amplitude;
-      this.redLinePath.push({ x, y });
-    }
-  },
+    // Número aleatorio de segmentos (entre 3 y 8)
+    const segments = 3 + Math.floor(Math.random() * 6);
 
-  generateMPattern(canvas) {
-    const peaks = 3;
-    const peakWidth = canvas.width / (peaks * 2);
+    console.log(`🔴 Creando línea aleatoria con ${segments} segmentos`);
 
-    for (let i = 0; i < 300; i++) {
-      const t = i / 299;
-      const segmentIndex = Math.floor(t * peaks * 2);
-      const segmentProgress = (t * peaks * 2) % 1;
+    let currentX = startPoint.x;
+    let currentY = startPoint.y;
 
-      let x, y;
-      if (segmentIndex % 2 === 0) {
-        // Subida
-        x = segmentIndex * peakWidth + segmentProgress * peakWidth;
-        y = canvas.height - segmentProgress * canvas.height * 0.8;
-      } else {
-        // Bajada
-        x = segmentIndex * peakWidth + segmentProgress * peakWidth;
-        y = canvas.height * 0.2 + segmentProgress * canvas.height * 0.8;
+    // Agregar punto inicial
+    this.redLinePath.push({ x: currentX, y: currentY });
+
+    // Generar segmentos aleatorios
+    for (let i = 0; i < segments; i++) {
+      const segment = this.generateRandomSegment(
+        canvas,
+        currentX,
+        currentY,
+        i,
+        segments
+      );
+
+      // Agregar todos los puntos del segmento
+      for (const point of segment) {
+        this.redLinePath.push(point);
       }
 
-      this.redLinePath.push({ x, y });
-    }
-  },
-
-  generateZPattern(canvas) {
-    const points = [
-      { x: canvas.width * 0.1, y: canvas.height * 0.2 },
-      { x: canvas.width * 0.9, y: canvas.height * 0.2 },
-      { x: canvas.width * 0.1, y: canvas.height * 0.8 },
-      { x: canvas.width * 0.9, y: canvas.height * 0.8 },
-    ];
-
-    for (let segment = 0; segment < 3; segment++) {
-      const start = points[segment];
-      const end = points[segment + 1];
-
-      for (let i = 0; i < 100; i++) {
-        const t = i / 99;
-        this.redLinePath.push({
-          x: start.x + (end.x - start.x) * t,
-          y: start.y + (end.y - start.y) * t,
-        });
+      // Actualizar posición actual al final del segmento
+      if (segment.length > 0) {
+        const lastPoint = segment[segment.length - 1];
+        currentX = lastPoint.x;
+        currentY = lastPoint.y;
       }
     }
+
+    console.log(`🔴 Línea generada con ${this.redLinePath.length} puntos`);
   },
 
-  generateWPattern(canvas) {
-    const peaks = 4;
-    const peakWidth = canvas.width / peaks;
+  /**
+   * Obtiene un punto aleatorio en los bordes de la pantalla
+   */
+  getRandomBorderPoint(canvas) {
+    const border = Math.floor(Math.random() * 4); // 0=top, 1=right, 2=bottom, 3=left
 
-    for (let i = 0; i < 400; i++) {
-      const t = i / 399;
-      const x = t * canvas.width;
-      const peakIndex = Math.floor(t * peaks);
-      const peakProgress = (t * peaks) % 1;
-
-      let y;
-      if (peakIndex % 2 === 0) {
-        y = canvas.height * 0.8 - peakProgress * canvas.height * 0.6;
-      } else {
-        y = canvas.height * 0.2 + peakProgress * canvas.height * 0.6;
-      }
-
-      this.redLinePath.push({ x, y });
+    switch (border) {
+      case 0: // Top
+        return { x: Math.random() * canvas.width, y: 0 };
+      case 1: // Right
+        return { x: canvas.width, y: Math.random() * canvas.height };
+      case 2: // Bottom
+        return { x: Math.random() * canvas.width, y: canvas.height };
+      case 3: // Left
+        return { x: 0, y: Math.random() * canvas.height };
+      default:
+        return { x: 0, y: 0 };
     }
   },
 
-  generateSpiralPattern(canvas) {
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const maxRadius = Math.min(canvas.width, canvas.height) * 0.4;
+  /**
+   * Genera un segmento aleatorio desde la posición actual
+   */
+  generateRandomSegment(canvas, startX, startY, segmentIndex, totalSegments) {
+    const segment = [];
 
-    for (let i = 0; i < 400; i++) {
-      const t = i / 399;
-      const angle = t * Math.PI * 6; // 3 vueltas completas
-      const radius = t * maxRadius;
+    // Determinar tipo de segmento aleatorio
+    const segmentType = Math.floor(Math.random() * 4);
+    // 0 = línea recta, 1 = curva suave, 2 = zigzag corto, 3 = arco
 
-      this.redLinePath.push({
-        x: centerX + Math.cos(angle) * radius,
-        y: centerY + Math.sin(angle) * radius,
-      });
-    }
-  },
+    // Punto de destino aleatorio
+    const endX = Math.random() * canvas.width;
+    const endY = Math.random() * canvas.height;
 
-  generateZigzagPattern(canvas) {
-    const zigzags = 8;
-    const amplitude = canvas.width * 0.4;
+    // Número de puntos en este segmento (densidad aleatoria)
+    const pointCount = 15 + Math.floor(Math.random() * 25); // 15-40 puntos
 
-    for (let i = 0; i < 400; i++) {
-      const t = i / 399;
-      const y = t * canvas.height;
-      const zigzagProgress = (t * zigzags) % 1;
-
-      let x;
-      if (Math.floor(t * zigzags) % 2 === 0) {
-        x = canvas.width * 0.3 + zigzagProgress * amplitude;
-      } else {
-        x = canvas.width * 0.7 - zigzagProgress * amplitude;
-      }
-
-      this.redLinePath.push({ x, y });
-    }
-  },
-
-  addBouncingSegment(canvas) {
-    // Agregar segmento final con rebotes
-    const lastPoint = this.redLinePath[this.redLinePath.length - 1];
-    let x = lastPoint.x;
-    let y = lastPoint.y;
-    let vx = (Math.random() - 0.5) * 20;
-    let vy = (Math.random() - 0.5) * 20;
-
-    for (let i = 0; i < 100; i++) {
-      x += vx;
-      y += vy;
-
-      // Rebotes en paredes
-      if (x <= this.boss.width / 2 || x >= canvas.width - this.boss.width / 2) {
-        vx = -vx * 1.1;
-        x = Math.max(
-          this.boss.width / 2,
-          Math.min(canvas.width - this.boss.width / 2, x)
+    switch (segmentType) {
+      case 0: // Línea recta
+        segment.push(
+          ...this.generateStraightSegment(
+            startX,
+            startY,
+            endX,
+            endY,
+            pointCount
+          )
         );
-      }
+        break;
 
-      if (
-        y <= this.boss.height / 2 ||
-        y >= canvas.height - this.boss.height / 2
-      ) {
-        vy = -vy * 1.1;
-        y = Math.max(
-          this.boss.height / 2,
-          Math.min(canvas.height - this.boss.height / 2, y)
+      case 1: // Curva suave
+        segment.push(
+          ...this.generateCurvedSegment(startX, startY, endX, endY, pointCount)
         );
-      }
+        break;
 
-      this.redLinePath.push({ x, y });
+      case 2: // Zigzag corto
+        segment.push(
+          ...this.generateZigzagSegment(startX, startY, endX, endY, pointCount)
+        );
+        break;
+
+      case 3: // Arco
+        segment.push(
+          ...this.generateArcSegment(startX, startY, endX, endY, pointCount)
+        );
+        break;
     }
+
+    return segment;
   },
 
+  /**
+   * Genera un segmento de línea recta
+   */
+  generateStraightSegment(startX, startY, endX, endY, pointCount) {
+    const points = [];
+
+    for (let i = 0; i <= pointCount; i++) {
+      const t = i / pointCount;
+      const x = startX + (endX - startX) * t;
+      const y = startY + (endY - startY) * t;
+      points.push({ x, y });
+    }
+
+    return points;
+  },
+
+  /**
+   * Genera un segmento curvo suave
+   */
+  generateCurvedSegment(startX, startY, endX, endY, pointCount) {
+    const points = [];
+
+    // Punto de control aleatorio para la curva
+    const controlX = (startX + endX) / 2 + (Math.random() - 0.5) * 200;
+    const controlY = (startY + endY) / 2 + (Math.random() - 0.5) * 200;
+
+    for (let i = 0; i <= pointCount; i++) {
+      const t = i / pointCount;
+
+      // Curva cuadrática de Bézier
+      const x =
+        Math.pow(1 - t, 2) * startX +
+        2 * (1 - t) * t * controlX +
+        Math.pow(t, 2) * endX;
+      const y =
+        Math.pow(1 - t, 2) * startY +
+        2 * (1 - t) * t * controlY +
+        Math.pow(t, 2) * endY;
+
+      points.push({ x, y });
+    }
+
+    return points;
+  },
+
+  /**
+   * Genera un segmento con zigzag
+   */
+  generateZigzagSegment(startX, startY, endX, endY, pointCount) {
+    const points = [];
+    const amplitude = 30 + Math.random() * 50; // Amplitud del zigzag
+    const frequency = 2 + Math.random() * 4; // Frecuencia del zigzag
+
+    for (let i = 0; i <= pointCount; i++) {
+      const t = i / pointCount;
+      const baseX = startX + (endX - startX) * t;
+      const baseY = startY + (endY - startY) * t;
+
+      // Añadir oscilación perpendicular
+      const perpX =
+        -(endY - startY) /
+        Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+      const perpY =
+        (endX - startX) /
+        Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+
+      const offset = Math.sin(t * Math.PI * frequency) * amplitude;
+      const x = baseX + perpX * offset;
+      const y = baseY + perpY * offset;
+
+      points.push({ x, y });
+    }
+
+    return points;
+  },
+
+  /**
+   * Genera un segmento en arco
+   */
+  generateArcSegment(startX, startY, endX, endY, pointCount) {
+    const points = [];
+
+    // Centro del arco (desplazado aleatoriamente)
+    const centerX = (startX + endX) / 2 + (Math.random() - 0.5) * 150;
+    const centerY = (startY + endY) / 2 + (Math.random() - 0.5) * 150;
+
+    // Radio del arco
+    const radiusStart = Math.sqrt(
+      Math.pow(startX - centerX, 2) + Math.pow(startY - centerY, 2)
+    );
+    const radiusEnd = Math.sqrt(
+      Math.pow(endX - centerX, 2) + Math.pow(endY - centerY, 2)
+    );
+
+    // Ángulos
+    const angleStart = Math.atan2(startY - centerY, startX - centerX);
+    const angleEnd = Math.atan2(endY - centerY, endX - centerX);
+
+    // Determinar la dirección del arco
+    let angleDiff = angleEnd - angleStart;
+    if (Math.abs(angleDiff) > Math.PI) {
+      angleDiff =
+        angleDiff > 0 ? angleDiff - 2 * Math.PI : angleDiff + 2 * Math.PI;
+    }
+
+    for (let i = 0; i <= pointCount; i++) {
+      const t = i / pointCount;
+      const angle = angleStart + angleDiff * t;
+      const radius = radiusStart + (radiusEnd - radiusStart) * t;
+
+      const x = centerX + Math.cos(angle) * radius;
+      const y = centerY + Math.sin(angle) * radius;
+
+      points.push({ x, y });
+    }
+
+    return points;
+  },
+
+  /**
+   * Inicia la fase del hilo rojo simplificada
+   */
+  startRedLinePhase() {
+    console.log("🔴 === INICIANDO FASE DEL HILO ROJO ===");
+
+    this.redLinePhase = true;
+    this.isImmune = true;
+    this.immunityTimer = 9999; // Inmune durante toda la fase
+
+    // Detener movimiento del boss
+    this.boss.velocityX = 0;
+    this.boss.velocityY = 0;
+
+    // 🔥 Ralentizar MUCHÍSIMO al jugador
+    Player.moveSpeed = 0.1; // 10 veces más lento
+    console.log(
+      "🐌 Jugador ralentizado SÚPER lento durante fase del hilo rojo"
+    );
+
+    // Generar línea completamente aleatoria
+    this.generateSimpleRedLine();
+
+    // Anunciar fase
+    UI.showScreenMessage("🔴 FASE DEL HILO ROJO 🔴", "#FF0000");
+
+    // Mostrar línea por 2.5 segundos para memorizar
+    this.showRedLinePreview();
+
+    // Después de 2.5 segundos, ocultar línea e iniciar movimiento
+    setTimeout(() => {
+      this.hideRedLinePreview();
+
+      setTimeout(() => {
+        this.startRedLineMovement();
+      }, 500); // 0.5 segundos más para prepararse
+    }, 2500); // Aumentado a 2.5 segundos para líneas más complejas
+  },
+
+  /**
+   * Muestra la línea roja para memorizar
+   */
+  showRedLinePreview() {
+    this.showingPreview = true;
+    console.log("🔴 Mostrando preview de la línea roja aleatoria");
+  },
+
+  /**
+   * Oculta el preview de la línea
+   */
+  hideRedLinePreview() {
+    this.showingPreview = false;
+    UI.showScreenMessage("🔴 ¡MEMORIZA EL PATRÓN!", "#FFFF00");
+    console.log("🔴 Preview oculto - ¡hora de memorizar!");
+  },
+
+  /**
+   * Inicia el movimiento del boss por la línea
+   */
   startRedLineMovement() {
+    if (this.redLinePath.length === 0) {
+      console.error("🔴 Error: No hay línea roja generada");
+      this.endRedLinePhase();
+      return;
+    }
+
     this.redLineIndex = 0;
-    this.redLineSpeed = 5; // Puntos por frame
+    this.redLineSpeed = 4; // Velocidad más rápida para líneas complejas
+    this.redLineMoving = true;
+
+    // Posicionar boss al inicio de la línea
+    const startPoint = this.redLinePath[0];
+    this.boss.x = startPoint.x - this.boss.width / 2;
+    this.boss.y = startPoint.y - this.boss.height / 2;
+
+    UI.showScreenMessage("🔴 ¡EL HILO SE MUEVE!", "#FF0000");
     AudioManager.playSound("special");
+
+    console.log("🔴 Boss iniciando movimiento por la línea aleatoria");
   },
 
+  /**
+   * Actualiza la fase del hilo rojo
+   */
   updateRedLine() {
+    if (!this.redLineMoving) return;
+
+    // Verificar si completó el recorrido
     if (this.redLineIndex >= this.redLinePath.length - 1) {
       this.endRedLinePhase();
       return;
     }
 
     // Mover el boss por la línea
-    const targetPoint = this.redLinePath[this.redLineIndex];
-    this.boss.x = targetPoint.x - this.boss.width / 2;
-    this.boss.y = targetPoint.y - this.boss.height / 2;
+    const currentPoint = this.redLinePath[this.redLineIndex];
+    this.boss.x = currentPoint.x - this.boss.width / 2;
+    this.boss.y = currentPoint.y - this.boss.height / 2;
 
     // Verificar colisión con el jugador
     if (this.checkCollisionWithPlayer()) {
+      console.log("💥 Jugador golpeado por el hilo rojo");
+
+      // Aplicar daño al jugador
       Player.takeDamage();
-      UI.showScreenMessage("💥 ¡GOLPEADO!", "#FF0000");
+
+      // Efecto visual
+      UI.createParticleEffect(
+        this.boss.x + this.boss.width / 2,
+        this.boss.y + this.boss.height / 2,
+        "#FF0000",
+        20
+      );
+
+      // Continuar el movimiento (no detener por golpear)
     }
 
     // Avanzar en la línea
     this.redLineIndex += this.redLineSpeed;
   },
 
+  /**
+   * Termina la fase del hilo rojo
+   */
   endRedLinePhase() {
-    console.log("🔴 Fase de línea roja terminada");
+    console.log("🔴 Terminando fase del hilo rojo");
 
     this.redLinePhase = false;
+    this.redLineMoving = false;
+    this.showingPreview = false;
     this.redLinePath = [];
-    this.hideRedLine = false; // Resetear visibilidad
+    this.redLineIndex = 0;
+
+    // 🔥 RESTAURAR velocidad normal del jugador
+    Player.moveSpeed = 1.0;
+    console.log("🏃 Velocidad del jugador restaurada a normal");
+
+    // Boss se vuelve vulnerable por 3 segundos
     this.isImmune = false;
     this.immunityTimer = 0;
 
-    // Restaurar velocidad del jugador
-    Player.moveSpeed /= this.playerSlowFactor;
+    // Posicionar boss en el centro para la pausa
+    const canvas = window.getCanvas();
+    this.boss.x = canvas.width / 2 - this.boss.width / 2;
+    this.boss.y = canvas.height / 2 - this.boss.height / 2;
+    this.boss.velocityX = 0;
+    this.boss.velocityY = 0;
 
-    UI.showScreenMessage("⚔️ ¡BOSS VULNERABLE!", "#00FF00");
+    UI.showScreenMessage("⚔️ ¡BOSS VULNERABLE! (3s)", "#00FF00");
+
+    // Después de 3 segundos, verificar si continúa o va a Yan Ken Po
+    setTimeout(() => {
+      const healthPercentage = this.currentHealth / this.maxHealth;
+
+      if (healthPercentage <= 0.03) {
+        // Ir a fase final Yan Ken Po
+        this.startFinalPhase();
+      } else {
+        // Repetir fase del hilo rojo con nueva línea aleatoria
+        UI.showScreenMessage("🔴 ¡NUEVO HILO ROJO!", "#FF8800");
+        setTimeout(() => {
+          this.startRedLinePhase();
+        }, 1000);
+      }
+    }, 3000);
+  },
+
+  /**
+   * Dibuja la línea roja
+   */
+  drawRedLine(ctx) {
+    if (this.redLinePath.length === 0) return;
+
+    ctx.save();
+
+    // Solo mostrar línea durante el preview
+    if (this.showingPreview) {
+      // Línea roja brillante para memorizar
+      ctx.strokeStyle = "#FF0000";
+      ctx.lineWidth = 6;
+      ctx.shadowColor = "#FF0000";
+      ctx.shadowBlur = 12;
+
+      ctx.beginPath();
+      for (let i = 0; i < this.redLinePath.length; i++) {
+        const point = this.redLinePath[i];
+        if (i === 0) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      }
+      ctx.stroke();
+
+      // Efecto de parpadeo
+      const pulse = Math.sin(window.getGameTime() * 0.3) * 0.3 + 0.7;
+      ctx.globalAlpha = pulse;
+      ctx.strokeStyle = "#FFFF00";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    // Durante el movimiento, mostrar solo la estela
+    if (this.redLineMoving && this.redLineIndex > 0) {
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = "rgba(255, 0, 0, 0.8)";
+      ctx.lineWidth = 8;
+      ctx.shadowColor = "#FF0000";
+      ctx.shadowBlur = 15;
+
+      // Dibujar estela de los últimos 20 puntos
+      const startIndex = Math.max(0, this.redLineIndex - 20);
+
+      ctx.beginPath();
+      for (
+        let i = startIndex;
+        i <= this.redLineIndex && i < this.redLinePath.length;
+        i++
+      ) {
+        const point = this.redLinePath[i];
+        if (i === startIndex) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      }
+      ctx.stroke();
+    }
+
+    ctx.restore();
   },
 
   // ======================================================
