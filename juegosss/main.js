@@ -1177,4 +1177,4 @@ window.showInstructions = () => UI.showInstructionsFromMenu();
 console.log("📁 main.js ÉPICO cargado y listo para la acción!");
 
 // Variable global para trackear la música actual
-window.currentMusicTrack = "Azkal - Elegía";
+window.currentMusicTrack = "Elegía - Azkal";

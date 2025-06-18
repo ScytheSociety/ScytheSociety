@@ -947,7 +947,7 @@ const UI = {
     text-shadow: 0 0 2px #000;
   `;
 
-    tickerText.textContent = window.currentMusicTrack || "Azkal - Elegía";
+    tickerText.textContent = window.currentMusicTrack || "Elegía - Azkal";
     musicTicker.appendChild(tickerText);
     document.body.appendChild(musicTicker);
   },

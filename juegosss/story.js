@@ -153,7 +153,7 @@ const StorySystem = {
     ];
 
     // Obtener la canción actual
-    let currentTrack = "Azkal - Elegía"; // Por defecto
+    let currentTrack = "Elegía - Azkal"; // Por defecto
     if (window.currentMusicTrack) {
       currentTrack = window.currentMusicTrack;
     }
