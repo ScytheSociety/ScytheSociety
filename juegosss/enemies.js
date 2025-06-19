@@ -27,20 +27,20 @@ const EnemyManager = {
   // ======================================================
 
   /**
-   * Configura el nivel actual - BALANCEADO
+   * Configura el nivel actual - MISMA VELOCIDAD PARA TODOS
    */
   setupLevel(level) {
-    // 🔥 USAR SOLO LA CONFIGURACIÓN DE CONFIG.JS
+    // Usar SOLO la configuración de CONFIG.JS
     this.enemiesRequired =
       GameConfig.LEVEL_CONFIG.enemiesPerLevel[level - 1] ||
       GameConfig.LEVEL_CONFIG.enemiesPerLevel[
         GameConfig.LEVEL_CONFIG.enemiesPerLevel.length - 1
       ];
 
-    // 🔥 Spawn BALANCEADO - Menos frecuente
-    const baseSpawnRate = 70; // Era 50, ahora 70 (más lento)
-    const spawnRateReduction = 3; // Era 4, ahora 3 (menos agresivo)
-    const minSpawnRate = 20; // Era 12, ahora 20 (más lento)
+    // 🔥 SPAWN IDÉNTICO PARA MÓVILES Y DESKTOP
+    const baseSpawnRate = 50; // UNIFICADO - más rápido para todos
+    const spawnRateReduction = 4; // AGRESIVO para todos
+    const minSpawnRate = 12; // RÁPIDO para todos
     this.currentSpawnDelay = Math.max(
       minSpawnRate,
       baseSpawnRate - level * spawnRateReduction
@@ -49,7 +49,7 @@ const EnemyManager = {
     this.spawnTimer = 0;
 
     console.log(
-      `👹 Nivel BALANCEADO ${level}: ${this.enemiesRequired} enemigos, spawn cada ${this.currentSpawnDelay} frames`
+      `👹 Nivel UNIFICADO ${level}: ${this.enemiesRequired} enemigos, spawn cada ${this.currentSpawnDelay} frames (MISMO PARA TODOS)`
     );
   },
 
@@ -255,33 +255,34 @@ const EnemyManager = {
   },
 
   /**
-   * Controla el spawn de enemigos - CORREGIDO PARA NIVEL 11
+   * Controla el spawn de enemigos - OPTIMIZADO PARA MÓVILES
    */
   updateSpawning() {
-    // 🔥 NO SPAWNAR SI ES BOSS LEVEL (nivel 11)
+    // NO SPAWNAR SI ES BOSS LEVEL (nivel 11)
     if (window.getLevel() >= 11) {
-      console.log("🚫 No spawn de enemigos normales en nivel 11 (Boss level)");
-      return; // No hacer nada en boss level
+      return;
     }
 
     // No spawnar si el nivel está completo
     if (this.isLevelComplete()) return;
 
-    // 🔥 Límite más alto de enemigos simultáneos
-    const maxEnemies = GameConfig.MOBILE_PERFORMANCE?.maxEnemies || 60;
+    // 🔥 LÍMITES IGUALES PARA TODOS LOS DISPOSITIVOS
+    const maxEnemies = 50; // FIJO PARA TODOS - NO USAR GameConfig.MOBILE_PERFORMANCE
     if (this.enemies.length > maxEnemies) return;
 
     this.spawnTimer++;
 
-    // 🔥 Spawn más frecuente con combos altos
+    // 🔥 MISMO SPAWN RATE PARA MÓVILES Y DESKTOP
     let effectiveDelay = this.currentSpawnDelay;
+
+    // Bonus por combo (igual para todos)
     if (window.ComboSystem) {
       const combo = window.ComboSystem.getCurrentCombo();
       if (combo >= 10) {
-        effectiveDelay = Math.max(8, effectiveDelay * 0.8); // 20% más rápido con combo 10+
+        effectiveDelay = Math.max(8, effectiveDelay * 0.8);
       }
       if (combo >= 20) {
-        effectiveDelay = Math.max(6, effectiveDelay * 0.6); // 40% más rápido con combo 20+
+        effectiveDelay = Math.max(6, effectiveDelay * 0.6);
       }
     }
 
@@ -289,39 +290,40 @@ const EnemyManager = {
       this.spawnEnemy();
       this.spawnTimer = 0;
 
-      // 🔥 Spawn adicional aleatorio más frecuente
+      // Spawn adicional aleatorio (igual para todos)
       if (Math.random() < 0.3) {
-        // 30% probabilidad
         setTimeout(() => this.spawnEnemy(), 100);
       }
     }
   },
 
   /**
-   * Actualiza el movimiento de todos los enemigos - MÁS ÉPICO
+   * Actualiza el movimiento de todos los enemigos - VELOCIDAD UNIFICADA
    */
   updateEnemyMovement() {
     const canvas = window.getCanvas();
-    const wallBounceFactorX = 0.85; // Menos pérdida de velocidad
-    const wallBounceFactorY = 1.1; // Más ganancia de velocidad
-    const enemyBounceFactorBase = 1.15; // Más aceleración en rebotes
+    const wallBounceFactorX = 0.85;
+    const wallBounceFactorY = 1.1;
+    const enemyBounceFactorBase = 1.15;
 
-    // 🔥 Factor de tiempo lento si está activo
+    // 🔥 FACTOR DE TIEMPO LENTO - IGUAL PARA TODOS
     const slowFactor = window.slowMotionActive ? window.slowMotionFactor : 1.0;
-    // Aplicar factor lento a TODOS los movimientos de rebote también
     const bounceSlowFactor = slowFactor;
 
     for (let i = 0; i < this.enemies.length; i++) {
       const enemy = this.enemies[i];
 
-      // 🔥 Movimiento con factor de tiempo lento
-      enemy.x += enemy.velocityX * enemy.speedFactor * slowFactor;
-      enemy.y += enemy.velocityY * enemy.speedFactor * slowFactor;
+      // 🔥 MOVIMIENTO UNIFICADO - MISMA VELOCIDAD PARA MÓVILES Y DESKTOP
+      const speedMultiplier = 1.0; // SIN PENALIZACIÓN MÓVIL
+      enemy.x +=
+        enemy.velocityX * enemy.speedFactor * slowFactor * speedMultiplier;
+      enemy.y +=
+        enemy.velocityY * enemy.speedFactor * slowFactor * speedMultiplier;
 
-      // 🔥 NUEVO: Actualizar escalado dinámico
+      // Resto del código de rebotes sin cambios...
       this.updateDynamicScaling(enemy);
 
-      // 🔥 Rebotes más agresivos para meteoritos
+      // Rebotes más agresivos para meteoritos
       const bounceMultiplierX = enemy.isMeteor ? 1.0 : wallBounceFactorX;
       const bounceMultiplierY = enemy.isMeteor ? 1.2 : wallBounceFactorY;
 
@@ -353,17 +355,17 @@ const EnemyManager = {
         enemy.velocityY =
           -Math.abs(enemy.velocityY) * bounceMultiplierY * bounceSlowFactor;
         enemy.y = canvas.height - enemy.height;
-        enemy.velocityX += (Math.random() - 0.5) * (canvas.width * 0.004); // Más variación
+        enemy.velocityX += (Math.random() - 0.5) * (canvas.width * 0.004);
         enemy.bounceCount++;
       }
 
-      // 🔥 Aumento de agresividad después de rebotes
+      // Aumento de agresividad después de rebotes
       if (enemy.bounceCount >= enemy.maxBounces) {
-        enemy.speedFactor = Math.min(enemy.speedFactor * 1.2, 2.0); // Hasta 2x velocidad
+        enemy.speedFactor = Math.min(enemy.speedFactor * 1.2, 2.0);
         enemy.bounceCount = 0;
       }
 
-      // 🔥 Cambio de dirección más frecuente para meteoritos
+      // Cambio de dirección más frecuente para meteoritos
       const directionChangeChance = enemy.isMeteor ? 0.002 : 0.001;
       if (Math.random() < directionChangeChance) {
         const angle = Math.random() * ((2 * Math.PI) / 3) - Math.PI / 3;
@@ -374,7 +376,7 @@ const EnemyManager = {
         enemy.velocityY = Math.abs(Math.cos(angle) * speed);
       }
 
-      // 🔥 Colisiones entre enemigos más agresivas
+      // Colisiones entre enemigos (código sin cambios...)
       for (let j = i + 1; j < this.enemies.length; j++) {
         const otherEnemy = this.enemies[j];
 
@@ -406,7 +408,6 @@ const EnemyManager = {
             otherEnemy.velocityY =
               (otherEnemy.velocityY + ny * (p1 - p2)) * otherEnemyBounceFactor;
 
-            // 🔥 Aumento de velocidad más agresivo
             enemy.speedFactor = Math.min(enemy.speedFactor * 1.08, 2.0);
             otherEnemy.speedFactor = Math.min(
               otherEnemy.speedFactor * 1.08,
@@ -425,8 +426,8 @@ const EnemyManager = {
         }
       }
 
-      // 🔥 Límite de velocidad más alto
-      const maxSpeed = canvas.height * 0.025 * (1 + window.getLevel() * 0.15); // Más rápido
+      // 🔥 LÍMITE DE VELOCIDAD UNIFICADO - IGUAL PARA TODOS
+      const maxSpeed = canvas.height * 0.025 * (1 + window.getLevel() * 0.15);
       const currentSpeed = Math.sqrt(
         enemy.velocityX * enemy.velocityX + enemy.velocityY * enemy.velocityY
       );

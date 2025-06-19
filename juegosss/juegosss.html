@@ -47,7 +47,7 @@
                     <div class="input-group">
                         <label for="avatar">Avatar:</label>
                         <div class="avatar-input-container">
-                            <input type="text" id="avatar" maxlength="2" minlength="1" placeholder="1-2">
+                            <input type="text" id="avatar" maxlength="2" minlength="1" placeholder="E" readonly>
                             <button id="emoji-button" type="button" title="Seleccionar Emoji">
                                 <i class="fas fa-smile"></i>
                             </button>
@@ -82,9 +82,12 @@
                         <i class="fas fa-scroll"></i>
                         <span>HISTORIA</span>
                     </button>
-                    <button onclick="showMusicSelector()" class="gothic-button secondary-button">
+                    <button onclick="showMusicSelector()" class="gothic-button secondary-button music-button">
                         <i class="fas fa-music"></i>
-                        <span>MÚSICA</span>
+                        <div class="music-button-content">
+                            <span class="music-button-title">MÚSICA</span>
+                            <span class="current-track-display" id="current-track-menu">Elegía - Azkal</span>
+                        </div>
                     </button>
                 </div>
             </div>
@@ -95,12 +98,14 @@
     <div id="game-area" style="display: none;">
         <!-- Información del juego (ACTUALIZADO) -->
         <div id="game-info">
-            <div><span id="player-name"></span> - <span id="player-avatar"></span></div>
+            <div class="player-info-center">
+                <span id="player-avatar"></span>
+                <span id="player-name"></span>
+            </div>
             <div id="player-lives">💀💀💀💀💀💀💀</div>
-            <div id="level">Nivel 1</div>
-            <div id="enemies-killed">Nivel: 0/0</div>
-            <div id="time">Tiempo: 0s</div>
-            <div id="score">Puntuación: 0</div>
+            <div id="level">NIVEL 1: 0/0</div>
+            <div id="time">⏰ 0s</div>
+            <div id="score">🎮 0</div>
         </div>
 
         <!-- Canvas del juego -->

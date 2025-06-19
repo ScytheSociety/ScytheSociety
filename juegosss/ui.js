@@ -58,10 +58,10 @@ const UI = {
   // ======================================================
 
   /**
-   * Sistema de mensajes en la parte superior - SOLO 2 SLOTS
+   * Sistema de mensajes en la parte superior - MEJORADO Y MÁS ABAJO
    */
   showScreenMessage(message, color = "#FFFFFF") {
-    // Filtrar mensajes repetitivos y spam
+    // Filtrar mensajes repetitivos
     const spamMessages = [
       "expirando",
       "terminado",
@@ -80,7 +80,7 @@ const UI = {
     }
 
     const messageId = this.messageIdCounter++;
-    const positions = [{ y: 8 }, { y: 16 }];
+    const positions = [{ y: 15 }, { y: 22 }]; // 🔥 MÁS ABAJO: era 8 y 16
 
     // Limpiar mensajes antiguos
     this.messagePositions = this.messagePositions.filter((pos) => pos.active);
@@ -102,60 +102,71 @@ const UI = {
         `[data-message-id="${this.messagePositions[0].id}"]`
       );
       if (existingMessage) {
-        existingMessage.style.top = "16%";
+        existingMessage.style.top = "22%"; // 🔥 MÁS ABAJO
       }
-      this.messagePositions[0].y = 16;
+      this.messagePositions[0].y = 22;
     }
 
     // Agregar nuevo mensaje arriba
     const position = {
       id: messageId,
-      y: 8,
+      y: 15, // 🔥 MÁS ABAJO
       active: true,
       timeCreated: Date.now(),
     };
     this.messagePositions.unshift(position);
 
-    // Crear elemento de mensaje
+    // Crear elemento de mensaje con más vida
     const messageElement = document.createElement("div");
     messageElement.textContent = message;
     messageElement.setAttribute("data-message-id", messageId);
-    messageElement.style.position = "fixed";
-    messageElement.style.top = "8%";
-    messageElement.style.left = "50%";
-    messageElement.style.transform = "translateX(-50%)";
-    messageElement.style.color = color;
-    messageElement.style.fontSize = "13px";
-    messageElement.style.fontWeight = "bold";
-    messageElement.style.textShadow = "2px 2px 4px rgba(0,0,0,0.9)";
-    messageElement.style.zIndex = "1000";
-    messageElement.style.backgroundColor = "transparent";
-    messageElement.style.padding = "0";
-    messageElement.style.borderRadius = "0";
-    messageElement.style.border = "none";
-    messageElement.style.outline = "none";
-    messageElement.style.maxWidth = "300px";
-    messageElement.style.textAlign = "center";
-    messageElement.style.fontFamily = '"Arial", sans-serif';
-    messageElement.style.transition = "all 0.3s ease";
-    messageElement.style.animation = "messageSlideIn 0.4s ease-out";
-    messageElement.style.letterSpacing = "1px";
-    messageElement.style.textTransform = "uppercase";
-    messageElement.style.boxShadow = "none";
+
+    // 🔥 ESTILOS SIN FONDO NI MARCO - SOLO TEXTO PURO
+    messageElement.style.cssText = `
+    position: fixed;
+    top: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: ${color};
+    font-size: 16px;
+    font-weight: bold;
+    font-family: var(--gothic-font), cursive;
+    text-shadow: 
+      -2px -2px 0 #000,
+      2px -2px 0 #000,
+      -2px 2px 0 #000,
+      2px 2px 0 #000,
+      0 0 10px ${color},
+      0 0 20px ${color},
+      0 0 30px rgba(0, 0, 0, 0.8);
+    z-index: 1500;
+    background: transparent;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    border-radius: 0;
+    max-width: 80vw;
+    text-align: center;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    animation: epicMessageAppear 0.5s ease-out;
+  `;
 
     document.body.appendChild(messageElement);
 
-    // Eliminar después de 3 segundos
+    // Eliminar después de 3.5 segundos (más tiempo para leer)
     setTimeout(() => {
       if (messageElement.parentNode) {
         messageElement.style.opacity = "0";
-        messageElement.style.transform = "translateX(-50%) translateY(-10px)";
+        messageElement.style.transform =
+          "translateX(-50%) translateY(-15px) scale(0.9)";
 
         setTimeout(() => {
           if (messageElement.parentNode) {
             document.body.removeChild(messageElement);
           }
-        }, 300);
+        }, 400);
       }
 
       // Limpiar de la lista
@@ -165,7 +176,7 @@ const UI = {
       if (posIndex !== -1) {
         this.messagePositions.splice(posIndex, 1);
       }
-    }, 3000);
+    }, 3500); // 🔥 MÁS TIEMPO: era 3000, ahora 3500
   },
 
   // ======================================================
@@ -173,7 +184,7 @@ const UI = {
   // ======================================================
 
   /**
-   * Actualiza la información del juego
+   * Actualiza la información del juego - NUEVO LAYOUT
    */
   updateGameInfo() {
     // Actualizar información del jugador
@@ -192,36 +203,32 @@ const UI = {
     const score = window.getScore();
     const gameTime = window.getGameTime();
 
-    // Actualizar elementos si existen
+    // 🔥 NUEVO: Actualizar elementos con nuevo formato
     const levelElement = document.getElementById("level");
     if (levelElement) {
-      levelElement.textContent = `Nivel ${level}`;
+      if (level <= 10) {
+        const enemiesKilled = EnemyManager.getEnemiesKilled();
+        const enemiesRequired = EnemyManager.getEnemiesRequired();
+        levelElement.textContent = `NIVEL ${level}: ${enemiesKilled}/${enemiesRequired}`;
+      } else {
+        levelElement.textContent = `BOSS FINAL`;
+      }
     }
 
     const scoreElement = document.getElementById("score");
     if (scoreElement) {
-      scoreElement.textContent = `Puntuación: ${score}`;
+      scoreElement.innerHTML = `🎮 ${score}`;
     }
 
     const timeElement = document.getElementById("time");
     if (timeElement && gameTime % 60 === 0) {
-      timeElement.textContent = `Tiempo: ${Math.floor(gameTime / 60)}s`;
-    }
-
-    // Actualizar contador para pasar de nivel
-    const enemiesElement = document.getElementById("enemies-killed");
-    if (enemiesElement) {
-      if (level <= 10) {
-        enemiesElement.textContent = `Nivel: ${EnemyManager.getEnemiesKilled()}/${EnemyManager.getEnemiesRequired()}`;
-      } else {
-        enemiesElement.textContent = `Boss Final`;
-      }
+      timeElement.innerHTML = `⏰ ${Math.floor(gameTime / 60)}s`;
     }
 
     // Actualizar contador total
     const totalDisplay = document.getElementById("total-enemies-display");
     if (totalDisplay && window.getTotalEnemiesKilled) {
-      totalDisplay.textContent = `Total: ${window.getTotalEnemiesKilled()}`;
+      totalDisplay.innerHTML = `👾 ${window.getTotalEnemiesKilled()}`;
     }
   },
 
@@ -573,46 +580,65 @@ const UI = {
   // ======================================================
 
   /**
-   * Muestra transición de nivel
+   * Muestra transición de nivel terrorífica sin marcos
    */
   showLevelTransition(level, callback) {
     const transition = document.createElement("div");
-    transition.style.position = "fixed";
-    transition.style.top = "50%";
-    transition.style.left = "50%";
-    transition.style.transform = "translate(-50%, -50%)";
-    transition.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
-    transition.style.padding = "30px 50px";
-    transition.style.borderRadius = "15px";
-    transition.style.zIndex = "1000";
-    transition.style.fontSize = "2.5em";
-    transition.style.color = "#FF0000";
-    transition.style.border = "3px solid #8B0000";
-    transition.style.boxShadow = "0 0 30px #FF0000";
-    transition.style.textAlign = "center";
-    transition.style.fontFamily = '"Arial", sans-serif';
-    transition.style.fontWeight = "bold";
+    transition.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    padding: 0;
+    border: none;
+    z-index: 2000;
+    font-size: 4em;
+    color: #FF0000;
+    font-family: var(--gothic-font), cursive;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 
+      -3px -3px 0 #000,
+      3px -3px 0 #000,
+      -3px 3px 0 #000,
+      3px 3px 0 #000,
+      0 0 20px #FF0000,
+      0 0 40px #FF0000,
+      0 0 60px #FF0000;
+    animation: terrorLevelAppear 0.8s ease-out;
+    pointer-events: none;
+    letter-spacing: 3px;
+  `;
 
-    if (level === 10) {
-      transition.innerHTML =
-        "👹 NIVEL FINAL 👹<br><span style='font-size: 0.6em;'>¡PREPÁRATE PARA EL BOSS!</span>";
+    if (level === 11) {
+      transition.innerHTML = `👹 BOSS FINAL 👹`;
     } else {
-      transition.innerHTML = `NIVEL ${level}<br><span style='font-size: 0.6em;'>${EnemyManager.getEnemiesRequired()} enemigos</span>`;
+      transition.innerHTML = `NIVEL ${level}`;
     }
 
     document.body.appendChild(transition);
 
     setTimeout(
       () => {
-        document.body.removeChild(transition);
+        if (transition.parentNode) {
+          transition.style.opacity = "0";
+          transition.style.transform = "translate(-50%, -50%) scale(1.2)";
+
+          setTimeout(() => {
+            if (transition.parentNode) {
+              document.body.removeChild(transition);
+            }
+          }, 300);
+        }
         if (callback) callback();
       },
-      level === 1 ? 1000 : 2000
+      level === 1 ? 1500 : 2500
     );
   },
 
   /**
-   * Muestra pantalla de game over mejorada y elegante
+   * Muestra pantalla de game over/victoria con botones horizontales
    */
   showGameOver(isVictory, finalScore, finalLevel, maxCombo = 0) {
     const gameOverScreen = document.getElementById("game-over");
@@ -620,136 +646,93 @@ const UI = {
     if (gameOverScreen) {
       gameOverScreen.innerHTML = `
       <div style="
-        background: linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(139,0,0,0.95) 100%);
-        border: 3px solid ${isVictory ? "#FFD700" : "#8B0000"};
-        border-radius: 20px;
-        padding: 30px;
+        background: transparent;
+        border: none;
+        padding: 0;
         text-align: center;
-        box-shadow: 0 0 30px ${isVictory ? "#FFD700" : "#FF0000"};
-        backdrop-filter: blur(10px);
-        max-width: 400px;
-        margin: 0 auto;
+        box-shadow: none;
+        backdrop-filter: none;
+        max-width: none;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 25px;
       ">
+        <!-- Título terrorífico/hermoso -->
         <h1 style="
-          font-size: 2.2em;
-          margin: 0 0 15px 0;
+          font-size: 4em;
+          margin: 0;
           color: ${isVictory ? "#FFD700" : "#FF0000"};
-          text-shadow: 0 0 20px currentColor;
+          font-family: var(--gothic-font), cursive;
           font-weight: bold;
-          letter-spacing: 2px;
+          letter-spacing: 3px;
+          text-shadow: 
+            -3px -3px 0 #000,
+            3px -3px 0 #000,
+            -3px 3px 0 #000,
+            3px 3px 0 #000,
+            0 0 20px ${isVictory ? "#FFD700" : "#FF0000"},
+            0 0 40px ${isVictory ? "#FFD700" : "#FF0000"},
+            0 0 60px ${isVictory ? "#FFD700" : "#FF0000"};
+          animation: ${
+            isVictory ? "victoryGlow" : "gameOverPulse"
+          } 2s ease-in-out infinite alternate;
         ">
-          ${isVictory ? "🏆 VICTORIA 🏆" : "💀 GAME OVER 💀"}
+          ${isVictory ? "VICTORIA" : "GAME OVER"}
         </h1>
 
+        <!-- Información compacta -->
         <div style="
-          background: rgba(0,0,0,0.6);
-          border-radius: 12px;
-          padding: 15px;
-          margin: 15px 0;
-          border: 1px solid rgba(255,255,255,0.2);
+          color: #FFFFFF;
+          font-size: 1.1em;
+          font-family: var(--professional-font);
+          font-weight: bold;
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+          text-align: center;
+          line-height: 1.6;
         ">
-          <div style="color: #FFFFFF; font-size: 1.1em; margin-bottom: 8px;">
-            <span style="color: #FFD700;">📊 Puntuación:</span> ${finalScore.toLocaleString()}
-          </div>
-          <div style="color: #FFFFFF; font-size: 1.1em; margin-bottom: 8px;">
-            <span style="color: #FFD700;">🎯 Nivel Alcanzado:</span> ${finalLevel}
-          </div>
+          <div>📊 Puntuación: <span style="color: #FFD700;">${finalScore.toLocaleString()}</span></div>
+          <div>🎯 Nivel Alcanzado: <span style="color: #FFD700;">${finalLevel}</span></div>
           ${
             maxCombo > 0
-              ? `
-          <div style="color: #FFFFFF; font-size: 1.2em; font-weight: bold;">
-            <span style="color: #FF6B00;">⚡ Combo Máximo:</span> 
-            <span style="color: #FFD700; text-shadow: 0 0 10px #FFD700;">${maxCombo}</span>
-          </div>
-          `
+              ? `<div>⚡ Combo Máximo: <span style="color: #FF6B00; font-size: 1.2em;">${maxCombo}</span></div>`
               : ""
           }
         </div>
 
+        <!-- Botones horizontales pequeños sin marcos -->
         <div style="
           display: flex;
-          flex-direction: column;
-          gap: 12px;
-          margin-top: 20px;
+          gap: 15px;
+          justify-content: center;
+          align-items: center;
+          margin-top: 10px;
         ">
           <button 
             onclick="restartGame()" 
-            style="
-              background: linear-gradient(45deg, #4CAF50, #45a049);
-              color: white;
-              border: none;
-              padding: 12px 20px;
-              border-radius: 25px;
-              font-size: 1em;
-              font-weight: bold;
-              cursor: pointer;
-              transition: all 0.3s;
-              box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
-              font-family: inherit;
-            "
-            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(76, 175, 80, 0.6)'"
-            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(76, 175, 80, 0.4)'"
+            class="small-game-button"
+            title="Jugar de Nuevo"
           >
-            🔄 Jugar de Nuevo
+            🔄
           </button>
 
           <button 
             onclick="saveAndViewRanking()" 
-            style="
-              background: linear-gradient(45deg, #FF9800, #F57C00);
-              color: white;
-              border: none;
-              padding: 12px 20px;
-              border-radius: 25px;
-              font-size: 1em;
-              font-weight: bold;
-              cursor: pointer;
-              transition: all 0.3s;
-              box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
-              font-family: inherit;
-            "
-            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 152, 0, 0.6)'"
-            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255, 152, 0, 0.4)'"
+            class="small-game-button"
+            title="Guardar Ranking"
           >
-            💾 Guardar en Ranking
+            💾
           </button>
 
           <button 
             onclick="backToMenu()" 
-            style="
-              background: linear-gradient(45deg, #607D8B, #455A64);
-              color: white;
-              border: none;
-              padding: 12px 20px;
-              border-radius: 25px;
-              font-size: 1em;
-              font-weight: bold;
-              cursor: pointer;
-              transition: all 0.3s;
-              box-shadow: 0 4px 15px rgba(96, 125, 139, 0.4);
-              font-family: inherit;
-            "
-            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(96, 125, 139, 0.6)'"
-            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(96, 125, 139, 0.4)'"
+            class="small-game-button"
+            title="Menú Principal"
           >
-            🏠 Menú Principal
+            🏠
           </button>
         </div>
-
-        ${
-          isVictory
-            ? `
-        <div style="
-          margin-top: 20px;
-          font-size: 0.9em;
-          color: #FFD700;
-          font-style: italic;
-        ">
-          ¡Felicidades por completar Hell Shooter! 🎉
-        </div>
-        `
-            : ""
-        }
       </div>
     `;
 
@@ -762,25 +745,25 @@ const UI = {
   // ======================================================
 
   /**
-   * Crea control de volumen
+   * Crea control de volumen con teclas + y -
    */
   createVolumeControl() {
     const volumeButton = document.createElement("button");
     volumeButton.id = "volume-control";
     volumeButton.style.position = "fixed";
-    volumeButton.style.top = "60px";
-    volumeButton.style.right = "15px";
-    volumeButton.style.width = "48px";
-    volumeButton.style.height = "48px";
-    volumeButton.style.minWidth = "48px";
-    volumeButton.style.minHeight = "48px";
-    volumeButton.style.maxWidth = "48px";
-    volumeButton.style.maxHeight = "48px";
+    volumeButton.style.top = "65px";
+    volumeButton.style.right = "25px"; // CAMBIADO: más a la derecha
+    volumeButton.style.width = "52px";
+    volumeButton.style.height = "52px";
+    volumeButton.style.minWidth = "52px";
+    volumeButton.style.minHeight = "52px";
+    volumeButton.style.maxWidth = "52px";
+    volumeButton.style.maxHeight = "52px";
     volumeButton.style.borderRadius = "50%";
     volumeButton.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
     volumeButton.style.border = "2px solid #8B0000";
     volumeButton.style.color = "#FFFFFF";
-    volumeButton.style.fontSize = "16px";
+    volumeButton.style.fontSize = "18px";
     volumeButton.style.cursor = "pointer";
     volumeButton.style.zIndex = "1001";
     volumeButton.style.transition = "all 0.3s ease";
@@ -797,7 +780,7 @@ const UI = {
     let volumeStates = [1.0, 0.5, 0.25, 0.0];
     let currentStateIndex = 0;
 
-    volumeButton.addEventListener("click", () => {
+    const changeVolume = () => {
       currentStateIndex = (currentStateIndex + 1) % volumeStates.length;
       const newVolume = volumeStates[currentStateIndex];
 
@@ -817,86 +800,198 @@ const UI = {
       setTimeout(() => {
         volumeButton.style.transform = "scale(1)";
       }, 150);
-    });
+    };
+
+    volumeButton.addEventListener("click", changeVolume);
+
+    // 🔥 NUEVO: Controles de teclado con + y - del numpad
+    const handleKeyPress = (e) => {
+      if (e.code === "NumpadAdd" || e.key === "+") {
+        // Subir volumen
+        if (currentStateIndex > 0) {
+          currentStateIndex--;
+          const newVolume = volumeStates[currentStateIndex];
+          AudioManager.setMasterVolume(newVolume);
+
+          if (newVolume === 0) {
+            volumeButton.textContent = "🔇";
+          } else if (newVolume <= 0.25) {
+            volumeButton.textContent = "🔈";
+          } else if (newVolume <= 0.5) {
+            volumeButton.textContent = "🔉";
+          } else {
+            volumeButton.textContent = "🔊";
+          }
+
+          volumeButton.style.transform = "scale(1.1)";
+          setTimeout(() => {
+            volumeButton.style.transform = "scale(1)";
+          }, 150);
+        }
+        e.preventDefault();
+      } else if (e.code === "NumpadSubtract" || e.key === "-") {
+        // Bajar volumen
+        if (currentStateIndex < volumeStates.length - 1) {
+          currentStateIndex++;
+          const newVolume = volumeStates[currentStateIndex];
+          AudioManager.setMasterVolume(newVolume);
+
+          if (newVolume === 0) {
+            volumeButton.textContent = "🔇";
+          } else if (newVolume <= 0.25) {
+            volumeButton.textContent = "🔈";
+          } else if (newVolume <= 0.5) {
+            volumeButton.textContent = "🔉";
+          } else {
+            volumeButton.textContent = "🔊";
+          }
+
+          volumeButton.style.transform = "scale(1.1)";
+          setTimeout(() => {
+            volumeButton.style.transform = "scale(1)";
+          }, 150);
+        }
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
 
     document.body.appendChild(volumeButton);
+
+    console.log("🔊 Control de volumen creado con teclas + y - del numpad");
   },
 
   /**
-   * Crea el ticker de música
+   * Crea el ticker de música SOLO para pantalla de juego
    */
   createMusicTicker() {
+    // Verificar que estamos en pantalla de juego
+    const gameArea = document.getElementById("game-area");
+    if (!gameArea || gameArea.style.display === "none") {
+      console.log("🎵 No crear ticker - no estamos en juego");
+      return;
+    }
+
+    // Eliminar ticker existente si hay uno
+    const existingTicker = document.getElementById("music-ticker");
+    if (existingTicker) {
+      existingTicker.remove();
+    }
+
     const musicTicker = document.createElement("div");
     musicTicker.id = "music-ticker";
     musicTicker.style.cssText = `
     position: fixed;
-    top: 112px;
-    right: 15px;
-    width: 48px;
-    height: 16px;
-    background: rgba(0, 0, 0, 0.9);
-    border: 1px solid #8B0000;
-    border-radius: 3px;
+    top: 55px;
+    left: 0;
+    width: 100vw;
+    height: 20px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
     overflow: hidden;
-    z-index: 1000;
+    z-index: 999;
     display: flex;
     align-items: center;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    box-shadow: none;
+    pointer-events: none;
   `;
 
     const tickerText = document.createElement("div");
     tickerText.id = "ticker-text";
     tickerText.style.cssText = `
     white-space: nowrap;
-    color: #FFFFFF;
-    font-size: 8px;
+    color: #FFD700;
+    font-size: 14px;
     font-weight: bold;
-    font-family: "Arial", sans-serif;
-    animation: tickerScroll 10s linear infinite;
+    font-family: var(--professional-font);
+    animation: tickerScrollFull 20s linear infinite;
     transform: translateX(100%);
-    text-shadow: 0 0 2px #000;
+    text-shadow: 
+      -1px -1px 0 #000,
+      1px -1px 0 #000,
+      -1px 1px 0 #000,
+      1px 1px 0 #000,
+      0 0 5px rgba(0, 0, 0, 0.8),
+      0 0 10px #FFD700;
+    letter-spacing: 1px;
+    background: transparent;
+    padding: 0;
+    margin: 0;
   `;
 
-    tickerText.textContent = window.currentMusicTrack || "Elegía - Azkal";
+    tickerText.textContent = `🎵 ${
+      window.currentMusicTrack || "Elegía - Azkal"
+    } 🎵`;
     musicTicker.appendChild(tickerText);
     document.body.appendChild(musicTicker);
+
+    console.log("🎵 Ticker de música creado SOLO para juego");
   },
 
   /**
-   * Actualiza el texto del ticker de música
+   * Actualiza el texto del ticker de música Y del botón del menú
    */
   updateMusicTicker(trackName) {
+    // Actualizar ticker del juego si existe
     const tickerText = document.getElementById("ticker-text");
     if (tickerText) {
-      tickerText.textContent = trackName;
-      console.log(`🎵 Ticker actualizado: ${trackName}`);
+      tickerText.textContent = `🎵 ${trackName} 🎵`;
+    }
+
+    // 🔥 NUEVO: Actualizar display del botón en menú principal
+    const currentTrackMenu = document.getElementById("current-track-menu");
+    if (currentTrackMenu) {
+      currentTrackMenu.textContent = trackName;
+    }
+
+    console.log(`🎵 Ticker y menú actualizados: ${trackName}`);
+  },
+
+  /**
+   * 🔥 NUEVO: Elimina el ticker cuando se sale del juego
+   */
+  removeMusicTicker() {
+    const ticker = document.getElementById("music-ticker");
+    if (ticker) {
+      ticker.remove();
+      console.log("🎵 Ticker de música eliminado");
     }
   },
 
   /**
-   * Crea el display del contador total de enemigos
+   * Crea el display del contador total sin marcos
    */
   createTotalEnemiesDisplay() {
     const totalDisplay = document.createElement("div");
     totalDisplay.id = "total-enemies-display";
-    totalDisplay.style.position = "fixed";
-    totalDisplay.style.bottom = "90px";
-    totalDisplay.style.left = "15px";
-    totalDisplay.style.backgroundColor = "rgba(0, 0, 0, 0.85)";
-    totalDisplay.style.color = "#FFFFFF";
-    totalDisplay.style.padding = "4px 8px";
-    totalDisplay.style.borderRadius = "4px";
-    totalDisplay.style.fontSize = "10px";
-    totalDisplay.style.fontWeight = "bold";
-    totalDisplay.style.fontFamily = '"Arial", sans-serif';
-    totalDisplay.style.border = "1px solid #FF0000";
-    totalDisplay.style.boxShadow = "0 0 5px rgba(255, 0, 0, 0.3)";
-    totalDisplay.style.zIndex = "1000";
-    totalDisplay.style.minWidth = "70px";
-    totalDisplay.style.textAlign = "center";
-    totalDisplay.style.display = "none";
-    totalDisplay.textContent = "Total: 0";
+    totalDisplay.style.cssText = `
+    position: fixed;
+    bottom: 25px;
+    left: 15px;
+    background: transparent;
+    color: #FFFFFF;
+    padding: 0;
+    border: none;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: var(--professional-font);
+    border-radius: 0;
+    box-shadow: none;
+    z-index: 1000;
+    text-align: left;
+    display: none;
+    text-shadow: 
+      -2px -2px 0 #000,
+      2px -2px 0 #000,
+      -2px 2px 0 #000,
+      2px 2px 0 #000,
+      0 0 5px rgba(0, 0, 0, 0.8);
+    letter-spacing: 1px;
+  `;
 
+    totalDisplay.innerHTML = "👾 0";
     document.body.appendChild(totalDisplay);
   },
 

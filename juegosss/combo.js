@@ -65,7 +65,7 @@ const ComboSystem = {
   },
 
   /**
-   * Crea el elemento HTML que muestra el combo - MÁS PEQUEÑO Y MEJOR POSICIONADO
+   * Crea el elemento HTML que muestra el combo - POSICIÓN AJUSTADA
    */
   createComboDisplay() {
     if (this.comboDisplay) return;
@@ -75,28 +75,28 @@ const ComboSystem = {
     this.comboDisplay = document.createElement("div");
     this.comboDisplay.id = "combo-display";
 
-    // 🔥 ESTILO NEÓN CURSIVO SIN MARCO
+    // 🔥 POSICIÓN MÁS ARRIBA PARA NO TAPAR EL CONTADOR TOTAL
     this.comboDisplay.style.position = "fixed";
-    this.comboDisplay.style.bottom = "25px";
+    this.comboDisplay.style.bottom = "70px"; // CAMBIADO: de 25px a 70px
     this.comboDisplay.style.left = "15px";
     this.comboDisplay.style.backgroundColor = "transparent";
     this.comboDisplay.style.border = "none";
     this.comboDisplay.style.boxShadow = "none";
-    this.comboDisplay.style.backdropFilter = "none"; // Quitar el blur también
+    this.comboDisplay.style.backdropFilter = "none";
     this.comboDisplay.style.outline = "none";
     this.comboDisplay.style.borderRadius = "0";
     this.comboDisplay.style.padding = "0";
     this.comboDisplay.style.margin = "0";
     this.comboDisplay.style.color = "#FFD700";
-    this.comboDisplay.style.fontSize = "32px"; // Más grande para efecto neón
+    this.comboDisplay.style.fontSize = "32px";
     this.comboDisplay.style.fontWeight = "bold";
-    this.comboDisplay.style.fontFamily = '"Arial", cursive'; // Cursiva
-    this.comboDisplay.style.fontStyle = "italic"; // Asegurar cursiva
+    this.comboDisplay.style.fontFamily = '"Arial", cursive';
+    this.comboDisplay.style.fontStyle = "italic";
     this.comboDisplay.style.zIndex = "1000";
     this.comboDisplay.style.display = "none";
     this.comboDisplay.style.transition = "all 0.3s ease";
 
-    // ⬅️ EFECTO NEÓN ÉPICO
+    // Efecto neón épico
     this.comboDisplay.style.textShadow = `
     0 0 5px currentColor,
     0 0 10px currentColor,
@@ -108,7 +108,7 @@ const ComboSystem = {
 
     document.body.appendChild(this.comboDisplay);
 
-    console.log("✅ Display del combo neón cursivo creado");
+    console.log("✅ Display del combo neón cursivo creado en nueva posición");
   },
 
   // ======================================================
@@ -374,14 +374,26 @@ const ComboSystem = {
 
     this.comboDisplay.style.display = "block";
 
-    // 🔥 SOLO EL NÚMERO GRANDE EN NEÓN CURSIVO
+    // 🔥 SOLO EL NÚMERO GRANDE EN NEÓN CURSIVO CON TRAZO
     this.comboDisplay.textContent = this.currentCombo;
 
     // Actualizar color neón
     this.comboDisplay.style.color = threshold.color;
 
-    // ⬅️ EFECTO NEÓN DINÁMICO SEGÚN EL THRESHOLD
+    // 🔥 EFECTO NEÓN DINÁMICO + TRAZO NEGRO FUERTE
     this.comboDisplay.style.textShadow = `
+    /* Trazo negro grueso para legibilidad */
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000,
+    2px 2px 0 #000,
+    -3px 0 0 #000,
+    3px 0 0 #000,
+    0 -3px 0 #000,
+    0 3px 0 #000,
+    /* Sombra negra adicional */
+    0 0 8px rgba(0, 0, 0, 0.9),
+    /* Efectos de neón */
     0 0 5px ${threshold.color},
     0 0 10px ${threshold.color},
     0 0 15px ${threshold.color},

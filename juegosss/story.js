@@ -263,7 +263,7 @@ window.selectMusic = (trackFile, trackName) => {
     console.log(`🎵 Nueva música iniciada: ${trackName}`);
   }, 100);
 
-  // Actualizar ticker de música
+  // 🔥 ACTUALIZAR TICKER Y BOTÓN DEL MENÚ
   if (window.UI && window.UI.updateMusicTicker) {
     window.UI.updateMusicTicker(trackName);
   }

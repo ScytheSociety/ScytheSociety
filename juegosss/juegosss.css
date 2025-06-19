@@ -534,7 +534,7 @@ body:has(#ranking-container:not([style*="display: none"])) .menu-only-footer {
   top: 0;
   left: 0;
   right: 0;
-  padding: 8px 12px;
+  padding: 12px 15px;
   background: linear-gradient(
     180deg,
     rgba(0, 0, 0, 0.95) 0%,
@@ -548,16 +548,88 @@ body:has(#ranking-container:not([style*="display: none"])) .menu-only-footer {
   border-bottom: 2px solid var(--border-color);
   backdrop-filter: blur(5px);
   overflow: hidden;
+  gap: 8px;
+  min-height: 45px;
 }
 
 #game-info > div {
-  margin: 0 3px;
+  margin: 0;
   color: var(--text-color);
-  text-shadow: 0 0 8px var(--accent-color);
+  text-shadow: 0 0 8px var(--accent-color), 2px 2px 4px rgba(0, 0, 0, 0.8);
   font-weight: bold;
-  font-size: 0.9em;
+  font-size: 1rem;
   white-space: nowrap;
   flex-shrink: 1;
+  text-align: center;
+  font-family: var(--professional-font);
+  letter-spacing: 0.5px;
+}
+
+/* 🔥 NUEVO: Estilo especial para info del jugador centrada */
+.player-info-center {
+  font-size: 1.2rem !important; /* Un poco más grande */
+  font-weight: bold !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  justify-content: center !important;
+  text-shadow: 0 0 10px var(--accent-color), 2px 2px 4px rgba(0, 0, 0, 0.9) !important;
+}
+
+/* NUEVO: Responsive para diferentes tamaños */
+@media (max-width: 1200px) {
+  #game-info > div {
+    font-size: 0.9rem;
+  }
+
+  .player-info-center {
+    font-size: 1.1rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #game-info {
+    padding: 8px 12px;
+    gap: 6px;
+  }
+
+  #game-info > div {
+    font-size: 0.8rem;
+    letter-spacing: 0.3px;
+  }
+
+  .player-info-center {
+    font-size: 0.9rem !important;
+    gap: 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #game-info {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+
+  #game-info > div {
+    font-size: 0.7rem;
+    letter-spacing: 0.2px;
+  }
+
+  .player-info-center {
+    font-size: 0.8rem !important;
+    gap: 4px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  #game-info > div {
+    font-size: 0.65rem;
+    letter-spacing: 0.1px;
+  }
+
+  .player-info-center {
+    font-size: 0.75rem !important;
+  }
 }
 
 /* =============================================== */
@@ -915,7 +987,7 @@ body:has(#ranking-container:not([style*="display: none"])) .menu-only-footer {
 #volume-control {
   position: fixed !important;
   top: 65px !important;
-  right: 50px !important;
+  right: 25px !important; /* CAMBIADO: de 50px a 25px (más a la derecha) */
   width: 52px !important;
   height: 52px !important;
   min-width: 52px !important;
@@ -990,34 +1062,6 @@ body:has(#ranking-container:not([style*="display: none"])) .menu-only-footer {
   padding: 0 !important;
   margin: 0 !important;
   font-family: var(--professional-font) !important;
-}
-
-/* =============================================== */
-/* TICKER DE MÚSICA PROFESIONAL */
-/* =============================================== */
-
-@keyframes tickerScroll {
-  0% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
-
-#music-ticker {
-  position: fixed !important;
-  top: 125px !important;
-  right: 70px !important;
-  left: auto !important;
-  transform: translateX(50%) !important;
-  width: 52px !important;
-  height: 14px !important;
-  text-align: center !important;
-  transition: opacity 0.4s ease;
-  font-family: var(--professional-font);
-  border-radius: 8px;
-  z-index: 1000 !important;
 }
 
 /* =============================================== */
@@ -1338,223 +1382,8 @@ body:has(#ranking-container:not([style*="display: none"])) .menu-only-footer {
 }
 
 /* =============================================== */
-/* OPTIMIZACIONES DE RENDIMIENTO PARA MÓVILES */
-/* Agregar al final de juegosss.css */
-/* =============================================== */
-
-/* Optimizaciones generales para dispositivos móviles */
-@media (max-width: 768px), (pointer: coarse) {
-  /* Deshabilitar animaciones costosas en móviles */
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-
-  /* Canvas optimizado para móviles */
-  #game-canvas {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: pixelated;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-  }
-
-  /* Reducir efectos visuales costosos */
-  .game-title {
-    animation: none !important;
-    text-shadow: 0 0 10px var(--accent-color) !important;
-  }
-
-  /* Simplificar sombras y efectos */
-  button,
-  .gothic-button {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
-    text-shadow: none !important;
-  }
-
-  button:hover,
-  .gothic-button:hover {
-    transform: none !important;
-    box-shadow: 0 2px 8px rgba(255, 0, 0, 0.6) !important;
-  }
-
-  /* Simplificar bordes y efectos de elementos */
-  .input-section,
-  .main-buttons-section,
-  .secondary-buttons-section {
-    backdrop-filter: none !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
-  }
-
-  /* Optimizar power indicator */
-  .special-power-indicator {
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5) !important;
-  }
-
-  .special-power-ready {
-    animation: none !important;
-    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8) !important;
-  }
-
-  /* Optimizar volume control */
-  #volume-control {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
-  }
-
-  #volume-control:hover {
-    transform: none !important;
-    box-shadow: 0 4px 12px rgba(139, 0, 0, 0.8) !important;
-  }
-}
-
-/* Optimizaciones específicas para dispositivos de gama baja */
-@media (max-width: 480px),
-  screen and (max-device-width: 480px) and (orientation: portrait),
-  screen and (max-device-width: 854px) and (orientation: landscape) {
-  /* Deshabilitar TODAS las animaciones */
-  * {
-    animation: none !important;
-    transition: none !important;
-  }
-
-  /* Canvas de menor resolución */
-  #game-canvas {
-    width: 100vw !important;
-    height: 100vh !important;
-    image-rendering: pixelated !important;
-  }
-
-  /* Simplificar completamente los efectos visuales */
-  .game-title {
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8) !important;
-  }
-
-  /* Eliminar efectos costosos */
-  .instructions-content,
-  .music-content,
-  #ranking-container {
-    backdrop-filter: none !important;
-    box-shadow: 0 0 20px #000000 !important;
-  }
-
-  /* Simplificar modales */
-  .modal-close-button {
-    box-shadow: none !important;
-    border: 1px solid #660000 !important;
-  }
-
-  /* Optimizar footer */
-  .menu-only-footer {
-    backdrop-filter: none !important;
-    text-shadow: 1px 1px 2px #000 !important;
-  }
-
-  /* Optimizar emoji picker */
-  .emoji-picker-content {
-    backdrop-filter: none !important;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8) !important;
-  }
-
-  .emoji-option:hover {
-    transform: scale(1.1) !important; /* Reducir escala */
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.4) !important;
-  }
-}
-
-/* Optimizaciones específicas para iOS */
-@supports (-webkit-touch-callout: none) {
-  /* iOS Safari optimizations */
-  #game-canvas {
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-  }
-
-  /* Prevenir zoom en inputs en iOS */
-  input {
-    font-size: 16px !important;
-  }
-
-  /* Optimizar scroll en iOS */
-  body {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Deshabilitar efectos 3D costosos en iOS */
-  * {
-    -webkit-transform-style: flat !important;
-    transform-style: flat !important;
-  }
-}
-
-/* Optimizaciones para Android Chrome */
-@media (max-width: 768px) and (-webkit-min-device-pixel-ratio: 1.5) {
-  /* Optimizaciones para pantallas de alta densidad en Android */
-  #game-canvas {
-    image-rendering: optimizeSpeed;
-  }
-
-  /* Reducir calidad de renderizado en Android de gama baja */
-  .game-logo {
-    image-rendering: -webkit-optimize-contrast;
-  }
-}
-
-/* Media query para dispositivos con poca memoria */
-@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
-  /* Si el usuario prefiere movimiento reducido, eliminar TODAS las animaciones */
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
-  }
-
-  /* Efectos estáticos solamente */
-  .game-title {
-    text-shadow: 0 0 10px var(--accent-color);
-  }
-
-  button:hover,
-  .gothic-button:hover {
-    background: linear-gradient(
-      135deg,
-      var(--hover-color) 0%,
-      var(--accent-color) 100%
-    );
-    transform: none !important;
-  }
-}
-
-/* Optimizaciones de memoria para WebKit (iOS Safari) */
-@media screen and (-webkit-min-device-pixel-ratio: 0) {
-  /* Forzar aceleración de hardware solo donde sea necesario */
-  #game-canvas {
-    -webkit-transform: translateZ(0);
-    -webkit-backface-visibility: hidden;
-    -webkit-perspective: 1000;
-  }
-
-  /* Optimizar layers en iOS */
-  .game-logo-container,
-  .game-title-container {
-    -webkit-transform: translateZ(0);
-  }
-}
-
-/* =============================================== */
 /* CLASES AUXILIARES PARA PERFORMANCE DINÁMICO */
 /* =============================================== */
-
-/* Clase para dispositivos de gama baja (aplicar via JavaScript) */
-.low-performance {
-  /* Deshabilitar todas las animaciones y efectos */
-}
 
 .low-performance * {
   animation: none !important;
@@ -1578,11 +1407,6 @@ body:has(#ranking-container:not([style*="display: none"])) .menu-only-footer {
   animation: none !important;
 }
 
-/* Clase para alto rendimiento (sin restricciones) */
-.high-performance {
-  /* Sin restricciones, usar todos los efectos */
-}
-
 /* =============================================== */
 /* OPTIMIZACIONES DE RENDERING */
 /* =============================================== */
@@ -1604,4 +1428,248 @@ body:has(#ranking-container:not([style*="display: none"])) .menu-only-footer {
 /* Evitar repaints innecesarios */
 #game-info > div {
   contain: layout;
+}
+
+/* =============================================== */
+/* TICKER DE MÚSICA - VIAJA POR TODA LA PANTALLA */
+/* =============================================== */
+
+@keyframes tickerScrollFull {
+  0% {
+    transform: translateX(100vw);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Responsive para ticker */
+@media (max-width: 768px) {
+  #ticker-text {
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #ticker-text {
+    font-size: 10px !important;
+  }
+}
+
+/* =============================================== */
+/* ANIMACIÓN PARA COMENTARIOS DEL BOSS */
+/* =============================================== */
+
+@keyframes bossCommentAppear {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.8) translateY(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1) translateY(0);
+  }
+}
+
+/* Responsive para comentarios del boss */
+@media (max-width: 768px) {
+  .boss-comment {
+    font-size: 16px !important;
+    padding: 12px 20px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .boss-comment {
+    font-size: 14px !important;
+    padding: 10px 15px !important;
+  }
+}
+
+/* =============================================== */
+/* BOTÓN DE MÚSICA CON CANCIÓN ACTUAL - CORREGIDO */
+/* =============================================== */
+
+.music-button {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important; /* CAMBIADO: centrado */
+  gap: 8px !important;
+  padding: 10px 12px !important;
+  text-align: center !important; /* CAMBIADO: centrado */
+}
+
+.music-button-content {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important; /* CAMBIADO: centrado */
+  gap: 2px !important;
+  flex: 1;
+  text-align: center !important; /* NUEVO: centrado */
+}
+
+.music-button-title {
+  font-size: 0.85em !important;
+  font-weight: bold !important;
+  color: #ffffff !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  text-align: center !important; /* NUEVO: centrado */
+}
+
+.current-track-display {
+  font-size: 0.65em !important; /* REDUCIDO: más pequeño */
+  color: #ffd700 !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  max-width: 120px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-family: var(--professional-font) !important;
+  text-align: center !important; /* NUEVO: centrado */
+}
+
+/* Responsive para botón de música */
+@media (max-width: 480px) {
+  .current-track-display {
+    font-size: 0.6em !important; /* REDUCIDO AÚN MÁS */
+    max-width: 100px !important;
+  }
+
+  .music-button-title {
+    font-size: 0.8em !important;
+  }
+}
+
+/* =============================================== */
+/* ANIMACIÓN TERRORÍFICA PARA TRANSICIÓN DE NIVEL */
+/* =============================================== */
+
+@keyframes terrorLevelAppear {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+    filter: blur(10px);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: blur(0px);
+  }
+}
+
+/* =============================================== */
+/* ANIMACIONES PARA GAME OVER Y VICTORIA */
+/* =============================================== */
+
+@keyframes gameOverPulse {
+  0% {
+    text-shadow: -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000,
+      3px 3px 0 #000, 0 0 20px #ff0000, 0 0 40px #ff0000, 0 0 60px #ff0000;
+  }
+  100% {
+    text-shadow: -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000,
+      3px 3px 0 #000, 0 0 30px #ff0000, 0 0 60px #ff0000, 0 0 90px #ff0000;
+  }
+}
+
+@keyframes victoryGlow {
+  0% {
+    text-shadow: -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000,
+      3px 3px 0 #000, 0 0 20px #ffd700, 0 0 40px #ffd700, 0 0 60px #ffd700;
+  }
+  100% {
+    text-shadow: -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000,
+      3px 3px 0 #000, 0 0 30px #ffd700, 0 0 60px #ffd700, 0 0 90px #ffd700,
+      0 0 120px #ffd700;
+  }
+}
+
+/* =============================================== */
+/* BOTONES MINÚSCULOS PARA GAME OVER - TAMAÑO EMOJI */
+/* =============================================== */
+
+.small-game-button {
+  background: rgba(139, 0, 0, 0.8);
+  color: #ffffff;
+  border: 1px solid #8b0000;
+  border-radius: 4px;
+  padding: 4px;
+  font-size: 1.1em;
+  width: auto;
+  height: auto;
+  min-width: 30px;
+  min-height: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+.small-game-button:hover {
+  background: rgba(255, 0, 0, 0.8);
+  border-color: #ff0000;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(255, 0, 0, 0.4);
+}
+
+.small-game-button:active {
+  transform: scale(1.05);
+  box-shadow: 0 1px 4px rgba(255, 0, 0, 0.3);
+}
+
+/* Responsive para botones minúsculos */
+@media (max-width: 480px) {
+  .small-game-button {
+    font-size: 1em;
+    min-width: 28px;
+    min-height: 28px;
+    padding: 3px;
+  }
+}
+
+/* =============================================== */
+/* ANIMACIÓN SOLO PARA TEXTO - SIN FONDOS */
+/* =============================================== */
+
+@keyframes epicMessageAppear {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.7) translateY(-20px);
+    filter: blur(3px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.05) translateY(0);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1) translateY(0);
+    filter: blur(0px);
+  }
+}
+
+/* Responsive para mensajes sin fondo */
+@media (max-width: 768px) {
+  [data-message-id] {
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  [data-message-id] {
+    font-size: 12px !important;
+    max-width: 90vw !important;
+  }
 }

@@ -72,42 +72,42 @@ function detectDevicePerformance() {
 // ======================================================
 
 /**
- * Ajusta la configuración del juego según el dispositivo
+ * Ajusta la configuración del juego según el dispositivo - SIN RESTRICCIONES MÓVILES
  */
 function adjustGameConfig() {
   const performance = detectDevicePerformance();
 
-  // Configuraciones por nivel de rendimiento
+  // 🔥 CONFIGURACIONES EQUILIBRADAS - NO PENALIZAR MÓVILES
   const configs = {
     low: {
-      maxEnemies: 15, // Menos enemigos simultáneos
-      maxBullets: 30, // Menos balas
-      maxParticles: 10, // Menos partículas
-      shadowsEnabled: false, // Sin sombras
-      glowEffects: false, // Sin efectos de brillo
-      animationQuality: "low", // Animaciones simples
-      targetFPS: 30, // FPS más bajo pero estable
-      updateInterval: 33, // ~30 FPS
+      maxEnemies: 35, // AUMENTADO de 15 a 35
+      maxBullets: 60, // AUMENTADO de 30 a 60
+      maxParticles: 25, // AUMENTADO de 10 a 25
+      shadowsEnabled: false,
+      glowEffects: true, // HABILITADO
+      animationQuality: "medium", // MEJORADO de low a medium
+      targetFPS: 45, // AUMENTADO de 30 a 45
+      updateInterval: 22, // MEJORADO de 33 a 22
     },
     medium: {
-      maxEnemies: 25,
-      maxBullets: 50,
-      maxParticles: 20,
-      shadowsEnabled: false, // Sin sombras en medium también
+      maxEnemies: 40, // AUMENTADO de 25 a 40
+      maxBullets: 70, // AUMENTADO de 50 a 70
+      maxParticles: 35, // AUMENTADO de 20 a 35
+      shadowsEnabled: true, // HABILITADO
       glowEffects: true,
-      animationQuality: "medium",
-      targetFPS: 45,
-      updateInterval: 22, // ~45 FPS
+      animationQuality: "high", // MEJORADO de medium a high
+      targetFPS: 55, // AUMENTADO de 45 a 55
+      updateInterval: 18, // MEJORADO de 22 a 18
     },
     high: {
-      maxEnemies: 40,
-      maxBullets: 80,
-      maxParticles: 50,
+      maxEnemies: 50, // AUMENTADO de 40 a 50
+      maxBullets: 100, // AUMENTADO de 80 a 100
+      maxParticles: 60, // AUMENTADO de 50 a 60
       shadowsEnabled: true,
       glowEffects: true,
       animationQuality: "high",
       targetFPS: 60,
-      updateInterval: 16, // 60 FPS
+      updateInterval: 16,
     },
   };
 
@@ -118,7 +118,7 @@ function adjustGameConfig() {
   GameConfig.isMobile = isMobileDevice;
   GameConfig.performanceLevel = performance;
 
-  console.log(`⚙️ Configuración aplicada:`, config);
+  console.log(`⚙️ Configuración OPTIMIZADA aplicada:`, config);
   return config;
 }
 
@@ -313,9 +313,17 @@ function startGame() {
   const playerName = document.getElementById("name")?.value;
   const playerAvatar = document.getElementById("avatar")?.value;
 
-  // Validar entrada
+  // 🔥 VALIDACIÓN MEJORADA - Avatar obligatorio de la lista
   if (!playerName || !playerAvatar || playerName.length < 3) {
-    alert("Por favor, ingresa un nombre (mínimo 3 caracteres) y un avatar");
+    alert(
+      "Por favor:\n• Ingresa un nombre (mínimo 3 caracteres)\n• Selecciona un avatar de la lista"
+    );
+    return;
+  }
+
+  // Verificar que el avatar no esté vacío
+  if (playerAvatar.trim() === "" || playerAvatar === "Obligatorio") {
+    alert("¡Debes seleccionar un emoji de la lista!");
     return;
   }
 
@@ -332,7 +340,7 @@ function startGame() {
   // Configurar controles
   Player.setupControls(canvas);
 
-  // Iniciar directamente el juego (SIN instrucciones)
+  // Iniciar directamente el juego
   startGameLoop();
 
   console.log("🚀 Juego ÉPICO iniciado directamente");
@@ -351,6 +359,11 @@ function startGameLoop() {
   if (!AudioManager.isBackgroundMusicPlaying()) {
     AudioManager.startBackgroundMusic();
   }
+
+  // 🔥 CREAR TICKER SOLO CUANDO EMPIEZA EL JUEGO
+  setTimeout(() => {
+    UI.createMusicTicker();
+  }, 500);
 
   // Game loop adaptativo
   let lastTime = performance.now();
@@ -575,31 +588,34 @@ function drawSpecialEffects(ctx) {
 }
 
 /**
- * Limita las entidades en dispositivos móviles para mejor rendimiento
+ * 🔥 NUEVO: Límites más generosos para móviles
  */
 function limitEntitiesForMobile() {
   const config = GameConfig.MOBILE_PERFORMANCE;
 
   if (!config) return;
 
-  // Limitar enemigos
-  if (EnemyManager.enemies.length > config.maxEnemies) {
+  // 🔥 LÍMITES MÁS ALTOS - NO PENALIZAR MÓVILES
+  // Limitar enemigos solo si superan MUCHO el máximo
+  if (EnemyManager.enemies.length > config.maxEnemies * 1.2) {
     EnemyManager.enemies.splice(config.maxEnemies);
   }
 
-  // Limitar balas
-  if (BulletManager.bullets.length > config.maxBullets) {
-    BulletManager.bullets.splice(config.maxBullets / 2); // Eliminar la mitad más antigua
+  // Limitar balas solo si superan MUCHO el máximo
+  if (BulletManager.bullets.length > config.maxBullets * 1.2) {
+    BulletManager.bullets.splice(config.maxBullets / 2);
   }
 
-  // Limitar power-ups
-  if (PowerUpManager.powerUps.length > 4) {
-    PowerUpManager.powerUps.splice(4);
+  // Límites más generosos para power-ups
+  if (PowerUpManager.powerUps.length > 6) {
+    // AUMENTADO de 4 a 6
+    PowerUpManager.powerUps.splice(6);
   }
 
-  // Limitar corazones
-  if (PowerUpManager.hearts.length > 2) {
-    PowerUpManager.hearts.splice(2);
+  // Límites más generosos para corazones
+  if (PowerUpManager.hearts.length > 4) {
+    // AUMENTADO de 2 a 4
+    PowerUpManager.hearts.splice(4);
   }
 }
 
@@ -956,14 +972,20 @@ function gameOver() {
 
   gameEnded = true;
 
+  // 🔥 OCULTAR CONTADOR TOTAL INMEDIATAMENTE
+  const totalDisplay = document.getElementById("total-enemies-display");
+  if (totalDisplay) {
+    totalDisplay.style.display = "none";
+    console.log("🔄 Contador total de enemigos ocultado en game over");
+  }
+
   // 🔥 COMENTARIO DEL BOSS SI ESTÁ ACTIVO
   if (level === 11 && BossManager.isActive()) {
-    // ⬅️ CAMBIO: Era 10, ahora 11
     BossManager.sayRandomComment("victoria_boss");
   }
 
   // 🔥 OBTENER COMBO MÁXIMO ANTES DE LIMPIAR
-  const maxCombo = ComboSystem ? ComboSystem.getMaxCombo() : 0; // ⬅️ CORRECCIÓN
+  const maxCombo = ComboSystem ? ComboSystem.getMaxCombo() : 0;
 
   // Detener TODOS los intervalos y sistemas
   if (gameInterval) {
@@ -972,13 +994,12 @@ function gameOver() {
   }
 
   BulletManager.stopAutoShoot();
-  //AudioManager.stopBackgroundMusic();
 
   // Limpiar sistemas completamente DESPUÉS de obtener el combo
   ComboSystem.cleanup();
 
   // Mostrar pantalla de game over
-  UI.showGameOver(false, score, level, maxCombo); // ⬅️ AHORA SÍ ESTÁ DEFINIDO
+  UI.showGameOver(false, score, level, maxCombo);
   AudioManager.playSound("gameOver");
 
   console.log(`💀 Game Over - Combo máximo: ${maxCombo}`);
@@ -990,8 +1011,15 @@ function gameOver() {
 function victory() {
   gameEnded = true;
 
+  // 🔥 OCULTAR CONTADOR TOTAL INMEDIATAMENTE
+  const totalDisplay = document.getElementById("total-enemies-display");
+  if (totalDisplay) {
+    totalDisplay.style.display = "none";
+    console.log("🔄 Contador total de enemigos ocultado en victory");
+  }
+
   // 🔥 OBTENER COMBO MÁXIMO ANTES DE LIMPIAR
-  const maxCombo = ComboSystem ? ComboSystem.getMaxCombo() : 0; // ⬅️ CORRECCIÓN
+  const maxCombo = ComboSystem ? ComboSystem.getMaxCombo() : 0;
 
   // Detener TODOS los intervalos y sistemas
   if (gameInterval) {
@@ -1000,10 +1028,12 @@ function victory() {
   }
 
   BulletManager.stopAutoShoot();
-  //AudioManager.stopBackgroundMusic();
+
+  // Limpiar sistemas completamente DESPUÉS de obtener el combo
+  ComboSystem.cleanup();
 
   // Celebración épica con combo
-  UI.showGameOver(true, score, level, maxCombo); // ⬅️ TRUE = Victoria
+  UI.showGameOver(true, score, level, maxCombo);
   AudioManager.playSound("victory");
 
   // Efecto de celebración más épico
@@ -1013,29 +1043,40 @@ function victory() {
 }
 
 /**
- * Reiniciar juego
+ * Reiniciar juego - CORREGIDO
  */
 function restartGame() {
-  // CORRECCIÓN: Ocultar pantalla de game over PRIMERO
+  console.log("🔄 Reiniciando juego...");
+
+  // 🔥 OCULTAR GAME OVER INMEDIATAMENTE
   const gameOverScreen = document.getElementById("game-over");
   if (gameOverScreen) {
     gameOverScreen.style.display = "none";
+    gameOverScreen.innerHTML = ""; // Limpiar contenido
   }
 
+  // 🔥 FORZAR DETENCIÓN COMPLETA
+  gameEnded = true;
+
+  // Resetear estado
   resetGameState();
-  // Asegurar que el sistema de combos se reinicie correctamente
+
+  // Asegurar que el sistema de combos se reinicie
   if (window.ComboSystem) {
     ComboSystem.reset();
-    // Recrear el display si no existe
     setTimeout(() => {
       ComboSystem.createComboDisplay();
     }, 100);
   }
+
+  // Iniciar juego limpio
   startGame();
+
+  console.log("✅ Juego reiniciado correctamente");
 }
 
 /**
- * Resetear estado del juego - CON COMBOS
+ * Resetea estado del juego - CORREGIDO PARA COMBOS
  */
 function resetGameState() {
   // Detener intervalos
@@ -1053,12 +1094,9 @@ function resetGameState() {
   gameTime = 0;
   level = 1;
   score = 0;
-  totalEnemiesKilled = 0; // 🔥 NUEVO: Resetear contador total
-
-  // 🔥 NUEVO: Resetear contador total de enemigos
   totalEnemiesKilled = 0;
 
-  // 🔥 Resetear efectos especiales
+  // Resetear efectos especiales
   slowMotionActive = false;
   slowMotionFactor = 1.0;
   frenzyModeActive = false;
@@ -1070,7 +1108,16 @@ function resetGameState() {
   PowerUpManager.reset();
   BossManager.reset();
   UI.reset();
-  ComboSystem.reset();
+
+  // 🔥 CORREGIDO: Resetear Y recrear combo display
+  if (window.ComboSystem) {
+    ComboSystem.cleanup(); // Limpiar primero
+    ComboSystem.reset(); // Resetear estado
+    // Recrear display después de un pequeño delay
+    setTimeout(() => {
+      ComboSystem.createComboDisplay();
+    }, 200);
+  }
 
   console.log("🔄 Estado del juego ÉPICO reseteado");
 }
@@ -1089,23 +1136,46 @@ function cleanupGame() {
 }
 
 /**
- * Volver al menú principal
+ * Volver al menú principal - CORREGIDO PARA COMBOS
  */
 function backToMenu() {
+  console.log("🏠 Volviendo al menú principal...");
+
+  // FORZAR DETENCIÓN COMPLETA DEL JUEGO
+  gameEnded = true;
+
+  // OCULTAR Y LIMPIAR GAME OVER INMEDIATAMENTE
+  const gameOverScreen = document.getElementById("game-over");
+  if (gameOverScreen) {
+    gameOverScreen.style.display = "none";
+    gameOverScreen.innerHTML = "";
+  }
+
+  // 🔥 LIMPIAR COMBO DISPLAY ANTES DE RESETEAR
+  if (window.ComboSystem) {
+    ComboSystem.cleanup();
+  }
+
+  // Resetear estado del juego ANTES de cambiar pantallas
   resetGameState();
 
+  // ELIMINAR TICKER AL VOLVER AL MENÚ
+  UI.removeMusicTicker();
+
+  // Cambiar pantallas
   document.getElementById("game-area").style.display = "none";
   document.getElementById("ranking-container").style.display = "none";
   document.getElementById("main-menu").style.display = "block";
 
   UI.centerMainMenu();
 
-  // ⬅️ AGREGAR ESTA LÍNEA AL FINAL:
   // Ocultar contador total fuera del juego
   const totalDisplay = document.getElementById("total-enemies-display");
   if (totalDisplay) {
     totalDisplay.style.display = "none";
   }
+
+  console.log("✅ Vuelto al menú principal correctamente");
 }
 
 // ======================================================
@@ -1114,14 +1184,15 @@ function backToMenu() {
 
 // URL de tu Web App de Google Sheets
 const WEBAPP_URL =
-  "https://script.google.com/macros/s/AKfycby4EeSEWs_IYpIDC1dQCGGuWemC7U8O6yhgaACcxnqxIqXc4wFvclHjkiOyqbj9FwOG/exec";
+  "https://script.google.com/macros/s/AKfycbyISC1HgWsjGaNoCubjC8xEtABygGw9m24NLnz2ZwyM4pdeQBhuIF-cHRTQtQeYDWpTOA/exec";
 
 // Variables de control de guardado
 let scoreAlreadySaved = false;
 let isSaving = false;
 
 /**
- * Guarda la puntuación - CORREGIDO PARA VICTORIA SOLO CON BOSS MUERTO
+ * Guarda la puntuación - ACTUALIZADO PARA INCLUIR COMBO
+ * Solo reemplaza esta función en tu código existente
  */
 async function saveScore() {
   console.log("🚀 Guardando puntuación...");
@@ -1132,15 +1203,25 @@ async function saveScore() {
     const enemiesKilled = totalEnemiesKilled;
     const maxCombo = ComboSystem.getMaxCombo();
 
+    // ⬅️ AGREGAR ESTOS LOGS DE DEBUG
+    console.log("📊 DEBUG - Datos a enviar:");
+    console.log("- playerName:", playerName);
+    console.log("- playerAvatar:", playerAvatar);
+    console.log("- level:", level);
+    console.log("- enemiesKilled:", enemiesKilled);
+    console.log("- score:", score);
+    console.log("- maxCombo:", maxCombo);
+    console.log("- ComboSystem existe:", !!ComboSystem);
+    console.log("- getMaxCombo función:", typeof ComboSystem?.getMaxCombo);
+
     // Validar datos antes de enviar
     if (!playerName || !playerAvatar) {
       throw new Error("Datos del jugador incompletos");
     }
 
-    // ⭐ CORREGIR LÓGICA DE VICTORIA: Solo si boss fue derrotado
+    // Victoria SOLO si el boss está inactivo (fue derrotado) Y estamos en nivel 11+
     let gameStatus = "Derrota";
 
-    // ⭐ Victoria SOLO si el boss está inactivo (fue derrotado) Y estamos en nivel 11+
     if (
       level >= 11 &&
       BossManager &&
@@ -1157,7 +1238,7 @@ async function saveScore() {
       );
     }
 
-    // Crear URL con parámetros
+    // Crear URL con parámetros - AHORA CON COMBO
     const params = new URLSearchParams();
     params.append("action", "save");
     params.append("date", new Date().toISOString());
@@ -1167,11 +1248,11 @@ async function saveScore() {
     params.append("enemiesKilled", enemiesKilled);
     params.append("time", Math.floor(gameTime / 60));
     params.append("score", score);
-    params.append("maxCombo", maxCombo);
+    params.append("maxCombo", maxCombo); // ⬅️ COMBO
     params.append("status", gameStatus);
 
     const urlWithParams = `${WEBAPP_URL}?${params.toString()}`;
-    console.log("📡 Enviando a:", urlWithParams);
+    console.log("📡 URL completa enviada:", urlWithParams);
 
     // Timeout para la petición
     const controller = new AbortController();
@@ -1184,6 +1265,7 @@ async function saveScore() {
     clearTimeout(timeoutId);
 
     const result = await response.json();
+    console.log("📥 Respuesta del servidor:", result);
 
     if (result.success) {
       console.log("✅ Guardado exitoso");
@@ -1248,6 +1330,9 @@ async function saveAndViewRanking() {
 
     viewRanking();
     document.getElementById("game-over").style.display = "none";
+
+    // 🔥 NUEVO: Eliminar ticker al ir a ranking
+    UI.removeMusicTicker();
   } catch (error) {
     console.error("Error al guardar:", error);
     alert("❌ Error al guardar la puntuación. Inténtalo de nuevo.");
@@ -1267,6 +1352,9 @@ async function saveAndViewRanking() {
  */
 async function viewRanking() {
   try {
+    // 🔥 NUEVO: Eliminar ticker inmediatamente
+    UI.removeMusicTicker();
+
     document.getElementById("main-menu").style.display = "none";
     document.getElementById("game-area").style.display = "none";
 
@@ -1311,7 +1399,7 @@ async function viewRanking() {
       enemiesKilled: parseInt(player.enemiesKilled) || 0,
       time: parseInt(player.time) || 0,
       score: parseInt(player.score) || 0,
-      maxCombo: parseInt(player.maxCombo) || 0,
+      maxCombo: parseInt(player.combo) || 0, // ⬅️ NUEVO: Procesar combo
       status: player.status || "Derrota",
     }));
 
@@ -1321,7 +1409,7 @@ async function viewRanking() {
         return b.score - a.score;
       }
       if (b.maxCombo !== a.maxCombo) {
-        return b.maxCombo - a.maxCombo;
+        return b.maxCombo - a.maxCombo; // ⬅️ NUEVO: Combo como criterio de desempate
       }
       return a.time - b.time;
     });
@@ -1428,6 +1516,20 @@ async function viewRanking() {
                                 white-space: nowrap;
                                 font-family: var(--professional-font);
                             ">Score</th>
+                            <th style="
+                                padding: 12px 8px;
+                                border: 1px solid rgba(255, 0, 0, 0.3);
+                                text-align: center;
+                                background: linear-gradient(135deg, var(--secondary-color) 0%, var(--hover-color) 100%);
+                                color: var(--text-color);
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
+                                font-weight: bold;
+                                text-shadow: 0 0 5px #000;
+                                font-size: 0.8em;
+                                white-space: nowrap;
+                                font-family: var(--professional-font);
+                            ">Combo</th>
                             <th style="
                                 padding: 12px 8px;
                                 border: 1px solid rgba(255, 0, 0, 0.3);
@@ -1549,6 +1651,25 @@ async function viewRanking() {
                                     font-size: 0.9em;
                                     color: #FFFFFF;
                                 ">${player.score}</td>
+                                <td style="
+                                    padding: 12px 8px;
+                                    border: 1px solid rgba(255, 0, 0, 0.3);
+                                    text-align: center;
+                                    font-family: var(--professional-font);
+                                    font-size: 0.9em;
+                                    color: ${
+                                      player.maxCombo >= 20
+                                        ? "#FFD700"
+                                        : player.maxCombo >= 10
+                                        ? "#FFA500"
+                                        : "#FF6B00"
+                                    };
+                                    font-weight: bold;
+                                ">${
+                                  player.maxCombo > 0
+                                    ? `🔥${player.maxCombo}`
+                                    : "-"
+                                }</td>
                                 <td style="
                                     padding: 12px 8px;
                                     border: 1px solid rgba(255, 0, 0, 0.3);

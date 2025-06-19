@@ -182,7 +182,7 @@ const BossManager = {
     this.updateIntelligentMines();
 
     // Comentarios aleatorios ocasionales
-    if (Math.random() < 0.001) {
+    if (Math.random() < 0.003) {
       this.sayRandomComment("combate");
     }
 
@@ -957,7 +957,7 @@ const BossManager = {
     this.active = false;
     this.currentHealth = 0;
 
-    // Comentarios de derrota
+    // 🔥 COMENTARIO OBLIGATORIO DE DERROTA
     this.sayRandomComment("derrota_boss");
 
     // Efectos de derrota
@@ -986,7 +986,7 @@ const BossManager = {
 
     AudioManager.playSound("victory");
 
-    // ⬅️ ESTA ES LA ÚNICA LLAMADA A VICTORY QUE DEBE EXISTIR
+    // Victoria después de 2 segundos
     setTimeout(() => {
       console.log("🏆 Llamando a window.victory() desde boss derrotado");
       window.victory();
@@ -1993,65 +1993,148 @@ const BossManager = {
   /**
    * 🔥 NUEVO: Sistema de comentarios sarcásticos del boss
    */
+  /**
+   * 🔥 SISTEMA DE COMENTARIOS ÉPICOS Y SOMBRÍOS DEL BOSS
+   */
   bossComments: {
     entrada: [
-      "¡Scythe Society será destruida!",
-      "¡Vengo por la reina Hell!",
-      "¡Prepárense para la aniquilación!",
-      "¡Su clan no durará ni un minuto!",
-      "¡Hell pagará por su insolencia!",
+      "¡Scythe Society será destruida para siempre!",
+      "¡Vengo por la reina Hell y toda su legión!",
+      "¡Prepárense para la aniquilación total!",
+      "¡Su clan patético no durará ni un minuto!",
+      "¡Hell pagará por su insolencia con sangre!",
+      "¡Soy la pesadilla que acecha sus sueños!",
+      "¡El reino de las sombras me pertenece!",
     ],
     combate: [
-      "¡Son unos mancos!",
+      "¡Son unos mancos patéticos!",
       "¡Scythe Society, más como Scythe Pathetic!",
-      "¡Hell debería entrenar mejor a sus seguidores!",
-      "¡Qué decepcionante resistencia!",
-      "¡Ni siquiera saben apuntar!",
-      "¡Mi abuela disparaba mejor!",
+      "¡Hell debería entrenar mejor a sus lacayos!",
+      "¡Qué decepcionante resistencia ofrecen!",
+      "¡Ni siquiera saben apuntar correctamente!",
+      "¡Mi abuela muerta disparaba mejor!",
       "¡Scythe Society = Scythe Sorry!",
-      "¡Hell te abandonará como todos!",
-      "¡Toda la culpa es de Red!",
+      "¡Hell te abandonará como a todos!",
+      "¡Toda la culpa es de Red por ser tan débil!",
       "¡Eso es demasiado heterosexual de tu parte!",
-      "¡Sus balas son como cosquillas!",
-      "¡Patéticos mortales!",
-      "¡Esto es todo lo que tienen?!",
+      "¡Sus balas son como cosquillas de bebé!",
+      "¡Patéticos mortales sin esperanza!",
+      "¡Esto es todo lo que tienen?! ¡Ja!",
       "¡Hell eligió mal a sus campeones!",
-      "¡Ni sus ancestros los salvarán!",
+      "¡Ni sus ancestros podrán salvarlos!",
       "¡Scythe Society, más como Cry Society!",
-      "¡Deberían rendirse ahora!",
+      "¡Deberían rendirse ahora y suplicar!",
+      "¡Soy la oscuridad que devora la luz!",
+      "¡Sus almas me pertenecen ahora!",
+      "¡El terror apenas ha comenzado!",
+      "¡Pronto conocerán el verdadero miedo!",
+      "¡Su sangre manchará estas tierras!",
+      "¡La muerte será su único escape!",
+      "¡Hell no podrá protegerlos por siempre!",
+      "¡Soy el eco de sus peores pesadillas!",
     ],
     victoria_boss: [
-      "¡Hell, aquí voy por ti!",
-      "¡Scythe Society ha caído!",
-      "¡Vuelvan pronto... si pueden!",
-      "¡Digan adiós a su preciada Hell!",
-      "¡La oscuridad prevalece!",
+      "¡Hell, aquí voy por ti, mi amor perdido!",
+      "¡Scythe Society ha caído en las tinieblas!",
+      "¡Vuelvan pronto... si es que pueden regenerarse!",
+      "¡Digan adiós a su preciada Hell para siempre!",
+      "¡La oscuridad prevalece sobre la luz!",
+      "¡Sus almas ahora me pertenecen!",
+      "¡El reino de Hell será mío!",
     ],
     derrota_boss: [
-      "¡Esto no ha terminado!",
-      "¡Volveré más fuerte!",
-      "¡Hell... me las pagará!",
-      "¡No me olvidaré de esto!",
-      "¡Mi venganza será eterna!",
+      "¡Esto no ha terminado, volveré!",
+      "¡Volveré más fuerte desde las profundidades!",
+      "¡Hell... me las pagará con creces!",
+      "¡No me olvidaré de esto jamás!",
+      "¡Mi venganza será eterna y sombría!",
+      "¡Las sombras me protegerán hasta mi regreso!",
+      "¡Pronto me regeneraré en el abismo!",
+      "¡Hell no ha visto lo último de mí!",
+      "¡Scythe Society... nos veremos de nuevo!",
+      "¡La oscuridad nunca puede ser derrotada!",
+      "¡Desde el inframundo planearé mi venganza!",
+      "¡Red será el primero en caer cuando regrese!",
     ],
   },
 
   /**
-   * 🔥 NUEVO: Dice un comentario aleatorio
+   * 🔥 DICE UN COMENTARIO ALEATORIO MÁS GRANDE Y SOMBRÍO
    */
   sayRandomComment(situation) {
     const currentTime = window.getGameTime();
 
-    if (currentTime - this.lastCommentTime < this.commentCooldown) return;
+    // Comentarios más frecuentes durante combate
+    const cooldown = situation === "combate" ? 180 : 300; // 3 segundos en combate, 5 segundos otros
+
+    if (currentTime - this.lastCommentTime < cooldown) return;
 
     const comments = this.bossComments[situation];
     if (!comments || comments.length === 0) return;
 
     const randomComment = comments[Math.floor(Math.random() * comments.length)];
-    UI.showScreenMessage(`👹: "${randomComment}"`, "#FF0000");
+
+    // 🔥 MOSTRAR COMENTARIO MÁS GRANDE Y SOMBRÍO
+    this.showBossComment(randomComment);
 
     this.lastCommentTime = currentTime;
     console.log(`👹 Boss dice: ${randomComment}`);
+  },
+
+  /**
+   * 🔥 NUEVO: Muestra comentario del boss con estilo épico y sombrío
+   */
+  showBossComment(comment) {
+    const commentElement = document.createElement("div");
+    commentElement.style.cssText = `
+    position: fixed;
+    top: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(139, 0, 0, 0.9) 100%);
+    color: #FF0000;
+    font-size: 18px;
+    font-weight: bold;
+    font-family: var(--gothic-font), cursive;
+    text-align: center;
+    padding: 15px 25px;
+    border-radius: 15px;
+    border: 3px solid #8B0000;
+    box-shadow: 
+      0 0 30px rgba(255, 0, 0, 0.8),
+      0 0 50px rgba(139, 0, 0, 0.6),
+      inset 0 0 20px rgba(0, 0, 0, 0.8);
+    text-shadow: 
+      -2px -2px 0 #000,
+      2px -2px 0 #000,
+      -2px 2px 0 #000,
+      2px 2px 0 #000,
+      0 0 10px #FF0000,
+      0 0 20px #FF0000,
+      0 0 30px #FF0000;
+    z-index: 2000;
+    max-width: 80vw;
+    word-wrap: break-word;
+    backdrop-filter: blur(5px);
+    animation: bossCommentAppear 0.5s ease-out;
+  `;
+
+    commentElement.innerHTML = `👹 "${comment}" 👹`;
+    document.body.appendChild(commentElement);
+
+    // Eliminar después de 4 segundos
+    setTimeout(() => {
+      if (commentElement.parentNode) {
+        commentElement.style.opacity = "0";
+        commentElement.style.transform = "translateX(-50%) translateY(-20px)";
+
+        setTimeout(() => {
+          if (commentElement.parentNode) {
+            document.body.removeChild(commentElement);
+          }
+        }, 500);
+      }
+    }, 4000);
   },
 
   // ======================================================
@@ -2900,5 +2983,29 @@ const BossManager = {
 
 // Hacer disponible globalmente
 window.BossManager = BossManager;
+
+// 🔥 SISTEMA MEJORADO: Boss habla al inicializar
+const originalInit = BossManager.init;
+BossManager.init = function () {
+  originalInit.call(this);
+
+  // Comentario de entrada después de 2 segundos
+  setTimeout(() => {
+    this.sayRandomComment("entrada");
+  }, 2000);
+
+  // Comentarios regulares cada 8-12 segundos durante el combate
+  const commentInterval = setInterval(() => {
+    if (!this.active) {
+      clearInterval(commentInterval);
+      return;
+    }
+
+    if (Math.random() < 0.7) {
+      // 70% probabilidad cada intervalo
+      this.sayRandomComment("combate");
+    }
+  }, 8000 + Math.random() * 4000); // Entre 8-12 segundos
+};
 
 console.log("👹 boss.js cargado - Sistema del boss listo");
