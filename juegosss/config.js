@@ -1,6 +1,6 @@
 /**
  * Hell Shooter - Game Configuration
- * Configuración central del juego balanceada
+ * Configuración central del juego balanceada - LÍMITE DE VIDAS CORREGIDO
  */
 
 const GameConfig = {
@@ -9,7 +9,7 @@ const GameConfig = {
   // ======================================================
 
   MAX_LEVELS: 10,
-  MAX_LIVES: 14, // 🔥 LÍMITE DE VIDAS
+  MAX_LIVES: 9, // 🔥 CORREGIDO: Era 14, ahora 9
 
   // Detección de dispositivo
   isMobile: false,
@@ -58,7 +58,7 @@ const GameConfig = {
 
   PLAYER_CONFIG: {
     initialLives: 7,
-    maxLives: 14, // 🔥 LÍMITE MÁXIMO
+    maxLives: 9, // 🔥 CORREGIDO: Era 14, ahora 9
     invulnerabilityFrames: 120, // 2 segundos a 60fps
 
     // Sistema de disparo mejorado
@@ -319,4 +319,6 @@ const GameConfig = {
 // Hacer disponible globalmente
 window.GameConfig = GameConfig;
 
-console.log("⚙️ config.js cargado - Configuración del juego lista");
+console.log(
+  "⚙️ config.js cargado - Configuración del juego lista con límite de 9 vidas"
+);

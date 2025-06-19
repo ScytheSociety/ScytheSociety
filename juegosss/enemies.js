@@ -314,7 +314,7 @@ const EnemyManager = {
       const enemy = this.enemies[i];
 
       // 🔥 MOVIMIENTO UNIFICADO - MISMA VELOCIDAD PARA MÓVILES Y DESKTOP
-      const speedMultiplier = 1.0; // SIN PENALIZACIÓN MÓVIL
+      const speedMultiplier = 1.0; // 🔥 VELOCIDAD COMPLETAMENTE IDÉNTICA PARA TODOS
       enemy.x +=
         enemy.velocityX * enemy.speedFactor * slowFactor * speedMultiplier;
       enemy.y +=

@@ -2730,16 +2730,34 @@ const BossManager = {
 
       console.log(`🎮 Tecla presionada: "${e.key}" (código: ${e.code})`);
 
-      // Detectar tanto las teclas de arriba como las del numpad
-      if (e.key === "1" || e.code === "Digit1" || e.code === "Numpad1") {
+      // 🔥 DETECCIÓN MEJORADA - TODAS LAS VARIANTES
+      if (
+        e.key === "1" ||
+        e.code === "Digit1" ||
+        e.code === "Numpad1" ||
+        e.keyCode === 49
+      ) {
         console.log("🎮 Detectado: Piedra (1)");
         this.playerChooseYanKenPo(0);
-      } else if (e.key === "2" || e.code === "Digit2" || e.code === "Numpad2") {
+        e.preventDefault();
+      } else if (
+        e.key === "2" ||
+        e.code === "Digit2" ||
+        e.code === "Numpad2" ||
+        e.keyCode === 50
+      ) {
         console.log("🎮 Detectado: Papel (2)");
         this.playerChooseYanKenPo(1);
-      } else if (e.key === "3" || e.code === "Digit3" || e.code === "Numpad3") {
+        e.preventDefault();
+      } else if (
+        e.key === "3" ||
+        e.code === "Digit3" ||
+        e.code === "Numpad3" ||
+        e.keyCode === 51
+      ) {
         console.log("🎮 Detectado: Tijera (3)");
         this.playerChooseYanKenPo(2);
+        e.preventDefault();
       }
     };
 
@@ -2791,9 +2809,11 @@ const BossManager = {
       this.yanKenPoKeyListener = null;
     }
 
-    // Limpiar botones
+    // 🔥 NUEVO: Limpiar botones al cambiar de pantalla
     const container = document.getElementById("yankenpo-container");
-    if (container) container.remove();
+    if (container && container.parentNode) {
+      container.parentNode.removeChild(container);
+    }
 
     this.yanKenPoPhase = false;
   },

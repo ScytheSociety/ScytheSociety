@@ -77,32 +77,32 @@ function detectDevicePerformance() {
 function adjustGameConfig() {
   const performance = detectDevicePerformance();
 
-  // 🔥 CONFIGURACIONES EQUILIBRADAS - NO PENALIZAR MÓVILES
+  // 🔥 CONFIGURACIONES BALANCEADAS - MENOS RESTRICCIONES MÓVILES
   const configs = {
     low: {
-      maxEnemies: 35, // AUMENTADO de 15 a 35
-      maxBullets: 60, // AUMENTADO de 30 a 60
-      maxParticles: 25, // AUMENTADO de 10 a 25
-      shadowsEnabled: false,
-      glowEffects: true, // HABILITADO
-      animationQuality: "medium", // MEJORADO de low a medium
-      targetFPS: 45, // AUMENTADO de 30 a 45
-      updateInterval: 22, // MEJORADO de 33 a 22
-    },
-    medium: {
-      maxEnemies: 40, // AUMENTADO de 25 a 40
-      maxBullets: 70, // AUMENTADO de 50 a 70
-      maxParticles: 35, // AUMENTADO de 20 a 35
-      shadowsEnabled: true, // HABILITADO
+      maxEnemies: 45, // AUMENTADO de 35 a 45
+      maxBullets: 80, // AUMENTADO de 60 a 80
+      maxParticles: 40, // AUMENTADO de 25 a 40
+      shadowsEnabled: true, // HABILITADO (era false)
       glowEffects: true,
       animationQuality: "high", // MEJORADO de medium a high
       targetFPS: 55, // AUMENTADO de 45 a 55
       updateInterval: 18, // MEJORADO de 22 a 18
     },
+    medium: {
+      maxEnemies: 50,
+      maxBullets: 90,
+      maxParticles: 50,
+      shadowsEnabled: true,
+      glowEffects: true,
+      animationQuality: "high",
+      targetFPS: 58,
+      updateInterval: 17,
+    },
     high: {
-      maxEnemies: 50, // AUMENTADO de 40 a 50
-      maxBullets: 100, // AUMENTADO de 80 a 100
-      maxParticles: 60, // AUMENTADO de 50 a 60
+      maxEnemies: 55,
+      maxBullets: 110,
+      maxParticles: 70,
       shadowsEnabled: true,
       glowEffects: true,
       animationQuality: "high",
@@ -112,13 +112,11 @@ function adjustGameConfig() {
   };
 
   const config = configs[performance];
-
-  // Aplicar configuraciones
   GameConfig.MOBILE_PERFORMANCE = config;
   GameConfig.isMobile = isMobileDevice;
   GameConfig.performanceLevel = performance;
 
-  console.log(`⚙️ Configuración OPTIMIZADA aplicada:`, config);
+  console.log(`⚙️ Configuración MEJORADA aplicada:`, config);
   return config;
 }
 
@@ -163,34 +161,27 @@ function setupCanvas() {
   }
 
   ctx = canvas.getContext("2d", {
-    alpha: false, // Sin canal alpha para mejor rendimiento
-    antialias: false, // Sin antialiasing en móviles
-    powerPreference: isMobileDevice ? "low-power" : "high-performance",
+    alpha: false,
+    antialias: true, // 🔥 CAMBIADO: habilitado para mejor calidad
+    powerPreference: isMobileDevice ? "high-performance" : "high-performance", // 🔥 SIEMPRE high-performance
   });
 
-  // Configurar dimensiones
+  // 🔥 RESOLUCIÓN COMPLETA PARA MÓVILES - NO REDUCIR
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   canvas.style.width = "100vw";
   canvas.style.height = "100vh";
 
-  // Optimizaciones específicas para móviles
+  // 🔥 CALIDAD MÁXIMA PARA MÓVILES
   if (isMobileDevice) {
-    // Reducir resolución en dispositivos de gama baja
-    if (devicePerformanceLevel === "low") {
-      const scale = 0.75;
-      canvas.width = window.innerWidth * scale;
-      canvas.height = window.innerHeight * scale;
-      ctx.scale(1 / scale, 1 / scale);
-    }
-
-    // Configuraciones de canvas para móviles
-    ctx.imageSmoothingEnabled = false;
-    canvas.style.imageRendering = "pixelated";
+    ctx.imageSmoothingEnabled = true; // 🔥 CAMBIADO: habilitado
+    canvas.style.imageRendering = "auto"; // 🔥 CAMBIADO: auto en lugar de pixelated
   }
 
   GameConfig.updateSizes(canvas);
-  console.log(`📱 Canvas móvil configurado: ${canvas.width}x${canvas.height}`);
+  console.log(
+    `📱 Canvas ALTA CALIDAD configurado: ${canvas.width}x${canvas.height}`
+  );
 }
 
 /**

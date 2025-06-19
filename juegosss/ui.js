@@ -359,7 +359,7 @@ const UI = {
           ">
             <h3 style="color: #FF0000; margin: 0 0 8px 0; font-size: 14px;">💀 SUPERVIVENCIA</h3>
             <div style="line-height: 1.4; color: #FFFFFF;">
-              <div>❤️ <strong>Vidas:</strong> 7 inicial (máx. 14)</div>
+              <div>❤️ <strong>Vidas:</strong> 7 inicial (máx. 9)</div>
               <div>🎮 <strong>Niveles:</strong> 10 épicos</div>
               <div>👹 <strong>Boss Final:</strong> Nivel 11</div>
               <div>⚡ <strong>Poder:</strong> Cada 15 enemigos</div>

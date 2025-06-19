@@ -462,16 +462,21 @@ const Player = {
    * Recupera una vida
    */
   addLife() {
+    // 🔥 LÍMITE MÁXIMO 9 VIDAS
+    if (this.lives >= 9) {
+      console.log("❤️ Máximo de vidas alcanzado (9)");
+      return false;
+    }
+
     this.lives++;
     AudioManager.playSound("heart");
 
     const lifeMessage =
-      this.lives > 10
+      this.lives > 7
         ? `¡Vida recuperada! ❤️ (${this.lives} vidas)`
         : "¡Vida recuperada! ❤️";
 
     UI.showScreenMessage(lifeMessage, "#FF0000");
-
     console.log(`❤️ Vida recuperada. Total: ${this.lives}`);
     return true;
   },
