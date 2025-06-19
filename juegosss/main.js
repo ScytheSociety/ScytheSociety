@@ -792,20 +792,21 @@ function victory() {
   console.log(`🏆 Victoria ÉPICA! - Combo máximo: ${maxCombo}`);
 }
 
-/**
- * Reiniciar juego - CORREGIDO
- */
+// 🔥 MODIFICAR restartGame para incluir limpieza
 function restartGame() {
   console.log("🔄 Reiniciando juego...");
 
-  // 🔥 OCULTAR GAME OVER INMEDIATAMENTE
+  // 🔥 LIMPIAR ELEMENTOS DEL BOSS PRIMERO
+  cleanupBossElements();
+
+  // OCULTAR GAME OVER INMEDIATAMENTE
   const gameOverScreen = document.getElementById("game-over");
   if (gameOverScreen) {
     gameOverScreen.style.display = "none";
-    gameOverScreen.innerHTML = ""; // Limpiar contenido
+    gameOverScreen.innerHTML = "";
   }
 
-  // 🔥 FORZAR DETENCIÓN COMPLETA
+  // FORZAR DETENCIÓN COMPLETA
   gameEnded = true;
 
   // Resetear estado
@@ -826,9 +827,14 @@ function restartGame() {
 }
 
 /**
- * Resetea estado del juego - CORREGIDO PARA COMBOS
+ * Resetea estado del juego - CORREGIDO PARA COMBOS Y BOSS
  */
 function resetGameState() {
+  console.log("🔄 Reseteando estado del juego...");
+
+  // 🔥 LIMPIAR ELEMENTOS DEL BOSS PRIMERO
+  cleanupBossElements();
+
   // Detener intervalos
   if (gameInterval) {
     clearInterval(gameInterval);
@@ -851,12 +857,17 @@ function resetGameState() {
   slowMotionFactor = 1.0;
   frenzyModeActive = false;
 
-  // Resetear módulos
+  // Resetear módulos EN EL ORDEN CORRECTO
   Player.reset();
   BulletManager.reset();
   EnemyManager.reset();
   PowerUpManager.reset();
-  BossManager.reset();
+
+  // 🔥 RESET COMPLETO DEL BOSS
+  if (window.BossManager) {
+    BossManager.reset();
+  }
+
   UI.reset();
 
   // 🔥 CORREGIDO: Resetear Y recrear combo display
@@ -869,7 +880,7 @@ function resetGameState() {
     }, 200);
   }
 
-  console.log("🔄 Estado del juego ÉPICO reseteado");
+  console.log("🔄 Estado del juego COMPLETAMENTE reseteado");
 }
 
 /**
@@ -886,13 +897,67 @@ function cleanupGame() {
 }
 
 /**
- * Volver al menú principal - CORREGIDO PARA COMBOS
+ * 🔥 NUEVO: Limpiar TODOS los elementos del boss al cambiar de pantalla
  */
+function cleanupBossElements() {
+  console.log("🧹 Limpiando elementos del boss...");
+
+  // 🔥 RESET FORZADO DEL BOSS
+  if (window.BossManager && window.BossManager.forceReset) {
+    window.BossManager.forceReset();
+  }
+
+  // Limpiar botones Yan Ken Po
+  const yankenpoContainer = document.getElementById("yankenpo-container");
+  if (yankenpoContainer && yankenpoContainer.parentNode) {
+    yankenpoContainer.parentNode.removeChild(yankenpoContainer);
+    console.log("✅ Botones Yan Ken Po eliminados");
+  }
+
+  // Limpiar mensajes del boss
+  const bossMessage = document.getElementById("boss-speech-bubble");
+  if (bossMessage && bossMessage.parentNode) {
+    bossMessage.parentNode.removeChild(bossMessage);
+    console.log("✅ Mensaje del boss eliminado");
+  }
+
+  // Limpiar listeners globales del boss
+  if (window.BossManager && window.BossManager.yanKenPoKeyListener) {
+    document.removeEventListener(
+      "keydown",
+      window.BossManager.yanKenPoKeyListener,
+      true
+    );
+    document.removeEventListener(
+      "keypress",
+      window.BossManager.yanKenPoKeyListener,
+      true
+    );
+    window.removeEventListener(
+      "keydown",
+      window.BossManager.yanKenPoKeyListener,
+      true
+    );
+    window.BossManager.yanKenPoKeyListener = null;
+    console.log("✅ Listeners del boss eliminados");
+  }
+
+  // 🔥 ASEGURAR QUE LA VELOCIDAD DEL JUGADOR SEA NORMAL
+  if (window.Player) {
+    window.Player.moveSpeed = 1.0;
+    console.log("✅ Velocidad del jugador restaurada");
+  }
+}
+
+// 🔥 MODIFICAR la función backToMenu para incluir limpieza
 function backToMenu() {
   console.log("🏠 Volviendo al menú principal...");
 
   // FORZAR DETENCIÓN COMPLETA DEL JUEGO
   gameEnded = true;
+
+  // 🔥 LIMPIAR ELEMENTOS DEL BOSS PRIMERO
+  cleanupBossElements();
 
   // OCULTAR Y LIMPIAR GAME OVER INMEDIATAMENTE
   const gameOverScreen = document.getElementById("game-over");
@@ -901,7 +966,7 @@ function backToMenu() {
     gameOverScreen.innerHTML = "";
   }
 
-  // 🔥 LIMPIAR COMBO DISPLAY ANTES DE RESETEAR
+  // LIMPIAR COMBO DISPLAY ANTES DE RESETEAR
   if (window.ComboSystem) {
     ComboSystem.cleanup();
   }
@@ -1100,9 +1165,13 @@ async function saveAndViewRanking() {
 /**
  * Muestra el ranking desde Google Sheets - RESPONSIVE Y MEJORADO
  */
+// 🔥 MODIFICAR viewRanking para incluir limpieza
 async function viewRanking() {
   try {
-    // 🔥 NUEVO: Eliminar ticker inmediatamente
+    // 🔥 LIMPIAR ELEMENTOS DEL BOSS PRIMERO
+    cleanupBossElements();
+
+    // NUEVO: Eliminar ticker inmediatamente
     UI.removeMusicTicker();
 
     document.getElementById("main-menu").style.display = "none";
@@ -1486,6 +1555,59 @@ function incrementTotalEnemiesKilled() {
   totalEnemiesKilled++;
   console.log(`🎯 Total enemigos eliminados: ${totalEnemiesKilled}`);
 }
+
+/**
+ * 🔥 NUEVO: Listeners globales para limpiar elementos del boss
+ */
+function setupGlobalCleanupListeners() {
+  // Limpiar cuando se cambia de pestaña
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      cleanupBossElements();
+    }
+  });
+
+  // Limpiar cuando se pierde el foco
+  window.addEventListener("blur", () => {
+    cleanupBossElements();
+  });
+
+  // Limpiar antes de cerrar/recargar la página
+  window.addEventListener("beforeunload", () => {
+    cleanupBossElements();
+  });
+
+  // Limpiar en errores
+  window.addEventListener("error", () => {
+    cleanupBossElements();
+  });
+
+  console.log("🔧 Listeners globales de limpieza configurados");
+}
+
+// Llamar después de la inicialización
+window.addEventListener("load", () => {
+  setupGlobalCleanupListeners();
+});
+
+// 🔥 SOBRESCRIBIR cualquier listener de teclado existente que pueda interferir
+document.addEventListener(
+  "keydown",
+  (e) => {
+    // Solo permitir teclas 1,2,3 si realmente estamos en Yan Ken Po
+    if (e.key === "1" || e.key === "2" || e.key === "3") {
+      if (
+        !window.BossManager ||
+        !window.BossManager.yanKenPoPhase ||
+        !window.BossManager.active
+      ) {
+        // Si no estamos en Yan Ken Po, ignorar completamente
+        return;
+      }
+    }
+  },
+  true
+); // Captura en fase de captura
 
 // ======================================================
 // FUNCIONES GLOBALES EXPUESTAS

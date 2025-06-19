@@ -1659,3 +1659,35 @@ body:has(#ranking-container:not([style*="display: none"])) .menu-only-footer {
     max-width: 90vw !important;
   }
 }
+
+/* Agregar al final de juegosss.css */
+
+/* =============================================== */
+/* ANIMACIÓN PARA MENSAJES DEL BOSS */
+/* =============================================== */
+
+@keyframes bossMessageFloat {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+/* Limpiar cualquier fondo de nivel que pueda interferir */
+#background-overlay {
+  z-index: -2 !important;
+}
+
+/* Asegurar que los mensajes del boss estén encima */
+#boss-speech-bubble {
+  z-index: 1999 !important;
+}
+
+/* Asegurar que los botones Yan Ken Po estén encima de todo */
+#yankenpo-container {
+  z-index: 2000 !important;
+}

@@ -547,64 +547,67 @@ const BossManager = {
   },
 
   /**
-   * 🔥 NUEVO: Movimiento inteligente del boss
+   * 🔥 CORREGIDO: Movimiento constante del boss
    */
   updateIntelligentMovement() {
-    // 🔥 SIEMPRE APLICAR MOVIMIENTO (excepto cuando está completamente inmóvil)
-
-    // Solo reducir movimiento durante fases específicas, no eliminarlo
+    // 🔥 MOVIMIENTO CONSTANTE - SIEMPRE ACTIVO
     let movementFactor = 1.0;
+
+    // Solo reducir durante fases específicas, nunca eliminar completamente
     if (
       this.phaseActive &&
       (this.currentPhase === "MINES" || this.currentPhase === "BULLETS")
     ) {
-      movementFactor = 0.3; // Movimiento reducido pero no eliminado
+      movementFactor = 0.4; // Reducido pero no eliminado
     }
 
-    // 🔥 CAMBIAR PATRÓN SOLO CUANDO NO HAY FASE ACTIVA
-    if (!this.phaseActive) {
-      if (window.getGameTime() - this.lastPatternChange > 300) {
-        this.changeMovementPattern();
-      }
+    // Durante Yan Ken Po: DETENERSE COMPLETAMENTE
+    if (this.yanKenPoPhase) {
+      this.boss.velocityX = 0;
+      this.boss.velocityY = 0;
+      // Mantener en el centro
+      const canvas = window.getCanvas();
+      this.boss.x = canvas.width / 2 - this.boss.width / 2;
+      this.boss.y = canvas.height / 2 - this.boss.height / 2;
+      return;
+    }
 
-      // Ejecutar patrón actual
-      switch (this.boss.movementPattern) {
-        case "hunting":
-          this.huntPlayer();
-          break;
-        case "circling":
-          this.circleAroundPlayer();
-          break;
-        case "teleporting":
-          this.teleportMovement();
-          break;
-      }
+    // Durante hilo rojo: seguir la ruta
+    if (this.redLinePhase && this.redLineMoving) {
+      // El movimiento se maneja en updateRedLine()
+      return;
+    }
+
+    // 🔥 MOVIMIENTO NORMAL - SIEMPRE ACTIVO
+    if (!this.phaseActive || this.currentPhase === "SUMMONING") {
+      this.huntPlayer();
     } else {
-      // 🔥 DURANTE FASES: Solo perseguir lentamente
       this.huntPlayerSlow();
     }
 
-    // 🔥 APLICAR MOVIMIENTO CON FACTOR
+    // 🔥 APLICAR MOVIMIENTO SIEMPRE
     this.boss.x += this.boss.velocityX * movementFactor;
     this.boss.y += this.boss.velocityY * movementFactor;
 
-    // Mantener en pantalla con rebote suave
+    // 🔥 REBOTES EN PAREDES - RÁPIDOS
     const canvas = window.getCanvas();
+    const bounceSpeed = 0.9; // Rebote rápido
+
     if (this.boss.x < 0) {
       this.boss.x = 0;
-      this.boss.velocityX = Math.abs(this.boss.velocityX) * 0.8;
+      this.boss.velocityX = Math.abs(this.boss.velocityX) * bounceSpeed;
     }
     if (this.boss.x + this.boss.width > canvas.width) {
       this.boss.x = canvas.width - this.boss.width;
-      this.boss.velocityX = -Math.abs(this.boss.velocityX) * 0.8;
+      this.boss.velocityX = -Math.abs(this.boss.velocityX) * bounceSpeed;
     }
     if (this.boss.y < 0) {
       this.boss.y = 0;
-      this.boss.velocityY = Math.abs(this.boss.velocityY) * 0.8;
+      this.boss.velocityY = Math.abs(this.boss.velocityY) * bounceSpeed;
     }
     if (this.boss.y + this.boss.height > canvas.height) {
       this.boss.y = canvas.height - this.boss.height;
-      this.boss.velocityY = -Math.abs(this.boss.velocityY) * 0.8;
+      this.boss.velocityY = -Math.abs(this.boss.velocityY) * bounceSpeed;
     }
 
     // Efectos visuales
@@ -1956,38 +1959,29 @@ const BossManager = {
   },
 
   /**
-   * Resetea el sistema del boss - LIMPIO
+   * 🔥 CORREGIDO: Actualizar método reset para incluir limpieza completa
    */
   reset() {
-    this.boss = null;
-    this.active = false;
+    // Usar el reset forzado
+    this.forceReset();
 
-    // Sistema de vida
+    // Reset de variables base
+    this.boss = null;
     this.currentHealth = 200;
     this.maxHealth = 200;
-
-    // Sistema de fases inteligente
     this.currentPhase = "SUMMONING";
     this.phaseTimer = 0;
-    this.phaseActive = false;
-    this.phaseCooldown = 0;
-
-    // Sistemas de ataque
     this.bulletPatterns = [];
     this.patternType = "none";
-
-    // Estado básico
     this.isImmune = false;
     this.immunityTimer = 0;
     this.mines = [];
     this.mineTimer = 0;
     this.miningPhase = false;
-
-    // Comentarios
     this.lastCommentTime = 0;
     this.commentCooldown = 300;
 
-    console.log("👹 Sistema del boss inteligente reseteado");
+    console.log("👹 Sistema del boss COMPLETAMENTE reseteado");
   },
 
   /**
@@ -2059,13 +2053,11 @@ const BossManager = {
   },
 
   /**
-   * 🔥 DICE UN COMENTARIO ALEATORIO MÁS GRANDE Y SOMBRÍO
+   * 🔥 CORREGIDO: Sistema de comentarios que usa el nuevo método
    */
   sayRandomComment(situation) {
     const currentTime = window.getGameTime();
-
-    // Comentarios más frecuentes durante combate
-    const cooldown = situation === "combate" ? 180 : 300; // 3 segundos en combate, 5 segundos otros
+    const cooldown = situation === "combate" ? 180 : 300;
 
     if (currentTime - this.lastCommentTime < cooldown) return;
 
@@ -2074,8 +2066,8 @@ const BossManager = {
 
     const randomComment = comments[Math.floor(Math.random() * comments.length)];
 
-    // 🔥 MOSTRAR COMENTARIO MÁS GRANDE Y SOMBRÍO
-    this.showBossComment(randomComment);
+    // 🔥 USAR EL NUEVO MÉTODO DE MENSAJE ENCIMA DEL BOSS
+    this.showBossMessage(randomComment);
 
     this.lastCommentTime = currentTime;
     console.log(`👹 Boss dice: ${randomComment}`);
@@ -2142,29 +2134,26 @@ const BossManager = {
   // ======================================================
 
   /**
-   * Inicia la fase del hilo rojo con ciclo continuo
+   * 🔥 CORREGIDO: Ralentizar SÚPER LENTO al jugador en fase hilo rojo
    */
   startRedLinePhase() {
     console.log("🔴 === INICIANDO FASE DEL HILO ROJO ===");
 
     this.redLinePhase = true;
     this.isImmune = true;
-    this.immunityTimer = 9999; // Inmune durante toda la fase
+    this.immunityTimer = 9999;
 
     // Detener movimiento del boss
     this.boss.velocityX = 0;
     this.boss.velocityY = 0;
 
-    // 🔥 Ralentizar MUCHÍSIMO al jugador
-    Player.moveSpeed = 0.1; // 10 veces más lento
-    console.log(
-      "🐌 Jugador ralentizado SÚPER lento durante fase del hilo rojo"
-    );
+    // 🔥 RALENTIZAR SÚPER MEGA LENTO AL JUGADOR
+    Player.moveSpeed = 0.05; // Era 0.1, ahora 0.05 (SÚPER LENTO)
+    console.log("🐌 Jugador SÚPER MEGA LENTO durante fase del hilo rojo");
 
-    // Anunciar fase
     UI.showScreenMessage("🔴 FASE DEL HILO ROJO 🔴", "#FF0000");
+    this.showBossMessage("¡Sigue mi rastro mortal!");
 
-    // Iniciar el primer ciclo
     setTimeout(() => {
       this.startRedLineCycle();
     }, 1000);
@@ -2307,7 +2296,7 @@ const BossManager = {
   },
 
   /**
-   * Termina completamente la fase del hilo rojo
+   * 🔥 CORREGIDO: Terminar fase hilo rojo y restaurar velocidad
    */
   endRedLinePhase() {
     console.log("🔴 Terminando COMPLETAMENTE la fase del hilo rojo");
@@ -2318,7 +2307,7 @@ const BossManager = {
     this.redLinePath = [];
     this.redLineIndex = 0;
 
-    // 🔥 RESTAURAR velocidad normal del jugador
+    // 🔥 RESTAURAR velocidad normal del jugador SIEMPRE
     Player.moveSpeed = 1.0;
     console.log("🏃 Velocidad del jugador restaurada a normal");
 
@@ -2328,23 +2317,31 @@ const BossManager = {
   },
 
   /**
-   * Maneja la derrota de Yan Ken Po del jugador (volver a hilo rojo)
+   * 🔥 CORREGIDO: Manejo de pérdida en Yan Ken Po
    */
   handleYanKenPoLoss() {
-    UI.showScreenMessage("¡PERDISTE! Nueva fase de hilo rojo", "#FF0000");
-
-    console.log("🎮 Yan Ken Po perdido - volviendo a fase de hilo rojo");
+    UI.showScreenMessage("¡PERDISTE! Nueva fase aleatoria", "#FF0000");
+    console.log("🎮 Yan Ken Po perdido - iniciando fase aleatoria");
 
     // Limpiar sistema Yan Ken Po
     this.endYanKenPoPhase();
-
-    // Resetear para nueva fase de hilo rojo
     this.yanKenPoPhase = false;
     this.yanKenPoRound = 0;
 
-    // Iniciar nueva fase de hilo rojo después de un delay
+    // 🔥 SELECCIONAR FASE ALEATORIA
+    const phases = ["SUMMONING", "MINES", "BULLETS", "REDLINE"];
+    const randomPhase = phases[Math.floor(Math.random() * phases.length)];
+
+    console.log(`🎲 Fase aleatoria seleccionada: ${randomPhase}`);
+
     setTimeout(() => {
-      this.startRedLinePhase(); // Reiniciar fase completa de hilo rojo
+      if (randomPhase === "REDLINE") {
+        this.startRedLinePhase();
+      } else {
+        this.changeIntelligentPhase(randomPhase);
+        this.phaseActive = true;
+        this.phaseTimer = 0;
+      }
     }, 2000);
   },
 
@@ -2669,47 +2666,55 @@ const BossManager = {
     }, 1000);
   },
 
+  /**
+   * 🔥 CORREGIDO: Crear botones Yan Ken Po encima del boss - CUADRADOS
+   */
   createYanKenPoButtons() {
     const canvas = window.getCanvas();
+
+    // 🔥 POSICIÓN ENCIMA DEL BOSS
+    const bossX = this.boss.x + this.boss.width / 2;
+    const bossY = this.boss.y - 120; // Encima del boss
 
     // Crear contenedor de botones
     const container = document.createElement("div");
     container.id = "yankenpo-container";
     container.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        display: flex;
-        gap: 20px;
-        z-index: 1000;
-    `;
+    position: fixed;
+    top: ${bossY}px;
+    left: ${bossX - 150}px;
+    display: flex;
+    gap: 15px;
+    z-index: 2000;
+    transform: translateX(-50%);
+  `;
 
-    // Crear 3 botones con números
+    // 🔥 BOTONES CUADRADOS
     this.yanKenPoChoices.forEach((choice, index) => {
       const button = document.createElement("button");
       button.innerHTML = `
-            <div style="font-size: 40px;">${choice}</div>
-            <div style="font-size: 16px; margin-top: 5px;">${index + 1}</div>
-        `;
+      <div style="font-size: 30px; margin-bottom: 5px;">${choice}</div>
+      <div style="font-size: 14px; font-weight: bold;">${index + 1}</div>
+    `;
       button.style.cssText = `
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            border: 3px solid #FFD700;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        `;
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      border: 3px solid #FFD700;
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+    `;
 
       button.onmouseover = () => {
-        button.style.transform = "scale(1.2)";
-        button.style.boxShadow = "0 0 20px #FFD700";
+        button.style.transform = "scale(1.1)";
+        button.style.boxShadow = "0 0 15px #FFD700";
       };
 
       button.onmouseout = () => {
@@ -2718,104 +2723,250 @@ const BossManager = {
       };
 
       button.onclick = () => this.playerChooseYanKenPo(index);
-
       container.appendChild(button);
     });
 
     document.body.appendChild(container);
 
-    // 🔥 LISTENER DE TECLADO CORREGIDO - DETECTA AMBOS TIPOS DE TECLAS
+    // 🔥 LISTENER DE TECLADO MEJORADO Y CORREGIDO
     this.yanKenPoKeyListener = (e) => {
-      if (this.playerChoice !== null) return;
+      if (this.playerChoice !== null || !this.yanKenPoPhase) return;
 
-      console.log(`🎮 Tecla presionada: "${e.key}" (código: ${e.code})`);
+      console.log(
+        `🎮 Tecla detectada: "${e.key}" | Código: "${e.code}" | KeyCode: ${e.keyCode}`
+      );
 
-      // 🔥 DETECCIÓN MEJORADA - TODAS LAS VARIANTES
+      let choiceIndex = -1;
+
+      // 🔥 DETECCIÓN COMPLETA DE TECLAS 1, 2, 3
       if (
         e.key === "1" ||
         e.code === "Digit1" ||
         e.code === "Numpad1" ||
-        e.keyCode === 49
+        e.keyCode === 49 ||
+        e.which === 49
       ) {
-        console.log("🎮 Detectado: Piedra (1)");
-        this.playerChooseYanKenPo(0);
-        e.preventDefault();
+        choiceIndex = 0; // Piedra
+        console.log("🎮 PIEDRA seleccionada (1)");
       } else if (
         e.key === "2" ||
         e.code === "Digit2" ||
         e.code === "Numpad2" ||
-        e.keyCode === 50
+        e.keyCode === 50 ||
+        e.which === 50
       ) {
-        console.log("🎮 Detectado: Papel (2)");
-        this.playerChooseYanKenPo(1);
-        e.preventDefault();
+        choiceIndex = 1; // Papel
+        console.log("🎮 PAPEL seleccionado (2)");
       } else if (
         e.key === "3" ||
         e.code === "Digit3" ||
         e.code === "Numpad3" ||
-        e.keyCode === 51
+        e.keyCode === 51 ||
+        e.which === 51
       ) {
-        console.log("🎮 Detectado: Tijera (3)");
-        this.playerChooseYanKenPo(2);
+        choiceIndex = 2; // Tijera
+        console.log("🎮 TIJERA seleccionada (3)");
+      }
+
+      if (choiceIndex !== -1) {
         e.preventDefault();
+        e.stopPropagation();
+        this.playerChooseYanKenPo(choiceIndex);
       }
     };
 
-    window.addEventListener("keydown", this.yanKenPoKeyListener);
+    // 🔥 AGREGAR LISTENER EN MÚLTIPLES EVENTOS
+    document.addEventListener("keydown", this.yanKenPoKeyListener, true);
+    document.addEventListener("keypress", this.yanKenPoKeyListener, true);
+    window.addEventListener("keydown", this.yanKenPoKeyListener, true);
 
-    // Desactivar movimiento del jugador durante Yan Ken Po
+    // Desactivar controles del jugador durante Yan Ken Po
     this.originalPlayerControls = Player.setupControls;
-    Player.setupControls = () => {}; // Desactivar controles temporalmente
+    Player.setupControls = () => {};
 
-    // Mostrar ronda
     UI.showScreenMessage(
       `Ronda ${this.yanKenPoRound + 1}/3 - Presiona 1, 2 o 3`,
       "#FFFFFF"
     );
   },
 
+  /**
+   * 🔥 CORREGIDO: Validación mejorada para Yan Ken Po
+   */
   playerChooseYanKenPo(choiceIndex) {
-    if (this.playerChoice !== null) return; // Ya eligió
+    // 🔥 VALIDACIONES ESTRICTAS
+    if (!this.yanKenPoPhase) {
+      console.log("🚫 Yan Ken Po no está activo");
+      return;
+    }
+
+    if (!this.active) {
+      console.log("🚫 Boss no está activo");
+      return;
+    }
+
+    if (this.playerChoice !== null) {
+      console.log("🚫 Ya se eligió una opción");
+      return;
+    }
+
+    if (window.isGameEnded()) {
+      console.log("🚫 El juego ha terminado");
+      return;
+    }
 
     this.playerChoice = choiceIndex;
 
-    // Remover listener de teclado
+    // Remover TODOS los listeners inmediatamente
     if (this.yanKenPoKeyListener) {
-      window.removeEventListener("keydown", this.yanKenPoKeyListener);
+      document.removeEventListener("keydown", this.yanKenPoKeyListener, true);
+      document.removeEventListener("keypress", this.yanKenPoKeyListener, true);
+      window.removeEventListener("keydown", this.yanKenPoKeyListener, true);
       this.yanKenPoKeyListener = null;
     }
 
     // Boss elige aleatoriamente
     this.bossChoice = Math.floor(Math.random() * 3);
 
-    // Ocultar botones
+    // Ocultar botones inmediatamente
     const container = document.getElementById("yankenpo-container");
-    if (container) container.style.display = "none";
+    if (container) {
+      container.style.display = "none";
+    }
 
     // Mostrar elecciones
     this.showYanKenPoResult();
   },
 
+  /**
+   * 🔥 NUEVO: Reset completo del boss (llamar al cambiar pantallas)
+   */
+  forceReset() {
+    console.log("🔄 RESET FORZADO del boss");
+
+    // Detener TODAS las fases
+    this.yanKenPoPhase = false;
+    this.redLinePhase = false;
+    this.phaseActive = false;
+    this.active = false;
+
+    // Limpiar timers y estados
+    this.playerChoice = null;
+    this.bossChoice = null;
+    this.yanKenPoRound = 0;
+
+    // Limpiar listeners
+    if (this.yanKenPoKeyListener) {
+      document.removeEventListener("keydown", this.yanKenPoKeyListener, true);
+      document.removeEventListener("keypress", this.yanKenPoKeyListener, true);
+      window.removeEventListener("keydown", this.yanKenPoKeyListener, true);
+      this.yanKenPoKeyListener = null;
+    }
+
+    // Restaurar controles del jugador
+    if (this.originalPlayerControls) {
+      Player.setupControls = this.originalPlayerControls;
+    }
+
+    // Restaurar velocidad del jugador
+    Player.moveSpeed = 1.0;
+
+    console.log("✅ Boss completamente reseteado");
+  },
+
+  /**
+   * 🔥 CORREGIDO: Limpiar completamente el sistema Yan Ken Po
+   */
   endYanKenPoPhase() {
+    console.log("🧹 Limpiando sistema Yan Ken Po completamente");
+
     // Restaurar controles del jugador
     if (this.originalPlayerControls) {
       Player.setupControls = this.originalPlayerControls;
       Player.setupControls(window.getCanvas());
     }
 
-    // Limpiar listener si quedó activo
+    // 🔥 LIMPIAR TODOS LOS LISTENERS
     if (this.yanKenPoKeyListener) {
-      window.removeEventListener("keydown", this.yanKenPoKeyListener);
+      document.removeEventListener("keydown", this.yanKenPoKeyListener, true);
+      document.removeEventListener("keypress", this.yanKenPoKeyListener, true);
+      window.removeEventListener("keydown", this.yanKenPoKeyListener, true);
       this.yanKenPoKeyListener = null;
     }
 
-    // 🔥 NUEVO: Limpiar botones al cambiar de pantalla
+    // 🔥 LIMPIAR BOTONES COMPLETAMENTE
     const container = document.getElementById("yankenpo-container");
     if (container && container.parentNode) {
       container.parentNode.removeChild(container);
+      console.log("✅ Botones Yan Ken Po eliminados");
     }
 
+    // Resetear variables
     this.yanKenPoPhase = false;
+    this.playerChoice = null;
+    this.bossChoice = null;
+  },
+
+  /**
+   * 🔥 NUEVO: Mostrar mensaje del boss encima de él (estilo comic)
+   */
+  showBossMessage(message) {
+    // Limpiar mensaje anterior si existe
+    const existingMessage = document.getElementById("boss-speech-bubble");
+    if (existingMessage) {
+      existingMessage.remove();
+    }
+
+    const messageElement = document.createElement("div");
+    messageElement.id = "boss-speech-bubble";
+
+    // 🔥 POSICIÓN ENCIMA DEL BOSS
+    const bossX = this.boss.x + this.boss.width / 2;
+    const bossY = this.boss.y - 60; // Encima del boss
+
+    messageElement.style.cssText = `
+    position: fixed;
+    top: ${bossY}px;
+    left: ${bossX}px;
+    transform: translateX(-50%);
+    background: transparent;
+    border: none;
+    color: #FF0000;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: Arial, cursive;
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 12px;
+    max-width: ${this.boss.width}px;
+    word-wrap: break-word;
+    z-index: 1999;
+    text-shadow: 
+      -1px -1px 0 #000,
+      1px -1px 0 #000,
+      -1px 1px 0 #000,
+      1px 1px 0 #000,
+      0 0 5px #000,
+      0 0 10px #FF0000;
+    animation: bossMessageFloat 0.3s ease-out;
+    pointer-events: none;
+  `;
+
+    messageElement.textContent = message;
+    document.body.appendChild(messageElement);
+
+    // Eliminar después de 3 segundos
+    setTimeout(() => {
+      if (messageElement.parentNode) {
+        messageElement.style.opacity = "0";
+        messageElement.style.transform = "translateX(-50%) translateY(-10px)";
+        setTimeout(() => {
+          if (messageElement.parentNode) {
+            messageElement.parentNode.removeChild(messageElement);
+          }
+        }, 300);
+      }
+    }, 3000);
   },
 
   showYanKenPoResult() {

@@ -638,7 +638,7 @@ const UI = {
   },
 
   /**
-   * Muestra pantalla de game over/victoria con botones horizontales
+   * 🔥 CORREGIDO: Muestra pantalla de game over/victoria SOLO con combo máximo
    */
   showGameOver(isVictory, finalScore, finalLevel, maxCombo = 0) {
     const gameOverScreen = document.getElementById("game-over");
@@ -682,24 +682,28 @@ const UI = {
           ${isVictory ? "VICTORIA" : "GAME OVER"}
         </h1>
 
-        <!-- Información compacta -->
-        <div style="
-          color: #FFFFFF;
-          font-size: 1.1em;
-          font-family: var(--professional-font);
-          font-weight: bold;
-          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-          text-align: center;
-          line-height: 1.6;
-        ">
-          <div>📊 Puntuación: <span style="color: #FFD700;">${finalScore.toLocaleString()}</span></div>
-          <div>🎯 Nivel Alcanzado: <span style="color: #FFD700;">${finalLevel}</span></div>
-          ${
-            maxCombo > 0
-              ? `<div>⚡ Combo Máximo: <span style="color: #FF6B00; font-size: 1.2em;">${maxCombo}</span></div>`
-              : ""
-          }
-        </div>
+        <!-- 🔥 SOLO COMBO MÁXIMO CON TRAZO NEGRO -->
+        ${
+          maxCombo > 0
+            ? `<div style="
+                color: #FF6B00;
+                font-size: 1.8em;
+                font-family: var(--professional-font);
+                font-weight: bold;
+                text-shadow: 
+                  -2px -2px 0 #000,
+                  2px -2px 0 #000,
+                  -2px 2px 0 #000,
+                  2px 2px 0 #000,
+                  0 0 10px #FF6B00;
+                text-align: center;
+                line-height: 1.6;
+                margin: 20px 0;
+              ">
+                ⚡ Combo Máximo: ${maxCombo} ⚡
+              </div>`
+            : ""
+        }
 
         <!-- Botones horizontales pequeños sin marcos -->
         <div style="
