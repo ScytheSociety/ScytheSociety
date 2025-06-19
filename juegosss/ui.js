@@ -580,61 +580,65 @@ const UI = {
   // ======================================================
 
   /**
-   * Muestra transición de nivel terrorífica sin marcos
+   * Muestra transición de nivel RESPONSIVA
    */
   showLevelTransition(level, callback) {
-    const transition = document.createElement("div");
-    transition.style.cssText = `
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: transparent;
-    padding: 0;
-    border: none;
-    z-index: 2000;
-    font-size: 4em;
-    color: #FF0000;
-    font-family: var(--gothic-font), cursive;
-    font-weight: bold;
-    text-align: center;
-    text-shadow: 
-      -3px -3px 0 #000,
-      3px -3px 0 #000,
-      -3px 3px 0 #000,
-      3px 3px 0 #000,
-      0 0 20px #FF0000,
-      0 0 40px #FF0000,
-      0 0 60px #FF0000;
-    animation: terrorLevelAppear 0.8s ease-out;
-    pointer-events: none;
-    letter-spacing: 3px;
-  `;
+    console.log("🔄 Mostrando transición responsiva para:", level);
 
-    if (level === 11) {
-      transition.innerHTML = `👹 BOSS FINAL 👹`;
+    const transitionDiv = document.createElement("div");
+    transitionDiv.id = "level-transition";
+
+    // Determinar el texto a mostrar
+    let displayText;
+    if (typeof level === "string" && level.includes("BOSS")) {
+      displayText = "👹 BOSS FINAL 👹";
     } else {
-      transition.innerHTML = `NIVEL ${level}`;
+      displayText = `Nivel ${level}`;
     }
 
-    document.body.appendChild(transition);
+    // 🔥 ESTILOS RESPONSIVOS MEJORADOS
+    transitionDiv.innerHTML = `
+    <div style="
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10000;
+      text-align: center;
+      color: #ff0000;
+      font-family: 'Creepster', cursive;
+      text-shadow: 
+        0 0 20px #ff0000, 
+        0 0 40px #ff0000, 
+        0 0 60px #ff0000,
+        3px 3px 6px rgba(0, 0, 0, 0.8);
+      animation: terrorLevelAppear 2s ease-out;
+      
+      /* 🔥 RESPONSIVO: Una línea siempre */
+      font-size: clamp(2rem, 8vw, 4rem);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 95vw;
+      line-height: 1.1;
+      
+      /* 🔥 Ajustes adicionales para pantallas muy pequeñas */
+      padding: 0 10px;
+      box-sizing: border-box;
+    ">
+      ${displayText}
+    </div>
+  `;
 
-    setTimeout(
-      () => {
-        if (transition.parentNode) {
-          transition.style.opacity = "0";
-          transition.style.transform = "translate(-50%, -50%) scale(1.2)";
+    document.body.appendChild(transitionDiv);
 
-          setTimeout(() => {
-            if (transition.parentNode) {
-              document.body.removeChild(transition);
-            }
-          }, 300);
-        }
-        if (callback) callback();
-      },
-      level === 1 ? 1500 : 2500
-    );
+    // Auto-remover y ejecutar callback
+    setTimeout(() => {
+      if (transitionDiv.parentNode) {
+        transitionDiv.parentNode.removeChild(transitionDiv);
+      }
+      if (callback) callback();
+    }, 2000);
   },
 
   /**
