@@ -1336,3 +1336,272 @@ body:has(#ranking-container:not([style*="display: none"])) .menu-only-footer {
 .music-content::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #ff6666 0%, var(--accent-color) 100%);
 }
+
+/* =============================================== */
+/* OPTIMIZACIONES DE RENDIMIENTO PARA MÓVILES */
+/* Agregar al final de juegosss.css */
+/* =============================================== */
+
+/* Optimizaciones generales para dispositivos móviles */
+@media (max-width: 768px), (pointer: coarse) {
+  /* Deshabilitar animaciones costosas en móviles */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Canvas optimizado para móviles */
+  #game-canvas {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: pixelated;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+
+  /* Reducir efectos visuales costosos */
+  .game-title {
+    animation: none !important;
+    text-shadow: 0 0 10px var(--accent-color) !important;
+  }
+
+  /* Simplificar sombras y efectos */
+  button,
+  .gothic-button {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+    text-shadow: none !important;
+  }
+
+  button:hover,
+  .gothic-button:hover {
+    transform: none !important;
+    box-shadow: 0 2px 8px rgba(255, 0, 0, 0.6) !important;
+  }
+
+  /* Simplificar bordes y efectos de elementos */
+  .input-section,
+  .main-buttons-section,
+  .secondary-buttons-section {
+    backdrop-filter: none !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
+  }
+
+  /* Optimizar power indicator */
+  .special-power-indicator {
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5) !important;
+  }
+
+  .special-power-ready {
+    animation: none !important;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8) !important;
+  }
+
+  /* Optimizar volume control */
+  #volume-control {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  #volume-control:hover {
+    transform: none !important;
+    box-shadow: 0 4px 12px rgba(139, 0, 0, 0.8) !important;
+  }
+}
+
+/* Optimizaciones específicas para dispositivos de gama baja */
+@media (max-width: 480px),
+  screen and (max-device-width: 480px) and (orientation: portrait),
+  screen and (max-device-width: 854px) and (orientation: landscape) {
+  /* Deshabilitar TODAS las animaciones */
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Canvas de menor resolución */
+  #game-canvas {
+    width: 100vw !important;
+    height: 100vh !important;
+    image-rendering: pixelated !important;
+  }
+
+  /* Simplificar completamente los efectos visuales */
+  .game-title {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  /* Eliminar efectos costosos */
+  .instructions-content,
+  .music-content,
+  #ranking-container {
+    backdrop-filter: none !important;
+    box-shadow: 0 0 20px #000000 !important;
+  }
+
+  /* Simplificar modales */
+  .modal-close-button {
+    box-shadow: none !important;
+    border: 1px solid #660000 !important;
+  }
+
+  /* Optimizar footer */
+  .menu-only-footer {
+    backdrop-filter: none !important;
+    text-shadow: 1px 1px 2px #000 !important;
+  }
+
+  /* Optimizar emoji picker */
+  .emoji-picker-content {
+    backdrop-filter: none !important;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  .emoji-option:hover {
+    transform: scale(1.1) !important; /* Reducir escala */
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.4) !important;
+  }
+}
+
+/* Optimizaciones específicas para iOS */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari optimizations */
+  #game-canvas {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* Prevenir zoom en inputs en iOS */
+  input {
+    font-size: 16px !important;
+  }
+
+  /* Optimizar scroll en iOS */
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Deshabilitar efectos 3D costosos en iOS */
+  * {
+    -webkit-transform-style: flat !important;
+    transform-style: flat !important;
+  }
+}
+
+/* Optimizaciones para Android Chrome */
+@media (max-width: 768px) and (-webkit-min-device-pixel-ratio: 1.5) {
+  /* Optimizaciones para pantallas de alta densidad en Android */
+  #game-canvas {
+    image-rendering: optimizeSpeed;
+  }
+
+  /* Reducir calidad de renderizado en Android de gama baja */
+  .game-logo {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* Media query para dispositivos con poca memoria */
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  /* Si el usuario prefiere movimiento reducido, eliminar TODAS las animaciones */
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Efectos estáticos solamente */
+  .game-title {
+    text-shadow: 0 0 10px var(--accent-color);
+  }
+
+  button:hover,
+  .gothic-button:hover {
+    background: linear-gradient(
+      135deg,
+      var(--hover-color) 0%,
+      var(--accent-color) 100%
+    );
+    transform: none !important;
+  }
+}
+
+/* Optimizaciones de memoria para WebKit (iOS Safari) */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  /* Forzar aceleración de hardware solo donde sea necesario */
+  #game-canvas {
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    -webkit-perspective: 1000;
+  }
+
+  /* Optimizar layers en iOS */
+  .game-logo-container,
+  .game-title-container {
+    -webkit-transform: translateZ(0);
+  }
+}
+
+/* =============================================== */
+/* CLASES AUXILIARES PARA PERFORMANCE DINÁMICO */
+/* =============================================== */
+
+/* Clase para dispositivos de gama baja (aplicar via JavaScript) */
+.low-performance {
+  /* Deshabilitar todas las animaciones y efectos */
+}
+
+.low-performance * {
+  animation: none !important;
+  transition: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.low-performance .game-title {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Clase para dispositivos de rendimiento medio */
+.medium-performance * {
+  animation-duration: 0.2s !important;
+  transition-duration: 0.2s !important;
+}
+
+.medium-performance .special-power-ready {
+  animation: none !important;
+}
+
+/* Clase para alto rendimiento (sin restricciones) */
+.high-performance {
+  /* Sin restricciones, usar todos los efectos */
+}
+
+/* =============================================== */
+/* OPTIMIZACIONES DE RENDERING */
+/* =============================================== */
+
+/* Forzar layers de GPU para elementos críticos */
+#game-canvas,
+.special-power-indicator,
+#volume-control {
+  will-change: transform;
+  contain: layout style paint;
+}
+
+/* Optimizar compositing */
+.game-logo,
+.game-title {
+  contain: layout style;
+}
+
+/* Evitar repaints innecesarios */
+#game-info > div {
+  contain: layout;
+}

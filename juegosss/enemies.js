@@ -268,7 +268,8 @@ const EnemyManager = {
     if (this.isLevelComplete()) return;
 
     // 🔥 Límite más alto de enemigos simultáneos
-    if (this.enemies.length > 60) return; // Era 40, ahora 60
+    const maxEnemies = GameConfig.MOBILE_PERFORMANCE?.maxEnemies || 60;
+    if (this.enemies.length > maxEnemies) return;
 
     this.spawnTimer++;
 
