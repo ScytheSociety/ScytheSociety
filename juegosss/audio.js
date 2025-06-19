@@ -14,13 +14,43 @@ const AudioManager = {
   previousVolume: 0.5,
 
   /**
-   * Inicializa el sistema de audio
+   * Inicializa el sistema de audio con control de visibilidad
    */
   init() {
     this.loadSounds();
     this.setupVolumeControl();
     this.resumeAudioContext();
+    this.setupVisibilityControl(); // 🔥 NUEVO
     console.log("🔊 Sistema de audio inicializado");
+  },
+
+  /**
+   * 🔥 NUEVO: Configura control de visibilidad para pausar audio
+   */
+  setupVisibilityControl() {
+    // Detectar cuando la pestaña/app se oculta
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        // Pausa todo el audio cuando se minimiza
+        this.pauseAllAudio();
+        console.log("🔇 Audio pausado - app minimizada");
+      } else {
+        // Reanuda solo la música de fondo cuando se restaura
+        this.resumeBackgroundAudio();
+        console.log("🔊 Audio reanudado - app restaurada");
+      }
+    });
+
+    // Para móviles - detectar cuando se pierde el foco
+    window.addEventListener("blur", () => {
+      this.pauseAllAudio();
+      console.log("🔇 Audio pausado - foco perdido");
+    });
+
+    window.addEventListener("focus", () => {
+      this.resumeBackgroundAudio();
+      console.log("🔊 Audio reanudado - foco recuperado");
+    });
   },
 
   /**
@@ -125,9 +155,14 @@ const AudioManager = {
   // ======================================================
 
   /**
-   * Reproduce un sonido específico
+   * Reproduce un sonido específico - NO reproduzca si la app está oculta
    */
   playSound(soundName) {
+    // 🔥 NO reproducir efectos si la app está minimizada
+    if (document.hidden || this.pausedByVisibility) {
+      return;
+    }
+
     if (!this.sounds[soundName] || this.masterVolume === 0) {
       return;
     }
@@ -310,7 +345,7 @@ const AudioManager = {
   },
 
   /**
-   * Reproduce efecto de sonido con fade out
+   * Reproduce efecto de sonido con fade out - CORREGIDO
    */
   playSoundWithFadeOut(soundName, duration = 1000) {
     if (!this.sounds[soundName]) return;
@@ -318,14 +353,14 @@ const AudioManager = {
     try {
       const sound = this.sounds[soundName];
       const audioClone = sound.audio.cloneNode();
-      const initialVolume = sound.baseVolume * this.masterVolume;
+      const initialVolume = sound.baseVolume * this.masterVolume; // ✅ Correcto
 
       audioClone.volume = initialVolume;
       audioClone.play();
 
       // Fade out después de un delay
       setTimeout(() => {
-        const fadeStep = initialVolumen / (duration / 50);
+        const fadeStep = initialVolume / (duration / 50); // ✅ CORREGIDO: era "initialVolumen"
         const fadeInterval = setInterval(() => {
           if (audioClone.volume > 0) {
             audioClone.volume = Math.max(audioClone.volume - fadeStep, 0);
@@ -552,6 +587,53 @@ const AudioManager = {
    */
   getAvailableSounds() {
     return Object.keys(this.sounds);
+  },
+
+  /**
+   * 🔥 NUEVO: Pausa todo el audio (incluidos efectos de sonido)
+   */
+  pauseAllAudio() {
+    // Pausar música de fondo
+    if (this.sounds.background && this.sounds.background.audio) {
+      this.sounds.background.audio.pause();
+      this.backgroundMusicPlaying = false;
+    }
+
+    // Pausar todos los sonidos activos
+    for (const [key, sound] of Object.entries(this.sounds)) {
+      if (sound.audio) {
+        sound.audio.pause();
+      }
+    }
+
+    // Marcar que el audio está pausado por visibilidad
+    this.pausedByVisibility = true;
+  },
+
+  /**
+   * 🔥 NUEVO: Reanuda solo la música de fondo (no efectos)
+   */
+  resumeBackgroundAudio() {
+    // Solo reanudar si fue pausado por visibilidad
+    if (!this.pausedByVisibility) return;
+
+    // Solo reanudar música de fondo si estaba reproduciéndose
+    if (this.sounds.background && this.sounds.background.audio) {
+      const playPromise = this.sounds.background.audio.play();
+
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            this.backgroundMusicPlaying = true;
+            console.log("🎵 Música de fondo reanudada");
+          })
+          .catch((error) => {
+            console.warn("⚠️ Error reanudando música:", error);
+          });
+      }
+    }
+
+    this.pausedByVisibility = false;
   },
 };
 

@@ -255,7 +255,7 @@ const EnemyManager = {
   },
 
   /**
-   * Controla el spawn de enemigos - OPTIMIZADO PARA MÓVILES
+   * Controla el spawn de enemigos - VELOCIDAD UNIFICADA PARA TODOS
    */
   updateSpawning() {
     // NO SPAWNAR SI ES BOSS LEVEL (nivel 11)
@@ -266,13 +266,13 @@ const EnemyManager = {
     // No spawnar si el nivel está completo
     if (this.isLevelComplete()) return;
 
-    // 🔥 LÍMITES IGUALES PARA TODOS LOS DISPOSITIVOS
-    const maxEnemies = 50; // FIJO PARA TODOS - NO USAR GameConfig.MOBILE_PERFORMANCE
+    // 🔥 LÍMITE ÚNICO PARA TODOS LOS DISPOSITIVOS
+    const maxEnemies = 55; // FIJO - NO diferencias entre móvil/desktop
     if (this.enemies.length > maxEnemies) return;
 
     this.spawnTimer++;
 
-    // 🔥 MISMO SPAWN RATE PARA MÓVILES Y DESKTOP
+    // 🔥 MISMA VELOCIDAD DE SPAWN PARA TODOS
     let effectiveDelay = this.currentSpawnDelay;
 
     // Bonus por combo (igual para todos)
@@ -291,14 +291,15 @@ const EnemyManager = {
       this.spawnTimer = 0;
 
       // Spawn adicional aleatorio (igual para todos)
-      if (Math.random() < 0.3) {
+      if (Math.random() < 0.35) {
+        // Ligeramente más agresivo
         setTimeout(() => this.spawnEnemy(), 100);
       }
     }
   },
 
   /**
-   * Actualiza el movimiento de todos los enemigos - VELOCIDAD UNIFICADA
+   * Actualiza el movimiento de todos los enemigos - VELOCIDAD COMPLETAMENTE UNIFICADA
    */
   updateEnemyMovement() {
     const canvas = window.getCanvas();
@@ -313,14 +314,14 @@ const EnemyManager = {
     for (let i = 0; i < this.enemies.length; i++) {
       const enemy = this.enemies[i];
 
-      // 🔥 MOVIMIENTO UNIFICADO - MISMA VELOCIDAD PARA MÓVILES Y DESKTOP
-      const speedMultiplier = 1.0; // 🔥 VELOCIDAD COMPLETAMENTE IDÉNTICA PARA TODOS
+      // 🔥 VELOCIDAD COMPLETAMENTE IDÉNTICA - SIN DIFERENCIAS MÓVIL/DESKTOP
+      const speedMultiplier = 1.0; // MISMA VELOCIDAD EXACTA PARA TODOS
       enemy.x +=
         enemy.velocityX * enemy.speedFactor * slowFactor * speedMultiplier;
       enemy.y +=
         enemy.velocityY * enemy.speedFactor * slowFactor * speedMultiplier;
 
-      // Resto del código de rebotes sin cambios...
+      // Actualizar escalado dinámico
       this.updateDynamicScaling(enemy);
 
       // Rebotes más agresivos para meteoritos
@@ -376,7 +377,7 @@ const EnemyManager = {
         enemy.velocityY = Math.abs(Math.cos(angle) * speed);
       }
 
-      // Colisiones entre enemigos (código sin cambios...)
+      // Colisiones entre enemigos (sin cambios)
       for (let j = i + 1; j < this.enemies.length; j++) {
         const otherEnemy = this.enemies[j];
 
@@ -426,7 +427,7 @@ const EnemyManager = {
         }
       }
 
-      // 🔥 LÍMITE DE VELOCIDAD UNIFICADO - IGUAL PARA TODOS
+      // 🔥 LÍMITE DE VELOCIDAD UNIFICADO - MISMA VELOCIDAD MÁXIMA PARA TODOS
       const maxSpeed = canvas.height * 0.025 * (1 + window.getLevel() * 0.15);
       const currentSpeed = Math.sqrt(
         enemy.velocityX * enemy.velocityX + enemy.velocityY * enemy.velocityY

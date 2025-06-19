@@ -72,32 +72,32 @@ function detectDevicePerformance() {
 // ======================================================
 
 /**
- * Ajusta la configuración del juego según el dispositivo - SIN RESTRICCIONES MÓVILES
+ * Ajusta la configuración del juego según el dispositivo - CONFIGURACIÓN UNIFICADA
  */
 function adjustGameConfig() {
   const performance = detectDevicePerformance();
 
-  // 🔥 CONFIGURACIONES BALANCEADAS - MENOS RESTRICCIONES MÓVILES
+  // 🔥 CONFIGURACIONES IDÉNTICAS - SOLO AJUSTES MENORES EN MÓVILES
   const configs = {
     low: {
-      maxEnemies: 45, // AUMENTADO de 35 a 45
-      maxBullets: 80, // AUMENTADO de 60 a 80
-      maxParticles: 40, // AUMENTADO de 25 a 40
-      shadowsEnabled: true, // HABILITADO (era false)
-      glowEffects: true,
-      animationQuality: "high", // MEJORADO de medium a high
-      targetFPS: 55, // AUMENTADO de 45 a 55
-      updateInterval: 18, // MEJORADO de 22 a 18
-    },
-    medium: {
-      maxEnemies: 50,
-      maxBullets: 90,
-      maxParticles: 50,
+      maxEnemies: 55, // IGUAL que high
+      maxBullets: 110, // IGUAL que high
+      maxParticles: 60, // Solo 10 menos que high
       shadowsEnabled: true,
       glowEffects: true,
       animationQuality: "high",
-      targetFPS: 58,
-      updateInterval: 17,
+      targetFPS: 58, // Solo 2 menos que high
+      updateInterval: 17, // Solo 1ms más que high
+    },
+    medium: {
+      maxEnemies: 55,
+      maxBullets: 110,
+      maxParticles: 65,
+      shadowsEnabled: true,
+      glowEffects: true,
+      animationQuality: "high",
+      targetFPS: 59,
+      updateInterval: 16,
     },
     high: {
       maxEnemies: 55,
@@ -116,7 +116,7 @@ function adjustGameConfig() {
   GameConfig.isMobile = isMobileDevice;
   GameConfig.performanceLevel = performance;
 
-  console.log(`⚙️ Configuración MEJORADA aplicada:`, config);
+  console.log(`⚙️ Configuración UNIFICADA aplicada:`, config);
   return config;
 }
 
@@ -502,8 +502,6 @@ function gameLoop() {
     // 🔥 Efectos especiales de pantalla
     drawSpecialEffects(ctx);
 
-    if (isMobileDevice) limitEntitiesForMobile();
-
     // Actualizar UI
     UI.update();
   } catch (error) {
@@ -575,38 +573,6 @@ function drawSpecialEffects(ctx) {
     ctx.fillRect(0, 0, canvas.width, canvas.width);
 
     ctx.restore();
-  }
-}
-
-/**
- * 🔥 NUEVO: Límites más generosos para móviles
- */
-function limitEntitiesForMobile() {
-  const config = GameConfig.MOBILE_PERFORMANCE;
-
-  if (!config) return;
-
-  // 🔥 LÍMITES MÁS ALTOS - NO PENALIZAR MÓVILES
-  // Limitar enemigos solo si superan MUCHO el máximo
-  if (EnemyManager.enemies.length > config.maxEnemies * 1.2) {
-    EnemyManager.enemies.splice(config.maxEnemies);
-  }
-
-  // Limitar balas solo si superan MUCHO el máximo
-  if (BulletManager.bullets.length > config.maxBullets * 1.2) {
-    BulletManager.bullets.splice(config.maxBullets / 2);
-  }
-
-  // Límites más generosos para power-ups
-  if (PowerUpManager.powerUps.length > 6) {
-    // AUMENTADO de 4 a 6
-    PowerUpManager.powerUps.splice(6);
-  }
-
-  // Límites más generosos para corazones
-  if (PowerUpManager.hearts.length > 4) {
-    // AUMENTADO de 2 a 4
-    PowerUpManager.hearts.splice(4);
   }
 }
 
