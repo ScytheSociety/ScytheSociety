@@ -37,10 +37,10 @@ const EnemyManager = {
         GameConfig.LEVEL_CONFIG.enemiesPerLevel.length - 1
       ];
 
-    // 🔥 SPAWN IDÉNTICO PARA MÓVILES Y DESKTOP
-    const baseSpawnRate = 50; // UNIFICADO - más rápido para todos
-    const spawnRateReduction = 4; // AGRESIVO para todos
-    const minSpawnRate = 12; // RÁPIDO para todos
+    // 🔥 Spawn BALANCEADO - Menos frecuente
+    const baseSpawnRate = 70; // Era 50, ahora 70 (más lento)
+    const spawnRateReduction = 3; // Era 4, ahora 3 (menos agresivo)
+    const minSpawnRate = 20; // Era 12, ahora 20 (más lento)
     this.currentSpawnDelay = Math.max(
       minSpawnRate,
       baseSpawnRate - level * spawnRateReduction
@@ -266,9 +266,8 @@ const EnemyManager = {
     // No spawnar si el nivel está completo
     if (this.isLevelComplete()) return;
 
-    // 🔥 LÍMITE ÚNICO PARA TODOS LOS DISPOSITIVOS
-    const maxEnemies = 55; // FIJO - NO diferencias entre móvil/desktop
-    if (this.enemies.length > maxEnemies) return;
+    // 🔥 Límite más alto de enemigos simultáneos
+    if (this.enemies.length > 60) return; // Era 40, ahora 60
 
     this.spawnTimer++;
 
@@ -314,12 +313,9 @@ const EnemyManager = {
     for (let i = 0; i < this.enemies.length; i++) {
       const enemy = this.enemies[i];
 
-      // 🔥 VELOCIDAD COMPLETAMENTE IDÉNTICA - SIN DIFERENCIAS MÓVIL/DESKTOP
-      const speedMultiplier = 1.0; // MISMA VELOCIDAD EXACTA PARA TODOS
-      enemy.x +=
-        enemy.velocityX * enemy.speedFactor * slowFactor * speedMultiplier;
-      enemy.y +=
-        enemy.velocityY * enemy.speedFactor * slowFactor * speedMultiplier;
+      // 🔥 Movimiento con factor de tiempo lento
+      enemy.x += enemy.velocityX * enemy.speedFactor * slowFactor;
+      enemy.y += enemy.velocityY * enemy.speedFactor * slowFactor;
 
       // Actualizar escalado dinámico
       this.updateDynamicScaling(enemy);

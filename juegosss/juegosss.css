@@ -138,7 +138,7 @@ body {
   border-radius: 0;
   transition: transform 0.3s ease; /* SOLO transición de transform */
   filter: none;
-  animation: none; /* Sin animaciones que causen problemas */
+  animation: professionalFloat 6s ease-in-out infinite;
   object-fit: contain; /* NUEVO: Mantener proporción */
 }
 
@@ -1385,22 +1385,8 @@ body:has(#ranking-container:not([style*="display: none"])) .menu-only-footer {
 /* CLASES AUXILIARES PARA PERFORMANCE DINÁMICO */
 /* =============================================== */
 
-.low-performance * {
-  animation: none !important;
-  transition: none !important;
-  box-shadow: none !important;
-  text-shadow: none !important;
-  backdrop-filter: none !important;
-}
-
 .low-performance .game-title {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8) !important;
-}
-
-/* Clase para dispositivos de rendimiento medio */
-.medium-performance * {
-  animation-duration: 0.2s !important;
-  transition-duration: 0.2s !important;
 }
 
 .medium-performance .special-power-ready {

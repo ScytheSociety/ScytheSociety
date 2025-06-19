@@ -22,104 +22,6 @@ let slowMotionActive = false;
 let slowMotionFactor = 1.0;
 let frenzyModeActive = false;
 
-// Variables de rendimiento móvil
-let isMobileDevice = false;
-let isLowEndDevice = false;
-let devicePerformanceLevel = "high";
-
-/**
- * Detecta el tipo de dispositivo y ajusta la calidad gráfica
- */
-function detectDevicePerformance() {
-  const userAgent = navigator.userAgent.toLowerCase();
-  const isIOS = /iphone|ipad|ipod/.test(userAgent);
-  const isAndroid = /android/.test(userAgent);
-
-  isMobileDevice =
-    isIOS ||
-    isAndroid ||
-    /mobi|mobile|tablet|kindle|silk|opera mini/.test(userAgent);
-
-  // Detectar dispositivos de gama baja
-  const lowEndPatterns = [
-    /android [1-4]\./, // Android 1-4
-    /android 5\.[01]/, // Android 5.0-5.1
-    /cpu os [1-9]_|cpu os 10_/, // iOS 9 o menor
-    /sm-[a-z]\d{3}[a-z]?$/i, // Samsung Galaxy gama baja
-  ];
-
-  isLowEndDevice = lowEndPatterns.some((pattern) => pattern.test(userAgent));
-
-  // Detectar RAM aproximada (estimación basada en performance)
-  const memoryGb =
-    navigator.deviceMemory ||
-    (performance.memory ? performance.memory.jsHeapSizeLimit / 1073741824 : 2);
-
-  if (isLowEndDevice || memoryGb < 2) {
-    devicePerformanceLevel = "low";
-  } else if (memoryGb < 4 || isMobileDevice) {
-    devicePerformanceLevel = "medium";
-  }
-
-  console.log(
-    `📱 Dispositivo detectado: ${devicePerformanceLevel} performance, Mobile: ${isMobileDevice}`
-  );
-  return devicePerformanceLevel;
-}
-
-// ======================================================
-// 2. CONFIGURACIÓN DINÁMICA DE CALIDAD
-// ======================================================
-
-/**
- * Ajusta la configuración del juego según el dispositivo - CONFIGURACIÓN UNIFICADA
- */
-function adjustGameConfig() {
-  const performance = detectDevicePerformance();
-
-  // 🔥 CONFIGURACIONES IDÉNTICAS - SOLO AJUSTES MENORES EN MÓVILES
-  const configs = {
-    low: {
-      maxEnemies: 55, // IGUAL que high
-      maxBullets: 110, // IGUAL que high
-      maxParticles: 60, // Solo 10 menos que high
-      shadowsEnabled: true,
-      glowEffects: true,
-      animationQuality: "high",
-      targetFPS: 58, // Solo 2 menos que high
-      updateInterval: 17, // Solo 1ms más que high
-    },
-    medium: {
-      maxEnemies: 55,
-      maxBullets: 110,
-      maxParticles: 65,
-      shadowsEnabled: true,
-      glowEffects: true,
-      animationQuality: "high",
-      targetFPS: 59,
-      updateInterval: 16,
-    },
-    high: {
-      maxEnemies: 55,
-      maxBullets: 110,
-      maxParticles: 70,
-      shadowsEnabled: true,
-      glowEffects: true,
-      animationQuality: "high",
-      targetFPS: 60,
-      updateInterval: 16,
-    },
-  };
-
-  const config = configs[performance];
-  GameConfig.MOBILE_PERFORMANCE = config;
-  GameConfig.isMobile = isMobileDevice;
-  GameConfig.performanceLevel = performance;
-
-  console.log(`⚙️ Configuración UNIFICADA aplicada:`, config);
-  return config;
-}
-
 // ======================================================
 // INICIALIZACIÓN DEL JUEGO
 // ======================================================
@@ -129,9 +31,6 @@ window.onload = function () {
 
   // Detectar dispositivo
   GameConfig.detectDevice();
-
-  detectDevicePerformance();
-  adjustGameConfig();
 
   // Configurar canvas
   setupCanvas();
@@ -160,23 +59,13 @@ function setupCanvas() {
     return;
   }
 
-  ctx = canvas.getContext("2d", {
-    alpha: false,
-    antialias: true, // 🔥 CAMBIADO: habilitado para mejor calidad
-    powerPreference: isMobileDevice ? "high-performance" : "high-performance", // 🔥 SIEMPRE high-performance
-  });
+  ctx = canvas.getContext("2d");
 
   // 🔥 RESOLUCIÓN COMPLETA PARA MÓVILES - NO REDUCIR
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   canvas.style.width = "100vw";
   canvas.style.height = "100vh";
-
-  // 🔥 CALIDAD MÁXIMA PARA MÓVILES
-  if (isMobileDevice) {
-    ctx.imageSmoothingEnabled = true; // 🔥 CAMBIADO: habilitado
-    canvas.style.imageRendering = "auto"; // 🔥 CAMBIADO: auto en lugar de pixelated
-  }
 
   GameConfig.updateSizes(canvas);
   console.log(
@@ -343,9 +232,6 @@ function startGame() {
 function startGameLoop() {
   gameEnded = false;
 
-  // Configurar para móviles
-  const config = adjustGameConfig();
-
   BulletManager.startAutoShoot();
   if (!AudioManager.isBackgroundMusicPlaying()) {
     AudioManager.startBackgroundMusic();
@@ -356,54 +242,8 @@ function startGameLoop() {
     UI.createMusicTicker();
   }, 500);
 
-  // Game loop adaptativo
-  let lastTime = performance.now();
-  let frameCount = 0;
-  let fpsMonitor = 0;
-  let adaptiveInterval = config.updateInterval;
+  gameInterval = setInterval(gameLoop, 1000 / 60);
 
-  function adaptiveGameLoop(currentTime) {
-    if (gameEnded) return;
-
-    const deltaTime = currentTime - lastTime;
-
-    // Solo ejecutar si ha pasado suficiente tiempo
-    if (deltaTime >= adaptiveInterval) {
-      // Monitorear FPS cada 60 frames
-      frameCount++;
-      if (frameCount >= 60) {
-        const actualFPS = 1000 / deltaTime;
-        fpsMonitor = actualFPS;
-
-        // Ajustar intervalo dinámicamente
-        if (actualFPS < config.targetFPS * 0.8) {
-          adaptiveInterval = Math.min(adaptiveInterval + 2, 50); // Reducir FPS si es necesario
-        } else if (actualFPS > config.targetFPS * 1.2) {
-          adaptiveInterval = Math.max(
-            adaptiveInterval - 1,
-            config.updateInterval
-          );
-        }
-
-        frameCount = 0;
-      }
-
-      try {
-        // Ejecutar game loop normal
-        gameLoop();
-      } catch (error) {
-        console.error("❌ Error en game loop móvil:", error);
-      }
-
-      lastTime = currentTime;
-    }
-
-    // Continuar loop
-    requestAnimationFrame(adaptiveGameLoop);
-  }
-
-  // Iniciar con requestAnimationFrame para mejor rendimiento
-  requestAnimationFrame(adaptiveGameLoop);
   startLevel();
 
   const totalDisplay = document.getElementById("total-enemies-display");
@@ -411,7 +251,7 @@ function startGameLoop() {
     totalDisplay.style.display = "block";
   }
 
-  console.log(`🔄 Game loop móvil iniciado - Target FPS: ${config.targetFPS}`);
+  console.log("🔄 Bucle de juego ÉPICO iniciado");
 }
 
 /**
@@ -575,53 +415,6 @@ function drawSpecialEffects(ctx) {
     ctx.restore();
   }
 }
-
-/**
- * Pool de objetos para reutilizar en lugar de crear/destruir
- */
-const ObjectPool = {
-  bullets: [],
-  enemies: [],
-  particles: [],
-
-  getBullet() {
-    return (
-      this.bullets.pop() || {
-        x: 0,
-        y: 0,
-        width: 0,
-        height: 0,
-        velocityX: 0,
-        velocityY: 0,
-        active: false,
-      }
-    );
-  },
-
-  returnBullet(bullet) {
-    bullet.active = false;
-    this.bullets.push(bullet);
-  },
-
-  getEnemy() {
-    return (
-      this.enemies.pop() || {
-        x: 0,
-        y: 0,
-        width: 0,
-        height: 0,
-        velocityX: 0,
-        velocityY: 0,
-        active: false,
-      }
-    );
-  },
-
-  returnEnemy(enemy) {
-    enemy.active = false;
-    this.enemies.push(enemy);
-  },
-};
 
 /**
  * 🔥 CORREGIDO: Verificar colisiones con mejor manejo de muerte del jugador
@@ -1729,4 +1522,3 @@ console.log("📁 main.js ÉPICO cargado y listo para la acción!");
 
 // Variable global para trackear la música actual
 window.currentMusicTrack = "Elegía - Azkal";
-window.ObjectPool = ObjectPool;

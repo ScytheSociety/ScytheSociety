@@ -338,3 +338,275 @@ h6 {
     font-size: 1.5rem;
   }
 }
+
+/**
+ * Games Carousel CSS
+ * Estilos para el carrusel de juegos en index.html
+ * CORREGIDO - Sin movimiento automático y tamaños uniformes
+ */
+
+/* =============================================== */
+/* CARRUSEL DE JUEGOS - CORREGIDO */
+/* =============================================== */
+
+.games-carousel {
+  margin: 40px 0;
+  position: relative;
+}
+
+.games-carousel .carousel-inner {
+  padding: 20px 0;
+}
+
+.games-carousel .carousel-item {
+  transition: transform 0.6s ease-in-out;
+}
+
+/* Cards de juegos con tamaños uniformes */
+.game-card {
+  transition: all 0.4s ease;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+.game-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  border-color: var(--accent-color);
+  box-shadow: 0 15px 35px rgba(202, 57, 57, 0.4),
+    0 0 25px rgba(202, 57, 57, 0.3);
+}
+
+/* IMPORTANTE: Tamaños uniformes para todas las imágenes */
+.game-card .image-container {
+  position: relative;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio - MISMO PARA TODAS */
+  overflow: hidden;
+  width: 100%;
+  height: 0;
+}
+
+.game-card .image-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Mantiene proporción y llena el contenedor */
+  transition: transform 0.4s ease;
+}
+
+.game-card:hover .image-container img {
+  transform: scale(1.1);
+}
+
+/* Hell Shooter card - MISMO ESTILO QUE LAS DEMÁS */
+.hell-game-card {
+  /* Sin estilos especiales - hereda de .game-card */
+}
+
+/* Overlay para juegos */
+.game-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.game-badge {
+  background: linear-gradient(135deg, #ff0000, #8b0000);
+  color: white;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 0 0 0 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 4px 20px rgba(255, 0, 0, 0.6);
+  }
+}
+
+/* Descripción de juegos */
+.game-description {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  margin: 10px 15px 15px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Controles del carrusel personalizados */
+.games-carousel .carousel-control-prev,
+.games-carousel .carousel-control-next {
+  width: 50px;
+  height: 50px;
+  background: rgba(34, 34, 34, 0.9);
+  border: 2px solid var(--accent-color);
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: all 0.3s ease;
+}
+
+.games-carousel .carousel-control-prev {
+  left: -25px;
+}
+
+.games-carousel .carousel-control-next {
+  right: -25px;
+}
+
+.games-carousel .carousel-control-prev:hover,
+.games-carousel .carousel-control-next:hover {
+  background: var(--accent-color);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 0 20px rgba(202, 57, 57, 0.6);
+}
+
+.games-carousel .carousel-control-prev-icon,
+.games-carousel .carousel-control-next-icon {
+  width: 20px;
+  height: 20px;
+  background-size: 20px 20px;
+}
+
+/* Indicadores del carrusel */
+.games-carousel .carousel-indicators {
+  bottom: -40px;
+  margin-bottom: 0;
+}
+
+.games-carousel .carousel-indicators button {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin: 0 5px;
+  background-color: rgba(255, 255, 255, 0.4);
+  border: 2px solid var(--accent-color);
+  transition: all 0.3s ease;
+}
+
+.games-carousel .carousel-indicators button.active,
+.games-carousel .carousel-indicators button:hover {
+  background-color: var(--accent-color);
+  transform: scale(1.2);
+  box-shadow: 0 0 10px rgba(202, 57, 57, 0.8);
+}
+
+/* =============================================== */
+/* RESPONSIVE PARA EL CARRUSEL */
+/* =============================================== */
+
+@media (max-width: 992px) {
+  .games-carousel .carousel-control-prev,
+  .games-carousel .carousel-control-next {
+    width: 45px;
+    height: 45px;
+  }
+
+  .games-carousel .carousel-control-prev {
+    left: -15px;
+  }
+
+  .games-carousel .carousel-control-next {
+    right: -15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .games-carousel .carousel-control-prev,
+  .games-carousel .carousel-control-next {
+    width: 40px;
+    height: 40px;
+    top: 45%;
+  }
+
+  .games-carousel .carousel-control-prev {
+    left: -10px;
+  }
+
+  .games-carousel .carousel-control-next {
+    right: -10px;
+  }
+
+  .games-carousel .carousel-control-prev-icon,
+  .games-carousel .carousel-control-next-icon {
+    width: 16px;
+    height: 16px;
+    background-size: 16px 16px;
+  }
+
+  .game-badge {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+  }
+
+  .game-description {
+    font-size: 0.8rem;
+    margin: 8px 10px 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .games-carousel .carousel-inner {
+    padding: 15px 0;
+  }
+
+  .games-carousel .carousel-indicators {
+    bottom: -30px;
+  }
+
+  .games-carousel .carousel-indicators button {
+    width: 10px;
+    height: 10px;
+    margin: 0 3px;
+  }
+
+  .game-card:hover {
+    transform: translateY(-5px) scale(1.01);
+  }
+}
+
+/* =============================================== */
+/* ANIMACIONES ADICIONALES */
+/* =============================================== */
+
+/* Efecto de entrada para las cards */
+.game-card {
+  animation: gameCardFadeIn 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.game-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.game-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.game-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes gameCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

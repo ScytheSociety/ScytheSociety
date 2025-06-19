@@ -35,7 +35,7 @@ const GameConfig = {
 
   LEVEL_CONFIG: {
     // Enemigos requeridos por nivel (más progresivo)
-    enemiesPerLevel: [60, 100, 160, 240, 340, 460, 600, 760, 940, 1200],
+    enemiesPerLevel: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
 
     // Velocidad de spawn de enemigos
     spawnDelay: [

@@ -104,7 +104,7 @@
             </div>
         </section>
 
-        <!-- Sección de juegos destacados -->
+        <!-- Sección de juegos destacados con carrusel -->
         <section class="py-5 bg-dark" id="juegos">
             <div class="container">
                 <h2 class="section-title">NUESTROS JUEGOS</h2>
@@ -113,46 +113,119 @@
                     los títulos más recientes, compartimos guías, estrategias y experiencias para mejorar tu gameplay.
                 </p>
 
-                <div class="row" id="game-cards">
-                    <!-- Juego 1: Ragnarok Online -->
-                    <div class="col-lg-3 col-md-6 mb-4">
-                        <div class="news-card">
-                            <div class="image-container">
-                                <img src="./assets/images/games/ragnarok.jpg" alt="Ragnarok Online">
+                <!-- Carrusel de juegos CORREGIDO -->
+                <div id="gamesCarousel" class="carousel slide games-carousel" data-bs-ride="false"
+                    data-bs-interval="8000">
+                    <div class="carousel-inner">
+                        <!-- Primera diapositiva (3 juegos) -->
+                        <div class="carousel-item active">
+                            <div class="row justify-content-center" id="game-cards-1">
+                                <!-- Juego 1: Ragnarok Online -->
+                                <div class="col-lg-4 col-md-6 mb-4">
+                                    <div class="news-card game-card">
+                                        <div class="image-container">
+                                            <img src="./assets/images/hellshooter/hell-shooter-logo.png"
+                                                alt="Hell Shooter">
+                                            <div class="game-overlay">
+                                                <span class="game-badge">¡NUEVO!</span>
+                                            </div>
+                                        </div>
+                                        <h5><a href="./pages/hellshooter/hellshooter.html">Hell Shooter 👹</a></h5>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4 col-md-6 mb-4">
+                                    <div class="news-card game-card">
+                                        <div class="image-container">
+                                            <img src="./assets/images/games/ragnarok.jpg" alt="Ragnarok Online">
+                                        </div>
+                                        <h5><a href="https://renewal.playragnarok.com/" target="_blank">Ragnarok
+                                                Online</a></h5>
+                                    </div>
+                                </div>
+
+                                <!-- Juego 2: World of Warcraft -->
+                                <div class="col-lg-4 col-md-6 mb-4">
+                                    <div class="news-card game-card">
+                                        <div class="image-container">
+                                            <img src="./assets/images/games/wow.jpg" alt="World of Warcraft">
+                                        </div>
+                                        <h5><a href="https://worldofwarcraft.blizzard.com/es-es/classic"
+                                                target="_blank">World of Warcraft</a></h5>
+                                    </div>
+                                </div>
+
+                                <!-- Juego 3: League of Legends -->
+                                <div class="col-lg-4 col-md-6 mb-4">
+                                    <div class="news-card game-card">
+                                        <div class="image-container">
+                                            <img src="./assets/images/games/lol.jpg" alt="League of Legends">
+                                        </div>
+                                        <h5><a href="https://www.leagueoflegends.com/es-es/" target="_blank">League of
+                                                Legends</a></h5>
+                                    </div>
+                                </div>
                             </div>
-                            <h5><a href="https://renewal.playragnarok.com/">Ragnarok Online</a></h5>
+                        </div>
+
+                        <!-- Segunda diapositiva (2 juegos) -->
+                        <div class="carousel-item">
+                            <div class="row justify-content-center" id="game-cards-2">
+                                <!-- Juego 4: Smite -->
+                                <div class="col-lg-4 col-md-6 mb-4">
+                                    <div class="news-card game-card">
+                                        <div class="image-container">
+                                            <img src="./assets/images/games/smite.jpg" alt="Smite">
+                                        </div>
+                                        <h5><a href="https://www.smite2.com/" target="_blank">Smite</a></h5>
+                                    </div>
+                                </div>
+
+                                <!-- Juego 5: Hell Shooter (SIN efectos especiales) -->
+                                <div class="col-lg-4 col-md-6 mb-4">
+                                    <div class="news-card game-card">
+                                        <div class="image-container">
+                                            <img src="./assets/images/hellshooter/hell-shooter-logo.png"
+                                                alt="Hell Shooter">
+                                            <div class="game-overlay">
+                                                <span class="game-badge">¡NUEVO!</span>
+                                            </div>
+                                        </div>
+                                        <h5><a href="./pages/hellshooter/hellshooter.html">Hell Shooter 👹</a></h5>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Juego 2: World of Warcraft -->
-                    <div class="col-lg-3 col-md-6 mb-4">
-                        <div class="news-card">
-                            <div class="image-container">
-                                <img src="./assets/images/games/wow.jpg" alt="World of Warcraft">
-                            </div>
-                            <h5><a href="https://worldofwarcraft.blizzard.com/es-es/classic">World of Warcraft</a></h5>
-                        </div>
-                    </div>
+                    <!-- Controles del carrusel -->
+                    <button class="carousel-control-prev" type="button" data-bs-target="#gamesCarousel"
+                        data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Anterior</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#gamesCarousel"
+                        data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Siguiente</span>
+                    </button>
 
-                    <!-- Juego 3: League of Legends -->
-                    <div class="col-lg-3 col-md-6 mb-4">
-                        <div class="news-card">
-                            <div class="image-container">
-                                <img src="./assets/images/games/lol.jpg" alt="League of Legends">
-                            </div>
-                            <h5><a href="https://www.leagueoflegends.com/es-es/">League of Legends</a></h5>
-                        </div>
+                    <!-- Indicadores del carrusel -->
+                    <div class="carousel-indicators">
+                        <button type="button" data-bs-target="#gamesCarousel" data-bs-slide-to="0" class="active"
+                            aria-current="true" aria-label="Juegos 1-3"></button>
+                        <button type="button" data-bs-target="#gamesCarousel" data-bs-slide-to="1"
+                            aria-label="Juegos 4-5"></button>
                     </div>
+                </div>
 
-                    <!-- Juego 4: Smite -->
-                    <div class="col-lg-3 col-md-6 mb-4">
-                        <div class="news-card">
-                            <div class="image-container">
-                                <img src="./assets/images/games/smite.jpg" alt="Smite">
-                            </div>
-                            <h5><a href="https://www.smite2.com/">Smite</a></h5>
-                        </div>
-                    </div>
+                <!-- Botón para ver todos los juegos -->
+                <div class="text-center mt-4">
+                    <a href="./pages/games.html" class="btn btn-gaming">
+                        <i class="fas fa-gamepad me-2"></i>Ver Todos los Juegos
+                    </a>
                 </div>
             </div>
         </section>

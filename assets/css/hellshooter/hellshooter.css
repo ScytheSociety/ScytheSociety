@@ -1,0 +1,581 @@
+/**
+ * Hell Shooter - CSS Personalizado
+ * Estilos específicos para la página de Hell Shooter
+ * Versión mejorada y sutil acorde al estilo general
+ */
+
+/* =============================================== */
+/* VARIABLES ESPECÍFICAS DE HELL SHOOTER */
+/* =============================================== */
+
+:root {
+  --hell-primary: #ca3939;
+  --hell-secondary: #d64545;
+  --hell-accent: #ffc862;
+  --hell-dark: #121212;
+  --hell-card-bg: #1e1e1e;
+  --hell-text: #ffffff;
+  --hell-border: #333;
+}
+
+/* =============================================== */
+/* BANNER ESPECÍFICO DE HELL SHOOTER */
+/* =============================================== */
+
+.hell-banner {
+  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+    url("../../images/hellshooter/hell-shooter-banner.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  color: var(--hell-text);
+}
+
+.hell-banner .banner-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.hell-title {
+  font-size: 4rem;
+  color: var(--hell-text);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 3px;
+  margin-bottom: 1rem;
+  font-family: var(--font-title);
+  font-weight: 700;
+}
+
+.hell-subtitle {
+  color: var(--hell-accent);
+  font-size: 1.5rem;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+  letter-spacing: 2px;
+  margin-bottom: 1rem;
+}
+
+/* =============================================== */
+/* BOTONES ESPECÍFICOS DE HELL SHOOTER */
+/* =============================================== */
+
+.btn-hell-play {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 0;
+  padding: 15px 30px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
+}
+
+.btn-hell-play:hover {
+  background-color: var(--hell-primary);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* =============================================== */
+/* TÍTULOS DE SECCIÓN ESPECÍFICOS */
+/* =============================================== */
+
+.hell-section-title {
+  color: var(--hell-text);
+  text-shadow: none;
+  position: relative;
+  font-family: var(--font-title);
+}
+
+.hell-section-title::after {
+  background-color: var(--accent-color);
+}
+
+/* =============================================== */
+/* CONTENIDO DESCRIPTIVO */
+/* =============================================== */
+
+.hell-description {
+  background-color: var(--hell-card-bg);
+  border: 1px solid var(--hell-border);
+  border-radius: 4px;
+  padding: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.hell-features {
+  margin-top: 30px;
+}
+
+.hell-feature {
+  background-color: var(--hell-card-bg);
+  border: 1px solid var(--hell-border);
+  border-radius: 4px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.hell-feature:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.hell-icon {
+  color: var(--accent-color);
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.hell-feature h4 {
+  color: var(--hell-accent);
+  margin-bottom: 10px;
+}
+
+/* =============================================== */
+/* CARDS DE GAMEPLAY */
+/* =============================================== */
+
+.hell-gameplay-card {
+  background-color: var(--hell-card-bg);
+  border: 1px solid var(--hell-border);
+  border-radius: 4px;
+  padding: 25px;
+  height: 100%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.hell-gameplay-card h3 {
+  color: var(--hell-accent);
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--accent-color);
+  padding-bottom: 10px;
+}
+
+.hell-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.control-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: var(--secondary-bg);
+  border-radius: 4px;
+  border: 1px solid var(--hell-border);
+}
+
+.control-key {
+  font-weight: bold;
+  color: var(--hell-accent);
+  min-width: 80px;
+}
+
+.control-desc {
+  color: var(--hell-text);
+  text-align: right;
+  flex-grow: 1;
+}
+
+.hell-lives-info {
+  color: var(--hell-text);
+  line-height: 1.8;
+}
+
+.hell-lives-info p {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background-color: var(--secondary-bg);
+  border-radius: 4px;
+  border-left: 4px solid var(--accent-color);
+}
+
+/* =============================================== */
+/* SECCIÓN DE VIDEO GAMEPLAY */
+/* =============================================== */
+
+.hell-video-section {
+  padding: 60px 0;
+}
+
+.hell-video-container {
+  background-color: var(--hell-card-bg);
+  border: 1px solid var(--hell-border);
+  border-radius: 4px;
+  padding: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.hell-video-wrapper {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 */
+  height: 0;
+  overflow: hidden;
+  max-width: 100%;
+  background: #000;
+  border-radius: 4px;
+  margin-top: 20px;
+}
+
+.hell-video-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* =============================================== */
+/* RANKING TOP 3 */
+/* =============================================== */
+
+.hell-ranking-container {
+  background-color: var(--hell-card-bg);
+  border: 1px solid var(--hell-border);
+  border-radius: 4px;
+  padding: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.hell-ranking-podium {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 20px;
+  margin: 30px 0;
+}
+
+.hell-ranking-position {
+  text-align: center;
+  padding: 20px;
+  border-radius: 4px;
+  border: 1px solid var(--hell-border);
+  background-color: var(--secondary-bg);
+  transition: all 0.3s ease;
+  min-width: 180px;
+}
+
+.hell-ranking-position:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.hell-ranking-position.first {
+  border-color: #ffd700;
+  order: 2;
+  transform: scale(1.05);
+}
+
+.hell-ranking-position.second {
+  border-color: #c0c0c0;
+  order: 1;
+}
+
+.hell-ranking-position.third {
+  border-color: #cd7f32;
+  order: 3;
+}
+
+.rank-number {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.rank-number.first {
+  color: #ffd700;
+}
+
+.rank-number.second {
+  color: #c0c0c0;
+}
+
+.rank-number.third {
+  color: #cd7f32;
+}
+
+.rank-avatar {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.rank-name {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: var(--hell-accent);
+  margin-bottom: 5px;
+}
+
+.rank-score {
+  font-size: 1.1rem;
+  color: var(--hell-text);
+  margin-bottom: 5px;
+}
+
+.rank-combo {
+  font-size: 1rem;
+  color: var(--accent-color);
+  font-weight: bold;
+}
+
+/* =============================================== */
+/* CARDS DE ENEMIGOS */
+/* =============================================== */
+
+.hell-enemy-card,
+.hell-boss-card {
+  background-color: var(--hell-card-bg);
+  border: 1px solid var(--hell-border);
+  border-radius: 4px;
+  padding: 25px;
+  height: 100%;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.hell-enemy-card:hover,
+.hell-boss-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.enemy-level {
+  background-color: var(--accent-color);
+  color: white;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.boss-level {
+  background-color: var(--hell-primary);
+  font-size: 1rem;
+}
+
+.hell-enemy-card h4,
+.hell-boss-card h4 {
+  color: var(--hell-accent);
+  margin-bottom: 15px;
+}
+
+.enemy-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.stat {
+  background-color: var(--secondary-bg);
+  padding: 8px 12px;
+  border-radius: 4px;
+  border-left: 4px solid var(--accent-color);
+  font-size: 0.9rem;
+  color: var(--hell-text);
+}
+
+.boss-features {
+  margin-top: 20px;
+}
+
+.boss-phase {
+  background-color: var(--secondary-bg);
+  padding: 12px 15px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  border-left: 4px solid var(--accent-color);
+  color: var(--hell-text);
+  font-size: 0.95rem;
+}
+
+.boss-phase strong {
+  color: var(--hell-accent);
+}
+
+/* =============================================== */
+/* CARDS DE POWER-UPS */
+/* =============================================== */
+
+.hell-powerup-card {
+  background-color: var(--hell-card-bg);
+  border: 1px solid var(--hell-border);
+  border-radius: 4px;
+  padding: 25px;
+  text-align: center;
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.hell-powerup-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.powerup-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.hell-powerup-card h4 {
+  color: var(--hell-accent);
+  margin-bottom: 15px;
+}
+
+.hell-powerup-card p {
+  color: var(--hell-text);
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.powerup-color {
+  height: 4px;
+  border-radius: 2px;
+  margin-top: auto;
+}
+
+/* =============================================== */
+/* RESPONSIVE DESIGN */
+/* =============================================== */
+
+@media (max-width: 992px) {
+  .hell-title {
+    font-size: 3rem;
+  }
+
+  .hell-subtitle {
+    font-size: 1.3rem;
+  }
+
+  .hell-ranking-podium {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hell-ranking-position {
+    min-width: 250px;
+    margin-bottom: 20px;
+  }
+
+  .hell-ranking-position.first {
+    order: 1;
+    transform: scale(1);
+  }
+
+  .hell-ranking-position.second {
+    order: 2;
+  }
+
+  .hell-ranking-position.third {
+    order: 3;
+  }
+}
+
+@media (max-width: 768px) {
+  .hell-title {
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+  }
+
+  .hell-subtitle {
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+  }
+
+  .btn-hell-play {
+    font-size: 1rem;
+    padding: 12px 24px;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .hell-feature {
+    padding: 15px;
+  }
+
+  .hell-icon {
+    font-size: 1.5rem;
+  }
+
+  .control-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .control-key {
+    min-width: auto;
+  }
+
+  .control-desc {
+    text-align: center;
+  }
+
+  .rank-number {
+    font-size: 2.5rem;
+  }
+
+  .rank-avatar {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .hell-banner {
+    min-height: 60vh;
+  }
+
+  .hell-title {
+    font-size: 2rem;
+    letter-spacing: 1px;
+  }
+
+  .hell-subtitle {
+    font-size: 1rem;
+  }
+
+  .hell-description {
+    padding: 20px;
+  }
+
+  .hell-gameplay-card {
+    padding: 20px;
+  }
+
+  .hell-ranking-container {
+    padding: 20px;
+  }
+
+  .hell-ranking-position {
+    min-width: 200px;
+    padding: 15px;
+  }
+
+  .rank-number {
+    font-size: 2rem;
+  }
+
+  .rank-name {
+    font-size: 1.1rem;
+  }
+
+  .powerup-icon {
+    font-size: 2.5rem;
+  }
+}
