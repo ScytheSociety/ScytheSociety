@@ -22,7 +22,7 @@
 
     <!-- Main Menu Screen -->
     <div id="main-menu">
-        <!-- Logo del juego -->
+        <!-- Logo del juego - CORREGIDO PARA NO SUBIRSE -->
         <div class="game-logo-container">
             <img src="../imagenes/imagenesjuegosss/logo-hell-shooter.png" alt="Hell Shooter Logo" class="game-logo"
                 id="game-logo">
@@ -34,9 +34,10 @@
             <p class="game-subtitle">22nd Aniversario Ragnarok Online</p>
         </div>
 
-        <!-- Controles de entrada organizados -->
-        <div class="input-container">
-            <div class="input-section">
+        <!-- NUEVO DISEÑO: Layout horizontal para player config y botones principales -->
+        <div class="main-layout-container">
+            <!-- Configuración del jugador (izquierda) -->
+            <div class="player-config-section">
                 <h3 class="section-title">Configuración del Jugador</h3>
                 <div class="input-row">
                     <div class="input-group">
@@ -54,31 +55,29 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Botones principales organizados -->
-        <div class="button-container">
+            <!-- Botones principales (derecha) -->
             <div class="main-buttons-section">
-                <h3 class="section-title">Menú Principal</h3>
-                <div class="main-buttons-row">
-                    <button onclick="startGame()" class="gothic-button main-button primary-action">
-                        <i class="fas fa-play"></i>
-                        <span>JUGAR</span>
-                    </button>
-                    <button onclick="showInstructions()" class="gothic-button main-button">
+                <!-- JUGAR (prominente) -->
+                <button onclick="startGame()" class="gothic-button main-button primary-action play-button">
+                    <i class="fas fa-play"></i>
+                    <span>JUGAR</span>
+                </button>
+
+                <!-- Fila 1: Instrucciones y Ranking -->
+                <div class="button-row">
+                    <button onclick="showInstructions()" class="gothic-button secondary-button">
                         <i class="fas fa-book"></i>
                         <span>INSTRUCCIONES</span>
                     </button>
-                    <button onclick="viewRanking()" class="gothic-button main-button">
+                    <button onclick="viewRanking()" class="gothic-button secondary-button">
                         <i class="fas fa-trophy"></i>
                         <span>RANKING</span>
                     </button>
                 </div>
-            </div>
 
-            <!-- Botones secundarios -->
-            <div class="secondary-buttons-section">
-                <div class="secondary-buttons-row">
+                <!-- Fila 2: Historia y Música -->
+                <div class="button-row">
                     <button onclick="showStory()" class="gothic-button secondary-button">
                         <i class="fas fa-scroll"></i>
                         <span>HISTORIA</span>
@@ -195,8 +194,8 @@
     <!-- 4. Sistema principal (debe cargarse al final) -->
     <script src="main.js"></script>
 
-    <!-- Footer de Scythe Society -->
-    <footer id="scythe-footer">
+    <!-- Footer de Scythe Society - SOLO EN MENÚ PRINCIPAL -->
+    <footer id="scythe-footer" class="menu-only-footer">
         <span style="color: #8B0000;">♰</span>
         Creado con amor por la comunidad
         <span style="color: #FF0000; font-weight: bold;">Scythe Society</span>

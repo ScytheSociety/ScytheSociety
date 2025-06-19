@@ -1018,7 +1018,7 @@ async function saveAndViewRanking() {
 }
 
 /**
- * Muestra el ranking desde Google Sheets - CORREGIDO PARA MOSTRAR ENEMIGOS MATADOS
+ * Muestra el ranking desde Google Sheets - RESPONSIVE Y MEJORADO
  */
 async function viewRanking() {
   try {
@@ -1040,8 +1040,17 @@ async function viewRanking() {
 
     if (players.length === 0) {
       rankingContainer.innerHTML = `
-                <h2>📊 Ranking de Jugadores</h2>
-                <p style="text-align: center;">No hay puntuaciones registradas aún.</p>
+                <h2 style="
+                    color: var(--accent-color);
+                    margin-bottom: 25px;
+                    font-size: 2.0em;
+                    font-family: var(--professional-font);
+                    text-shadow: 0 0 15px var(--accent-color);
+                    font-weight: bold;
+                    text-align: center;
+                    line-height: 1.2;
+                ">📊 Ranking de Jugadores</h2>
+                <p style="text-align: center; color: #FFFFFF;">No hay puntuaciones registradas aún.</p>
                 <div style="text-align: center; margin-top: 20px;">
                     <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
                 </div>
@@ -1074,53 +1083,263 @@ async function viewRanking() {
 
     const top10 = sortedPlayers.slice(0, 10);
 
-    // 🔥 TABLA CORREGIDA - MOSTRAR ENEMIGOS MATADOS EN LUGAR DE COMBO MAX
+    // 🔥 TABLA RESPONSIVA MEJORADA
     rankingContainer.innerHTML = `
-            <h2>🏆 Ranking de Jugadores 🏆</h2>
-            <table>
-                <tr>
-                    <th>Pos</th>
-                    <th>Avatar</th>
-                    <th>Nombre</th>
-                    <th>Nivel</th>
-                    <th>Score</th>
-                    <th>Enemigos</th>
-                    <th>Tiempo</th>
-                    <th>Estado</th>
-                </tr>
-                ${top10
-                  .map(
-                    (player, index) => `
-                    <tr ${
-                      index < 3
-                        ? 'style="background-color: rgba(255, 215, 0, 0.2);"'
-                        : ""
-                    }>
-                        <td>${index + 1}${
-                      index === 0
-                        ? " 🥇"
-                        : index === 1
-                        ? " 🥈"
-                        : index === 2
-                        ? " 🥉"
-                        : ""
-                    }</td>
-                        <td>${player.avatar}</td>
-                        <td>${player.name}</td>
-                        <td>${player.level}</td>
-                        <td>${player.score}</td>
-                        <td style="color: #FF6B00; font-weight: bold;">${
-                          player.enemiesKilled
-                        }</td>
-                        <td>${player.time}s</td>
-                        <td>${player.status === "Victoria" ? "🏆" : "💀"}</td>
-                    </tr>
-                `
-                  )
-                  .join("")}
-            </table>
+            <h2 style="
+                color: var(--accent-color);
+                margin-bottom: 25px;
+                font-size: 2.0em;
+                font-family: var(--professional-font);
+                text-shadow: 0 0 15px var(--accent-color);
+                font-weight: bold;
+                text-align: center;
+                line-height: 1.2;
+            ">🏆 Ranking de Jugadores 🏆</h2>
+            
+            <!-- Contenedor responsivo para la tabla -->
+            <div class="ranking-table-container" style="
+                width: 100%;
+                overflow-x: auto;
+                background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(139, 0, 0, 0.3) 100%);
+                border-radius: 10px;
+                box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+                -webkit-overflow-scrolling: touch;
+            ">
+                <table style="
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 0;
+                    min-width: 600px;
+                ">
+                    <thead>
+                        <tr>
+                            <th style="
+                                padding: 12px 8px;
+                                border: 1px solid rgba(255, 0, 0, 0.3);
+                                text-align: center;
+                                background: linear-gradient(135deg, var(--secondary-color) 0%, var(--hover-color) 100%);
+                                color: var(--text-color);
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
+                                font-weight: bold;
+                                text-shadow: 0 0 5px #000;
+                                font-size: 0.8em;
+                                white-space: nowrap;
+                                font-family: var(--professional-font);
+                            ">Pos</th>
+                            <th style="
+                                padding: 12px 8px;
+                                border: 1px solid rgba(255, 0, 0, 0.3);
+                                text-align: center;
+                                background: linear-gradient(135deg, var(--secondary-color) 0%, var(--hover-color) 100%);
+                                color: var(--text-color);
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
+                                font-weight: bold;
+                                text-shadow: 0 0 5px #000;
+                                font-size: 0.8em;
+                                white-space: nowrap;
+                                font-family: var(--professional-font);
+                            ">Avatar</th>
+                            <th style="
+                                padding: 12px 8px;
+                                border: 1px solid rgba(255, 0, 0, 0.3);
+                                text-align: center;
+                                background: linear-gradient(135deg, var(--secondary-color) 0%, var(--hover-color) 100%);
+                                color: var(--text-color);
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
+                                font-weight: bold;
+                                text-shadow: 0 0 5px #000;
+                                font-size: 0.8em;
+                                white-space: nowrap;
+                                font-family: var(--professional-font);
+                            ">Nombre</th>
+                            <th style="
+                                padding: 12px 8px;
+                                border: 1px solid rgba(255, 0, 0, 0.3);
+                                text-align: center;
+                                background: linear-gradient(135deg, var(--secondary-color) 0%, var(--hover-color) 100%);
+                                color: var(--text-color);
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
+                                font-weight: bold;
+                                text-shadow: 0 0 5px #000;
+                                font-size: 0.8em;
+                                white-space: nowrap;
+                                font-family: var(--professional-font);
+                            ">Nivel</th>
+                            <th style="
+                                padding: 12px 8px;
+                                border: 1px solid rgba(255, 0, 0, 0.3);
+                                text-align: center;
+                                background: linear-gradient(135deg, var(--secondary-color) 0%, var(--hover-color) 100%);
+                                color: var(--text-color);
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
+                                font-weight: bold;
+                                text-shadow: 0 0 5px #000;
+                                font-size: 0.8em;
+                                white-space: nowrap;
+                                font-family: var(--professional-font);
+                            ">Score</th>
+                            <th style="
+                                padding: 12px 8px;
+                                border: 1px solid rgba(255, 0, 0, 0.3);
+                                text-align: center;
+                                background: linear-gradient(135deg, var(--secondary-color) 0%, var(--hover-color) 100%);
+                                color: var(--text-color);
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
+                                font-weight: bold;
+                                text-shadow: 0 0 5px #000;
+                                font-size: 0.8em;
+                                white-space: nowrap;
+                                font-family: var(--professional-font);
+                            ">Enemigos</th>
+                            <th style="
+                                padding: 12px 8px;
+                                border: 1px solid rgba(255, 0, 0, 0.3);
+                                text-align: center;
+                                background: linear-gradient(135deg, var(--secondary-color) 0%, var(--hover-color) 100%);
+                                color: var(--text-color);
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
+                                font-weight: bold;
+                                text-shadow: 0 0 5px #000;
+                                font-size: 0.8em;
+                                white-space: nowrap;
+                                font-family: var(--professional-font);
+                            ">Tiempo</th>
+                            <th style="
+                                padding: 12px 8px;
+                                border: 1px solid rgba(255, 0, 0, 0.3);
+                                text-align: center;
+                                background: linear-gradient(135deg, var(--secondary-color) 0%, var(--hover-color) 100%);
+                                color: var(--text-color);
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
+                                font-weight: bold;
+                                text-shadow: 0 0 5px #000;
+                                font-size: 0.8em;
+                                white-space: nowrap;
+                                font-family: var(--professional-font);
+                            ">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${top10
+                          .map(
+                            (player, index) => `
+                            <tr style="
+                                ${
+                                  index === 0
+                                    ? "background: linear-gradient(90deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0.1) 100%);"
+                                    : index === 1
+                                    ? "background: linear-gradient(90deg, rgba(192, 192, 192, 0.3) 0%, rgba(192, 192, 192, 0.1) 100%);"
+                                    : index === 2
+                                    ? "background: linear-gradient(90deg, rgba(205, 127, 50, 0.3) 0%, rgba(205, 127, 50, 0.1) 100%);"
+                                    : index % 2 === 1
+                                    ? "background: rgba(139, 0, 0, 0.2);"
+                                    : "background: transparent;"
+                                }
+                                transition: all 0.3s ease;
+                            " onmouseover="this.style.background='rgba(139, 0, 0, 0.4)'; this.style.transform='scale(1.01)'" 
+                               onmouseout="this.style.background='${
+                                 index === 0
+                                   ? "linear-gradient(90deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0.1) 100%)"
+                                   : index === 1
+                                   ? "linear-gradient(90deg, rgba(192, 192, 192, 0.3) 0%, rgba(192, 192, 192, 0.1) 100%)"
+                                   : index === 2
+                                   ? "linear-gradient(90deg, rgba(205, 127, 50, 0.3) 0%, rgba(205, 127, 50, 0.1) 100%)"
+                                   : index % 2 === 1
+                                   ? "rgba(139, 0, 0, 0.2)"
+                                   : "transparent"
+                               }'; this.style.transform='scale(1)'">
+                                <td style="
+                                    padding: 12px 8px;
+                                    border: 1px solid rgba(255, 0, 0, 0.3);
+                                    text-align: center;
+                                    font-family: var(--professional-font);
+                                    font-size: 0.9em;
+                                    color: #FFFFFF;
+                                ">${index + 1}${
+                              index === 0
+                                ? " 🥇"
+                                : index === 1
+                                ? " 🥈"
+                                : index === 2
+                                ? " 🥉"
+                                : ""
+                            }</td>
+                                <td style="
+                                    padding: 12px 8px;
+                                    border: 1px solid rgba(255, 0, 0, 0.3);
+                                    text-align: center;
+                                    font-family: var(--professional-font);
+                                    font-size: 0.9em;
+                                    color: #FFFFFF;
+                                ">${player.avatar}</td>
+                                <td style="
+                                    padding: 12px 8px;
+                                    border: 1px solid rgba(255, 0, 0, 0.3);
+                                    text-align: center;
+                                    font-family: var(--professional-font);
+                                    font-size: 0.9em;
+                                    color: #FFFFFF;
+                                ">${player.name}</td>
+                                <td style="
+                                    padding: 12px 8px;
+                                    border: 1px solid rgba(255, 0, 0, 0.3);
+                                    text-align: center;
+                                    font-family: var(--professional-font);
+                                    font-size: 0.9em;
+                                    color: #FFFFFF;
+                                ">${player.level}</td>
+                                <td style="
+                                    padding: 12px 8px;
+                                    border: 1px solid rgba(255, 0, 0, 0.3);
+                                    text-align: center;
+                                    font-family: var(--professional-font);
+                                    font-size: 0.9em;
+                                    color: #FFFFFF;
+                                ">${player.score}</td>
+                                <td style="
+                                    padding: 12px 8px;
+                                    border: 1px solid rgba(255, 0, 0, 0.3);
+                                    text-align: center;
+                                    font-family: var(--professional-font);
+                                    font-size: 0.9em;
+                                    color: #FF6B00;
+                                    font-weight: bold;
+                                ">${player.enemiesKilled}</td>
+                                <td style="
+                                    padding: 12px 8px;
+                                    border: 1px solid rgba(255, 0, 0, 0.3);
+                                    text-align: center;
+                                    font-family: var(--professional-font);
+                                    font-size: 0.9em;
+                                    color: #FFFFFF;
+                                ">${player.time}s</td>
+                                <td style="
+                                    padding: 12px 8px;
+                                    border: 1px solid rgba(255, 0, 0, 0.3);
+                                    text-align: center;
+                                    font-family: var(--professional-font);
+                                    font-size: 0.9em;
+                                    color: #FFFFFF;
+                                ">${
+                                  player.status === "Victoria" ? "🏆" : "💀"
+                                }</td>
+                            </tr>
+                        `
+                          )
+                          .join("")}
+                    </tbody>
+                </table>
+            </div>
             <div style="margin-top: 20px; text-align: center;">
-                <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
+                <button onclick="backToMenu()" class="gothic-button" style="margin-right: 10px;">Volver al Menú</button>
                 <button onclick="viewRanking()" class="gothic-button">Actualizar</button>
             </div>
         `;
@@ -1129,10 +1348,19 @@ async function viewRanking() {
 
     const rankingContainer = document.getElementById("ranking-container");
     rankingContainer.innerHTML = `
-            <h2>❌ Error al cargar el ranking</h2>
-            <p>No se pudo conectar con Google Sheets.</p>
-            <button onclick="backToMenu()" class="gothic-button">Volver al Menú</button>
-            <button onclick="viewRanking()" class="gothic-button">Reintentar</button>
+            <h2 style="
+                color: var(--accent-color);
+                font-family: var(--professional-font);
+                text-shadow: 0 0 15px var(--accent-color);
+                font-weight: bold;
+                text-align: center;
+                line-height: 1.2;
+            ">❌ Error al cargar el ranking</h2>
+            <p style="color: #FFFFFF; text-align: center;">No se pudo conectar con Google Sheets.</p>
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="backToMenu()" class="gothic-button" style="margin-right: 10px;">Volver al Menú</button>
+                <button onclick="viewRanking()" class="gothic-button">Reintentar</button>
+            </div>
         `;
   }
 }

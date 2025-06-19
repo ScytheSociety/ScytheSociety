@@ -1,6 +1,6 @@
 /**
- * Hell Shooter - UI Management CORREGIDO
- * Sistema de interfaz más elegante y profesional
+ * Hell Shooter - UI Management CORREGIDO Y MEJORADO
+ * Sistema de interfaz más elegante y profesional con modales responsivos
  */
 
 const UI = {
@@ -16,7 +16,7 @@ const UI = {
    */
   init() {
     this.createVolumeControl();
-    this.createMusicTicker(); // ← AGREGAR ESTA LÍNEA
+    this.createMusicTicker();
     this.createTotalEnemiesDisplay();
     this.setupEventListeners();
     console.log("🎨 Sistema de UI inicializado");
@@ -56,11 +56,12 @@ const UI = {
   // ======================================================
   // SISTEMA DE MENSAJES EN PANTALLA - MEJORADO
   // ======================================================
+
   /**
-   * 🔥 NUEVO: Sistema de mensajes en la parte superior - SOLO 2 SLOTS
+   * Sistema de mensajes en la parte superior - SOLO 2 SLOTS
    */
   showScreenMessage(message, color = "#FFFFFF") {
-    // 🚫 FILTRAR MENSAJES REPETITIVOS Y SPAM
+    // Filtrar mensajes repetitivos y spam
     const spamMessages = [
       "expirando",
       "terminado",
@@ -75,16 +76,11 @@ const UI = {
     ];
 
     if (spamMessages.some((spam) => message.includes(spam))) {
-      return; // No mostrar mensajes de spam
+      return;
     }
 
     const messageId = this.messageIdCounter++;
-
-    // 🔥 SOLO 2 POSICIONES FIJAS EN LA PARTE SUPERIOR
-    const positions = [
-      { y: 8 }, // Posición 1 (arriba)
-      { y: 16 }, // Posición 2 (abajo)
-    ];
+    const positions = [{ y: 8 }, { y: 16 }];
 
     // Limpiar mensajes antiguos
     this.messagePositions = this.messagePositions.filter((pos) => pos.active);
@@ -118,14 +114,14 @@ const UI = {
       active: true,
       timeCreated: Date.now(),
     };
-    this.messagePositions.unshift(position); // Agregar al inicio
+    this.messagePositions.unshift(position);
 
     // Crear elemento de mensaje
     const messageElement = document.createElement("div");
     messageElement.textContent = message;
     messageElement.setAttribute("data-message-id", messageId);
     messageElement.style.position = "fixed";
-    messageElement.style.top = "8%"; // Siempre arriba
+    messageElement.style.top = "8%";
     messageElement.style.left = "50%";
     messageElement.style.transform = "translateX(-50%)";
     messageElement.style.color = color;
@@ -146,8 +142,6 @@ const UI = {
     messageElement.style.letterSpacing = "1px";
     messageElement.style.textTransform = "uppercase";
     messageElement.style.boxShadow = "none";
-    messageElement.style.webkitBoxShadow = "none";
-    messageElement.style.mozBoxShadow = "none";
 
     document.body.appendChild(messageElement);
 
@@ -182,7 +176,7 @@ const UI = {
    * Actualiza la información del juego
    */
   updateGameInfo() {
-    // NUEVO: Actualizar información del jugador
+    // Actualizar información del jugador
     const playerNameElement = document.getElementById("player-name");
     const playerAvatarElement = document.getElementById("player-avatar");
 
@@ -194,7 +188,6 @@ const UI = {
       playerAvatarElement.textContent = Player.getAvatar();
     }
 
-    // Resto del código existente...
     const level = window.getLevel();
     const score = window.getScore();
     const gameTime = window.getGameTime();
@@ -247,7 +240,7 @@ const UI = {
     } else {
       indicator.classList.remove("special-power-ready");
       const progress = BulletManager.getSpecialPowerProgress();
-      const required = 15; // 🔥 CAMBIADO: Era 25, ahora 15
+      const required = 15;
       const current = Math.floor(progress * required);
       counter.textContent = `${current}/${required}`;
     }
@@ -262,7 +255,7 @@ const UI = {
 
     const lives = Math.max(0, Player.getLives());
 
-    // ⭐ CORREGIR: Verificar si el juego ha terminado
+    // Verificar si el juego ha terminado
     if (window.isGameEnded && window.isGameEnded()) {
       livesDisplay.innerHTML = "💀 GAME OVER";
       livesDisplay.style.color = "#FF0000";
@@ -273,12 +266,10 @@ const UI = {
     let livesText = "";
 
     if (lives === 0) {
-      // ⭐ MOSTRAR GAME OVER INMEDIATAMENTE CUANDO NO HAY VIDAS
       livesText = "💀 GAME OVER";
       livesDisplay.style.color = "#FF0000";
       livesDisplay.style.fontWeight = "bold";
 
-      // ⭐ ACTIVAR GAME OVER SI NO SE HA ACTIVADO AÚN
       if (window.gameOver && !window.isGameEnded()) {
         console.log("💀 UI detectó 0 vidas - activando game over");
         setTimeout(() => {
@@ -301,15 +292,159 @@ const UI = {
   },
 
   /**
-   * 🔥 CORREGIDO: Actualiza el indicador de power-up activo con múltiples poderes
+   * Actualiza el indicador de power-up activo
    */
   updatePowerUpIndicator() {
-    // Ya no necesitamos indicador separado,
-    // los círculos de tiempo están en el personaje
     const indicator = document.getElementById("power-up-indicator");
     if (indicator && indicator.parentNode) {
       indicator.parentNode.removeChild(indicator);
     }
+  },
+
+  // ======================================================
+  // MODALES MEJORADOS Y RESPONSIVOS
+  // ======================================================
+
+  /**
+   * 🔥 NUEVO: Muestra las instrucciones del juego - RESPONSIVE Y CONSISTENTE
+   */
+  showInstructions(callback) {
+    const modal = document.createElement("div");
+    modal.className = "instructions-modal";
+    modal.id = "instructions-modal";
+
+    modal.innerHTML = `
+      <div class="instructions-content">
+        <button onclick="closeInstructions()" class="modal-close-button">✕</button>
+
+        <h2 class="instructions-title">🎮 HELL SHOOTER 🎮</h2>
+        
+        <!-- Grid de Información Compacta -->
+        <div style="
+          display: grid; 
+          grid-template-columns: 1fr 1fr; 
+          gap: 15px; 
+          margin-bottom: 20px;
+          font-size: 13px;
+        ">
+          <!-- Controles -->
+          <div style="
+            background: rgba(139, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+          ">
+            <h3 style="color: #FF0000; margin: 0 0 8px 0; font-size: 14px;">🎯 CONTROLES</h3>
+            <div style="line-height: 1.4; color: #FFFFFF;">
+              <div>🖱️ <strong>Movimiento:</strong> Mouse/Táctil</div>
+              <div>🔫 <strong>Disparo:</strong> Automático</div>
+              <div>⚡ <strong>Poder:</strong> ESPACIO / 🔥</div>
+              <div>🎯 <strong>Combo:</strong> Elimina sin parar</div>
+            </div>
+          </div>
+          
+          <!-- Supervivencia -->
+          <div style="
+            background: rgba(139, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+          ">
+            <h3 style="color: #FF0000; margin: 0 0 8px 0; font-size: 14px;">💀 SUPERVIVENCIA</h3>
+            <div style="line-height: 1.4; color: #FFFFFF;">
+              <div>❤️ <strong>Vidas:</strong> 7 inicial (máx. 14)</div>
+              <div>🎮 <strong>Niveles:</strong> 10 épicos</div>
+              <div>👹 <strong>Boss Final:</strong> Nivel 11</div>
+              <div>⚡ <strong>Poder:</strong> Cada 15 enemigos</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Power-ups Compactos -->
+        <div style="
+          background: rgba(139, 0, 0, 0.2);
+          padding: 15px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 0, 0, 0.3);
+          margin-bottom: 20px;
+        ">
+          <h3 style="color: #FF0000; margin: 0 0 10px 0; font-size: 14px; text-align: center;">⚡ POWER-UPS ÉPICOS</h3>
+          <div style="
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px; 
+            justify-content: center;
+            font-size: 11px;
+          ">
+            <span style="background: rgba(0,255,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(0,255,0,0.5); color: #FFFFFF;">
+              🟢 Escudo (4s)
+            </span>
+            <span style="background: rgba(0,255,255,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(0,255,255,0.5); color: #FFFFFF;">
+              🔵 Amplio (7 balas)
+            </span>
+            <span style="background: rgba(255,136,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,136,0,0.5); color: #FFFFFF;">
+              🟠 Explosivas
+            </span>
+            <span style="background: rgba(255,0,255,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,0,255,0.5); color: #FFFFFF;">
+              🟣 Súper Rápido
+            </span>
+          </div>
+        </div>
+
+        <!-- Eventos Especiales -->
+        <div style="
+          background: rgba(139, 0, 0, 0.2);
+          padding: 15px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 0, 0, 0.3);
+          margin-bottom: 20px;
+        ">
+          <h3 style="color: #FF0000; margin: 0 0 10px 0; font-size: 14px; text-align: center;">🌟 EVENTOS ÚNICOS</h3>
+          <div style="
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px; 
+            justify-content: center;
+            font-size: 11px;
+          ">
+            <span style="background: rgba(0,187,255,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(0,187,255,0.5); color: #FFFFFF;">
+              🌊 Tiempo Lento
+            </span>
+            <span style="background: rgba(255,100,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,100,0,0.5); color: #FFFFFF;">
+              🔥 Modo Frenesí
+            </span>
+            <span style="background: rgba(255,136,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,136,0,0.5); color: #FFFFFF;">
+              ☄️ Meteoritos
+            </span>
+            <span style="background: rgba(255,215,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,215,0,0.5); color: #FFFFFF;">
+              ✨ Lluvia Items
+            </span>
+          </div>
+        </div>
+        
+        <!-- Tip Final -->
+        <div style="
+          text-align: center; 
+          margin-top: 15px; 
+          font-size: 11px; 
+          color: #CCCCCC;
+          font-style: italic;
+        ">
+          💡 Tip: Mantén combos altos para multiplicar puntos y desbloquear eventos épicos
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+  },
+
+  /**
+   * Muestra las instrucciones desde el menú principal
+   */
+  showInstructionsFromMenu() {
+    this.showInstructions(() => {
+      // No hacer nada, solo cerrar
+    });
   },
 
   // ======================================================
@@ -322,7 +457,6 @@ const UI = {
   createParticleEffect(x, y, color, particleCount) {
     const particles = [];
 
-    // Crear partículas
     for (let i = 0; i < particleCount; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 1 + Math.random() * 3;
@@ -338,7 +472,6 @@ const UI = {
       });
     }
 
-    // Animar partículas
     const animateParticles = () => {
       if (particles.length === 0) return;
 
@@ -346,7 +479,6 @@ const UI = {
       const ctx = window.getContext();
       if (!ctx) return;
 
-      // Actualizar y dibujar partículas
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
 
@@ -354,7 +486,6 @@ const UI = {
         p.y += p.speedY;
         p.life--;
 
-        // Dibujar partícula
         ctx.save();
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
@@ -363,13 +494,11 @@ const UI = {
         ctx.fill();
         ctx.restore();
 
-        // Eliminar partículas muertas
         if (p.life <= 0) {
           particles.splice(i, 1);
         }
       }
 
-      // Continuar animación
       if (particles.length > 0) {
         requestAnimationFrame(animateParticles);
       }
@@ -382,10 +511,8 @@ const UI = {
    * Crea efecto de explosión
    */
   createExplosionEffect(x, y) {
-    // Partículas principales
     this.createParticleEffect(x, y, "#FF8800", 30);
 
-    // Onda expansiva
     const canvas = window.getCanvas();
     const ctx = window.getContext();
     if (!ctx) return;
@@ -441,220 +568,9 @@ const UI = {
     }
   },
 
-  /**
-   * Determina el color de texto apropiado según el fondo
-   */
-  getContrastColor(backgroundColor) {
-    // Convertir hex a RGB
-    const hex = backgroundColor.replace("#", "");
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-
-    // Calcular luminancia
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
-    // Retornar negro o blanco según luminancia
-    return luminance > 0.5 ? "#000000" : "#FFFFFF";
-  },
-
   // ======================================================
-  // PANTALLAS Y MODALES - CORREGIDO
+  // PANTALLAS Y MODALES
   // ======================================================
-
-  /**
-   * Muestra las instrucciones del juego - VERSIÓN ELEGANTE Y COMPACTA
-   */
-  showInstructions(callback) {
-    const modal = document.createElement("div");
-    modal.style.position = "fixed";
-    modal.style.top = "50%";
-    modal.style.left = "50%";
-    modal.style.width = "90%";
-    modal.style.maxWidth = "500px";
-    modal.style.maxHeight = "85vh";
-    modal.style.transform = "translate(-50%, -50%)";
-    modal.style.backgroundColor = "rgba(0, 0, 0, 0.95)";
-    modal.style.border = "3px solid #8B0000";
-    modal.style.borderRadius = "20px";
-    modal.style.padding = "25px";
-    modal.style.color = "#FFFFFF";
-    modal.style.zIndex = "1000";
-    modal.style.fontFamily = '"Arial", sans-serif';
-    modal.style.boxShadow = "0 0 40px #FF0000";
-    modal.style.overflowY = "auto";
-    modal.style.backdropFilter = "blur(10px)";
-
-    modal.innerHTML = `
-    <!-- Título Principal -->
-    <h2 style="
-      text-align: center; 
-      color: #FF0000; 
-      text-shadow: 0 0 20px #FF0000; 
-      margin: 0 0 20px 0; 
-      font-size: 1.8em;
-      letter-spacing: 1px;
-    ">
-      🎮 HELL SHOOTER 🎮
-    </h2>
-    
-    <!-- Grid de Información Compacta -->
-    <div style="
-      display: grid; 
-      grid-template-columns: 1fr 1fr; 
-      gap: 15px; 
-      margin-bottom: 20px;
-      font-size: 13px;
-    ">
-      <!-- Controles -->
-      <div style="
-        background: rgba(139, 0, 0, 0.3);
-        padding: 12px;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 0, 0, 0.3);
-      ">
-        <h3 style="color: #FF0000; margin: 0 0 8px 0; font-size: 14px;">🎯 CONTROLES</h3>
-        <div style="line-height: 1.4;">
-          <div>🖱️ <strong>Movimiento:</strong> Mouse/Táctil</div>
-          <div>🔫 <strong>Disparo:</strong> Automático</div>
-          <div>⚡ <strong>Poder:</strong> ESPACIO / 🔥</div>
-          <div>🎯 <strong>Combo:</strong> Elimina sin parar</div>
-        </div>
-      </div>
-      
-      <!-- Supervivencia -->
-      <div style="
-        background: rgba(139, 0, 0, 0.3);
-        padding: 12px;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 0, 0, 0.3);
-      ">
-        <h3 style="color: #FF0000; margin: 0 0 8px 0; font-size: 14px;">💀 SUPERVIVENCIA</h3>
-        <div style="line-height: 1.4;">
-          <div>❤️ <strong>Vidas:</strong> 7 inicial (máx. 14)</div>
-          <div>🎮 <strong>Niveles:</strong> 10 épicos</div>
-          <div>👹 <strong>Boss Final:</strong> Nivel 11</div>
-          <div>⚡ <strong>Poder:</strong> Cada 15 enemigos</div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Power-ups Compactos -->
-    <div style="
-      background: rgba(139, 0, 0, 0.2);
-      padding: 15px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 0, 0, 0.3);
-      margin-bottom: 20px;
-    ">
-      <h3 style="color: #FF0000; margin: 0 0 10px 0; font-size: 14px; text-align: center;">⚡ POWER-UPS ÉPICOS</h3>
-      <div style="
-        display: flex; 
-        flex-wrap: wrap; 
-        gap: 8px; 
-        justify-content: center;
-        font-size: 11px;
-      ">
-        <span style="background: rgba(0,255,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(0,255,0,0.5);">
-          🟢 Escudo (4s)
-        </span>
-        <span style="background: rgba(0,255,255,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(0,255,255,0.5);">
-          🔵 Amplio (7 balas)
-        </span>
-        <span style="background: rgba(255,136,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,136,0,0.5);">
-          🟠 Explosivas
-        </span>
-        <span style="background: rgba(255,0,255,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,0,255,0.5);">
-          🟣 Súper Rápido
-        </span>
-      </div>
-    </div>
-
-    <!-- Eventos Especiales -->
-    <div style="
-      background: rgba(139, 0, 0, 0.2);
-      padding: 15px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 0, 0, 0.3);
-      margin-bottom: 20px;
-    ">
-      <h3 style="color: #FF0000; margin: 0 0 10px 0; font-size: 14px; text-align: center;">🌟 EVENTOS ÚNICOS</h3>
-      <div style="
-        display: flex; 
-        flex-wrap: wrap; 
-        gap: 8px; 
-        justify-content: center;
-        font-size: 11px;
-      ">
-        <span style="background: rgba(0,187,255,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(0,187,255,0.5);">
-          🌊 Tiempo Lento
-        </span>
-        <span style="background: rgba(255,100,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,100,0,0.5);">
-          🔥 Modo Frenesí
-        </span>
-        <span style="background: rgba(255,136,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,136,0,0.5);">
-          ☄️ Meteoritos
-        </span>
-        <span style="background: rgba(255,215,0,0.3); padding: 4px 8px; border-radius: 15px; border: 1px solid rgba(255,215,0,0.5);">
-          ✨ Lluvia Items
-        </span>
-      </div>
-    </div>
-    
-    <!-- Botón de Inicio Épico -->
-    <div style="text-align: center; margin-top: 25px;">
-      <button id="start-game-btn" style="
-        background: linear-gradient(45deg, #8B0000, #FF0000, #8B0000); 
-        color: white; 
-        padding: 15px 30px; 
-        font-size: 16px; 
-        border: none; 
-        border-radius: 30px; 
-        cursor: pointer; 
-        font-weight: bold; 
-        box-shadow: 0 6px 20px rgba(255,0,0,0.4);
-        transition: all 0.3s; 
-        font-family: inherit;
-        letter-spacing: 1px;
-        position: relative;
-        overflow: hidden;
-      ">
-        ✅ ¡AHORA VE A JUGAR! ✅
-      </button>
-    </div>
-
-    <!-- Tip Final -->
-    <div style="
-      text-align: center; 
-      margin-top: 15px; 
-      font-size: 11px; 
-      color: #CCCCCC;
-      font-style: italic;
-    ">
-      💡 Tip: Mantén combos altos para multiplicar puntos y desbloquear eventos épicos
-    </div>
-  `;
-
-    document.body.appendChild(modal);
-
-    // Efectos del botón
-    const startBtn = document.getElementById("start-game-btn");
-
-    startBtn.addEventListener("mouseenter", () => {
-      startBtn.style.transform = "scale(1.05)";
-      startBtn.style.boxShadow = "0 8px 25px rgba(255,0,0,0.6)";
-    });
-
-    startBtn.addEventListener("mouseleave", () => {
-      startBtn.style.transform = "scale(1)";
-      startBtn.style.boxShadow = "0 6px 20px rgba(255,0,0,0.4)";
-    });
-
-    startBtn.addEventListener("click", () => {
-      document.body.removeChild(modal);
-      callback();
-    });
-  },
 
   /**
    * Muestra transición de nivel
@@ -702,7 +618,6 @@ const UI = {
     const gameOverScreen = document.getElementById("game-over");
 
     if (gameOverScreen) {
-      // Crear contenido HTML mejorado
       gameOverScreen.innerHTML = `
       <div style="
         background: linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(139,0,0,0.95) 100%);
@@ -715,7 +630,6 @@ const UI = {
         max-width: 400px;
         margin: 0 auto;
       ">
-        <!-- Título Principal -->
         <h1 style="
           font-size: 2.2em;
           margin: 0 0 15px 0;
@@ -727,7 +641,6 @@ const UI = {
           ${isVictory ? "🏆 VICTORIA 🏆" : "💀 GAME OVER 💀"}
         </h1>
 
-        <!-- Información del Juego -->
         <div style="
           background: rgba(0,0,0,0.6);
           border-radius: 12px;
@@ -753,7 +666,6 @@ const UI = {
           }
         </div>
 
-        <!-- Botones Elegantes -->
         <div style="
           display: flex;
           flex-direction: column;
@@ -846,7 +758,7 @@ const UI = {
   },
 
   // ======================================================
-  // SISTEMA DE VOLUMEN
+  // CONTROLES DE VOLUMEN Y MÚSICA
   // ======================================================
 
   /**
@@ -858,12 +770,12 @@ const UI = {
     volumeButton.style.position = "fixed";
     volumeButton.style.top = "60px";
     volumeButton.style.right = "15px";
-    volumeButton.style.width = "48px"; // ⬅️ EXACTAMENTE IGUAL
-    volumeButton.style.height = "48px"; // ⬅️ EXACTAMENTE IGUAL
-    volumeButton.style.minWidth = "48px"; // ⬅️ NUEVO: Forzar ancho mínimo
-    volumeButton.style.minHeight = "48px"; // ⬅️ NUEVO: Forzar alto mínimo
-    volumeButton.style.maxWidth = "48px"; // ⬅️ NUEVO: Forzar ancho máximo
-    volumeButton.style.maxHeight = "48px"; // ⬅️ NUEVO: Forzar alto máximo
+    volumeButton.style.width = "48px";
+    volumeButton.style.height = "48px";
+    volumeButton.style.minWidth = "48px";
+    volumeButton.style.minHeight = "48px";
+    volumeButton.style.maxWidth = "48px";
+    volumeButton.style.maxHeight = "48px";
     volumeButton.style.borderRadius = "50%";
     volumeButton.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
     volumeButton.style.border = "2px solid #8B0000";
@@ -875,14 +787,14 @@ const UI = {
     volumeButton.style.display = "flex";
     volumeButton.style.alignItems = "center";
     volumeButton.style.justifyContent = "center";
-    volumeButton.style.boxSizing = "border-box"; // ⬅️ NUEVO: Importante para mantener forma
-    volumeButton.style.padding = "0"; // ⬅️ NUEVO: Sin padding interno
-    volumeButton.style.margin = "0"; // ⬅️ NUEVO: Sin margin
+    volumeButton.style.boxSizing = "border-box";
+    volumeButton.style.padding = "0";
+    volumeButton.style.margin = "0";
     volumeButton.style.boxShadow = "0 2px 8px rgba(0,0,0,0.5)";
-    volumeButton.style.aspectRatio = "1 / 1"; // ⬅️ NUEVO: Forzar proporción 1:1
+    volumeButton.style.aspectRatio = "1 / 1";
     volumeButton.textContent = "🔊";
 
-    let volumeStates = [1.0, 0.5, 0.25, 0.0]; // 100%, 50%, 25%, mute
+    let volumeStates = [1.0, 0.5, 0.25, 0.0];
     let currentStateIndex = 0;
 
     volumeButton.addEventListener("click", () => {
@@ -891,7 +803,6 @@ const UI = {
 
       AudioManager.setMasterVolume(newVolume);
 
-      // Cambiar icono según volumen
       if (newVolume === 0) {
         volumeButton.textContent = "🔇";
       } else if (newVolume <= 0.25) {
@@ -902,7 +813,6 @@ const UI = {
         volumeButton.textContent = "🔊";
       }
 
-      // Efecto visual
       volumeButton.style.transform = "scale(1.1)";
       setTimeout(() => {
         volumeButton.style.transform = "scale(1)";
@@ -913,7 +823,7 @@ const UI = {
   },
 
   /**
-   * Crea el ticker de música debajo del botón de volumen
+   * Crea el ticker de música
    */
   createMusicTicker() {
     const musicTicker = document.createElement("div");
@@ -964,23 +874,13 @@ const UI = {
   },
 
   /**
-   * Actualiza el texto del ticker de música
-   */
-  updateMusicTicker(trackName) {
-    const tickerText = document.getElementById("ticker-text");
-    if (tickerText) {
-      tickerText.textContent = trackName;
-    }
-  },
-
-  /**
    * Crea el display del contador total de enemigos
    */
   createTotalEnemiesDisplay() {
     const totalDisplay = document.createElement("div");
     totalDisplay.id = "total-enemies-display";
     totalDisplay.style.position = "fixed";
-    totalDisplay.style.bottom = "90px"; // ⬅️ CAMBIO: Era 70px, ahora 90px (más arriba)
+    totalDisplay.style.bottom = "90px";
     totalDisplay.style.left = "15px";
     totalDisplay.style.backgroundColor = "rgba(0, 0, 0, 0.85)";
     totalDisplay.style.color = "#FFFFFF";
@@ -994,7 +894,7 @@ const UI = {
     totalDisplay.style.zIndex = "1000";
     totalDisplay.style.minWidth = "70px";
     totalDisplay.style.textAlign = "center";
-    totalDisplay.style.display = "none"; // ⬅️ NUEVO: Oculto por defecto
+    totalDisplay.style.display = "none";
     totalDisplay.textContent = "Total: 0";
 
     document.body.appendChild(totalDisplay);
@@ -1004,9 +904,6 @@ const UI = {
   // EMOJI PICKER
   // ======================================================
 
-  /**
-   * Abre el selector de emojis
-   */
   openEmojiPicker() {
     const picker = document.getElementById("emoji-picker");
     if (picker) {
@@ -1014,9 +911,6 @@ const UI = {
     }
   },
 
-  /**
-   * Cierra el selector de emojis
-   */
   closeEmojiPicker() {
     const picker = document.getElementById("emoji-picker");
     if (picker) {
@@ -1024,9 +918,6 @@ const UI = {
     }
   },
 
-  /**
-   * Selecciona un emoji
-   */
   selectEmoji(emoji) {
     const avatarInput = document.getElementById("avatar");
     if (avatarInput) {
@@ -1035,9 +926,6 @@ const UI = {
     this.closeEmojiPicker();
   },
 
-  /**
-   * Centra el menú principal
-   */
   centerMainMenu() {
     const mainMenu = document.getElementById("main-menu");
     if (mainMenu) {
@@ -1049,21 +937,19 @@ const UI = {
     }
   },
 
-  /**
-   * Resetea el sistema de UI
-   */
+  // ======================================================
+  // RESET Y LIMPIEZA
+  // ======================================================
+
   reset() {
-    // Limpiar mensajes
     this.messagePositions = [];
     this.messageIdCounter = 0;
 
-    // Limpiar indicadores dinámicos
     const powerUpIndicator = document.getElementById("power-up-indicator");
     if (powerUpIndicator && powerUpIndicator.parentNode) {
       powerUpIndicator.parentNode.removeChild(powerUpIndicator);
     }
 
-    // Resetear display total
     const totalDisplay = document.getElementById("total-enemies-display");
     if (totalDisplay) {
       totalDisplay.textContent = "Total: 0";
@@ -1071,42 +957,18 @@ const UI = {
 
     console.log("🎨 Sistema de UI reseteado");
   },
-  /**
-   * Muestra instrucciones desde el menú principal
-   */
-  showInstructionsFromMenu() {
-    this.showInstructions(() => {
-      // No hacer nada, solo cerrar
-    });
-  },
 };
 
-// Hacer funciones globales para HTML
+// Funciones globales para HTML
 window.openEmojiPicker = () => UI.openEmojiPicker();
 window.closeEmojiPicker = () => UI.closeEmojiPicker();
 window.selectEmoji = (emoji) => UI.selectEmoji(emoji);
+window.closeInstructions = () => {
+  const modal = document.getElementById("instructions-modal");
+  if (modal) modal.remove();
+};
 
 // Hacer disponible globalmente
 window.UI = UI;
 
-console.log("🎨 ui.js cargado - Sistema de UI corregido");
-
-// AGREGAR AQUÍ (después del console.log final):
-const style = document.createElement("style");
-style.textContent = `
-@keyframes messageSlideIn {
-    0% { 
-        opacity: 0; 
-        transform: translateX(-50%) translateY(-20px) scale(0.8); 
-    }
-    100% { 
-        opacity: 1; 
-        transform: translateX(-50%) translateY(0) scale(1); 
-    }
-}
-@keyframes messagePulse {
-    0%, 100% { transform: translateX(-50%) scale(1); }
-    50% { transform: translateX(-50%) scale(1.05); }
-}
-`;
-document.head.appendChild(style);
+console.log("🎨 ui.js cargado - Sistema de UI mejorado y responsivo");

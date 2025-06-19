@@ -1,6 +1,6 @@
 /**
  * Hell Shooter - Story System
- * Sistema de historia y selector de música
+ * Sistema de historia y selector de música RESPONSIVE
  */
 
 const StorySystem = {
@@ -36,32 +36,7 @@ const StorySystem = {
                 position: relative;
                 backdrop-filter: blur(5px);
             ">
-                <button onclick="closeStory()" style="
-                    position: absolute;
-                    top: 10px;
-                    right: 10px;
-                    background: #4a0a0a;
-                    color: #cccccc;
-                    border: 2px solid #660000;
-                    border-radius: 50%;
-                    width: 32px;
-                    height: 32px;
-                    min-width: 32px;
-                    min-height: 32px;
-                    max-width: 32px;
-                    max-height: 32px;
-                    font-size: 18px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    box-sizing: border-box;
-                    padding: 0;
-                    line-height: 1;
-                    aspect-ratio: 1 / 1;
-                    transition: all 0.3s ease;
-                " onmouseover="this.style.background='#660000'; this.style.color='white';" 
-                   onmouseout="this.style.background='#4a0a0a'; this.style.color='#cccccc';">✕</button>
+                <button onclick="closeStory()" class="modal-close-button">✕</button>
 
                 <h2 style="
                     text-align: center;
@@ -71,6 +46,7 @@ const StorySystem = {
                     font-size: 2.2em;
                     font-family: 'Serif', serif;
                     letter-spacing: 2px;
+                    line-height: 1.2;
                 ">La Maldición de Hell</h2>
 
                 <img src="../imagenes/imagenesjuegosss/hell_story.jpg" style="
@@ -184,22 +160,11 @@ const StorySystem = {
     document.body.appendChild(storyModal);
   },
 
-  // Modal de selector de música
+  // Modal de selector de música MEJORADO Y RESPONSIVE
   showMusicSelector() {
     const musicModal = document.createElement("div");
     musicModal.id = "music-modal";
-    musicModal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        `;
+    musicModal.className = "music-modal";
 
     const tracks = [
       { file: "background.mp3", name: "Elegía - Azkal", icon: "🎵" },
@@ -211,52 +176,16 @@ const StorySystem = {
     ];
 
     // Obtener la canción actual
-    let currentTrack = "Elegía - Azkal"; // Por defecto
+    let currentTrack = "Elegía - Azkal";
     if (window.currentMusicTrack) {
       currentTrack = window.currentMusicTrack;
     }
 
     musicModal.innerHTML = `
-            <div style="
-                background: linear-gradient(135deg, #1a0000 0%, #4a0000 100%);
-                border: 3px solid #8B0000;
-                border-radius: 20px;
-                padding: 30px;
-                max-width: 500px;
-                box-shadow: 0 0 30px #FF0000;
-                position: relative;
-            ">
-                <button onclick="closeMusicSelector()" style="
-                    position: absolute;
-                    top: 10px;
-                    right: 10px;
-                    background: #8B0000;
-                    color: white;
-                    border: none;
-                    border-radius: 50%;
-                    width: 32px;
-                    height: 32px;
-                    min-width: 32px;
-                    min-height: 32px;
-                    max-width: 32px;
-                    max-height: 32px;
-                    font-size: 18px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    box-sizing: border-box;
-                    padding: 0;
-                    line-height: 1;
-                    aspect-ratio: 1 / 1;
-                ">✕</button>
+            <div class="music-content">
+                <button onclick="closeMusicSelector()" class="modal-close-button">✕</button>
 
-                <h2 style="
-                    text-align: center;
-                    color: #FF0000;
-                    text-shadow: 0 0 20px #FF0000;
-                    margin-bottom: 25px;
-                ">🎵 Selector de Música 🎵</h2>
+                <h2 class="music-title">🎵 Selector de Música 🎵</h2>
 
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     ${tracks
