@@ -927,7 +927,7 @@ function cleanupGame() {
 }
 
 /**
- * CORREGIDO: Limpiar TODOS los elementos del boss al cambiar de pantalla
+ * CORREGIDO: Limpiar SOLO elementos del boss, NO los enemigos normales
  */
 function cleanupBossElements() {
   console.log("🧹 Limpiando elementos del boss...");
@@ -1000,6 +1000,28 @@ function cleanupBossElements() {
     }
   } catch (error) {
     console.warn("⚠️ Error restaurando velocidad jugador:", error);
+  }
+
+  // 🔥 LIMPIAR SOLO ESBIRROS DEL BOSS, NO TODOS LOS ENEMIGOS
+  try {
+    if (window.EnemyManager && window.EnemyManager.enemies) {
+      // Solo eliminar enemigos que sean esbirros del boss
+      const originalCount = window.EnemyManager.enemies.length;
+      window.EnemyManager.enemies = window.EnemyManager.enemies.filter(
+        (enemy) => !enemy.isBossMinion && !enemy.type === "boss_minion"
+      );
+      const newCount = window.EnemyManager.enemies.length;
+
+      if (originalCount !== newCount) {
+        console.log(
+          `✅ Solo esbirros del boss eliminados: ${
+            originalCount - newCount
+          } esbirros`
+        );
+      }
+    }
+  } catch (error) {
+    console.warn("⚠️ Error eliminando esbirros del boss:", error);
   }
 
   // 🔥 LIMPIAR CUALQUIER ELEMENTO RESIDUAL DEL BOSS
@@ -1654,7 +1676,7 @@ function setupGlobalCleanupListeners() {
   });
 
   console.log("🔧 Listeners globales CORREGIDOS configurados");
-} // Captura en fase de captura
+}
 
 // ======================================================
 // FUNCIONES GLOBALES EXPUESTAS
