@@ -86,7 +86,7 @@ const BossManager = {
 
     this.boss = {
       x: canvas.width / 2 - (config.size * 1.5) / 2,
-      y: 80,
+      y: canvas.height / 2 - (config.size * 1.5) / 2,
       width: config.size * 1.5,
       height: config.size * 1.5,
       velocityX: 0,

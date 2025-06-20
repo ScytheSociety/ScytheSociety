@@ -136,8 +136,8 @@ const AudioManager = {
    * Reproduce un sonido específico - NO reproduzca si la app está oculta
    */
   playSound(soundName) {
-    // 🔥 NO reproducir efectos si la app está minimizada
-    if (document.hidden || this.pausedByVisibility) {
+    // Solo verificar volumen, no pausar por visibilidad
+    if (this.masterVolume === 0) {
       return;
     }
 

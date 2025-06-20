@@ -303,33 +303,42 @@ const BossPhases = {
   // ======================================================
 
   /**
-   * Ejecutar fase de invocación - MEJORADA
+   * Ejecutar fase de invocación - CORREGIDA PARA 60 SEGUNDOS
    */
   executeSummoningPhase() {
-    // 🔥 DURACIÓN FIJA: 60 segundos (3600 frames)
+    // 🔥 DURACIÓN EXACTA: 60 segundos (3600 frames a 60fps)
     const PHASE_DURATION = 3600;
 
     console.log(
-      `⚔️ DEBUG - Timer de invocación: ${this.phaseTimer}/${PHASE_DURATION}`
+      `⚔️ DEBUG - Timer invocación: ${this.phaseTimer}/${PHASE_DURATION}`
     );
 
-    // Oleadas en tiempos específicos
-    if (this.phaseTimer === 120) {
+    // Oleadas específicas SIN efectos excesivos
+    if (this.phaseTimer === 300) {
+      // 5 segundos
       this.summonEnemies(2);
-      this.bossManager.comments?.sayComment("¡Primera oleada del abismo!");
+      if (this.bossManager.comments) {
+        this.bossManager.comments.sayComment("¡Primera oleada!");
+      }
     }
 
     if (this.phaseTimer === 1800) {
+      // 30 segundos
       this.summonEnemies(3);
-      this.bossManager.comments?.sayComment("¡Segunda oleada!");
+      if (this.bossManager.comments) {
+        this.bossManager.comments.sayComment("¡Segunda oleada!");
+      }
     }
 
     if (this.phaseTimer === 3000) {
+      // 50 segundos
       this.summonEnemies(4);
-      this.bossManager.comments?.sayComment("¡Oleada final!");
+      if (this.bossManager.comments) {
+        this.bossManager.comments.sayComment("¡Oleada final!");
+      }
     }
 
-    // 🔥 VERIFICAR FIN DE FASE
+    // 🔥 VERIFICAR FIN DE FASE EXACTO
     if (this.phaseTimer >= PHASE_DURATION) {
       console.log("⚔️ TERMINANDO fase de invocación por tiempo");
       this.endCurrentPhase();
@@ -517,8 +526,7 @@ const BossPhases = {
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        `👹 ¡${count} ESBIRROS DE TODOS LOS NIVELES!`,
-        "#FF4444"
+        `👹 ¡${count} ESBIRROS DE TODOS LOS NIVELES!`
       );
     }
 

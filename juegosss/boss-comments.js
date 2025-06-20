@@ -243,7 +243,7 @@ const BossComments = {
   },
 
   /**
-   * 🔥 NUEVA: Actualiza la posición del mensaje para que siga al boss
+   * 🔥 CORREGIDA: Actualiza la posición del mensaje para que siga al boss fluidamente
    */
   updateBossMessagePosition() {
     const bossMessage = document.getElementById("boss-speech-bubble");
@@ -251,14 +251,18 @@ const BossComments = {
       const boss = this.bossManager.boss;
       const canvas = window.getCanvas();
 
-      // 🔥 POSICIÓN RELATIVA AL CANVAS, NO FIJA
-      const rect = canvas.getBoundingClientRect();
-      const bossScreenX = rect.left + boss.x + boss.width / 2;
-      const bossScreenY = rect.top + boss.y - 60; // Solo 60px arriba del boss
+      if (canvas) {
+        // Posición relativa al canvas
+        const rect = canvas.getBoundingClientRect();
+        const bossScreenX = rect.left + boss.x + boss.width / 2;
+        const bossScreenY = rect.top + boss.y - 80; // 80px arriba del boss
 
-      bossMessage.style.left = `${bossScreenX}px`;
-      bossMessage.style.top = `${bossScreenY}px`;
-      bossMessage.style.transform = "translateX(-50%)";
+        // Actualizar posición suavemente
+        bossMessage.style.left = `${bossScreenX}px`;
+        bossMessage.style.top = `${bossScreenY}px`;
+        bossMessage.style.transform = "translateX(-50%)";
+        bossMessage.style.transition = "left 0.1s ease, top 0.1s ease";
+      }
     }
   },
 

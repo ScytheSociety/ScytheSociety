@@ -190,7 +190,7 @@ const BossMovement = {
   // ======================================================
 
   /**
-   * Perseguir al jugador inteligentemente
+   * Perseguir al jugador fluidamente y sin pausas
    */
   huntPlayer() {
     const playerPos = Player.getPosition();
@@ -206,21 +206,22 @@ const BossMovement = {
     const dy = playerCenterY - bossCenterY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // 🔥 PERSECUCIÓN DIRECTA Y AGRESIVA
-    if (distance > 80) {
-      // Cambio: era 100, ahora 80
-      const speed = boss.moveSpeed * 2.5; // Más rápido
-      this.movement.velocityX = (dx / distance) * speed;
-      this.movement.velocityY = (dy / distance) * speed;
-    } else {
-      // 🔥 SEGUIR MOVIÉNDOSE LENTAMENTE AUNQUE ESTÉ CERCA
-      const slowSpeed = boss.moveSpeed * 1.2;
-      this.movement.velocityX = (dx / distance) * slowSpeed;
-      this.movement.velocityY = (dy / distance) * slowSpeed;
+    // 🔥 SIEMPRE MOVERSE HACIA EL JUGADOR - SIN PAUSAS
+    if (distance > 10) {
+      // Solo parar si está MUY cerca
+      const speed = boss.moveSpeed * 3.5; // Más agresivo
+
+      // Movimiento fluido y constante
+      this.movement.velocityX += (dx / distance) * speed * 0.15;
+      this.movement.velocityY += (dy / distance) * speed * 0.15;
+
+      // Mantener momentum para fluidez
+      this.movement.velocityX *= 0.95;
+      this.movement.velocityY *= 0.95;
     }
 
-    // 🔥 LÍMITE DE VELOCIDAD MAYOR
-    this.limitVelocity(boss.moveSpeed * 3.0);
+    // Límite de velocidad más alto para fluidez
+    this.limitVelocity(boss.moveSpeed * 4.0);
   },
 
   /**
