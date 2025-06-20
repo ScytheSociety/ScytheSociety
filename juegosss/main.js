@@ -760,9 +760,11 @@ function gameOver() {
     console.log("🔄 Contador total de enemigos ocultado en game over");
   }
 
-  // 🔥 COMENTARIO DEL BOSS SI ESTÁ ACTIVO
+  // 🔥 COMENTARIO DEL BOSS SI ESTÁ ACTIVO - CORREGIDO
   if (level === 11 && BossManager.isActive()) {
-    BossManager.sayRandomComment("victoria_boss");
+    if (BossManager.comments && BossManager.comments.sayRandomComment) {
+      BossManager.comments.sayRandomComment("victoria_boss");
+    }
   }
 
   // 🔥 OBTENER COMBO MÁXIMO ANTES DE LIMPIAR
