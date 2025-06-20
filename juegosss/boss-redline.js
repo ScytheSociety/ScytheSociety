@@ -1,5 +1,5 @@
 /**
- * Hell Shooter - Boss Red Line System
+ * Hell Shooter - Boss Red Line System OPTIMIZADO
  * Sistema modular de la fase del hilo rojo
  */
 
@@ -24,42 +24,24 @@ const BossRedLine = {
   originalPlayerSpeed: 1.0,
   playerSlowFactor: 0.05, // Jugador SÚPER LENTO
 
-  // Configuración de líneas
-  lineConfig: {
-    previewDuration: 1000, // 1 segundo para memorizar
-    lineWidth: 8,
-    glowBlur: 20,
-    trailLength: 20, // Puntos de estela
-    minSegments: 3,
-    maxSegments: 8,
-    pointsPerSegment: 25, // Densidad de puntos
-  },
-
   // Estado de ciclos
   cycleCount: 0,
-  maxCycles: 5, // Máximo 5 ciclos antes de ir a Yan Ken Po
-  vulnerabilityDuration: 1000, // 1 segundo vulnerable
+  maxCycles: 10, // EXACTAMENTE 10 RONDAS
 
-  // Tipos de líneas disponibles
-  lineTypes: ["random", "zigzag", "curve", "arc", "spiral"],
+  // Configuración de líneas
+  lineConfig: {
+    previewDuration: 2000, // 2 segundos para memorizar
+    lineWidth: 8,
+    glowBlur: 20,
+    trailLength: 20,
+  },
 
   // ======================================================
   // INICIALIZACIÓN
   // ======================================================
 
-  /**
-   * Inicializar el sistema de hilo rojo
-   */
   init(bossManagerRef) {
     this.bossManager = bossManagerRef;
-    this.initRedLineSystem();
-    console.log("🔴 Sistema de hilo rojo del boss inicializado");
-  },
-
-  /**
-   * Configurar sistema de hilo rojo
-   */
-  initRedLineSystem() {
     this.phaseActive = false;
     this.redLineMoving = false;
     this.showingPreview = false;
@@ -67,6 +49,7 @@ const BossRedLine = {
     this.redLineIndex = 0;
     this.cycleCount = 0;
     this.originalPlayerSpeed = Player.moveSpeed;
+    console.log("🔴 Sistema de hilo rojo del boss inicializado");
   },
 
   // ======================================================
@@ -81,17 +64,8 @@ const BossRedLine = {
 
     this.phaseActive = true;
     this.cycleCount = 0;
+    this.maxCycles = 10; // EXACTAMENTE 10 RONDAS
 
-    // 🔥 CONFIGURACIÓN DINÁMICA según el contexto
-    if (this.bossManager.phases && this.bossManager.phases.isRandomPhase) {
-      this.maxCycles = 5; // 5 rondas para fase aleatoria
-      console.log("🔴 Configurado para fase aleatoria: 5 rondas");
-    } else {
-      this.maxCycles = 10; // 10 rondas para fase normal
-      console.log("🔴 Configurado para fase normal: 10 rondas");
-    }
-
-    this.maxCycles = 10; // 🔥 EXACTAMENTE 10 RONDAS
     this.bossManager.makeImmune(9999);
 
     // Detener movimiento del boss
@@ -99,7 +73,7 @@ const BossRedLine = {
       this.bossManager.movement.stopMovementAndCenter();
     }
 
-    // Ralentizar jugador
+    // 🔥 RALENTIZAR JUGADOR para que pueda ver el recorrido
     this.originalPlayerSpeed = Player.moveSpeed;
     Player.moveSpeed = this.playerSlowFactor;
 
@@ -114,15 +88,11 @@ const BossRedLine = {
       this.bossManager.comments.sayComment("¡Memoriza mi rastro mortal!");
     }
 
-    // 🔥 MOSTRAR CONTADOR DE RONDAS
     setTimeout(() => {
       this.startRedLineCycle();
     }, 2000);
   },
 
-  /**
-   * Terminar la fase del hilo rojo
-   */
   endPhase() {
     console.log("🔴 Terminando COMPLETAMENTE la fase del hilo rojo");
 
@@ -133,19 +103,17 @@ const BossRedLine = {
     this.redLineIndex = 0;
     this.cycleCount = 0;
 
-    // 🔥 VERIFICAR QUE EL JUGADOR EXISTE antes de restaurar velocidad
+    // Restaurar velocidad del jugador
     if (window.Player && Player.moveSpeed !== undefined) {
       Player.moveSpeed = this.originalPlayerSpeed;
       console.log("🏃 Velocidad del jugador restaurada a normal");
     }
 
-    // 🔥 VERIFICAR QUE EL BOSS EXISTE antes de hacerlo vulnerable
+    // Boss vulnerable
     if (this.bossManager && this.bossManager.boss) {
       this.bossManager.isImmune = false;
       this.bossManager.immunityTimer = 0;
       console.log("🔴 Boss hecho vulnerable al terminar Red Line");
-    } else {
-      console.warn("🔴 Warning: Boss no existe al terminar Red Line");
     }
   },
 
@@ -153,16 +121,11 @@ const BossRedLine = {
   // ACTUALIZACIÓN PRINCIPAL
   // ======================================================
 
-  /**
-   * Actualizar sistema de hilo rojo
-   */
   update() {
-    // 🔥 VERIFICAR que la fase y el boss siguen activos
     if (!this.phaseActive || !this.bossManager || !this.bossManager.active) {
       return;
     }
 
-    // 🔥 VERIFICAR que el boss existe físicamente
     if (!this.bossManager.boss) {
       console.error("🔴 Boss desapareció durante Red Line, terminando fase");
       this.endPhase();
@@ -175,14 +138,8 @@ const BossRedLine = {
     }
   },
 
-  /**
-   * Actualizar movimiento del boss por la línea
-   */
   updateBossMovement() {
-    // Verificaciones de seguridad
-    if (!this.redLineMoving || this.redLinePath.length === 0) {
-      return;
-    }
+    if (!this.redLineMoving || this.redLinePath.length === 0) return;
 
     if (!this.bossManager || !this.bossManager.boss) {
       console.error("🔴 Error: Boss no existe en updateBossMovement");
@@ -190,16 +147,15 @@ const BossRedLine = {
       return;
     }
 
-    // 🔥 MEJORAR la verificación de fin de recorrido
+    // Verificar fin de recorrido
     if (this.redLineIndex >= this.redLinePath.length - 2) {
-      // 🔥 CAMBIADO: -2 en lugar de -1
       console.log("🔴 Boss completó el recorrido del hilo rojo");
       this.endRedLineMovement();
       return;
     }
 
     // Mover el boss por la línea
-    const currentPoint = this.redLinePath[Math.floor(this.redLineIndex)]; // 🔥 AGREGADO: Math.floor
+    const currentPoint = this.redLinePath[Math.floor(this.redLineIndex)];
     if (!currentPoint) {
       console.log("🔴 Punto no válido, terminando recorrido");
       this.endRedLineMovement();
@@ -213,11 +169,8 @@ const BossRedLine = {
     // Verificar colisión con el jugador
     if (this.checkCollisionWithPlayer()) {
       console.log("💥 Jugador golpeado por el hilo rojo");
-
-      // Aplicar daño al jugador
       Player.takeDamage();
 
-      // Efecto visual
       if (this.bossManager.ui) {
         this.bossManager.ui.createParticleEffect(
           boss.x + boss.width / 2,
@@ -228,13 +181,10 @@ const BossRedLine = {
       }
     }
 
-    // Avanzar en la línea - 🔥 VELOCIDAD AJUSTABLE
+    // Avanzar en la línea
     this.redLineIndex += this.redLineSpeed;
   },
 
-  /**
-   * Verificar colisión del boss con el jugador
-   */
   checkCollisionWithPlayer() {
     const player = Player;
     const playerPos = player.getPosition();
@@ -253,15 +203,11 @@ const BossRedLine = {
   // GESTIÓN DE CICLOS
   // ======================================================
 
-  /**
-   * Iniciar un ciclo completo de hilo rojo
-   */
   startRedLineCycle() {
     console.log(
       `🔄 Iniciando ronda ${this.cycleCount + 1}/${this.maxCycles} de hilo rojo`
     );
 
-    // 🔥 MOSTRAR PROGRESO DE RONDAS
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
         `🔴 RONDA ${this.cycleCount + 1}/10`,
@@ -269,61 +215,47 @@ const BossRedLine = {
       );
     }
 
-    // 🔥 VERIFICAR QUE EL BOSS EXISTE ANTES DE CONTINUAR
     if (!this.bossManager || !this.bossManager.boss) {
       console.error("🔴 Error: Boss no existe para iniciar ciclo red line");
       this.endPhase();
       return;
     }
 
-    // 🔥 LÍNEAS MÁS COMPLEJAS EN RONDAS AVANZADAS
+    // Ajustar dificultad según la ronda
     this.adjustDifficultyForRound(this.cycleCount + 1);
 
-    // Generar nueva línea aleatoria
-    this.generateRedLine();
+    // 🔥 GENERAR FORMA GEOMÉTRICA COMPLEJA
+    this.generateComplexGeometricLine();
 
-    // 🔥 VERIFICAR QUE LA LÍNEA SE GENERÓ CORRECTAMENTE
     if (this.redLinePath.length === 0) {
       console.error("🔴 Error: No se pudo generar línea roja");
       this.endPhase();
       return;
     }
 
-    // PASO 1: Mostrar línea brevemente
+    // PASO 1: Mostrar línea para memorizar
     this.showLinePreview();
   },
 
-  /**
-   * 🔥 NUEVA: Ajusta dificultad según la ronda
-   */
   adjustDifficultyForRound(roundNumber) {
-    // Rondas 1-3: Líneas simples
+    // Rondas 1-3: Formas simples y velocidad lenta
     if (roundNumber <= 3) {
-      this.lineConfig.minSegments = 2;
-      this.lineConfig.maxSegments = 4;
       this.redLineSpeed = 3;
     }
-    // Rondas 4-6: Líneas medianas
+    // Rondas 4-6: Formas medianas y velocidad normal
     else if (roundNumber <= 6) {
-      this.lineConfig.minSegments = 4;
-      this.lineConfig.maxSegments = 6;
       this.redLineSpeed = 4;
     }
-    // Rondas 7-10: Líneas complejas
+    // Rondas 7-10: Formas complejas y velocidad rápida
     else {
-      this.lineConfig.minSegments = 6;
-      this.lineConfig.maxSegments = 8;
       this.redLineSpeed = 5;
     }
 
     console.log(
-      `🔴 Ronda ${roundNumber}: Dificultad ajustada (velocidad: ${this.redLineSpeed})`
+      `🔴 Ronda ${roundNumber}: Velocidad ajustada a ${this.redLineSpeed}`
     );
   },
 
-  /**
-   * Mostrar preview de la línea
-   */
   showLinePreview() {
     console.log("🔴 Mostrando preview de la línea...");
 
@@ -333,32 +265,27 @@ const BossRedLine = {
       this.bossManager.ui.showScreenMessage("¡MEMORIZA LA RUTA!", "#FFFF00");
     }
 
-    // Mostrar por tiempo configurado
+    // 🔥 TIEMPO SUFICIENTE PARA MEMORIZAR (2 segundos)
     setTimeout(() => {
       this.showingPreview = false;
       console.log("🔴 Preview terminado - boss iniciará movimiento");
 
-      // Pequeño delay antes del movimiento
       setTimeout(() => {
         this.startRedLineMovement();
-      }, 200);
+      }, 500);
     }, this.lineConfig.previewDuration);
   },
 
-  /**
-   * Iniciar movimiento del boss por la línea
-   */
   startRedLineMovement() {
-    // 🔥 VERIFICAR QUE EL BOSS EXISTE
     if (!this.bossManager || !this.bossManager.boss) {
       console.error("🔴 Error: Boss no existe para red line movement");
-      this.endPhase(); // Terminar la fase si no hay boss
+      this.endPhase();
       return;
     }
 
     if (this.redLinePath.length === 0) {
       console.error("🔴 Error: No hay línea roja generada");
-      this.endPhase(); // 🔥 CORREGIDO: usar endPhase en lugar de endRedLinePhase
+      this.endPhase();
       return;
     }
 
@@ -368,13 +295,6 @@ const BossRedLine = {
     // Posicionar boss al inicio de la línea
     const startPoint = this.redLinePath[0];
     const boss = this.bossManager.boss;
-
-    // 🔥 VERIFICACIÓN ADICIONAL
-    if (!boss) {
-      console.error("🔴 Error: Boss null en startRedLineMovement");
-      this.endPhase();
-      return;
-    }
 
     boss.x = startPoint.x - boss.width / 2;
     boss.y = startPoint.y - boss.height / 2;
@@ -389,9 +309,6 @@ const BossRedLine = {
     console.log("🔴 Boss iniciando movimiento por la línea");
   },
 
-  /**
-   * Terminar movimiento de la línea (no la fase completa)
-   */
   endRedLineMovement() {
     console.log("🔴 Boss terminó el recorrido - iniciando pausa vulnerable");
 
@@ -400,23 +317,16 @@ const BossRedLine = {
     this.redLineIndex = 0;
     this.cycleCount++;
 
-    // 🔥 CORREGIDO: FORZAR que el boss sea vulnerable
+    // Boss vulnerable por 3 segundos
     if (this.bossManager) {
       this.bossManager.isImmune = false;
       this.bossManager.immunityTimer = 0;
       console.log("🔴 Boss FORZADO a ser vulnerable");
     }
 
-    // Detener movimiento del boss
-    if (this.bossManager && this.bossManager.boss) {
-      const boss = this.bossManager.boss;
-      boss.velocityX = 0;
-      boss.velocityY = 0;
-    }
-
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        "⚔️ ¡BOSS VULNERABLE! (3s)", // 🔥 AUMENTADO a 3 segundos
+        "⚔️ ¡BOSS VULNERABLE! (3s)",
         "#00FF00"
       );
     }
@@ -425,18 +335,12 @@ const BossRedLine = {
       this.bossManager.comments.sayRandomComment("combate");
     }
 
-    // 🔥 AUMENTADO: 3 segundos en lugar de 1
-    const vulnerabilityTime = 3000;
-
-    // Decidir siguiente acción después del período vulnerable
+    // Decidir siguiente acción después de 3 segundos
     setTimeout(() => {
       this.decideNextAction();
-    }, vulnerabilityTime);
+    }, 3000);
   },
 
-  /**
-   * Decidir la siguiente acción
-   */
   decideNextAction() {
     const healthPercentage =
       this.bossManager.currentHealth / this.bossManager.maxHealth;
@@ -453,227 +357,250 @@ const BossRedLine = {
 
     // Verificar si alcanzó el máximo de ciclos
     if (this.cycleCount >= this.maxCycles) {
-      console.log("🔄 Máximo de ciclos alcanzado - cambiando de fase");
+      console.log("🔄 Máximo de ciclos alcanzado - terminando fase");
       this.endPhase();
-      if (this.bossManager.phases) {
-        this.bossManager.phases.handleYanKenPoLoss(); // Fase aleatoria
+
+      // Volver a hunting fluido
+      if (this.bossManager.movement) {
+        this.bossManager.movement.enableFluidHunting();
       }
       return;
     }
 
     // Continuar con otro ciclo
     console.log("🔄 Continuando con nuevo ciclo de hilo rojo");
-    this.bossManager.makeImmune(9999); // Volver a ser inmune
+    this.bossManager.makeImmune(9999);
 
     setTimeout(() => {
       this.startRedLineCycle();
-    }, 500);
-  },
-
-  /**
-   * Terminar TODA la fase del hilo rojo (no solo el movimiento)
-   */
-  endRedLinePhase() {
-    console.log("🔴 Terminando TODA la fase del hilo rojo");
-
-    this.endPhase(); // Llamar al método principal que ya existe
+    }, 1000);
   },
 
   // ======================================================
-  // GENERACIÓN DE LÍNEAS
+  // 🔥 GENERACIÓN DE FORMAS GEOMÉTRICAS COMPLEJAS
   // ======================================================
 
-  /**
-   * Generar línea roja aleatoria
-   */
-  generateRedLine() {
-    this.redLinePath = [];
-
+  generateComplexGeometricLine() {
     const canvas = window.getCanvas();
 
-    // 🔥 VERIFICAR QUE EL CANVAS EXISTE
     if (!canvas) {
       console.error("🔴 Error: Canvas no existe para generar línea");
       return;
     }
 
-    const lineType =
-      this.lineTypes[Math.floor(Math.random() * this.lineTypes.length)];
+    const shapes = [
+      "zigzag",
+      "star",
+      "triangle",
+      "diamond",
+      "spiral",
+      "wave",
+      "lightning",
+    ];
+    const shape = shapes[Math.floor(Math.random() * shapes.length)];
 
-    console.log(`🔴 Generando línea tipo: ${lineType}`);
+    console.log(`🔴 Generando forma geométrica: ${shape}`);
 
-    switch (lineType) {
-      case "random":
-        this.generateRandomLine(canvas);
-        break;
+    switch (shape) {
       case "zigzag":
-        this.generateZigzagLine(canvas);
+        this.generateZigzagPattern(canvas);
         break;
-      case "curve":
-        this.generateCurvedLine(canvas);
+      case "star":
+        this.generateStarPattern(canvas);
         break;
-      case "arc":
-        this.generateArcLine(canvas);
+      case "triangle":
+        this.generateTrianglePattern(canvas);
+        break;
+      case "diamond":
+        this.generateDiamondPattern(canvas);
         break;
       case "spiral":
-        this.generateSpiralLine(canvas);
+        this.generateSpiralPattern(canvas);
+        break;
+      case "wave":
+        this.generateWavePattern(canvas);
+        break;
+      case "lightning":
+        this.generateLightningPattern(canvas);
         break;
     }
 
-    console.log(`🔴 Línea generada con ${this.redLinePath.length} puntos`);
-
-    // 🔥 VERIFICAR QUE SE GENERARON PUNTOS
+    // Verificar que se generó correctamente
     if (this.redLinePath.length === 0) {
       console.error("🔴 Error: No se generaron puntos para la línea");
-      // Generar línea simple de respaldo
       this.generateFallbackLine(canvas);
     }
+
+    console.log(
+      `🔴 Forma ${shape} generada con ${this.redLinePath.length} puntos`
+    );
   },
 
-  /**
-   * Generar línea completamente aleatoria
-   */
-  generateRandomLine(canvas) {
-    const startPoint = this.getRandomBorderPoint(canvas);
-    const segments =
-      this.lineConfig.minSegments +
-      Math.floor(
-        Math.random() *
-          (this.lineConfig.maxSegments - this.lineConfig.minSegments)
-      );
-
-    let currentX = startPoint.x;
-    let currentY = startPoint.y;
-
-    this.redLinePath.push({ x: currentX, y: currentY });
-
-    for (let i = 0; i < segments; i++) {
-      const segment = this.generateRandomSegment(canvas, currentX, currentY);
-
-      for (const point of segment) {
-        this.redLinePath.push(point);
-      }
-
-      if (segment.length > 0) {
-        const lastPoint = segment[segment.length - 1];
-        currentX = lastPoint.x;
-        currentY = lastPoint.y;
-      }
-    }
-  },
-
-  /**
-   * Generar línea en zigzag
-   */
-  generateZigzagLine(canvas) {
-    const startX = Math.random() * canvas.width;
-    const startY = 50;
-    const endX = Math.random() * canvas.width;
-    const endY = canvas.height - 50;
-
+  generateZigzagPattern(canvas) {
+    const points = [];
     const segments = 6;
-    const amplitude = 80 + Math.random() * 40;
+    const width = canvas.width * 0.8;
+    const height = canvas.height * 0.6;
+    const startX = canvas.width * 0.1;
+    const startY = canvas.height * 0.2;
 
-    for (let i = 0; i <= segments * this.lineConfig.pointsPerSegment; i++) {
-      const t = i / (segments * this.lineConfig.pointsPerSegment);
-      const baseX = startX + (endX - startX) * t;
-      const baseY = startY + (endY - startY) * t;
-
-      const zigzagOffset = Math.sin(t * Math.PI * segments) * amplitude;
-      const perpX =
-        -(endY - startY) /
-        Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
-
-      this.redLinePath.push({
-        x: baseX + perpX * zigzagOffset,
-        y: baseY,
-      });
+    for (let i = 0; i <= segments; i++) {
+      const x = startX + (width / segments) * i;
+      const y = startY + (i % 2 === 0 ? 0 : height);
+      points.push({ x, y });
     }
+
+    this.createSmoothPath(points);
   },
 
-  /**
-   * Generar línea curva suave
-   */
-  generateCurvedLine(canvas) {
-    const startPoint = this.getRandomBorderPoint(canvas);
-    const endPoint = this.getRandomBorderPoint(canvas);
+  generateStarPattern(canvas) {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const outerRadius = Math.min(canvas.width, canvas.height) * 0.3;
+    const innerRadius = outerRadius * 0.5;
+    const points = [];
 
-    // Puntos de control para curva Bézier
-    const controlPoints = [];
-    const numControls = 2 + Math.floor(Math.random() * 3);
-
-    for (let i = 0; i < numControls; i++) {
-      controlPoints.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-      });
-    }
-
-    // Generar curva usando interpolación
-    const totalPoints = this.lineConfig.pointsPerSegment * 4;
-
-    for (let i = 0; i <= totalPoints; i++) {
-      const t = i / totalPoints;
-      const point = this.calculateBezierPoint(
-        t,
-        startPoint,
-        controlPoints,
-        endPoint
-      );
-      this.redLinePath.push(point);
-    }
-  },
-
-  /**
-   * Generar línea en arco
-   */
-  generateArcLine(canvas) {
-    const centerX = canvas.width / 2 + (Math.random() - 0.5) * 200;
-    const centerY = canvas.height / 2 + (Math.random() - 0.5) * 200;
-    const radius = 150 + Math.random() * 100;
-
-    const startAngle = Math.random() * Math.PI * 2;
-    const endAngle = startAngle + Math.PI * (0.5 + Math.random());
-
-    const totalPoints = this.lineConfig.pointsPerSegment * 3;
-
-    for (let i = 0; i <= totalPoints; i++) {
-      const t = i / totalPoints;
-      const angle = startAngle + (endAngle - startAngle) * t;
-
-      this.redLinePath.push({
+    for (let i = 0; i < 10; i++) {
+      const angle = (i * Math.PI) / 5;
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      points.push({
         x: centerX + Math.cos(angle) * radius,
         y: centerY + Math.sin(angle) * radius,
       });
     }
+
+    points.push(points[0]); // Cerrar estrella
+    this.createSmoothPath(points);
   },
 
-  /**
-   * Generar línea en espiral
-   */
-  generateSpiralLine(canvas) {
+  generateTrianglePattern(canvas) {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const maxRadius = Math.min(canvas.width, canvas.height) / 3;
+    const radius = Math.min(canvas.width, canvas.height) * 0.35;
 
-    const turns = 2 + Math.random() * 2;
-    const totalPoints = this.lineConfig.pointsPerSegment * 5;
+    const points = [];
+    for (let i = 0; i < 3; i++) {
+      const angle = (i * 2 * Math.PI) / 3 - Math.PI / 2; // Empezar desde arriba
+      points.push({
+        x: centerX + Math.cos(angle) * radius,
+        y: centerY + Math.sin(angle) * radius,
+      });
+    }
 
-    for (let i = 0; i <= totalPoints; i++) {
-      const t = i / totalPoints;
+    points.push(points[0]); // Cerrar triángulo
+    this.createSmoothPath(points);
+  },
+
+  generateDiamondPattern(canvas) {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const width = Math.min(canvas.width, canvas.height) * 0.4;
+    const height = Math.min(canvas.width, canvas.height) * 0.3;
+
+    const points = [
+      { x: centerX, y: centerY - height }, // Arriba
+      { x: centerX + width, y: centerY }, // Derecha
+      { x: centerX, y: centerY + height }, // Abajo
+      { x: centerX - width, y: centerY }, // Izquierda
+      { x: centerX, y: centerY - height }, // Cerrar
+    ];
+
+    this.createSmoothPath(points);
+  },
+
+  generateSpiralPattern(canvas) {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const maxRadius = Math.min(canvas.width, canvas.height) * 0.35;
+    const turns = 2.5;
+    const points = [];
+
+    const totalSteps = 80;
+    for (let i = 0; i <= totalSteps; i++) {
+      const t = i / totalSteps;
       const angle = t * Math.PI * 2 * turns;
       const radius = t * maxRadius;
 
-      this.redLinePath.push({
+      points.push({
         x: centerX + Math.cos(angle) * radius,
         y: centerY + Math.sin(angle) * radius,
       });
     }
+
+    this.createSmoothPath(points);
   },
 
-  /**
-   * 🔥 NUEVO: Generar línea simple de respaldo
-   */
+  generateWavePattern(canvas) {
+    const points = [];
+    const amplitude = canvas.height * 0.2;
+    const frequency = 3;
+    const centerY = canvas.height / 2;
+
+    const steps = 100;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = canvas.width * 0.1 + t * canvas.width * 0.8;
+      const y = centerY + Math.sin(t * Math.PI * 2 * frequency) * amplitude;
+
+      points.push({ x, y });
+    }
+
+    this.createSmoothPath(points);
+  },
+
+  generateLightningPattern(canvas) {
+    const points = [];
+    const startX = canvas.width * 0.2;
+    const startY = canvas.height * 0.2;
+    const endX = canvas.width * 0.8;
+    const endY = canvas.height * 0.8;
+
+    points.push({ x: startX, y: startY });
+
+    // Crear segmentos con desviaciones aleatorias
+    const segments = 8;
+    for (let i = 1; i <= segments; i++) {
+      const t = i / segments;
+      const baseX = startX + (endX - startX) * t;
+      const baseY = startY + (endY - startY) * t;
+
+      // Desviación aleatoria para efecto de rayo
+      const deviation = (Math.random() - 0.5) * 100;
+      const perpX =
+        -(endY - startY) /
+        Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
+      const perpY =
+        (endX - startX) /
+        Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
+
+      points.push({
+        x: baseX + perpX * deviation,
+        y: baseY + perpY * deviation,
+      });
+    }
+
+    this.createSmoothPath(points);
+  },
+
+  createSmoothPath(points) {
+    this.redLinePath = [];
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const start = points[i];
+      const end = points[i + 1];
+
+      // Interpolación suave entre puntos
+      const steps = 30;
+      for (let j = 0; j <= steps; j++) {
+        const t = j / steps;
+        this.redLinePath.push({
+          x: start.x + (end.x - start.x) * t,
+          y: start.y + (end.y - start.y) * t,
+        });
+      }
+    }
+  },
+
   generateFallbackLine(canvas) {
     console.log("🔴 Generando línea de respaldo simple");
 
@@ -682,7 +609,6 @@ const BossRedLine = {
     const endX = canvas.width * 0.8;
     const endY = canvas.height * 0.7;
 
-    // Línea recta simple con 20 puntos
     for (let i = 0; i <= 20; i++) {
       const t = i / 20;
       this.redLinePath.push({
@@ -699,148 +625,20 @@ const BossRedLine = {
   },
 
   // ======================================================
-  // UTILIDADES DE GENERACIÓN
-  // ======================================================
-
-  /**
-   * Obtener punto aleatorio en los bordes
-   */
-  getRandomBorderPoint(canvas) {
-    const border = Math.floor(Math.random() * 4);
-
-    switch (border) {
-      case 0: // Top
-        return { x: Math.random() * canvas.width, y: 50 };
-      case 1: // Right
-        return { x: canvas.width - 50, y: Math.random() * canvas.height };
-      case 2: // Bottom
-        return { x: Math.random() * canvas.width, y: canvas.height - 50 };
-      case 3: // Left
-        return { x: 50, y: Math.random() * canvas.height };
-      default:
-        return { x: 50, y: 50 };
-    }
-  },
-
-  /**
-   * Generar segmento aleatorio
-   */
-  generateRandomSegment(canvas, startX, startY) {
-    const endX = Math.random() * canvas.width;
-    const endY = Math.random() * canvas.height;
-    const segmentType = Math.floor(Math.random() * 3);
-
-    const points = [];
-    const pointCount = this.lineConfig.pointsPerSegment;
-
-    switch (segmentType) {
-      case 0: // Línea recta
-        for (let i = 0; i <= pointCount; i++) {
-          const t = i / pointCount;
-          points.push({
-            x: startX + (endX - startX) * t,
-            y: startY + (endY - startY) * t,
-          });
-        }
-        break;
-
-      case 1: // Curva
-        const controlX = (startX + endX) / 2 + (Math.random() - 0.5) * 200;
-        const controlY = (startY + endY) / 2 + (Math.random() - 0.5) * 200;
-
-        for (let i = 0; i <= pointCount; i++) {
-          const t = i / pointCount;
-          const x =
-            (1 - t) ** 2 * startX + 2 * (1 - t) * t * controlX + t ** 2 * endX;
-          const y =
-            (1 - t) ** 2 * startY + 2 * (1 - t) * t * controlY + t ** 2 * endY;
-          points.push({ x, y });
-        }
-        break;
-
-      case 2: // Zigzag
-        const amplitude = 30 + Math.random() * 50;
-        for (let i = 0; i <= pointCount; i++) {
-          const t = i / pointCount;
-          const baseX = startX + (endX - startX) * t;
-          const baseY = startY + (endY - startY) * t;
-          const offset = Math.sin(t * Math.PI * 3) * amplitude;
-
-          const perpX =
-            -(endY - startY) /
-            Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
-          const perpY =
-            (endX - startX) /
-            Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
-
-          points.push({
-            x: baseX + perpX * offset,
-            y: baseY + perpY * offset,
-          });
-        }
-        break;
-    }
-
-    return points;
-  },
-
-  /**
-   * Calcular punto en curva Bézier
-   */
-  calculateBezierPoint(t, start, controls, end) {
-    // Implementación simplificada para múltiples puntos de control
-    if (controls.length === 1) {
-      // Curva cuadrática
-      const control = controls[0];
-      return {
-        x:
-          (1 - t) ** 2 * start.x + 2 * (1 - t) * t * control.x + t ** 2 * end.x,
-        y:
-          (1 - t) ** 2 * start.y + 2 * (1 - t) * t * control.y + t ** 2 * end.y,
-      };
-    } else {
-      // Interpolación lineal entre múltiples puntos
-      const totalSegments = controls.length + 1;
-      const segmentIndex = Math.floor(t * totalSegments);
-      const segmentT = t * totalSegments - segmentIndex;
-
-      let p1, p2;
-      if (segmentIndex === 0) {
-        p1 = start;
-        p2 = controls[0];
-      } else if (segmentIndex >= controls.length) {
-        p1 = controls[controls.length - 1];
-        p2 = end;
-      } else {
-        p1 = controls[segmentIndex - 1];
-        p2 = controls[segmentIndex];
-      }
-
-      return {
-        x: p1.x + (p2.x - p1.x) * segmentT,
-        y: p1.y + (p2.y - p1.y) * segmentT,
-      };
-    }
-  },
-
-  // ======================================================
   // RENDERIZADO
   // ======================================================
 
-  /**
-   * Dibujar la línea roja
-   */
   draw(ctx) {
     if (this.redLinePath.length === 0) return;
 
     ctx.save();
 
-    // Solo mostrar línea durante el preview
+    // 🔥 MOSTRAR LÍNEA DURANTE EL PREVIEW (para memorizar)
     if (this.showingPreview) {
       this.drawPreviewLine(ctx);
     }
 
-    // Dibujar estela cuando el boss se mueve
+    // 🔥 MOSTRAR ESTELA cuando el boss se mueve
     if (this.redLineMoving && this.redLineIndex > 0) {
       this.drawBossTrail(ctx);
     }
@@ -848,9 +646,6 @@ const BossRedLine = {
     ctx.restore();
   },
 
-  /**
-   * Dibujar línea de preview
-   */
   drawPreviewLine(ctx) {
     // Línea roja brillante para memorizar
     ctx.strokeStyle = "#FF0000";
@@ -877,9 +672,6 @@ const BossRedLine = {
     ctx.stroke();
   },
 
-  /**
-   * Dibujar estela del boss
-   */
   drawBossTrail(ctx) {
     const startIndex = Math.max(
       0,
@@ -910,12 +702,9 @@ const BossRedLine = {
   },
 
   // ======================================================
-  // RESET Y CLEANUP
+  // CLEANUP
   // ======================================================
 
-  /**
-   * Limpiar sistema
-   */
   cleanup() {
     console.log("🧹 Limpiando sistema de hilo rojo");
 
@@ -932,57 +721,40 @@ const BossRedLine = {
     }
   },
 
-  /**
-   * Reset del sistema
-   */
   reset() {
     this.cleanup();
-    this.initRedLineSystem();
     console.log("🔄 Sistema de hilo rojo reseteado");
   },
 
   // ======================================================
-  // GETTERS Y UTILIDADES
+  // GETTERS
   // ======================================================
 
   isActive() {
     return this.phaseActive;
   },
-
   isMoving() {
     return this.redLineMoving;
   },
-
   isShowingPreview() {
     return this.showingPreview;
   },
-
   getCurrentCycle() {
     return this.cycleCount;
   },
-
   getMaxCycles() {
     return this.maxCycles;
   },
-
   getProgress() {
     if (!this.redLineMoving || this.redLinePath.length === 0) return 0;
     return Math.min(1, this.redLineIndex / this.redLinePath.length);
   },
-
   getLineLength() {
     return this.redLinePath.length;
   },
-
-  getCurrentPosition() {
-    if (!this.redLineMoving || this.redLineIndex >= this.redLinePath.length) {
-      return null;
-    }
-    return this.redLinePath[this.redLineIndex];
-  },
 };
 
-// Hacer disponible globalmente
 window.BossRedLine = BossRedLine;
-
-console.log("🔴 boss-redline.js cargado - Sistema de hilo rojo listo");
+console.log(
+  "🔴 boss-redline.js OPTIMIZADO cargado - Sistema de hilo rojo mejorado listo"
+);

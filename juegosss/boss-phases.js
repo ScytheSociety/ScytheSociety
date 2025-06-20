@@ -248,35 +248,61 @@ const BossPhases = {
   // ======================================================
 
   /**
-   * Configurar fase de invocación
+   * 🔥 CORRECCIÓN: setupSummoningPhase() - Boss quieto en centro
    */
   setupSummoningPhase() {
-    this.bossManager.makeImmune(this.PHASE_DURATIONS.SUMMONING);
+    // Duración exacta: 60 segundos
+    this.bossManager.makeImmune(3600);
 
+    // 🔥 CENTRAR Y MANTENER QUIETO
     if (this.bossManager.movement) {
       this.bossManager.movement.teleportToCenter();
+      this.bossManager.movement.changePattern("stationary");
+    }
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        "⚔️ INVOCANDO LEGIONES...",
+        "#FF0000"
+      );
     }
   },
 
   /**
-   * Configurar fase de minas
+   * 🔥 CORRECCIÓN: setupMinesPhase() - Teletransporte activo
    */
   setupMinesPhase() {
-    this.bossManager.makeImmune(this.PHASE_DURATIONS.MINES);
+    // Duración: 90 segundos
+    this.bossManager.makeImmune(5400);
 
+    // 🔥 MOVIMIENTO DE TELETRANSPORTE ACTIVO
     if (this.bossManager.movement) {
-      this.bossManager.movement.teleportToCenter();
+      this.bossManager.movement.changePattern("teleporting");
+    }
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        "💣 CAMPO MINADO ACTIVADO",
+        "#FF8800"
+      );
     }
   },
 
   /**
-   * Configurar fase de balas
+   * 🔥 CORRECCIÓN: setupBulletsPhase() - Boss quieto en centro
    */
   setupBulletsPhase() {
-    this.bossManager.makeImmune(this.PHASE_DURATIONS.BULLETS);
+    // Duración: 120 segundos
+    this.bossManager.makeImmune(7200);
 
+    // 🔥 CENTRAR Y MANTENER QUIETO
     if (this.bossManager.movement) {
       this.bossManager.movement.teleportToCenter();
+      this.bossManager.movement.changePattern("stationary");
+    }
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage("🌟 LLUVIA CELESTIAL", "#9B59B6");
     }
   },
 
@@ -416,7 +442,7 @@ const BossPhases = {
   },
 
   /**
-   * Terminar la fase actual
+   * 🔥 CORRECCIÓN: Terminar fases y volver a HUNTING
    */
   endCurrentPhase() {
     console.log(`👹 Terminando fase: ${this.currentPhase}`);
@@ -430,16 +456,15 @@ const BossPhases = {
     // Limpiar sistemas de la fase
     this.cleanupCurrentPhase();
 
-    // Volver a modo de caza
+    // 🔥 VOLVER A HUNTING FLUIDO INMEDIATAMENTE
     this.currentPhase = "HUNTING";
 
-    if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage("⚔️ BOSS VULNERABLE", "#00FF00");
+    if (this.bossManager.movement) {
+      this.bossManager.movement.enableFluidHunting();
     }
 
-    // Reanudar movimiento normal
-    if (this.bossManager.movement) {
-      this.bossManager.movement.changePattern("hunting");
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage("🏃 BOSS CAZANDO", "#00FF00");
     }
   },
 

@@ -302,7 +302,7 @@ const BossManager = {
   },
 
   /**
-   * 🎯 CONTROL PRINCIPAL DE SECUENCIA DE FASES - CORREGIDO
+   * 🎯 CONTROL PRINCIPAL DE SECUENCIA DE FASES - COMPLETAMENTE CORREGIDO
    * Ejecuta las fases según el porcentaje de vida del boss
    */
   executePhaseSequence() {
@@ -314,108 +314,97 @@ const BossManager = {
     }
 
     const healthPercentage = this.currentHealth / this.maxHealth;
+    const currentPhase = this.phases?.getCurrentPhase() || "HUNTING";
+    const isPhaseActive = this.phases?.isPhaseActive() || false;
 
-    // 🔥 LOGS PARA DEBUG
+    // 🔥 DEBUG LOGS
     console.log(
       `👹 DEBUG - Vida: ${Math.round(
         healthPercentage * 100
-      )}%, Fase actual: ${this.phases?.getCurrentPhase()}, Fase activa: ${this.phases?.isPhaseActive()}, Cooldown: ${
-        this.phases?.phaseCooldown || 0
-      }`
+      )}%, Fase: ${currentPhase}, Activa: ${isPhaseActive}`
     );
 
-    // Solo cambiar fases si no está en una fase especial activa
-    if (!this.phases || !this.phases.isInSpecialPhase()) {
-      // Fase Final: Yan Ken Po (3% de vida)
-      if (healthPercentage <= 0.03 && !this.yankenpo.isActive()) {
-        console.log("🎮 Iniciando Fase Final: Yan Ken Po");
-        this.startYanKenPoPhase();
-        return;
-      }
+    // ========== FASE FINAL: YAN KEN PO (3% de vida) ==========
+    if (healthPercentage <= 0.03 && !this.yankenpo.isActive()) {
+      console.log("🎮 INICIANDO FASE FINAL: Yan Ken Po");
+      this.startYanKenPoPhase();
+      return;
+    }
 
-      // Fase 8: Hilo Rojo (15% de vida)
-      if (
-        healthPercentage <= 0.15 &&
-        healthPercentage > 0.03 &&
-        !this.redline.isActive()
-      ) {
-        console.log("🔴 Iniciando Fase 8: Hilo Rojo");
-        this.startRedLinePhase();
-        return;
-      }
+    // ========== FASE 4: HILO ROJO (15% de vida) ==========
+    if (
+      healthPercentage <= 0.15 &&
+      healthPercentage > 0.03 &&
+      !this.redline.isActive()
+    ) {
+      console.log("🔴 INICIANDO FASE 4: Hilo Rojo");
+      this.startRedLinePhase();
+      return;
+    }
 
-      // Fase 6: Balas Touhou (30% de vida)
-      if (
-        healthPercentage <= 0.3 &&
-        healthPercentage > 0.15 &&
-        !this.bullets.isPatternActive()
-      ) {
-        console.log("🌟 Iniciando Fase 6: Balas Touhou");
-        this.startBulletsPhase();
-        return;
-      }
+    // ========== FASE 3: BALAS TOUHOU (30% de vida) ==========
+    if (
+      healthPercentage <= 0.3 &&
+      healthPercentage > 0.15 &&
+      currentPhase !== "BULLETS" &&
+      !isPhaseActive
+    ) {
+      console.log("🌟 INICIANDO FASE 3: Balas Touhou");
+      this.startBulletsPhase();
+      return;
+    }
 
-      // Fase 4: Minas (50% de vida) - 🔥 CORREGIDO CON COOLDOWN
-      if (
-        healthPercentage <= 0.5 &&
-        healthPercentage > 0.3 &&
-        !this.mines.isMiningPhaseActive() &&
-        (!this.phases || this.phases.phaseCooldown <= 0) // ⬅️ VERIFICAR COOLDOWN
-      ) {
-        console.log("💣 Iniciando Fase 4: Minas");
-        this.startMinesPhase();
-        return;
-      }
+    // ========== FASE 2: MINAS (50% de vida) ==========
+    if (
+      healthPercentage <= 0.5 &&
+      healthPercentage > 0.3 &&
+      currentPhase !== "MINES" &&
+      !isPhaseActive
+    ) {
+      console.log("💣 INICIANDO FASE 2: Minas");
+      this.startMinesPhase();
+      return;
+    }
 
-      // Fase 2: Invocación (75% de vida) - 🔥 CORREGIDO CON COOLDOWN
-      if (healthPercentage <= 0.75 && healthPercentage > 0.5) {
-        const currentPhase = this.phases.getCurrentPhase();
-        const isPhaseActive = this.phases.isPhaseActive();
-        const cooldown = this.phases.phaseCooldown || 0;
+    // ========== FASE 1: INVOCACIÓN (75% de vida) ==========
+    if (
+      healthPercentage <= 0.75 &&
+      healthPercentage > 0.5 &&
+      currentPhase !== "SUMMONING" &&
+      !isPhaseActive
+    ) {
+      console.log("⚔️ INICIANDO FASE 1: Invocación");
+      this.startSummoningPhase();
+      return;
+    }
 
-        console.log(
-          `👹 DEBUG INVOCACIÓN - Fase actual: ${currentPhase}, Activa: ${isPhaseActive}, Vida: ${Math.round(
-            healthPercentage * 100
-          )}%, Cooldown: ${cooldown}`
-        );
+    // ========== MODO HUNTING ENTRE FASES ==========
+    if (!isPhaseActive && currentPhase !== "HUNTING") {
+      console.log("🏃 Boss entrando en modo HUNTING");
+      this.enterHuntingMode();
+    }
+  },
 
-        // 🔥 VERIFICAR COOLDOWN ANTES DE INICIAR
-        if (currentPhase !== "SUMMONING" && !isPhaseActive && cooldown <= 0) {
-          console.log("⚔️ Iniciando Fase 2: Invocación");
-          this.startSummoningPhase();
-          return;
-        } else if (cooldown > 0) {
-          console.log(
-            `⏳ Fase de invocación en cooldown: ${cooldown} frames restantes`
-          );
-        }
-      }
+  /**
+   * 🔥 NUEVA: Entrar en modo hunting fluido
+   */
+  enterHuntingMode() {
+    if (this.phases) {
+      this.phases.currentPhase = "HUNTING";
+      this.phases.phaseActive = false;
+    }
 
-      // 🔥 NUEVO: Modo de caza libre entre fases
-      if (
-        !this.phases.isPhaseActive() &&
-        this.phases.getCurrentPhase() !== "HUNTING" &&
-        this.phases.phaseCooldown <= 0 // ⬅️ SOLO SI NO HAY COOLDOWN
-      ) {
-        console.log("🏃 Boss entrando en modo de caza libre");
-        this.phases.currentPhase = "HUNTING";
+    // Boss vulnerable
+    this.isImmune = false;
+    this.immunityTimer = 0;
 
-        // Reanudar movimiento de caza
-        if (this.movement) {
-          this.movement.enableWandering();
-        }
+    // 🔥 MOVIMIENTO FLUIDO INMEDIATO
+    if (this.movement) {
+      this.movement.enableFluidHunting(); // Nueva función
+    }
 
-        // Boss vulnerable
-        this.isImmune = false;
-        this.immunityTimer = 0;
-      }
-    } else {
-      // 🔥 DEBUG: Mostrar por qué no cambia de fase
-      console.log(
-        `👹 DEBUG - No puede cambiar fase. En fase especial: ${this.phases?.isInSpecialPhase()}, Cooldown: ${
-          this.phases?.phaseCooldown || 0
-        }`
-      );
+    if (this.ui) {
+      this.ui.showScreenMessage("🏃 Boss cazando...", "#FFFF00");
     }
   },
 

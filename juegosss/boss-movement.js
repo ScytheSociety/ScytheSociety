@@ -157,10 +157,14 @@ const BossMovement = {
   },
 
   /**
-   * Ejecutar el patrón de movimiento actual
+   * 🔥 CORRECCIÓN: Actualizar executeMovementPattern()
    */
   executeMovementPattern() {
     switch (this.movement.pattern) {
+      case "fluid_hunting":
+        this.fluidHuntPlayer(); // 🔥 NUEVA función fluida
+        break;
+
       case "hunting":
         this.huntPlayer();
         break;
@@ -177,12 +181,25 @@ const BossMovement = {
         this.wanderRandomly();
         break;
 
-      case "aggressive":
-        this.aggressiveMovement();
+      case "stationary":
+        this.stayStationary(); // 🔥 NUEVA para fases
         break;
     }
 
     this.movement.patternTimer++;
+  },
+
+  /**
+   * 🔥 NUEVA: Quedarse quieto para fases especiales
+   */
+  stayStationary() {
+    // Reducir velocidad gradualmente hasta parar
+    this.movement.velocityX *= 0.9;
+    this.movement.velocityY *= 0.9;
+
+    // Si está muy lento, parar completamente
+    if (Math.abs(this.movement.velocityX) < 0.1) this.movement.velocityX = 0;
+    if (Math.abs(this.movement.velocityY) < 0.1) this.movement.velocityY = 0;
   },
 
   // ======================================================
@@ -260,6 +277,56 @@ const BossMovement = {
     }
 
     // 🔥 SIN LLAMADA A limitVelocity() - Ya no necesaria
+  },
+
+  /**
+   * 🔥 NUEVA: Activar persecución fluida inmediata
+   */
+  enableFluidHunting() {
+    console.log("🏃 Boss iniciando persecución fluida");
+
+    this.movement.enabled = true;
+    this.movement.isWandering = false;
+    this.movement.pattern = "fluid_hunting";
+    this.movement.speed = 3.5; // Velocidad alta y fluida
+
+    // 🔥 RESETEAR VELOCIDADES para movimiento inmediato
+    this.movement.velocityX = 0;
+    this.movement.velocityY = 0;
+  },
+
+  /**
+   * 🔥 NUEVA: Persecución fluida perfecta
+   */
+  fluidHuntPlayer() {
+    const playerPos = Player.getPosition();
+    const playerSize = Player.getSize();
+    const boss = this.bossManager.boss;
+
+    const playerCenterX = playerPos.x + playerSize.width / 2;
+    const playerCenterY = playerPos.y + playerSize.height / 2;
+    const bossCenterX = boss.x + boss.width / 2;
+    const bossCenterY = boss.y + boss.height / 2;
+
+    const dx = playerCenterX - bossCenterX;
+    const dy = playerCenterY - bossCenterY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // 🔥 MOVIMIENTO FLUIDO CONSTANTE
+    if (distance > 30) {
+      const huntSpeed = 3.8; // Velocidad de persecución fluida
+
+      const dirX = dx / distance;
+      const dirY = dy / distance;
+
+      // 🔥 APLICAR VELOCIDAD DIRECTA
+      this.movement.velocityX = dirX * huntSpeed;
+      this.movement.velocityY = dirY * huntSpeed;
+    } else {
+      // Reducir velocidad cerca del jugador
+      this.movement.velocityX *= 0.7;
+      this.movement.velocityY *= 0.7;
+    }
   },
 
   /**
