@@ -663,19 +663,69 @@ const BossManager = {
   },
 
   /**
-   * Reset forzado (para cambios de pantalla)
+   * Reset forzado (para cambios de pantalla) - CORREGIDO
    */
   forceReset() {
     console.log("🔄 RESET FORZADO del boss");
 
-    // Cleanup inmediato
+    // Marcar como inactivo inmediatamente
+    this.active = false;
+
+    // Cleanup inmediato de sistemas
     this.cleanupSystems();
+
+    // Reset completo
     this.reset();
 
     // Restaurar controles del jugador
     if (window.Player && Player.moveSpeed !== 1.0) {
       Player.moveSpeed = 1.0;
+      console.log("✅ Velocidad del jugador restaurada");
     }
+
+    console.log("✅ Reset forzado del boss completado");
+  },
+
+  /**
+   * Limpiar todos los sistemas modulares
+   */
+  cleanupSystems() {
+    console.log("🧹 Limpiando todos los sistemas del boss");
+
+    // Limpiar cada sistema modular si existe
+    if (this.movement) {
+      this.movement.reset();
+    }
+
+    if (this.phases) {
+      this.phases.reset();
+    }
+
+    if (this.mines) {
+      this.mines.cleanup();
+    }
+
+    if (this.bullets) {
+      this.bullets.cleanup();
+    }
+
+    if (this.redline) {
+      this.redline.cleanup();
+    }
+
+    if (this.yankenpo) {
+      this.yankenpo.cleanup();
+    }
+
+    if (this.ui) {
+      this.ui.cleanup();
+    }
+
+    if (this.comments) {
+      this.comments.cleanup();
+    }
+
+    console.log("✅ Todos los sistemas del boss limpiados");
   },
 
   // ======================================================
