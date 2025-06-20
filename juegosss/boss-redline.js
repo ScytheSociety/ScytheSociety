@@ -152,7 +152,16 @@ const BossRedLine = {
    * Actualizar movimiento del boss por la línea
    */
   updateBossMovement() {
-    if (!this.redLineMoving || this.redLinePath.length === 0) return;
+    // 🔥 VERIFICACIONES MEJORADAS
+    if (!this.redLineMoving || this.redLinePath.length === 0) {
+      return;
+    }
+
+    if (!this.bossManager || !this.bossManager.boss) {
+      console.error("🔴 Error: Boss no existe en updateBossMovement");
+      this.endPhase();
+      return;
+    }
 
     // Verificar si completó el recorrido
     if (this.redLineIndex >= this.redLinePath.length - 1) {
@@ -218,8 +227,22 @@ const BossRedLine = {
       `🔄 Iniciando ciclo ${this.cycleCount + 1}/${this.maxCycles} de hilo rojo`
     );
 
+    // 🔥 VERIFICAR QUE EL BOSS EXISTE ANTES DE CONTINUAR
+    if (!this.bossManager || !this.bossManager.boss) {
+      console.error("🔴 Error: Boss no existe para iniciar ciclo red line");
+      this.endPhase();
+      return;
+    }
+
     // Generar nueva línea aleatoria
     this.generateRedLine();
+
+    // 🔥 VERIFICAR QUE LA LÍNEA SE GENERÓ CORRECTAMENTE
+    if (this.redLinePath.length === 0) {
+      console.error("🔴 Error: No se pudo generar línea roja");
+      this.endPhase();
+      return;
+    }
 
     // PASO 1: Mostrar línea brevemente
     this.showLinePreview();
@@ -253,9 +276,16 @@ const BossRedLine = {
    * Iniciar movimiento del boss por la línea
    */
   startRedLineMovement() {
+    // 🔥 VERIFICAR QUE EL BOSS EXISTE
+    if (!this.bossManager || !this.bossManager.boss) {
+      console.error("🔴 Error: Boss no existe para red line movement");
+      this.endPhase(); // Terminar la fase si no hay boss
+      return;
+    }
+
     if (this.redLinePath.length === 0) {
       console.error("🔴 Error: No hay línea roja generada");
-      this.endRedLinePhase();
+      this.endPhase(); // 🔥 CORREGIDO: usar endPhase en lugar de endRedLinePhase
       return;
     }
 
@@ -265,6 +295,14 @@ const BossRedLine = {
     // Posicionar boss al inicio de la línea
     const startPoint = this.redLinePath[0];
     const boss = this.bossManager.boss;
+
+    // 🔥 VERIFICACIÓN ADICIONAL
+    if (!boss) {
+      console.error("🔴 Error: Boss null en startRedLineMovement");
+      this.endPhase();
+      return;
+    }
+
     boss.x = startPoint.x - boss.width / 2;
     boss.y = startPoint.y - boss.height / 2;
 
@@ -351,6 +389,15 @@ const BossRedLine = {
     }, 500);
   },
 
+  /**
+   * Terminar TODA la fase del hilo rojo (no solo el movimiento)
+   */
+  endRedLinePhase() {
+    console.log("🔴 Terminando TODA la fase del hilo rojo");
+
+    this.endPhase(); // Llamar al método principal que ya existe
+  },
+
   // ======================================================
   // GENERACIÓN DE LÍNEAS
   // ======================================================
@@ -362,6 +409,13 @@ const BossRedLine = {
     this.redLinePath = [];
 
     const canvas = window.getCanvas();
+
+    // 🔥 VERIFICAR QUE EL CANVAS EXISTE
+    if (!canvas) {
+      console.error("🔴 Error: Canvas no existe para generar línea");
+      return;
+    }
+
     const lineType =
       this.lineTypes[Math.floor(Math.random() * this.lineTypes.length)];
 
@@ -386,6 +440,13 @@ const BossRedLine = {
     }
 
     console.log(`🔴 Línea generada con ${this.redLinePath.length} puntos`);
+
+    // 🔥 VERIFICAR QUE SE GENERARON PUNTOS
+    if (this.redLinePath.length === 0) {
+      console.error("🔴 Error: No se generaron puntos para la línea");
+      // Generar línea simple de respaldo
+      this.generateFallbackLine(canvas);
+    }
   },
 
   /**
@@ -527,6 +588,33 @@ const BossRedLine = {
         y: centerY + Math.sin(angle) * radius,
       });
     }
+  },
+
+  /**
+   * 🔥 NUEVO: Generar línea simple de respaldo
+   */
+  generateFallbackLine(canvas) {
+    console.log("🔴 Generando línea de respaldo simple");
+
+    const startX = canvas.width * 0.2;
+    const startY = canvas.height * 0.3;
+    const endX = canvas.width * 0.8;
+    const endY = canvas.height * 0.7;
+
+    // Línea recta simple con 20 puntos
+    for (let i = 0; i <= 20; i++) {
+      const t = i / 20;
+      this.redLinePath.push({
+        x: startX + (endX - startX) * t,
+        y: startY + (endY - startY) * t,
+      });
+    }
+
+    console.log(
+      "🔴 Línea de respaldo generada con",
+      this.redLinePath.length,
+      "puntos"
+    );
   },
 
   // ======================================================
