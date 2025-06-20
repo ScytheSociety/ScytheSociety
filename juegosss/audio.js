@@ -25,11 +25,11 @@ const AudioManager = {
   },
 
   /**
-   * 🔥 NUEVO: Configura control de visibilidad para pausar audio
+   * 🔥 NUEVO: Configura control de visibilidad para pausar audio - CORREGIDO
    */
   setupVisibilityControl() {
     // Detectar cuando la pestaña/app se oculta
-    document.addEventListener("visibilitychange", () => {
+    const handleVisibilityChange = () => {
       if (document.hidden) {
         // Pausa todo el audio cuando se minimiza
         this.pauseAllAudio();
@@ -39,18 +39,29 @@ const AudioManager = {
         this.resumeBackgroundAudio();
         console.log("🔊 Audio reanudado - app restaurada");
       }
-    });
+    };
+
+    // 🔥 CORREGIDO: Guardar referencia para poder remover listeners
+    this.visibilityChangeHandler = handleVisibilityChange;
+
+    document.addEventListener("visibilitychange", this.visibilityChangeHandler);
 
     // Para móviles - detectar cuando se pierde el foco
-    window.addEventListener("blur", () => {
+    const handleBlur = () => {
       this.pauseAllAudio();
       console.log("🔇 Audio pausado - foco perdido");
-    });
+    };
 
-    window.addEventListener("focus", () => {
+    const handleFocus = () => {
       this.resumeBackgroundAudio();
       console.log("🔊 Audio reanudado - foco recuperado");
-    });
+    };
+
+    this.blurHandler = handleBlur;
+    this.focusHandler = handleFocus;
+
+    window.addEventListener("blur", this.blurHandler);
+    window.addEventListener("focus", this.focusHandler);
   },
 
   /**
@@ -533,10 +544,26 @@ const AudioManager = {
   // ======================================================
 
   /**
-   * Limpia recursos de audio
+   * Limpia recursos de audio - CORREGIDO
    */
   cleanup() {
     this.stopAllSounds();
+
+    // 🔥 CORREGIDO: Remover event listeners específicos
+    if (this.visibilityChangeHandler) {
+      document.removeEventListener(
+        "visibilitychange",
+        this.visibilityChangeHandler
+      );
+    }
+
+    if (this.blurHandler) {
+      window.removeEventListener("blur", this.blurHandler);
+    }
+
+    if (this.focusHandler) {
+      window.removeEventListener("focus", this.focusHandler);
+    }
 
     // Limpiar event listeners y recursos
     for (const [key, sound] of Object.entries(this.sounds)) {
@@ -547,17 +574,6 @@ const AudioManager = {
     }
 
     console.log("🧹 Recursos de audio limpiados");
-  },
-
-  /**
-   * Resetea el sistema de audio
-   */
-  reset() {
-    this.stopAllSounds();
-    this.masterVolume = 0.5;
-    this.updateAllVolumes();
-
-    console.log("🔄 Sistema de audio reseteado");
   },
 
   // ======================================================

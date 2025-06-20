@@ -204,6 +204,35 @@ const GameConfig = {
     },
   },
 
+  // 🔥 NUEVO: Configuración específica de fases del boss
+  BOSS_PHASE_CONFIG: {
+    // Tiempos en frames (60fps)
+    INTRO_DURATION: 600, // 10 segundos - Boss inmune en centro
+    SUMMONING_DURATION: 600, // 10 segundos - Invocación
+    MINES_DURATION: 900, // 15 segundos - Minas
+    BULLETS_DURATION: 1200, // 20 segundos - Touhou
+    REDLINE_COUNT: 10, // 10 hilos rojos
+    REDLINE_PAUSE: 180, // 3 segundos entre hilos
+    YANKENPO_WINS: 3, // 3 victorias para matar boss
+
+    // Umbrales de vida para activar fases
+    HEALTH_THRESHOLDS: {
+      SUMMONING: 0.75, // 75%
+      MINES: 0.5, // 50%
+      BULLETS: 0.3, // 30%
+      REDLINE: 0.15, // 15%
+      YANKENPO: 0.03, // 3%
+    },
+
+    // Mensajes de pausa entre fases
+    TRANSITION_MESSAGES: {
+      VULNERABLE: "⚔️ ¡Boss vulnerable!",
+      IMMUNE: "🛡️ Boss inmune durante fase",
+      PHASE_END: "✅ Fase completada",
+      HUNTING: "👹 ¡A la caza!",
+    },
+  },
+
   // ======================================================
   // EFECTOS VISUALES Y SONIDO
   // ======================================================

@@ -345,48 +345,40 @@ const BossRedLine = {
   },
 
   /**
-   * Terminar movimiento de la línea (no la fase completa) - CORREGIDO
+   * Terminar movimiento de la línea (no la fase completa) - INTEGRADO
    */
   endRedLineMovement() {
-    console.log("🔴 Boss terminó el recorrido - iniciando pausa vulnerable");
+    console.log(
+      "🔴 Boss terminó el recorrido - notificando a sistema de fases"
+    );
 
     this.redLineMoving = false;
     this.redLinePath = [];
     this.redLineIndex = 0;
-    this.cycleCount++;
 
-    // 🔥 CORREGIDO: FORZAR que el boss sea vulnerable
-    if (this.bossManager) {
-      this.bossManager.isImmune = false;
-      this.bossManager.immunityTimer = 0;
-      console.log("🔴 Boss FORZADO a ser vulnerable por 3 segundos");
+    // Notificar al sistema de fases que terminó este hilo
+    if (this.bossManager.phases) {
+      // En el nuevo sistema, la fase maneja la secuencia
+      console.log("🔴 Hilo rojo completado, esperando siguiente...");
     }
 
-    // Detener movimiento del boss
-    if (this.bossManager && this.bossManager.boss) {
-      const boss = this.bossManager.boss;
-      boss.velocityX = 0;
-      boss.velocityY = 0;
-    }
+    // El boss NO se hace vulnerable aquí, eso lo maneja el sistema de fases
+    console.log("🔴 Hilo rojo individual completado");
+  },
 
-    if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage(
-        "⚔️ ¡BOSS VULNERABLE! (3s)",
-        "#00FF00"
-      );
-    }
+  /**
+   * 🔥 NUEVO: Método para ser llamado por el sistema de fases
+   */
+  startRedLineCycleFromPhases() {
+    console.log("🔴 Iniciando ciclo de hilo rojo desde sistema de fases");
+    this.startRedLineCycle();
+  },
 
-    if (this.bossManager.comments) {
-      this.bossManager.comments.sayRandomComment("combate");
-    }
-
-    // 🔥 AUMENTADO: 3 segundos vulnerable en lugar de 1
-    const vulnerabilityTime = 3000;
-
-    // Decidir siguiente acción después del período vulnerable
-    setTimeout(() => {
-      this.decideNextAction();
-    }, vulnerabilityTime);
+  /**
+   * 🔥 NUEVO: Verificar si el hilo actual terminó
+   */
+  isCurrentRedLineComplete() {
+    return !this.redLineMoving && this.redLinePath.length === 0;
   },
 
   /**

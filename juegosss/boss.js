@@ -78,15 +78,15 @@ const BossManager = {
   },
 
   /**
-   * Crear la entidad boss básica
+   * Crear la entidad boss básica - CENTRADO
    */
   createBoss() {
     const canvas = window.getCanvas();
     const config = GameConfig.BOSS_CONFIG;
 
     this.boss = {
-      x: canvas.width / 2 - (config.size * 1.5) / 2,
-      y: 80,
+      x: canvas.width / 2 - (config.size * 1.5) / 2, // CENTRADO
+      y: canvas.height / 2 - (config.size * 1.5) / 2, // CENTRADO
       width: config.size * 1.5,
       height: config.size * 1.5,
       velocityX: 0,
@@ -101,7 +101,7 @@ const BossManager = {
       aggressionLevel: 1.0,
     };
 
-    console.log("👹 Entidad boss creada");
+    console.log("👹 Entidad boss creada en el centro");
   },
 
   /**
@@ -155,13 +155,13 @@ const BossManager = {
   },
 
   /**
-   * Configurar el boss después de inicializar sistemas
+   * Configurar el boss después de inicializar sistemas - REDISEÑADO
    */
   setupBoss() {
     this.active = true;
     this.currentHealth = this.maxHealth;
-    this.isImmune = false;
-    this.immunityTimer = 0;
+    this.isImmune = true; // 🔥 Empezar inmune en INTRO
+    this.immunityTimer = 9999;
 
     // Efectos de entrada
     if (this.ui) {
@@ -177,24 +177,24 @@ const BossManager = {
       );
     }
 
-    // Comentario de entrada
-    if (this.comments) {
-      setTimeout(() => {
-        this.comments.sayComment("entrada");
-      }, 2000);
-    }
-
     // Audio
     if (window.AudioManager) {
       AudioManager.playSound("special");
     }
 
-    // Comenzar con movimiento libre
-    if (this.movement) {
-      setTimeout(() => {
-        this.movement.enableWandering();
-      }, 1000);
+    // 🔥 NUEVO: Iniciar con fase INTRO (10 segundos inmune en el centro)
+    if (this.phases) {
+      this.phases.changePhase("INTRO");
     }
+
+    // Comentario de entrada después de 2 segundos
+    if (this.comments) {
+      setTimeout(() => {
+        this.comments.sayRandomComment("entrada");
+      }, 2000);
+    }
+
+    console.log("👹 Boss configurado - Iniciando con fase INTRO");
   },
 
   // ======================================================
@@ -389,7 +389,7 @@ const BossManager = {
   },
 
   /**
-   * Boss derrotado
+   * Boss derrotado - MEJORADO CON CONTADORES
    */
   defeat() {
     console.log("👹 === BOSS DERROTADO ===");
@@ -400,7 +400,7 @@ const BossManager = {
 
     // Comentario de derrota
     if (this.comments) {
-      this.comments.sayComment("derrota_boss");
+      this.comments.sayRandomComment("derrota_boss");
     }
 
     // Efectos de derrota
@@ -420,14 +420,25 @@ const BossManager = {
       }
     }
 
-    // Puntos bonus
-    const bonusPoints = 5000;
+    // Puntos bonus épicos
+    const bonusPoints = 10000; // 🔥 Aumentado de 5000 a 10000
     if (window.setScore) {
       window.setScore(window.getScore() + bonusPoints);
     }
 
     if (this.ui) {
       this.ui.showScreenMessage(`+${bonusPoints} PUNTOS BONUS!`, "#FFD700");
+    }
+
+    // 🔥 NUEVO: Contar boss como enemigo eliminado para el total
+    if (window.incrementTotalEnemiesKilled) {
+      window.incrementTotalEnemiesKilled();
+      console.log("👹 Boss contado en total de enemigos eliminados");
+    }
+
+    // 🔥 NUEVO: Mega combo bonus
+    if (window.ComboSystem) {
+      window.ComboSystem.addKill(); // Boss cuenta como kill para combo
     }
 
     // Limpiar sistemas
@@ -438,11 +449,6 @@ const BossManager = {
       AudioManager.playSound("victory");
     }
 
-    // Contar como enemigo eliminado
-    if (window.incrementTotalEnemiesKilled) {
-      window.incrementTotalEnemiesKilled();
-    }
-
     // Victoria después de 2 segundos
     setTimeout(() => {
       console.log("🏆 Llamando a window.victory() desde boss derrotado");
@@ -450,36 +456,6 @@ const BossManager = {
         window.victory();
       }
     }, 2000);
-  },
-
-  /**
-   * Limpiar todos los sistemas al derrotar al boss
-   */
-  cleanupSystems() {
-    if (this.mines) {
-      this.mines.cleanup();
-    }
-
-    if (this.bullets) {
-      this.bullets.cleanup();
-    }
-
-    if (this.redline) {
-      this.redline.cleanup();
-    }
-
-    if (this.yankenpo) {
-      this.yankenpo.cleanup();
-    }
-
-    if (this.ui) {
-      this.ui.cleanup();
-    }
-
-    // Limpiar enemigos
-    if (window.EnemyManager) {
-      EnemyManager.enemies = [];
-    }
   },
 
   // ======================================================

@@ -627,33 +627,30 @@ function checkCollisions() {
 }
 
 /**
- * 🔥 Inicia el nivel del boss final - CORREGIDO PARA NIVEL 11
+ * Inicia el nivel del boss final - REDISEÑADO
  */
 function startBossLevel() {
   console.log("👹 === INICIANDO BOSS FINAL NIVEL 11 ===");
 
-  // 🔥 MANTENER level = 11 para el boss
-  // level ya es 11 aquí, NO cambiar
-
-  // 🔥 LIMPIAR TODOS LOS ENEMIGOS INMEDIATAMENTE
+  // Limpiar enemigos inmediatamente
   console.log(`🧹 Limpiando ${EnemyManager.enemies.length} enemigos restantes`);
   EnemyManager.enemies = [];
   EnemyManager.enemiesKilled = 0;
   EnemyManager.spawnTimer = 0;
-
-  // 🔥 DETENER EL SPAWN DE ENEMIGOS NORMALES completamente
-  EnemyManager.currentSpawnDelay = 999999; // Tiempo muy alto para evitar spawn
+  EnemyManager.currentSpawnDelay = 999999;
 
   console.log("🧹 Enemigos normales eliminados y spawn detenido para nivel 11");
 
-  // 🔥 INICIALIZAR BOSS DESPUÉS DE UN PEQUEÑO DELAY
+  // Inicializar boss después de delay
   setTimeout(() => {
     console.log("👹 Inicializando BossManager para nivel 11...");
     BossManager.init();
 
     // Mostrar transición épica
     UI.showLevelTransition("👹 BOSS FINAL 👹", () => {
-      console.log("👹 Boss Final activo en nivel 11 - ¡Sistema completo!");
+      console.log(
+        "👹 Boss Final activo en nivel 11 - Sistema con fases temporales!"
+      );
     });
   }, 500);
 }
