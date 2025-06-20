@@ -1634,57 +1634,27 @@ function incrementTotalEnemiesKilled() {
 }
 
 /**
- * 🔥 NUEVO: Listeners globales para limpiar elementos del boss
+ * Listeners globales CORREGIDOS - SIN CLEANUP AUTOMÁTICO
  */
 function setupGlobalCleanupListeners() {
-  // Limpiar cuando se cambia de pestaña
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
+  // 🔥 SOLO limpiar antes de cerrar/recargar la página
+  window.addEventListener("beforeunload", () => {
+    // Solo limpiar si el juego realmente terminó
+    if (gameEnded) {
       cleanupBossElements();
     }
   });
 
-  // Limpiar cuando se pierde el foco
-  window.addEventListener("blur", () => {
-    cleanupBossElements();
-  });
-
-  // Limpiar antes de cerrar/recargar la página
-  window.addEventListener("beforeunload", () => {
-    cleanupBossElements();
-  });
-
-  // Limpiar en errores
-  window.addEventListener("error", () => {
-    cleanupBossElements();
-  });
-
-  console.log("🔧 Listeners globales de limpieza configurados");
-}
-
-// Llamar después de la inicialización
-window.addEventListener("load", () => {
-  setupGlobalCleanupListeners();
-});
-
-// 🔥 SOBRESCRIBIR cualquier listener de teclado existente que pueda interferir
-document.addEventListener(
-  "keydown",
-  (e) => {
-    // Solo permitir teclas 1,2,3 si realmente estamos en Yan Ken Po
-    if (e.key === "1" || e.key === "2" || e.key === "3") {
-      if (
-        !window.BossManager ||
-        !window.BossManager.yanKenPoPhase ||
-        !window.BossManager.active
-      ) {
-        // Si no estamos en Yan Ken Po, ignorar completamente
-        return;
-      }
+  // 🔥 SOLO limpiar en errores críticos
+  window.addEventListener("error", (e) => {
+    // Solo si es un error realmente crítico
+    if (e.message && e.message.includes("boss") && gameEnded) {
+      cleanupBossElements();
     }
-  },
-  true
-); // Captura en fase de captura
+  });
+
+  console.log("🔧 Listeners globales CORREGIDOS configurados");
+} // Captura en fase de captura
 
 // ======================================================
 // FUNCIONES GLOBALES EXPUESTAS

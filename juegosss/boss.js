@@ -1059,10 +1059,3 @@ window.BossManager = BossManager;
 console.log(
   "👹 boss.js (controlador principal) cargado - Sistema modular listo"
 );
-
-// 🔥 PREVENIR ERROR DE ASYNC RESPONSE
-window.addEventListener("beforeunload", () => {
-  if (window.BossManager) {
-    BossManager.active = false;
-  }
-});
