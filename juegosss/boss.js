@@ -302,7 +302,7 @@ const BossManager = {
   },
 
   /**
-   * 🎯 CONTROL PRINCIPAL DE SECUENCIA DE FASES
+   * 🎯 CONTROL PRINCIPAL DE SECUENCIA DE FASES - CORREGIDO
    * Ejecuta las fases según el porcentaje de vida del boss
    */
   executePhaseSequence() {
@@ -319,7 +319,9 @@ const BossManager = {
     console.log(
       `👹 DEBUG - Vida: ${Math.round(
         healthPercentage * 100
-      )}%, Fase actual: ${this.phases?.getCurrentPhase()}, Fase activa: ${this.phases?.isPhaseActive()}`
+      )}%, Fase actual: ${this.phases?.getCurrentPhase()}, Fase activa: ${this.phases?.isPhaseActive()}, Cooldown: ${
+        this.phases?.phaseCooldown || 0
+      }`
     );
 
     // Solo cambiar fases si no está en una fase especial activa
@@ -353,39 +355,47 @@ const BossManager = {
         return;
       }
 
-      // Fase 4: Minas (50% de vida)
+      // Fase 4: Minas (50% de vida) - 🔥 CORREGIDO CON COOLDOWN
       if (
         healthPercentage <= 0.5 &&
         healthPercentage > 0.3 &&
-        !this.mines.isMiningPhaseActive()
+        !this.mines.isMiningPhaseActive() &&
+        (!this.phases || this.phases.phaseCooldown <= 0) // ⬅️ VERIFICAR COOLDOWN
       ) {
         console.log("💣 Iniciando Fase 4: Minas");
         this.startMinesPhase();
         return;
       }
 
-      // Fase 2: Invocación (75% de vida)
+      // Fase 2: Invocación (75% de vida) - 🔥 CORREGIDO CON COOLDOWN
       if (healthPercentage <= 0.75 && healthPercentage > 0.5) {
         const currentPhase = this.phases.getCurrentPhase();
         const isPhaseActive = this.phases.isPhaseActive();
+        const cooldown = this.phases.phaseCooldown || 0;
 
         console.log(
           `👹 DEBUG INVOCACIÓN - Fase actual: ${currentPhase}, Activa: ${isPhaseActive}, Vida: ${Math.round(
             healthPercentage * 100
-          )}%`
+          )}%, Cooldown: ${cooldown}`
         );
 
-        if (currentPhase !== "SUMMONING" && !isPhaseActive) {
+        // 🔥 VERIFICAR COOLDOWN ANTES DE INICIAR
+        if (currentPhase !== "SUMMONING" && !isPhaseActive && cooldown <= 0) {
           console.log("⚔️ Iniciando Fase 2: Invocación");
           this.startSummoningPhase();
           return;
+        } else if (cooldown > 0) {
+          console.log(
+            `⏳ Fase de invocación en cooldown: ${cooldown} frames restantes`
+          );
         }
       }
 
       // 🔥 NUEVO: Modo de caza libre entre fases
       if (
         !this.phases.isPhaseActive() &&
-        this.phases.getCurrentPhase() !== "HUNTING"
+        this.phases.getCurrentPhase() !== "HUNTING" &&
+        this.phases.phaseCooldown <= 0 // ⬅️ SOLO SI NO HAY COOLDOWN
       ) {
         console.log("🏃 Boss entrando en modo de caza libre");
         this.phases.currentPhase = "HUNTING";
@@ -402,7 +412,9 @@ const BossManager = {
     } else {
       // 🔥 DEBUG: Mostrar por qué no cambia de fase
       console.log(
-        `👹 DEBUG - No puede cambiar fase. En fase especial: ${this.phases?.isInSpecialPhase()}`
+        `👹 DEBUG - No puede cambiar fase. En fase especial: ${this.phases?.isInSpecialPhase()}, Cooldown: ${
+          this.phases?.phaseCooldown || 0
+        }`
       );
     }
   },
