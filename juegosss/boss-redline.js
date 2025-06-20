@@ -123,13 +123,20 @@ const BossRedLine = {
     this.redLineIndex = 0;
     this.cycleCount = 0;
 
-    // Restaurar velocidad normal del jugador SIEMPRE
-    Player.moveSpeed = this.originalPlayerSpeed;
-    console.log("🏃 Velocidad del jugador restaurada a normal");
+    // 🔥 VERIFICAR QUE EL JUGADOR EXISTE antes de restaurar velocidad
+    if (window.Player && Player.moveSpeed !== undefined) {
+      Player.moveSpeed = this.originalPlayerSpeed;
+      console.log("🏃 Velocidad del jugador restaurada a normal");
+    }
 
-    // Boss se vuelve vulnerable
-    this.bossManager.isImmune = false;
-    this.bossManager.immunityTimer = 0;
+    // 🔥 VERIFICAR QUE EL BOSS EXISTE antes de hacerlo vulnerable
+    if (this.bossManager && this.bossManager.boss) {
+      this.bossManager.isImmune = false;
+      this.bossManager.immunityTimer = 0;
+      console.log("🔴 Boss hecho vulnerable al terminar Red Line");
+    } else {
+      console.warn("🔴 Warning: Boss no existe al terminar Red Line");
+    }
   },
 
   // ======================================================
@@ -140,7 +147,17 @@ const BossRedLine = {
    * Actualizar sistema de hilo rojo
    */
   update() {
-    if (!this.phaseActive) return;
+    // 🔥 VERIFICAR que la fase y el boss siguen activos
+    if (!this.phaseActive || !this.bossManager || !this.bossManager.active) {
+      return;
+    }
+
+    // 🔥 VERIFICAR que el boss existe físicamente
+    if (!this.bossManager.boss) {
+      console.error("🔴 Boss desapareció durante Red Line, terminando fase");
+      this.endPhase();
+      return;
+    }
 
     // Actualizar movimiento del boss por la línea
     if (this.redLineMoving) {
@@ -152,7 +169,7 @@ const BossRedLine = {
    * Actualizar movimiento del boss por la línea
    */
   updateBossMovement() {
-    // 🔥 VERIFICACIONES MEJORADAS
+    // Verificaciones de seguridad
     if (!this.redLineMoving || this.redLinePath.length === 0) {
       return;
     }
@@ -163,16 +180,23 @@ const BossRedLine = {
       return;
     }
 
-    // Verificar si completó el recorrido
-    if (this.redLineIndex >= this.redLinePath.length - 1) {
+    // 🔥 MEJORAR la verificación de fin de recorrido
+    if (this.redLineIndex >= this.redLinePath.length - 2) {
+      // 🔥 CAMBIADO: -2 en lugar de -1
+      console.log("🔴 Boss completó el recorrido del hilo rojo");
       this.endRedLineMovement();
       return;
     }
 
     // Mover el boss por la línea
-    const currentPoint = this.redLinePath[this.redLineIndex];
-    const boss = this.bossManager.boss;
+    const currentPoint = this.redLinePath[Math.floor(this.redLineIndex)]; // 🔥 AGREGADO: Math.floor
+    if (!currentPoint) {
+      console.log("🔴 Punto no válido, terminando recorrido");
+      this.endRedLineMovement();
+      return;
+    }
 
+    const boss = this.bossManager.boss;
     boss.x = currentPoint.x - boss.width / 2;
     boss.y = currentPoint.y - boss.height / 2;
 
@@ -194,7 +218,7 @@ const BossRedLine = {
       }
     }
 
-    // Avanzar en la línea
+    // Avanzar en la línea - 🔥 VELOCIDAD AJUSTABLE
     this.redLineIndex += this.redLineSpeed;
   },
 
@@ -327,18 +351,23 @@ const BossRedLine = {
     this.redLineIndex = 0;
     this.cycleCount++;
 
-    // Boss se vuelve vulnerable por tiempo limitado
-    this.bossManager.isImmune = false;
-    this.bossManager.immunityTimer = 0;
+    // 🔥 CORREGIDO: FORZAR que el boss sea vulnerable
+    if (this.bossManager) {
+      this.bossManager.isImmune = false;
+      this.bossManager.immunityTimer = 0;
+      console.log("🔴 Boss FORZADO a ser vulnerable");
+    }
 
     // Detener movimiento del boss
-    const boss = this.bossManager.boss;
-    boss.velocityX = 0;
-    boss.velocityY = 0;
+    if (this.bossManager && this.bossManager.boss) {
+      const boss = this.bossManager.boss;
+      boss.velocityX = 0;
+      boss.velocityY = 0;
+    }
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        "⚔️ ¡BOSS VULNERABLE! (1s)",
+        "⚔️ ¡BOSS VULNERABLE! (3s)", // 🔥 AUMENTADO a 3 segundos
         "#00FF00"
       );
     }
@@ -347,10 +376,13 @@ const BossRedLine = {
       this.bossManager.comments.sayRandomComment("combate");
     }
 
+    // 🔥 AUMENTADO: 3 segundos en lugar de 1
+    const vulnerabilityTime = 3000;
+
     // Decidir siguiente acción después del período vulnerable
     setTimeout(() => {
       this.decideNextAction();
-    }, this.vulnerabilityDuration);
+    }, vulnerabilityTime);
   },
 
   /**
