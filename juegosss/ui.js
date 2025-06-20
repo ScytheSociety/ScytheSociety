@@ -44,15 +44,24 @@ const UI = {
   },
 
   /**
-   * Actualiza la UI cada frame
+   * REEMPLAZA LA FUNCIÓN update() en powerups.js
+   * Sistema de power-ups - IDÉNTICO PARA TODOS
    */
   update() {
-    this.updateGameInfo();
-    this.updateSpecialPowerIndicator();
-    this.updateLivesDisplay();
-    this.updatePowerUpIndicator();
-  },
+    // 🔥 IDÉNTICO: Spawn igual para todos - sin optimizaciones de móvil
+    this.trySpawnHeart();
+    this.trySpawnPowerUp();
 
+    // Eventos especiales aleatorios
+    this.checkSpecialEvents();
+
+    // 🔥 IDÉNTICO: Actualizar items igual para todos
+    this.updatePowerUps();
+    this.updateHearts();
+
+    // Limpiar items fuera de pantalla
+    this.cleanupItems();
+  },
   // ======================================================
   // SISTEMA DE MENSAJES EN PANTALLA - MEJORADO
   // ======================================================
@@ -459,21 +468,16 @@ const UI = {
   // ======================================================
 
   /**
-   * Crea efecto de partículas - OPTIMIZADO PARA MÓVIL
+   * REEMPLAZA LA FUNCIÓN createParticleEffect() en ui.js
+   * Crea efecto de partículas - IDÉNTICO PARA TODOS
    */
   createParticleEffect(x, y, color, particleCount) {
-    // 🔥 REDUCIR PARTÍCULAS EN MÓVIL
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      );
-    const finalParticleCount = isMobile
-      ? Math.max(5, Math.floor(particleCount * 0.3))
-      : particleCount;
+    // 🔥 ELIMINADO: Toda la detección de móvil que reducía partículas
 
     const particles = [];
 
-    for (let i = 0; i < finalParticleCount; i++) {
+    // 🔥 IDÉNTICO: Mismo número de partículas para todos
+    for (let i = 0; i < particleCount; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 1 + Math.random() * 3;
 
@@ -483,8 +487,8 @@ const UI = {
         size: 2 + Math.random() * 3,
         speedX: Math.cos(angle) * speed,
         speedY: Math.sin(angle) * speed,
-        life: isMobile ? 20 : 30 + Math.random() * 20, // 🔥 Vida más corta en móvil
-        maxLife: isMobile ? 30 : 50,
+        life: 30 + Math.random() * 20, // 🔥 IDÉNTICO: Vida completa para todos
+        maxLife: 50,
       });
     }
 

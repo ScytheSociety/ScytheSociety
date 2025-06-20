@@ -313,7 +313,8 @@ const ComboSystem = {
   },
 
   /**
-   * ⚡ Modo frenesí - OPTIMIZADO PARA MÓVIL Y MENOS LAG
+   * REEMPLAZA LA FUNCIÓN triggerFrenzyMode() en combo.js
+   * Modo frenesí - IDÉNTICO PARA TODOS
    */
   triggerFrenzyMode() {
     // Verificar si ya hay otro evento activo
@@ -324,24 +325,20 @@ const ComboSystem = {
 
     UI.showScreenMessage("⚡ ¡MODO FRENESÍ! ⚡", "#FF00FF");
     window.frenzyModeActive = true;
-    console.log("⚡ Iniciando modo frenesí optimizado");
+    console.log("⚡ Iniciando modo frenesí IDÉNTICO PC/MÓVIL");
 
     const originalInterval = BulletManager.autoShootInterval;
     BulletManager.stopAutoShoot();
 
-    // 🔥 DETECTAR MÓVIL Y AJUSTAR VELOCIDAD
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      );
-    const frenzyDelay = isMobile ? 80 : 40; // 🔥 Menos agresivo: 80ms móvil, 40ms desktop
+    // 🔥 IDÉNTICO: Misma velocidad para todos
+    const frenzyDelay = 40; // FIJO: 40ms para todos
 
     const frenzyInterval = setInterval(() => {
       BulletManager.shootBullet();
     }, frenzyDelay);
 
-    // 🔥 DURACIÓN REDUCIDA
-    const frenzyDuration = isMobile ? 8000 : 12000; // 8s móvil vs 12s desktop
+    // 🔥 IDÉNTICO: Misma duración para todos
+    const frenzyDuration = 12000; // FIJO: 12 segundos para todos
 
     setTimeout(() => {
       clearInterval(frenzyInterval);

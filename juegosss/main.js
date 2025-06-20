@@ -50,7 +50,8 @@ window.onload = function () {
 };
 
 /**
- * Configurar el canvas responsivo
+ * REEMPLAZA LA FUNCIÓN setupCanvas() en main.js
+ * Configurar el canvas - RESOLUCIÓN COMPLETA PARA TODOS
  */
 function setupCanvas() {
   canvas = document.getElementById("game-canvas");
@@ -61,7 +62,7 @@ function setupCanvas() {
 
   ctx = canvas.getContext("2d");
 
-  // 🔥 RESOLUCIÓN COMPLETA PARA MÓVILES - NO REDUCIR
+  // 🔥 RESOLUCIÓN COMPLETA PARA TODOS - Sin reducir en móvil
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   canvas.style.width = "100vw";
@@ -69,7 +70,7 @@ function setupCanvas() {
 
   GameConfig.updateSizes(canvas);
   console.log(
-    `📱 Canvas ALTA CALIDAD configurado: ${canvas.width}x${canvas.height}`
+    `📱 Canvas ALTA CALIDAD configurado: ${canvas.width}x${canvas.height} (IDÉNTICO PC/MÓVIL)`
   );
 }
 
@@ -255,30 +256,18 @@ function startGameLoop() {
 }
 
 /**
- * Bucle principal del juego - OPTIMIZADO PARA MÓVIL
+ * REEMPLAZA SOLO LA FUNCIÓN gameLoop() en main.js
+ * Bucle principal del juego - IDÉNTICO PARA PC Y MÓVIL
  */
 function gameLoop() {
   if (gameEnded) return;
 
   try {
-    // 🔥 OPTIMIZACIÓN: Detectar dispositivo móvil
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      );
+    // 🔥 ELIMINADO: Toda la detección de móvil que ralentizaba
 
-    // 🔥 REDUCIR FRECUENCIA DE ACTUALIZACIÓN EN MÓVIL
-    if (isMobile) {
-      gameTime++;
-      // Solo actualizar cada 2 frames en móvil
-      if (gameTime % 2 !== 0) {
-        return;
-      }
-    } else {
-      gameTime++;
-    }
+    gameTime++;
 
-    // 🔥 Actualizar sistema de combos solo cada 3 frames
+    // 🔥 IDÉNTICO: Actualizar sistema de combos siempre igual
     if (gameTime % 3 === 0) {
       ComboSystem.update();
     }
@@ -286,15 +275,8 @@ function gameLoop() {
     // Limpiar canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Dibujar fondo (reducir calidad en móvil)
-    if (isMobile) {
-      ctx.save();
-      ctx.imageSmoothingEnabled = false; // 🔥 Desactivar suavizado en móvil
-    }
+    // 🔥 IDÉNTICO: Dibujar fondo igual para todos
     drawBackground();
-    if (isMobile) {
-      ctx.restore();
-    }
 
     // 🔥 Aplicar efectos de tiempo lento si está activo
     const originalSlowFactor = window.slowMotionFactor;
@@ -302,7 +284,7 @@ function gameLoop() {
       window.slowMotionFactor = slowMotionFactor;
     }
 
-    // Actualizar sistemas de juego
+    // 🔥 IDÉNTICO: Actualizar sistemas de juego sin diferencias
     Player.update();
     BulletManager.update();
 
@@ -315,10 +297,8 @@ function gameLoop() {
       }
     }
 
-    // 🔥 REDUCIR FRECUENCIA DE POWER-UPS EN MÓVIL
-    if (!isMobile || gameTime % 2 === 0) {
-      PowerUpManager.update();
-    }
+    // 🔥 IDÉNTICO: Power-ups igual para todos
+    PowerUpManager.update();
 
     // 🔥 SOLO verificar boss si es nivel 11
     if (level === 11) {
@@ -345,7 +325,7 @@ function gameLoop() {
       nextLevel();
     }
 
-    // Dibujar elementos
+    // 🔥 IDÉNTICO: Dibujar elementos igual para todos
     Player.draw(ctx);
     BulletManager.draw(ctx);
 
@@ -356,79 +336,51 @@ function gameLoop() {
       EnemyManager.draw(ctx);
     }
 
-    // 🔥 REDUCIR FRECUENCIA DE DIBUJO DE POWER-UPS EN MÓVIL
-    if (!isMobile || gameTime % 2 === 0) {
-      PowerUpManager.draw(ctx);
-    }
+    // 🔥 IDÉNTICO: Power-ups igual para todos
+    PowerUpManager.draw(ctx);
 
     // 🔥 SOLO dibujar boss si es nivel 11
     if (level === 11) {
       BossManager.draw(ctx);
     }
 
-    // 🔥 Efectos especiales REDUCIDOS en móvil
-    if (!isMobile || gameTime % 3 === 0) {
-      drawSpecialEffects(ctx);
-    }
+    // 🔥 IDÉNTICO: Efectos especiales igual para todos
+    drawSpecialEffects(ctx);
 
-    // 🔥 Actualizar UI solo cada 2 frames en móvil
-    if (!isMobile || gameTime % 2 === 0) {
-      UI.update();
-    }
+    // 🔥 IDÉNTICO: Actualizar UI igual para todos
+    UI.update();
   } catch (error) {
     console.error("❌ Error en game loop:", error);
   }
 }
 
 /**
- * 🔥 NUEVO: Dibuja efectos especiales en pantalla - CORREGIDO
+ * REEMPLAZA LA FUNCIÓN drawSpecialEffects() en main.js
+ * Efectos especiales simplificados - IDÉNTICO PC/MÓVIL
  */
 function drawSpecialEffects(ctx) {
-  // 🌊 Efecto de tiempo lento - SOLO OVERLAY AZUL SUTIL
+  // 🌊 Efecto de tiempo lento - SIMPLIFICADO
   if (window.slowMotionActive) {
     ctx.save();
-
-    // Overlay azul muy sutil
     ctx.fillStyle = "rgba(0, 119, 255, 0.15)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
     ctx.restore();
   }
 
-  // 🔥 Efecto de modo frenesí - ROJO FUEGO MUY SUTIL
+  // 🔥 Efecto de modo frenesí - SIMPLIFICADO
   if (window.frenzyModeActive) {
     ctx.save();
-
-    // 🔥 OVERLAY ROJO MUY SUTIL - CASI TRANSPARENTE
-    ctx.fillStyle = "rgba(255, 80, 0, 0.18)"; // Era 0.3, ahora 0.18
+    ctx.fillStyle = "rgba(255, 80, 0, 0.18)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Segundo overlay aún más sutil
-    ctx.fillStyle = "rgba(200, 60, 0, 0.1)"; // Era 0.15, ahora 0.1
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Efectos de fuego sutiles
-    for (let i = 0; i < 20; i++) {
-      // Menos efectos
-      const fireX = Math.random() * canvas.width;
-      const fireY = Math.random() * canvas.height;
-      const fireSize = 3 + Math.random() * 6; // Más pequeños
-
-      ctx.fillStyle = `rgba(255, ${150 + Math.random() * 100}, 0, 0.4)`; // Era 0.8, ahora 0.4
-      ctx.fillRect(fireX, fireY, fireSize, fireSize);
-    }
-
     ctx.restore();
   }
 
-  // ⚡ Efecto de combo alto - ENERGÍA DORADA MÁS SUTIL
+  // ⚡ Efecto de combo alto - SIMPLIFICADO
   if (window.ComboSystem && window.ComboSystem.getCurrentCombo() >= 20) {
     const combo = window.ComboSystem.getCurrentCombo();
-    const intensity = Math.min(combo / 150, 0.2); // Más sutil
+    const intensity = Math.min(combo / 150, 0.2);
 
     ctx.save();
-
-    // Resplandor dorado MÁS SUTIL
     const goldGradient = ctx.createRadialGradient(
       canvas.width / 2,
       canvas.height / 2,
@@ -441,8 +393,7 @@ function drawSpecialEffects(ctx) {
     goldGradient.addColorStop(0.7, `rgba(255, 215, 0, ${intensity * 0.3})`);
     goldGradient.addColorStop(1, `rgba(255, 165, 0, ${intensity})`);
     ctx.fillStyle = goldGradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.width);
-
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.restore();
   }
 }
