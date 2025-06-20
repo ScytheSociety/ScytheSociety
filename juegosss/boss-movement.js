@@ -190,7 +190,7 @@ const BossMovement = {
   // ======================================================
 
   /**
-   * Perseguir al jugador fluidamente y sin pausas
+   * Perseguir al jugador FLUIDAMENTE - SIN PAUSAS NI REBOTES
    */
   huntPlayer() {
     const playerPos = Player.getPosition();
@@ -206,26 +206,29 @@ const BossMovement = {
     const dy = playerCenterY - bossCenterY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // 🔥 SIEMPRE MOVERSE HACIA EL JUGADOR - SIN PAUSAS
-    if (distance > 10) {
-      // Solo parar si está MUY cerca
-      const speed = boss.moveSpeed * 3.5; // Más agresivo
+    // 🔥 MOVIMIENTO FLUIDO Y CONSTANTE - SIN PARAR
+    if (distance > 50) {
+      // Reducido de 10 a 50 para menos agresividad
+      const speed = 3.5; // Velocidad fija y fluida
 
-      // Movimiento fluido y constante
-      this.movement.velocityX += (dx / distance) * speed * 0.15;
-      this.movement.velocityY += (dy / distance) * speed * 0.15;
+      // Dirección normalizada hacia el jugador
+      const dirX = dx / distance;
+      const dirY = dy / distance;
 
-      // Mantener momentum para fluidez
-      this.movement.velocityX *= 0.95;
-      this.movement.velocityY *= 0.95;
+      // Aplicar velocidad DIRECTA sin acumulación
+      this.movement.velocityX = dirX * speed;
+      this.movement.velocityY = dirY * speed;
+    } else {
+      // Si está muy cerca, moverse lentamente
+      this.movement.velocityX *= 0.5;
+      this.movement.velocityY *= 0.5;
     }
 
-    // Límite de velocidad más alto para fluidez
-    this.limitVelocity(boss.moveSpeed * 4.0);
+    // 🔥 NO LIMITAR VELOCIDAD AQUÍ - Dejar fluir
   },
 
   /**
-   * Perseguir jugador lentamente (durante fases)
+   * Perseguir jugador lentamente (durante fases) - CORREGIDO
    */
   huntPlayerSlow() {
     const playerPos = Player.getPosition();
@@ -241,15 +244,22 @@ const BossMovement = {
     const dy = playerCenterY - bossCenterY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // Movimiento lento durante fases
-    if (distance > 200) {
-      const slowSpeed = boss.moveSpeed * 0.8;
-      this.movement.velocityX += (dx / distance) * slowSpeed * 0.2;
-      this.movement.velocityY += (dy / distance) * slowSpeed * 0.2;
+    // 🔥 MOVIMIENTO LENTO PERO FLUIDO durante fases
+    if (distance > 100) {
+      const slowSpeed = 1.8; // Velocidad fija lenta
+
+      const dirX = dx / distance;
+      const dirY = dy / distance;
+
+      this.movement.velocityX = dirX * slowSpeed;
+      this.movement.velocityY = dirY * slowSpeed;
+    } else {
+      // Si está cerca, prácticamente parar
+      this.movement.velocityX *= 0.3;
+      this.movement.velocityY *= 0.3;
     }
 
-    // Limitar velocidad lenta
-    this.limitVelocity(boss.moveSpeed * 1.5);
+    // 🔥 SIN LLAMADA A limitVelocity() - Ya no necesaria
   },
 
   /**
@@ -294,7 +304,7 @@ const BossMovement = {
   },
 
   /**
-   * Movimiento aleatorio (wandering)
+   * Movimiento aleatorio MEJORADO - Más natural
    */
   wanderRandomly() {
     const boss = this.bossManager.boss;
@@ -304,25 +314,28 @@ const BossMovement = {
     const deltaY = this.movement.targetY - boss.y;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-    // Si está cerca del objetivo, buscar uno nuevo
-    if (distance < 30) {
+    // 🔥 ÁREA MÁS GRANDE PARA OBJETIVOS
+    if (distance < 80) {
+      // Era 30, ahora 80
       this.movement.wanderTimer++;
       if (this.movement.wanderTimer >= this.movement.wanderDelay) {
         this.selectRandomWanderTarget();
         this.movement.wanderTimer = 0;
       }
     } else {
-      // Moverse hacia el objetivo
+      // 🔥 MOVIMIENTO MÁS FLUIDO
       const directionX = deltaX / distance;
       const directionY = deltaY / distance;
 
-      this.movement.velocityX = directionX * this.movement.speed;
-      this.movement.velocityY = directionY * this.movement.speed;
+      // Velocidad constante y suave
+      const wanderSpeed = 2.8; // Más rápido que antes
+      this.movement.velocityX = directionX * wanderSpeed;
+      this.movement.velocityY = directionY * wanderSpeed;
     }
   },
 
   /**
-   * Movimiento agresivo para fase final
+   * 🔥 NUEVA: Movimiento agresivo FLUIDO para fase final
    */
   aggressiveMovement() {
     const playerPos = Player.getPosition();
@@ -338,13 +351,16 @@ const BossMovement = {
     const dy = playerCenterY - bossCenterY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // Movimiento más agresivo y rápido
-    const speed = boss.moveSpeed * 2.5;
-    this.movement.velocityX += (dx / distance) * speed * 0.4;
-    this.movement.velocityY += (dy / distance) * speed * 0.4;
+    // 🔥 MOVIMIENTO AGRESIVO PERO FLUIDO
+    if (distance > 30) {
+      const aggressiveSpeed = 4.5; // Más rápido para fase final
 
-    // Límite de velocidad más alto
-    this.limitVelocity(boss.moveSpeed * 3.5);
+      const dirX = dx / distance;
+      const dirY = dy / distance;
+
+      this.movement.velocityX = dirX * aggressiveSpeed;
+      this.movement.velocityY = dirY * aggressiveSpeed;
+    }
   },
 
   // ======================================================
@@ -452,17 +468,34 @@ const BossMovement = {
   // ======================================================
 
   /**
-   * Seleccionar objetivo aleatorio para wandering
+   * 🔥 MEJORADO: Objetivo aleatorio más inteligente
    */
   selectRandomWanderTarget() {
     const canvas = window.getCanvas();
     const boss = this.bossManager.boss;
-    const margin = 50;
+    const margin = 80; // Margen más grande
 
-    this.movement.targetX =
-      margin + Math.random() * (canvas.width - boss.width - margin * 2);
-    this.movement.targetY =
-      margin + Math.random() * (canvas.height - boss.height - margin * 2);
+    // 🔥 EVITAR ESQUINAS - Preferir zonas centrales
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(canvas.width, canvas.height) * 0.3; // 30% del área
+
+    // Generar punto en área central con algo de variación
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * radius;
+
+    this.movement.targetX = centerX + Math.cos(angle) * distance;
+    this.movement.targetY = centerY + Math.sin(angle) * distance;
+
+    // Asegurar que esté dentro de límites
+    this.movement.targetX = Math.max(
+      margin,
+      Math.min(canvas.width - boss.width - margin, this.movement.targetX)
+    );
+    this.movement.targetY = Math.max(
+      60,
+      Math.min(canvas.height - boss.height - margin, this.movement.targetY)
+    );
 
     console.log(
       `🎯 Boss nuevo objetivo: (${Math.round(
@@ -472,66 +505,103 @@ const BossMovement = {
   },
 
   /**
-   * Aplicar movimiento al boss
+   * 🔥 CORREGIDO: Aplicar movimiento más suave
    */
   applyMovement() {
     const boss = this.bossManager.boss;
-    boss.x += this.movement.velocityX;
-    boss.y += this.movement.velocityY;
+
+    // 🔥 FACTOR DE TIEMPO LENTO
+    const slowFactor = window.slowMotionActive ? window.slowMotionFactor : 1.0;
+
+    // Aplicar movimiento con factor de tiempo lento
+    boss.x += this.movement.velocityX * slowFactor;
+    boss.y += this.movement.velocityY * slowFactor;
+
+    // 🔥 SUAVIZADO DE MOVIMIENTO - Evitar movimientos bruscos
+    this.movement.velocityX *= 0.98; // Muy leve fricción para suavidad
+    this.movement.velocityY *= 0.98;
   },
 
   /**
-   * Limitar velocidad máxima
-   */
-  limitVelocity(maxSpeed) {
-    const currentSpeed = Math.sqrt(
-      this.movement.velocityX ** 2 + this.movement.velocityY ** 2
-    );
-
-    if (currentSpeed > maxSpeed) {
-      this.movement.velocityX =
-        (this.movement.velocityX / currentSpeed) * maxSpeed;
-      this.movement.velocityY =
-        (this.movement.velocityY / currentSpeed) * maxSpeed;
-    }
-  },
-
-  /**
-   * Manejar rebotes en paredes
+   * 🔥 NUEVO: Manejar rebotes INTELIGENTES - Sin retrocesos
    */
   handleWallBounces() {
     const canvas = window.getCanvas();
     const boss = this.bossManager.boss;
-    const bounceStrength = 0.8;
 
+    // 🔥 REBOTES SUAVES SIN RETROCESOS BRUSCOS
     if (boss.x <= 0) {
-      boss.x = 0;
-      this.movement.velocityX =
-        Math.abs(this.movement.velocityX) * bounceStrength;
-      if (this.movement.isWandering) this.selectRandomWanderTarget();
-      console.log("🏀 Boss rebotó en pared izquierda");
+      boss.x = 5; // Pequeño margen
+      // Solo cambiar dirección X, mantener Y
+      if (this.movement.velocityX < 0) {
+        this.movement.velocityX = Math.abs(this.movement.velocityX);
+      }
+      this.selectAlternativeTarget();
     } else if (boss.x + boss.width >= canvas.width) {
-      boss.x = canvas.width - boss.width;
-      this.movement.velocityX =
-        -Math.abs(this.movement.velocityX) * bounceStrength;
-      if (this.movement.isWandering) this.selectRandomWanderTarget();
-      console.log("🏀 Boss rebotó en pared derecha");
+      boss.x = canvas.width - boss.width - 5;
+      if (this.movement.velocityX > 0) {
+        this.movement.velocityX = -Math.abs(this.movement.velocityX);
+      }
+      this.selectAlternativeTarget();
     }
 
     if (boss.y <= 50) {
-      // Evitar solaparse con UI
-      boss.y = 50;
-      this.movement.velocityY =
-        Math.abs(this.movement.velocityY) * bounceStrength;
-      if (this.movement.isWandering) this.selectRandomWanderTarget();
-      console.log("🏀 Boss rebotó en techo");
+      boss.y = 55;
+      if (this.movement.velocityY < 0) {
+        this.movement.velocityY = Math.abs(this.movement.velocityY);
+      }
+      this.selectAlternativeTarget();
     } else if (boss.y + boss.height >= canvas.height) {
-      boss.y = canvas.height - boss.height;
-      this.movement.velocityY =
-        -Math.abs(this.movement.velocityY) * bounceStrength;
-      if (this.movement.isWandering) this.selectRandomWanderTarget();
-      console.log("🏀 Boss rebotó en suelo");
+      boss.y = canvas.height - boss.height - 5;
+      if (this.movement.velocityY > 0) {
+        this.movement.velocityY = -Math.abs(this.movement.velocityY);
+      }
+      this.selectAlternativeTarget();
     }
+  },
+
+  /**
+   * 🔥 NUEVA FUNCIÓN: Seleccionar objetivo alternativo cuando choca
+   */
+  selectAlternativeTarget() {
+    const canvas = window.getCanvas();
+    const boss = this.bossManager.boss;
+    const playerPos = Player.getPosition();
+
+    // 🔥 ELEGIR DIRECCIÓN INTELIGENTE basada en posición del jugador
+    const margin = 100;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    // Si el jugador está a la izquierda, ir a la derecha, etc.
+    let targetX, targetY;
+
+    if (playerPos.x < centerX) {
+      // Jugador a la izquierda, boss va a la derecha
+      targetX =
+        centerX + margin + Math.random() * (canvas.width / 2 - margin * 2);
+    } else {
+      // Jugador a la derecha, boss va a la izquierda
+      targetX = margin + Math.random() * (centerX - margin * 2);
+    }
+
+    if (playerPos.y < centerY) {
+      // Jugador arriba, boss va abajo
+      targetY =
+        centerY + margin + Math.random() * (canvas.height / 2 - margin * 2);
+    } else {
+      // Jugador abajo, boss va arriba
+      targetY = 50 + margin + Math.random() * (centerY - margin * 2);
+    }
+
+    this.movement.targetX = targetX;
+    this.movement.targetY = targetY;
+
+    console.log(
+      `🎯 Boss nuevo objetivo estratégico: (${Math.round(
+        targetX
+      )}, ${Math.round(targetY)})`
+    );
   },
 
   // ======================================================
