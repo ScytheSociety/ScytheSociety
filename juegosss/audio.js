@@ -606,19 +606,28 @@ const AudioManager = {
   },
 
   /**
-   * 🔥 NUEVO: Pausa todo el audio (incluidos efectos de sonido)
+   * 🔥 NUEVO: Pausa todo el audio (incluidos efectos de sonido) - CORREGIDO
    */
   pauseAllAudio() {
-    // Pausar música de fondo
-    if (this.sounds.background && this.sounds.background.audio) {
-      this.sounds.background.audio.pause();
-      this.backgroundMusicPlaying = false;
+    // NO pausar música de fondo si está en juego
+    if (
+      this.sounds.background &&
+      this.sounds.background.audio &&
+      !window.isGameEnded()
+    ) {
+      // Solo reducir volumen, no pausar completamente
+      this.sounds.background.audio.volume =
+        this.sounds.background.baseVolume * this.masterVolume * 0.3;
+      console.log("🔇 Volumen de música reducido, no pausado");
     }
 
-    // Pausar todos los sonidos activos
-    for (const [key, sound] of Object.entries(this.sounds)) {
-      if (sound.audio) {
-        sound.audio.pause();
+    // NO pausar otros sonidos durante el juego activo
+    if (window.isGameEnded && window.isGameEnded()) {
+      // Solo pausar si el juego terminó
+      for (const [key, sound] of Object.entries(this.sounds)) {
+        if (sound.audio && key !== "background") {
+          sound.audio.pause();
+        }
       }
     }
 
@@ -627,25 +636,30 @@ const AudioManager = {
   },
 
   /**
-   * 🔥 NUEVO: Reanuda solo la música de fondo (no efectos)
+   * 🔥 NUEVO: Reanuda solo la música de fondo (no efectos) - CORREGIDO
    */
   resumeBackgroundAudio() {
     // Solo reanudar si fue pausado por visibilidad
     if (!this.pausedByVisibility) return;
 
-    // Solo reanudar música de fondo si estaba reproduciéndose
+    // Restaurar volumen completo de música de fondo
     if (this.sounds.background && this.sounds.background.audio) {
-      const playPromise = this.sounds.background.audio.play();
+      this.sounds.background.audio.volume =
+        this.sounds.background.baseVolume * this.masterVolume;
 
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            this.backgroundMusicPlaying = true;
-            console.log("🎵 Música de fondo reanudada");
-          })
-          .catch((error) => {
-            console.warn("⚠️ Error reanudando música:", error);
-          });
+      // Si no está reproduciéndose, intentar reanudar
+      if (this.sounds.background.audio.paused) {
+        const playPromise = this.sounds.background.audio.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              this.backgroundMusicPlaying = true;
+              console.log("🎵 Música de fondo reanudada");
+            })
+            .catch((error) => {
+              console.warn("⚠️ Error reanudando música:", error);
+            });
+        }
       }
     }
 

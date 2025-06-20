@@ -849,6 +849,137 @@ const BossMines = {
   },
 
   /**
+   * Dibujar mina de tiempo (3 segundos) - NUEVO
+   */
+  drawTimerMine(ctx, mine) {
+    let mineColor = "#FF4400";
+
+    // Parpadeo intenso cuando está por explotar
+    if (mine.timer < 60) {
+      const blinkIntensity =
+        mine.blinkTimer % mine.blinkSpeed < mine.blinkSpeed / 2;
+      ctx.globalAlpha = blinkIntensity ? 1.0 : 0.3;
+      mineColor = "#FFFFFF";
+    } else if (mine.timer < 120) {
+      const blinkIntensity =
+        mine.blinkTimer % mine.blinkSpeed < mine.blinkSpeed / 2;
+      ctx.globalAlpha = blinkIntensity ? 1.0 : 0.7;
+      mineColor = "#FF6600";
+    }
+
+    // Sombra para la mina
+    ctx.shadowColor = mineColor;
+    ctx.shadowBlur = 20;
+
+    // Cuerpo de la mina (circular para diferenciarse)
+    const centerX = mine.x + mine.width / 2;
+    const centerY = mine.y + mine.height / 2;
+    const radius = mine.width / 2;
+
+    ctx.fillStyle = mineColor;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Borde visible
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Indicador central
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Líneas de advertencia en cruz
+    ctx.strokeStyle = mine.warningPhase ? "#FFFF00" : "#FF8800";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(centerX - 12, centerY);
+    ctx.lineTo(centerX + 12, centerY);
+    ctx.moveTo(centerX, centerY - 12);
+    ctx.lineTo(centerX, centerY + 12);
+    ctx.stroke();
+
+    // Pulso de energía cuando está por explotar
+    if (mine.timer < 120) {
+      const pulseRadius = radius + Math.sin(mine.blinkTimer * 0.3) * 8;
+      ctx.strokeStyle = `rgba(255, 255, 0, 0.8)`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, pulseRadius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  },
+
+  /**
+   * Dibujar mina de proximidad (se activa al pisarla) - NUEVO
+   */
+  drawProximityMine(ctx, mine) {
+    const mineColor = mine.color || "#FF6600";
+
+    // Parpadeo lento para minas de proximidad
+    const blinkIntensity =
+      mine.blinkTimer % mine.blinkSpeed < mine.blinkSpeed / 2;
+    ctx.globalAlpha = blinkIntensity ? 1.0 : 0.6;
+
+    // Sombra para la mina
+    ctx.shadowColor = mineColor;
+    ctx.shadowBlur = 15;
+
+    // Cuerpo de la mina (hexagonal para diferenciarse)
+    const centerX = mine.x + mine.width / 2;
+    const centerY = mine.y + mine.height / 2;
+    const radius = mine.width / 2;
+
+    // Dibujar hexágono
+    ctx.fillStyle = mineColor;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Borde visible
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Indicador central (triángulo de advertencia)
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY - 8);
+    ctx.lineTo(centerX - 7, centerY + 5);
+    ctx.lineTo(centerX + 7, centerY + 5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Símbolo de exclamación
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(centerX - 1, centerY - 3, 2, 4);
+    ctx.fillRect(centerX - 1, centerY + 2, 2, 2);
+
+    // Ondas de proximidad
+    const waveRadius = radius + Math.sin(mine.blinkTimer * 0.2) * 15;
+    ctx.strokeStyle = `rgba(255, 102, 0, 0.4)`;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, waveRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  },
+
+  /**
    * Dibujar contador de tiempo
    */
   drawTimeCounter(ctx, mine) {

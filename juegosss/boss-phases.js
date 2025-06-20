@@ -749,6 +749,34 @@ const BossPhases = {
     console.log("🔄 Sistema de fases reseteado");
   },
 
+  /**
+   * Obtener nombre de fase en español - NUEVO
+   */
+  getPhaseNameInSpanish(phaseName) {
+    const translations = {
+      INTRO: "PRESENTACIÓN",
+      HUNTING_1: "CAZANDO",
+      SUMMONING: "INVOCANDO",
+      HUNTING_2: "CAZANDO",
+      MINES: "MINAS",
+      HUNTING_3: "CAZANDO",
+      BULLETS: "LLUVIA DE BALAS",
+      HUNTING_4: "CAZANDO",
+      REDLINE: "HILO ROJO",
+      HUNTING_5: "CAZANDO",
+      YANKENPO: "YAN KEN PO",
+    };
+
+    return translations[phaseName] || phaseName;
+  },
+
+  /**
+   * Obtener fase actual en español - NUEVO
+   */
+  getCurrentPhaseSpanish() {
+    return this.getPhaseNameInSpanish(this.currentPhase);
+  },
+
   // ======================================================
   // EVENTOS (para compatibilidad)
   // ======================================================

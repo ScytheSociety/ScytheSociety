@@ -1721,3 +1721,10 @@ console.log("📁 main.js ÉPICO cargado y listo para la acción!");
 
 // Variable global para trackear la música actual
 window.currentMusicTrack = "Elegía - Azkal";
+
+/**
+ * Verificar si el juego ha terminado - NUEVO
+ */
+window.isGameEnded = function () {
+  return gameEnded;
+};
