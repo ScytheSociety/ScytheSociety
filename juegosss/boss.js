@@ -296,6 +296,8 @@ const BossManager = {
   // ======================================================
 
   startSummoningPhase() {
+    console.log("⚔️ INICIANDO FASE: Invocación de enemigos");
+
     this.makeImmune(3600); // 60 segundos
 
     if (this.movement) {
@@ -306,11 +308,12 @@ const BossManager = {
       this.comments.sayComment("¡Legiones del abismo, vengan a mí!");
     }
 
-    setTimeout(() => {
-      if (this.phases) {
-        this.phases.changePhase("SUMMONING");
-      }
-    }, 1000);
+    // Cambiar fase INMEDIATAMENTE, no con timeout
+    if (this.phases) {
+      this.phases.changePhase("SUMMONING");
+    }
+
+    console.log("⚔️ Fase de invocación iniciada correctamente");
   },
 
   startMinesPhase() {

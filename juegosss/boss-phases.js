@@ -74,6 +74,59 @@ const BossPhases = {
     this.phaseTimer = 0;
 
     this.notifyPhaseChange(newPhase);
+
+    // EJECUTAR INMEDIATAMENTE LA LÓGICA DE LA FASE
+    switch (newPhase) {
+      case "SUMMONING":
+        this.startSummoningSequence();
+        break;
+      case "MINES":
+        if (this.bossManager.mines) {
+          this.bossManager.mines.startMineSequence();
+        }
+        break;
+      case "BULLETS":
+        if (this.bossManager.bullets) {
+          this.bossManager.bullets.startBulletPattern();
+        }
+        break;
+      case "REDLINE":
+        if (this.bossManager.redline) {
+          this.bossManager.redline.startPhase();
+        }
+        break;
+      case "YANKENPO":
+        if (this.bossManager.yankenpo) {
+          this.bossManager.yankenpo.startPhase();
+        }
+        break;
+    }
+  },
+
+  // Nueva función para manejar la secuencia de invocación
+  startSummoningSequence() {
+    console.log("⚔️ === INICIANDO SECUENCIA DE INVOCACIÓN (60s) ===");
+
+    // Invocar enemigos cada 7 segundos durante 60 segundos
+    const summonTimes = [2000, 9000, 16000, 23000, 30000, 37000, 44000, 51000];
+    const enemyCounts = [5, 6, 7, 8, 6, 7, 8, 10]; // Escalada de dificultad
+
+    summonTimes.forEach((time, index) => {
+      setTimeout(() => {
+        if (this.currentPhase === "SUMMONING" && this.phaseActive) {
+          this.summonEnemies(enemyCounts[index]);
+        }
+      }, time);
+    });
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        "⚔️ FASE DE INVOCACIÓN (60s)",
+        "#FF0000"
+      );
+    }
+
+    console.log("⚔️ Secuencia de invocación programada");
   },
 
   endCurrentPhase() {
