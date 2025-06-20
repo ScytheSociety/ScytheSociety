@@ -121,22 +121,15 @@ const BossMines = {
   // ======================================================
 
   /**
-   * Iniciar secuencia inteligente de minas
+   * Iniciar secuencia inteligente de minas - MEJORADA PARA 90 SEGUNDOS
    */
   startMineSequence() {
-    console.log("💣 Boss iniciando secuencia de minas inteligente");
+    console.log("💣 Boss iniciando secuencia de minas inteligente (90s)");
 
     this.miningPhase = true;
     this.sequenceActive = true;
     this.mineTimer = 0;
-
-    // Boss se vuelve inmune durante la secuencia
-    this.bossManager.makeImmune(480); // 8 segundos
-
-    // Centrar boss para lanzar minas
-    if (this.bossManager.movement) {
-      this.bossManager.movement.teleportToCenter();
-    }
+    this.teleportCooldown = 0;
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
@@ -145,19 +138,61 @@ const BossMines = {
       );
     }
 
-    // Programar 6 minas con patrón inteligente
-    for (let i = 0; i < 6; i++) {
-      setTimeout(() => {
-        if (this.sequenceActive) {
-          this.spawnIntelligentMine();
-        }
-      }, i * 800); // Una mina cada 0.8 segundos
-    }
+    // 🔥 TELETRANSPORTE INTELIGENTE CADA 3 SEGUNDOS
+    this.teleportInterval = setInterval(() => {
+      if (this.sequenceActive) {
+        this.intelligentTeleportAndMine();
+      }
+    }, 3000);
 
-    // Terminar secuencia después de las explosiones
+    // 🔥 TERMINAR DESPUÉS DE 90 SEGUNDOS
     setTimeout(() => {
       this.endMineSequence();
-    }, 8000);
+    }, 90000);
+  },
+
+  /**
+   * 🔥 NUEVA: Teletransporte inteligente que sigue al jugador
+   */
+  intelligentTeleportAndMine() {
+    const playerPos = Player.getPosition();
+    const canvas = window.getCanvas();
+
+    // 🔥 ESTRATEGIA: Teletransportarse cerca de donde ESTABA el jugador
+    let targetX = playerPos.x + (Math.random() - 0.5) * 200;
+    let targetY = playerPos.y + (Math.random() - 0.5) * 200;
+
+    // Mantener dentro de pantalla
+    targetX = Math.max(100, Math.min(canvas.width - 100, targetX));
+    targetY = Math.max(100, Math.min(canvas.height - 100, targetY));
+
+    // Teletransportar boss
+    if (this.bossManager.boss) {
+      this.bossManager.boss.x = targetX - this.bossManager.boss.width / 2;
+      this.bossManager.boss.y = targetY - this.bossManager.boss.height / 2;
+
+      // Efecto visual de teletransporte
+      if (this.bossManager.ui) {
+        this.bossManager.ui.createParticleEffect(
+          targetX,
+          targetY,
+          "#FF8800",
+          30
+        );
+      }
+
+      // Dejar mina en la posición de teletransporte
+      setTimeout(() => {
+        const mine = this.createMine(targetX - 20, targetY - 20, 300); // 5 segundos
+        mine.armed = true;
+        mine.warningPhase = true;
+        this.mines.push(mine);
+
+        if (this.bossManager.comments) {
+          this.bossManager.comments.sayComment("¡Esquiva esto si puedes!");
+        }
+      }, 500);
+    }
   },
 
   /**
@@ -625,10 +660,35 @@ const BossMines = {
    * Terminar secuencia de minas
    */
   endMineSequence() {
-    console.log("💣 Secuencia de minas terminada");
+    console.log("💣 Secuencia de minas terminada (90s completados)");
 
     this.miningPhase = false;
     this.sequenceActive = false;
+
+    // 🔥 NUEVO: Si es fase aleatoria, no hacer vulnerable automáticamente
+    if (this.bossManager.phases && this.bossManager.phases.isRandomPhase) {
+      console.log(
+        "💣 Fase aleatoria completada - delegando al sistema de fases"
+      );
+      return; // El sistema de fases manejará el retorno a Yan Ken Po
+    }
+
+    // 🔥 LIMPIAR INTERVALO DE TELETRANSPORTE
+    if (this.teleportInterval) {
+      clearInterval(this.teleportInterval);
+      this.teleportInterval = null;
+    }
+
+    // 🔥 CENTRAR BOSS Y MENSAJE FINAL
+    if (this.bossManager.movement) {
+      this.bossManager.movement.teleportToCenter();
+    }
+
+    if (this.bossManager.comments) {
+      this.bossManager.comments.sayComment(
+        "¡Fase de minas completada! ¡Ahora vengan por mí!"
+      );
+    }
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
@@ -640,6 +700,13 @@ const BossMines = {
     // El boss vuelve a ser vulnerable
     this.bossManager.isImmune = false;
     this.bossManager.immunityTimer = 0;
+
+    // 🔥 REANUDAR MOVIMIENTO NORMAL
+    setTimeout(() => {
+      if (this.bossManager.movement) {
+        this.bossManager.movement.enableWandering();
+      }
+    }, 2000);
   },
 
   /**

@@ -303,12 +303,40 @@ const BossPhases = {
   // ======================================================
 
   /**
-   * Ejecutar fase de invocación
+   * Ejecutar fase de invocación - MEJORADA
    */
   executeSummoningPhase() {
-    // Invocar enemigos cada 4 segundos
-    if (this.phaseTimer % 240 === 0) {
+    // 🔥 OLEADAS DE INVOCACIÓN MÁS DINÁMICAS
+
+    // Primera oleada a los 2 segundos
+    if (this.phaseTimer === 120) {
+      this.summonEnemies(2);
+      this.bossManager.comments.sayComment("¡Primera oleada del abismo!");
+    }
+
+    // Segunda oleada a los 15 segundos
+    if (this.phaseTimer === 900) {
       this.summonEnemies(3);
+      this.bossManager.comments.sayComment(
+        "¡Más esbirros se unen a la batalla!"
+      );
+    }
+
+    // Tercera oleada a los 30 segundos
+    if (this.phaseTimer === 1800) {
+      this.summonEnemies(4);
+      this.bossManager.comments.sayComment("¡La horda crece sin cesar!");
+    }
+
+    // Oleada final a los 45 segundos
+    if (this.phaseTimer === 2700) {
+      this.summonEnemies(5);
+      this.bossManager.comments.sayComment("¡Última avalancha de terror!");
+    }
+
+    // 🔥 BOSS SE MUEVE LENTAMENTE DURANTE LA FASE
+    if (this.phaseTimer % 60 === 0 && this.bossManager.movement) {
+      this.bossManager.movement.huntPlayerSlow();
     }
   },
 
@@ -652,18 +680,8 @@ const BossPhases = {
 
     console.log("🎮 Yan Ken Po perdido - iniciando fase aleatoria");
 
-    // Limpiar Yan Ken Po
-    this.currentPhase = "HUNTING";
-    this.phaseActive = false;
-
-    // Seleccionar fase aleatoria
-    const phases = ["SUMMONING", "MINES", "BULLETS", "REDLINE"];
-    const randomPhase = phases[Math.floor(Math.random() * phases.length)];
-
-    console.log(`🎲 Fase aleatoria seleccionada: ${randomPhase}`);
-
     setTimeout(() => {
-      this.changePhase(randomPhase);
+      this.executeRandomPhase(); // 🔥 Usar nueva función
     }, 2000);
   },
 
@@ -677,6 +695,119 @@ const BossPhases = {
       (this.phaseActive &&
         ["SUMMONING", "MINES", "BULLETS"].includes(this.currentPhase))
     );
+  },
+
+  /**
+   * 🔥 NUEVA: Ejecuta una fase aleatoria después de perder Yan Ken Po
+   */
+  executeRandomPhase() {
+    const availablePhases = ["SUMMONING", "MINES", "BULLETS", "REDLINE"];
+    const randomPhase =
+      availablePhases[Math.floor(Math.random() * availablePhases.length)];
+
+    console.log(`🎲 Ejecutando fase aleatoria: ${randomPhase}`);
+
+    // Configurar como fase temporal
+    this.currentPhase = randomPhase;
+    this.phaseActive = true;
+    this.phaseTimer = 0;
+    this.isRandomPhase = true; // 🔥 Marcar como fase aleatoria
+
+    // Ejecutar la fase específica
+    switch (randomPhase) {
+      case "SUMMONING":
+        this.executeRandomSummoning();
+        break;
+      case "MINES":
+        this.executeRandomMines();
+        break;
+      case "BULLETS":
+        this.executeRandomBullets();
+        break;
+      case "REDLINE":
+        this.executeRandomRedline();
+        break;
+    }
+  },
+
+  /**
+   * 🔥 NUEVA: Versión corta de invocación (30 segundos)
+   */
+  executeRandomSummoning() {
+    this.bossManager.makeImmune(1800); // 30 segundos
+    if (this.bossManager.movement) {
+      this.bossManager.movement.teleportToCenter();
+    }
+
+    // 3 oleadas rápidas
+    setTimeout(() => this.summonEnemies(3), 1000);
+    setTimeout(() => this.summonEnemies(3), 10000);
+    setTimeout(() => this.summonEnemies(4), 20000);
+
+    // Terminar y volver a Yan Ken Po
+    setTimeout(() => {
+      this.endRandomPhase();
+    }, 30000);
+  },
+
+  /**
+   * 🔥 NUEVA: Versión corta de minas (45 segundos)
+   */
+  executeRandomMines() {
+    this.bossManager.makeImmune(2700); // 45 segundos
+    if (this.bossManager.mines) {
+      this.bossManager.mines.startMineSequence();
+    }
+
+    setTimeout(() => {
+      this.endRandomPhase();
+    }, 45000);
+  },
+
+  /**
+   * 🔥 NUEVA: Versión corta de balas (60 segundos)
+   */
+  executeRandomBullets() {
+    this.bossManager.makeImmune(3600); // 60 segundos
+    if (this.bossManager.bullets) {
+      this.bossManager.bullets.startBulletPattern();
+    }
+
+    setTimeout(() => {
+      this.endRandomPhase();
+    }, 60000);
+  },
+
+  /**
+   * 🔥 NUEVA: Versión corta de hilo rojo (5 rondas)
+   */
+  executeRandomRedline() {
+    this.bossManager.makeImmune(9999);
+    if (this.bossManager.redline) {
+      // Configurar para solo 5 rondas
+      this.bossManager.redline.maxCycles = 5;
+      this.bossManager.redline.startPhase();
+    }
+  },
+
+  /**
+   * 🔥 NUEVA: Termina fase aleatoria y vuelve a Yan Ken Po
+   */
+  endRandomPhase() {
+    console.log("🔄 Terminando fase aleatoria - volviendo a Yan Ken Po");
+
+    this.phaseActive = false;
+    this.isRandomPhase = false;
+
+    // Limpiar sistemas
+    this.cleanupCurrentPhase();
+
+    // Volver a Yan Ken Po
+    setTimeout(() => {
+      if (this.bossManager.yankenpo) {
+        this.bossManager.yankenpo.startPhase();
+      }
+    }, 2000);
   },
 
   // ======================================================

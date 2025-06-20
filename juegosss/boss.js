@@ -12,8 +12,8 @@ const BossManager = {
   active: false,
 
   // Estadísticas básicas
-  maxHealth: 200,
-  currentHealth: 200,
+  maxHealth: 2000,
+  currentHealth: 2000,
 
   // Sistemas modulares (se cargan dinámicamente)
   movement: null,
@@ -160,8 +160,11 @@ const BossManager = {
   setupBoss() {
     this.active = true;
     this.currentHealth = this.maxHealth;
-    this.isImmune = false;
-    this.immunityTimer = 0;
+
+    // 🔥 FASE DE INTRODUCCIÓN: 10 SEGUNDOS INMUNE EN EL CENTRO
+    this.isImmune = true;
+    this.immunityTimer = 600; // 10 segundos a 60fps
+    this.introductionPhase = true;
 
     // Efectos de entrada
     if (this.ui) {
@@ -177,11 +180,21 @@ const BossManager = {
       );
     }
 
-    // Comentario de entrada
+    // 🔥 SECUENCIA DE MENSAJES DE INTRODUCCIÓN
     if (this.comments) {
       setTimeout(() => {
-        this.comments.sayComment("entrada");
-      }, 2000);
+        this.comments.sayComment(
+          "¡Scythe Society será destruida para siempre!"
+        );
+      }, 1000);
+
+      setTimeout(() => {
+        this.comments.sayComment("¡Vengo por la reina Hell y toda su legión!");
+      }, 4000);
+
+      setTimeout(() => {
+        this.comments.sayComment("¡Prepárense para la aniquilación total!");
+      }, 7000);
     }
 
     // Audio
@@ -189,11 +202,34 @@ const BossManager = {
       AudioManager.playSound("special");
     }
 
-    // Comenzar con movimiento libre
+    // 🔥 COMENZAR MOVIMIENTO DESPUÉS DE 10 SEGUNDOS
+    setTimeout(() => {
+      this.endIntroductionPhase();
+    }, 10000);
+  },
+
+  /**
+   * 🔥 NUEVA: Termina la fase de introducción
+   */
+  endIntroductionPhase() {
+    console.log("👹 Terminando fase de introducción - boss vulnerable");
+
+    this.introductionPhase = false;
+    this.isImmune = false;
+    this.immunityTimer = 0;
+
+    // Comenzar movimiento fluido
     if (this.movement) {
-      setTimeout(() => {
-        this.movement.enableWandering();
-      }, 1000);
+      this.movement.enableWandering();
+    }
+
+    // Mensaje de vulnerabilidad
+    if (this.comments) {
+      this.comments.sayComment("¡Ahora vengan por mí si pueden!");
+    }
+
+    if (this.ui) {
+      this.ui.showScreenMessage("⚔️ ¡BOSS VULNERABLE!", "#00FF00");
     }
   },
 
@@ -212,6 +248,9 @@ const BossManager = {
 
     // Actualizar sistemas modulares
     this.updateSystems();
+
+    // 🎯 EJECUTAR CONTROL DE FASES
+    this.executePhaseSequence();
 
     // Verificar derrota
     this.checkDefeat();
@@ -260,6 +299,243 @@ const BossManager = {
     if (this.comments) {
       this.comments.update();
     }
+  },
+
+  /**
+   * 🎯 CONTROL PRINCIPAL DE SECUENCIA DE FASES
+   * Ejecuta las fases según el porcentaje de vida del boss
+   */
+  executePhaseSequence() {
+    if (!this.active || !this.boss) return;
+
+    // 🔥 NO EJECUTAR DURANTE LA FASE DE INTRODUCCIÓN
+    if (this.introductionPhase) {
+      return;
+    }
+
+    // 🔥 NUEVA: Verificar Yan Ken Po primero
+    if (this.checkYanKenPoTrigger()) {
+      return;
+    }
+
+    const healthPercentage = this.currentHealth / this.maxHealth;
+
+    // Solo cambiar fases si no está en una fase especial activa
+    if (!this.phases || !this.phases.isInSpecialPhase()) {
+      // Fase Final: Yan Ken Po (3% de vida)
+      if (healthPercentage <= 0.03 && !this.yankenpo.isActive()) {
+        console.log("🎮 Iniciando Fase Final: Yan Ken Po");
+        this.startYanKenPoPhase();
+        return;
+      }
+
+      // Fase 8: Hilo Rojo (15% de vida)
+      if (
+        healthPercentage <= 0.15 &&
+        healthPercentage > 0.03 &&
+        !this.redline.isActive()
+      ) {
+        console.log("🔴 Iniciando Fase 8: Hilo Rojo");
+        this.startRedLinePhase();
+        return;
+      }
+
+      // Fase 6: Balas Touhou (30% de vida)
+      if (
+        healthPercentage <= 0.3 &&
+        healthPercentage > 0.15 &&
+        !this.bullets.isPatternActive()
+      ) {
+        console.log("🌟 Iniciando Fase 6: Balas Touhou");
+        this.startBulletsPhase();
+        return;
+      }
+
+      // Fase 4: Minas (50% de vida)
+      if (
+        healthPercentage <= 0.5 &&
+        healthPercentage > 0.3 &&
+        !this.mines.isMiningPhaseActive()
+      ) {
+        console.log("💣 Iniciando Fase 4: Minas");
+        this.startMinesPhase();
+        return;
+      }
+
+      // Fase 2: Invocación (75% de vida)
+      if (
+        healthPercentage <= 0.75 &&
+        healthPercentage > 0.5 &&
+        this.phases.getCurrentPhase() !== "SUMMONING"
+      ) {
+        console.log("⚔️ Iniciando Fase 2: Invocación");
+        this.startSummoningPhase();
+        return;
+      }
+    }
+  },
+
+  /**
+   * 🔥 NUEVA: Verifica si debe iniciar Yan Ken Po por vida baja
+   */
+  checkYanKenPoTrigger() {
+    const healthPercentage = this.currentHealth / this.maxHealth;
+
+    if (
+      healthPercentage <= 0.03 &&
+      !this.yankenpo.isActive() &&
+      (!this.phases || !this.phases.isRandomPhase)
+    ) {
+      console.log("🎮 Vida crítica - iniciando Yan Ken Po");
+      this.startYanKenPoPhase();
+      return true;
+    }
+
+    return false;
+  },
+
+  // ======================================================
+  // 🎭 FUNCIONES DE INICIO DE FASES ESPECÍFICAS
+  // ======================================================
+
+  /**
+   * 🔱 Fase 2: Invocación (60 segundos)
+   * 75% a 50% de vida
+   */
+  startSummoningPhase() {
+    console.log("⚔️ === INICIANDO FASE DE INVOCACIÓN ===");
+
+    // Hacer inmune por 60 segundos (3600 frames a 60fps)
+    this.makeImmune(3600);
+
+    // Detener movimiento y centrar
+    if (this.movement) {
+      this.movement.stopMovementAndCenter();
+    }
+
+    // Mostrar mensaje del boss
+    if (this.comments) {
+      this.comments.sayComment("¡Legiones del abismo, vengan a mí!");
+    }
+
+    // Iniciar fase después de 1 segundo
+    setTimeout(() => {
+      if (this.phases) {
+        this.phases.changePhase("SUMMONING");
+      }
+    }, 1000);
+  },
+
+  /**
+   * 💣 Fase 4: Minas (90 segundos)
+   * 50% a 30% de vida
+   */
+  startMinesPhase() {
+    console.log("💣 === INICIANDO FASE DE MINAS ===");
+
+    // Hacer inmune por 90 segundos (5400 frames a 60fps)
+    this.makeImmune(5400);
+
+    // Detener movimiento y centrar
+    if (this.movement) {
+      this.movement.stopMovementAndCenter();
+    }
+
+    // Mostrar mensaje del boss
+    if (this.comments) {
+      this.comments.sayComment("¡El suelo bajo sus pies es traicionero!");
+    }
+
+    // Iniciar fase después de 1 segundo
+    setTimeout(() => {
+      if (this.mines) {
+        this.mines.startMineSequence();
+      }
+    }, 1000);
+  },
+
+  /**
+   * 🌟 Fase 6: Balas Touhou (120 segundos)
+   * 30% a 15% de vida
+   */
+  startBulletsPhase() {
+    console.log("🌟 === INICIANDO FASE DE BALAS TOUHOU ===");
+
+    // Hacer inmune por 120 segundos (7200 frames a 60fps)
+    this.makeImmune(7200);
+
+    // Detener movimiento y centrar
+    if (this.movement) {
+      this.movement.stopMovementAndCenter();
+    }
+
+    // Mostrar mensaje del boss
+    if (this.comments) {
+      this.comments.sayComment("¡Lluvia de muerte del inframundo!");
+    }
+
+    // Iniciar fase después de 1 segundo
+    setTimeout(() => {
+      if (this.bullets) {
+        this.bullets.startBulletPattern();
+      }
+    }, 1000);
+  },
+
+  /**
+   * 🔴 Fase 8: Hilo Rojo (10 rondas)
+   * 15% a 3% de vida
+   */
+  startRedLinePhase() {
+    console.log("🔴 === INICIANDO FASE DEL HILO ROJO ===");
+
+    // Hacer inmune hasta completar (inmunidad infinita)
+    this.makeImmune(99999);
+
+    // Detener movimiento y centrar
+    if (this.movement) {
+      this.movement.stopMovementAndCenter();
+    }
+
+    // Mostrar mensaje del boss
+    if (this.comments) {
+      this.comments.sayComment("¡Sigue mi rastro mortal!");
+    }
+
+    // Iniciar fase después de 1 segundo
+    setTimeout(() => {
+      if (this.redline) {
+        this.redline.startPhase();
+      }
+    }, 1000);
+  },
+
+  /**
+   * 🎮 Fase Final: Yan Ken Po
+   * 3% a 0% de vida
+   */
+  startYanKenPoPhase() {
+    console.log("🎮 === INICIANDO FASE FINAL: YAN KEN PO ===");
+
+    // Hacer inmune permanentemente
+    this.makeImmune(99999);
+
+    // Detener movimiento y centrar
+    if (this.movement) {
+      this.movement.stopMovementAndCenter();
+    }
+
+    // Mostrar mensaje del boss
+    if (this.comments) {
+      this.comments.sayComment("¡Última oportunidad, mortal!");
+    }
+
+    // Iniciar fase después de 1 segundo
+    setTimeout(() => {
+      if (this.yankenpo) {
+        this.yankenpo.startPhase();
+      }
+    }, 1000);
   },
 
   // ======================================================

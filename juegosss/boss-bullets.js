@@ -208,7 +208,7 @@ const BossBullets = {
   // ======================================================
 
   /**
-   * Iniciar un patrón de balas aleatorio
+   * Iniciar secuencia de patrones Touhou - MEJORADA PARA 120 SEGUNDOS
    */
   startBulletPattern() {
     if (this.patternActive) {
@@ -216,34 +216,150 @@ const BossBullets = {
       return;
     }
 
-    // Seleccionar patrón aleatorio
-    this.patternType =
-      this.availablePatterns[
-        Math.floor(Math.random() * this.availablePatterns.length)
-      ];
-
-    console.log(`🌟 Boss iniciando patrón: ${this.patternType}`);
+    console.log("🌟 === INICIANDO FASE TOUHOU (120 SEGUNDOS) ===");
 
     this.patternActive = true;
     this.patternTimer = 0;
+    this.currentPatternIndex = 0;
+    this.patternSequence = ["spiral", "walls", "burst", "rain", "laser"];
 
-    // Boss inmune durante el patrón
-    this.bossManager.makeImmune(300);
-
-    // Centrar boss para mejor posicionamiento
+    // Centrar boss
     if (this.bossManager.movement) {
       this.bossManager.movement.teleportToCenter();
     }
 
-    // Iniciar el patrón específico
-    this.executePattern(this.patternType);
-
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        `🌟 PATRÓN ${this.patternType.toUpperCase()}!`,
+        "🌟 ¡FASE TOUHOU INICIADA!",
         "#FFD700"
       );
     }
+
+    // 🔥 SECUENCIA DE PATRONES CADA 20 SEGUNDOS
+    this.executePatternSequence();
+
+    // 🔥 ESCUDOS CADA 4 SEGUNDOS
+    this.startShieldSpawning();
+
+    // 🔥 BOSS SE MUEVE LENTAMENTE
+    if (this.bossManager.movement) {
+      this.bossManager.movement.changePattern("circling");
+    }
+
+    // 🔥 TERMINAR DESPUÉS DE 120 SEGUNDOS
+    setTimeout(() => {
+      this.endBulletPhase();
+    }, 120000);
+  },
+
+  /**
+   * 🔥 NUEVA: Ejecuta secuencia de patrones cada 20 segundos
+   */
+  executePatternSequence() {
+    if (!this.patternActive) return;
+
+    // Obtener patrón actual
+    const currentPattern =
+      this.patternSequence[
+        this.currentPatternIndex % this.patternSequence.length
+      ];
+
+    console.log(
+      `🌟 Ejecutando patrón ${this.currentPatternIndex + 1}: ${currentPattern}`
+    );
+
+    // Mensaje del boss
+    if (this.bossManager.comments) {
+      const messages = {
+        spiral: "¡Danza espiral de la muerte!",
+        walls: "¡Muros de destrucción!",
+        burst: "¡Explosión celestial!",
+        rain: "¡Lluvia dirigida del infierno!",
+        laser: "¡Láser aniquilador!",
+      };
+      this.bossManager.comments.sayComment(messages[currentPattern]);
+    }
+
+    // Ejecutar patrón
+    this.executePattern(currentPattern);
+
+    // Programar siguiente patrón
+    this.currentPatternIndex++;
+    if (this.currentPatternIndex < 6) {
+      // 6 patrones en 120 segundos
+      setTimeout(() => {
+        this.executePatternSequence();
+      }, 20000);
+    }
+  },
+
+  /**
+   * 🔥 NUEVA: Spawning de escudos cada 4 segundos
+   */
+  startShieldSpawning() {
+    let shieldCount = 0;
+    const maxShields = 30; // 120 segundos / 4 = 30 escudos máximo
+
+    const spawnShield = () => {
+      if (!this.patternActive || shieldCount >= maxShields) return;
+
+      // Máximo 2 escudos en pantalla
+      if (window.PowerUpManager && window.PowerUpManager.powerUps.length < 2) {
+        this.spawnProtectiveShield();
+        shieldCount++;
+      }
+
+      // Programar siguiente escudo
+      setTimeout(spawnShield, 4000);
+    };
+
+    // Primer escudo a los 2 segundos
+    setTimeout(spawnShield, 2000);
+  },
+
+  /**
+   * 🔥 NUEVA: Termina la fase de balas
+   */
+  endBulletPhase() {
+    console.log("🌟 Terminando fase Touhou (120s completados)");
+
+    this.patternActive = false;
+    this.patternTimer = 0;
+    this.cleanup();
+
+    // 🔥 NUEVO: Si es fase aleatoria, no hacer vulnerable automáticamente
+    if (this.bossManager.phases && this.bossManager.phases.isRandomPhase) {
+      console.log(
+        "🌟 Fase aleatoria completada - delegando al sistema de fases"
+      );
+      return; // El sistema de fases manejará el retorno a Yan Ken Po
+    }
+
+    // Centrar boss y mensaje final
+    if (this.bossManager.movement) {
+      this.bossManager.movement.teleportToCenter();
+    }
+
+    if (this.bossManager.comments) {
+      this.bossManager.comments.sayComment(
+        "¡Balas celestiales completadas! ¡Siguen siendo débiles!"
+      );
+    }
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage("⚔️ ¡BOSS VULNERABLE!", "#00FF00");
+    }
+
+    // Boss vuelve a ser vulnerable
+    this.bossManager.isImmune = false;
+    this.bossManager.immunityTimer = 0;
+
+    // Reanudar movimiento normal
+    setTimeout(() => {
+      if (this.bossManager.movement) {
+        this.bossManager.movement.enableWandering();
+      }
+    }, 2000);
   },
 
   /**

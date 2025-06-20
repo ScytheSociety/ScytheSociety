@@ -77,10 +77,21 @@ const BossRedLine = {
    * Iniciar la fase del hilo rojo
    */
   startPhase() {
-    console.log("🔴 === INICIANDO FASE DEL HILO ROJO ===");
+    console.log("🔴 === INICIANDO FASE DEL HILO ROJO (10 RONDAS) ===");
 
     this.phaseActive = true;
     this.cycleCount = 0;
+
+    // 🔥 CONFIGURACIÓN DINÁMICA según el contexto
+    if (this.bossManager.phases && this.bossManager.phases.isRandomPhase) {
+      this.maxCycles = 5; // 5 rondas para fase aleatoria
+      console.log("🔴 Configurado para fase aleatoria: 5 rondas");
+    } else {
+      this.maxCycles = 10; // 10 rondas para fase normal
+      console.log("🔴 Configurado para fase normal: 10 rondas");
+    }
+
+    this.maxCycles = 10; // 🔥 EXACTAMENTE 10 RONDAS
     this.bossManager.makeImmune(9999);
 
     // Detener movimiento del boss
@@ -88,10 +99,9 @@ const BossRedLine = {
       this.bossManager.movement.stopMovementAndCenter();
     }
 
-    // Ralentizar SÚPER LENTO al jugador
+    // Ralentizar jugador
     this.originalPlayerSpeed = Player.moveSpeed;
     Player.moveSpeed = this.playerSlowFactor;
-    console.log("🐌 Jugador SÚPER MEGA LENTO durante fase del hilo rojo");
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
@@ -101,13 +111,13 @@ const BossRedLine = {
     }
 
     if (this.bossManager.comments) {
-      this.bossManager.comments.showBossMessage("¡Sigue mi rastro mortal!");
+      this.bossManager.comments.sayComment("¡Memoriza mi rastro mortal!");
     }
 
-    // Iniciar primer ciclo después de un delay
+    // 🔥 MOSTRAR CONTADOR DE RONDAS
     setTimeout(() => {
       this.startRedLineCycle();
-    }, 1000);
+    }, 2000);
   },
 
   /**
@@ -248,8 +258,16 @@ const BossRedLine = {
    */
   startRedLineCycle() {
     console.log(
-      `🔄 Iniciando ciclo ${this.cycleCount + 1}/${this.maxCycles} de hilo rojo`
+      `🔄 Iniciando ronda ${this.cycleCount + 1}/${this.maxCycles} de hilo rojo`
     );
+
+    // 🔥 MOSTRAR PROGRESO DE RONDAS
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        `🔴 RONDA ${this.cycleCount + 1}/10`,
+        "#FFFF00"
+      );
+    }
 
     // 🔥 VERIFICAR QUE EL BOSS EXISTE ANTES DE CONTINUAR
     if (!this.bossManager || !this.bossManager.boss) {
@@ -257,6 +275,9 @@ const BossRedLine = {
       this.endPhase();
       return;
     }
+
+    // 🔥 LÍNEAS MÁS COMPLEJAS EN RONDAS AVANZADAS
+    this.adjustDifficultyForRound(this.cycleCount + 1);
 
     // Generar nueva línea aleatoria
     this.generateRedLine();
@@ -270,6 +291,34 @@ const BossRedLine = {
 
     // PASO 1: Mostrar línea brevemente
     this.showLinePreview();
+  },
+
+  /**
+   * 🔥 NUEVA: Ajusta dificultad según la ronda
+   */
+  adjustDifficultyForRound(roundNumber) {
+    // Rondas 1-3: Líneas simples
+    if (roundNumber <= 3) {
+      this.lineConfig.minSegments = 2;
+      this.lineConfig.maxSegments = 4;
+      this.redLineSpeed = 3;
+    }
+    // Rondas 4-6: Líneas medianas
+    else if (roundNumber <= 6) {
+      this.lineConfig.minSegments = 4;
+      this.lineConfig.maxSegments = 6;
+      this.redLineSpeed = 4;
+    }
+    // Rondas 7-10: Líneas complejas
+    else {
+      this.lineConfig.minSegments = 6;
+      this.lineConfig.maxSegments = 8;
+      this.redLineSpeed = 5;
+    }
+
+    console.log(
+      `🔴 Ronda ${roundNumber}: Dificultad ajustada (velocidad: ${this.redLineSpeed})`
+    );
   },
 
   /**

@@ -235,8 +235,23 @@ const BossComments = {
     // Actualizar comentarios activos
     this.updateActiveComments();
 
+    // 🔥 ACTUALIZAR POSICIÓN DEL MENSAJE DEL BOSS
+    this.updateBossMessagePosition();
+
     // Comentarios automáticos durante combate
     this.updateAutomaticComments();
+  },
+
+  /**
+   * 🔥 NUEVA: Actualiza la posición del mensaje para que siga al boss
+   */
+  updateBossMessagePosition() {
+    const bossMessage = document.getElementById("boss-speech-bubble");
+    if (bossMessage && this.bossManager.boss) {
+      const boss = this.bossManager.boss;
+      bossMessage.style.left = `${boss.x + boss.width / 2}px`;
+      bossMessage.style.top = `${boss.y - 100}px`;
+    }
   },
 
   /**
@@ -325,14 +340,30 @@ const BossComments = {
   /**
    * Mostrar mensaje del boss con estilo épico
    */
+  /**
+   * Mostrar mensaje del boss con estilo épico
+   */
   showBossMessage(message, category = "combate") {
-    // Limitar número de comentarios activos
-    if (this.activeComments.length >= this.maxActiveComments) {
-      this.removeComment(0); // Eliminar el más viejo
+    // 🔥 ELIMINAR MENSAJE ANTERIOR SI EXISTE
+    const existingMessage = document.getElementById("boss-speech-bubble");
+    if (existingMessage) {
+      existingMessage.remove();
     }
 
     const messageElement = this.createMessageElement(message, category);
-    this.positionMessage(messageElement, category);
+
+    // 🔥 POSICIONAR RELATIVO AL BOSS
+    if (this.bossManager.boss) {
+      const boss = this.bossManager.boss;
+      messageElement.style.left = `${boss.x + boss.width / 2}px`;
+      messageElement.style.top = `${boss.y - 100}px`;
+      messageElement.style.transform = "translateX(-50%)";
+    } else {
+      this.positionMessage(messageElement, category);
+    }
+
+    // 🔥 ASIGNAR ID ÚNICO
+    messageElement.id = "boss-speech-bubble";
 
     document.body.appendChild(messageElement);
 

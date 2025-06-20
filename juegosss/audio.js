@@ -609,6 +609,12 @@ const AudioManager = {
    * 🔥 NUEVO: Pausa todo el audio (incluidos efectos de sonido) - CORREGIDO
    */
   pauseAllAudio() {
+    // 🔥 NO PAUSAR NADA SI EL BOSS ESTÁ ACTIVO
+    if (window.BossManager && window.BossManager.isActive()) {
+      console.log("🔇 Boss activo - no pausar audio");
+      return;
+    }
+
     // NO pausar música de fondo si está en juego
     if (
       this.sounds.background &&
