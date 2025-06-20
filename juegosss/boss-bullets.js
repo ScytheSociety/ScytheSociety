@@ -208,12 +208,18 @@ const BossBullets = {
   // ======================================================
 
   /**
-   * Iniciar un patrón de balas aleatorio - CORREGIDO PARA RALENTIZAR JUGADOR
+   * Iniciar un patrón de balas con persecución - CORREGIDA
    */
   startBulletPattern() {
     if (this.patternActive) {
       console.log("🌟 Patrón ya activo, ignorando nuevo inicio");
       return;
+    }
+
+    // Boss persigue al jugador durante esta fase
+    if (this.bossManager.movement) {
+      this.bossManager.movement.enableWandering();
+      this.bossManager.movement.changePattern("hunting");
     }
 
     // Seleccionar patrón aleatorio
@@ -222,25 +228,22 @@ const BossBullets = {
         Math.floor(Math.random() * this.availablePatterns.length)
       ];
 
-    console.log(`🌟 Boss iniciando patrón: ${this.patternType}`);
+    console.log(
+      `🌟 Boss iniciando patrón: ${this.patternType} (con persecución)`
+    );
 
     this.patternActive = true;
     this.patternTimer = 0;
 
-    // 🔥 NUEVO: Ralentizar jugador durante patrones Touhou intensos
+    // 🔥 RALENTIZAR JUGADOR SOLO UN POCO durante patrones Touhou
     if (window.Player) {
       this.originalPlayerSpeedPattern = window.Player.moveSpeed;
-      window.Player.moveSpeed = 0.5; // 50% más lento durante patrones
-      console.log("🐌 Jugador ralentizado durante patrón Touhou");
+      window.Player.moveSpeed = 0.7; // Solo 30% más lento, no tan extremo
+      console.log("🐌 Jugador ligeramente ralentizado durante patrón Touhou");
     }
 
-    // Boss inmune durante el patrón
-    this.bossManager.makeImmune(300);
-
-    // Centrar boss para mejor posicionamiento
-    if (this.bossManager.movement) {
-      this.bossManager.movement.teleportToCenter();
-    }
+    // 🔥 Boss NO inmune - persigue mientras dispara
+    // NO hacer inmune aquí para que sea vulnerable
 
     // Iniciar el patrón específico
     this.executePattern(this.patternType);
@@ -249,6 +252,68 @@ const BossBullets = {
       this.bossManager.ui.showScreenMessage(
         `🌟 PATRÓN ${this.patternType.toUpperCase()}!`,
         "#FFD700"
+      );
+    }
+
+    // 🔥 SPAWEAR ESCUDOS PROTECTORES durante la fase
+    this.spawnProtectiveShields();
+  },
+
+  /**
+   * Spawear escudos protectores durante fase Touhou - NUEVO
+   */
+  spawnProtectiveShields() {
+    const canvas = window.getCanvas();
+
+    // Spawear 3-4 escudos durante la fase
+    const shieldCount = 3 + Math.floor(Math.random() * 2);
+
+    for (let i = 0; i < shieldCount; i++) {
+      setTimeout(() => {
+        // Posición aleatoria pero accesible
+        const x = 100 + Math.random() * (canvas.width - 200);
+        const y = 100 + Math.random() * (canvas.height - 200);
+
+        // Crear power-up de escudo
+        if (window.PowerUpManager) {
+          const shield = {
+            x: x,
+            y: y,
+            width: 50,
+            height: 50,
+            velocityY: 0,
+            velocityX: 0,
+            type: {
+              id: 0,
+              name: "Escudo Protector",
+              color: "#00FF00",
+              duration: 240,
+            },
+            pulseTimer: 0,
+            glowIntensity: 0.8,
+            spawnTime: window.getGameTime(),
+          };
+
+          PowerUpManager.powerUps.push(shield);
+
+          // Efecto visual
+          if (this.bossManager.ui) {
+            this.bossManager.ui.createParticleEffect(x, y, "#00FF00", 20);
+          }
+        }
+
+        console.log(
+          `🛡️ Escudo protector spawneado en (${Math.round(x)}, ${Math.round(
+            y
+          )})`
+        );
+      }, i * 3000); // Cada 3 segundos un escudo
+    }
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        "🛡️ ¡ESCUDOS DISPONIBLES!",
+        "#00FF00"
       );
     }
   },
@@ -321,11 +386,12 @@ const BossBullets = {
   // ======================================================
 
   /**
-   * Patrón espiral de balas
+   * Patrón espiral con espacios para esquivar - CORREGIDA
    */
   createSpiralPattern() {
     const config = this.patternConfigs.spiral;
     let angle = 0;
+    let skipCounter = 0; // Para crear espacios
 
     const spiralInterval = setInterval(() => {
       if (!this.patternActive || this.patternType !== "spiral") {
@@ -333,14 +399,23 @@ const BossBullets = {
         return;
       }
 
-      // Crear balas en espiral
-      for (let i = 0; i < config.bulletsPerFrame; i++) {
+      // 🔥 CREAR ESPACIOS CADA 4 BALAS para que sea esquivable
+      skipCounter++;
+      if (skipCounter % 6 === 0) {
+        angle += config.rotationSpeed * 3; // Saltar espacio
+        return;
+      }
+
+      // Crear balas en espiral con menos densidad
+      const bulletsInThisFrame = Math.random() < 0.7 ? 1 : 2; // Menos balas
+
+      for (let i = 0; i < bulletsInThisFrame; i++) {
         const bulletAngle = angle + (i * Math.PI * 2) / config.bulletsPerFrame;
-        this.createTouhouBullet(bulletAngle, config.speed, config.color);
+        this.createTouhouBullet(bulletAngle, config.speed * 0.8, config.color); // Más lento
       }
 
       angle += config.rotationSpeed;
-    }, config.bulletInterval);
+    }, config.bulletInterval * 1.5); // Más tiempo entre disparos
 
     this.activeIntervals.push(spiralInterval);
   },
@@ -370,22 +445,44 @@ const BossBullets = {
   },
 
   /**
-   * Crear muro de balas con espacio para esquivar
+   * Crear muro de balas con espacios más grandes para esquivar - CORREGIDA
    */
   createWallOfBullets(config) {
     const canvas = window.getCanvas();
     const playerPos = Player.getPosition();
 
-    // Crear espacio para esquivar cerca del jugador
-    const safeZoneStart =
-      Math.floor((playerPos.x / canvas.width) * config.bulletCount) - 2;
-    const safeZoneEnd = safeZoneStart + config.gapSize;
+    // 🔥 ESPACIOS MÁS GRANDES PARA ESQUIVAR
+    const bulletCount = 8; // Menos balas = más espacios
+    const gapSize = 3; // Espacio más grande
 
-    for (let i = 0; i < config.bulletCount; i++) {
-      // No crear balas en la zona segura
-      if (i >= safeZoneStart && i <= safeZoneEnd) continue;
+    // Crear múltiples espacios seguros
+    const safeZones = [];
 
-      const x = (canvas.width / config.bulletCount) * i;
+    // Zona segura principal cerca del jugador
+    const playerZoneStart =
+      Math.floor((playerPos.x / canvas.width) * bulletCount) - 1;
+    safeZones.push({
+      start: Math.max(0, playerZoneStart),
+      end: Math.min(bulletCount - 1, playerZoneStart + gapSize),
+    });
+
+    // Zona segura adicional aleatoria
+    const randomZoneStart = Math.floor(Math.random() * (bulletCount - gapSize));
+    safeZones.push({
+      start: randomZoneStart,
+      end: randomZoneStart + gapSize,
+    });
+
+    for (let i = 0; i < bulletCount; i++) {
+      // Verificar si esta posición está en una zona segura
+      const isInSafeZone = safeZones.some(
+        (zone) => i >= zone.start && i <= zone.end
+      );
+
+      if (isInSafeZone) continue; // No crear bala en zona segura
+
+      const x =
+        (canvas.width / bulletCount) * i + canvas.width / bulletCount / 2;
       const bullet = this.createBulletObject(
         x,
         -20,
@@ -397,7 +494,9 @@ const BossBullets = {
       this.bulletPatterns.push(bullet);
     }
 
-    console.log("🧱 Muro de balas creado con zona segura");
+    console.log(
+      `🧱 Muro de balas creado con ${safeZones.length} zonas seguras`
+    );
   },
 
   /**

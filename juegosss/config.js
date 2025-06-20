@@ -208,9 +208,9 @@ const GameConfig = {
   BOSS_PHASE_CONFIG: {
     // Tiempos en frames (60fps)
     INTRO_DURATION: 600, // 10 segundos - Boss inmune en centro
-    SUMMONING_DURATION: 600, // 10 segundos - Invocación
-    MINES_DURATION: 900, // 15 segundos - Minas
-    BULLETS_DURATION: 1200, // 20 segundos - Touhou
+    SUMMONING_DURATION: 1800, // 30 segundos - Invocación
+    MINES_DURATION: 2700, // 45 segundos - Minas
+    BULLETS_DURATION: 3600, // 60 segundos - Touhou
     REDLINE_COUNT: 10, // 10 hilos rojos
     REDLINE_PAUSE: 180, // 3 segundos entre hilos
     YANKENPO_WINS: 3, // 3 victorias para matar boss

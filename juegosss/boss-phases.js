@@ -308,17 +308,41 @@ const BossPhases = {
   },
 
   /**
-   * Ejecutar fase actual
+   * Ejecutar fase actual - CORREGIDO PARA PERSECUCIÓN
    */
   executeCurrentPhase() {
     const config = this.PHASE_CONFIGS[this.currentPhase];
 
     switch (this.currentPhase) {
+      case "INTRO":
+        // Boss inmóvil en el centro
+        break;
+
+      case "HUNTING_1":
+      case "HUNTING_2":
+      case "HUNTING_3":
+      case "HUNTING_4":
+      case "HUNTING_5":
+        // 🔥 PERSECUCIÓN FLUIDA DEL JUGADOR
+        if (this.bossManager.movement) {
+          this.bossManager.movement.enableWandering();
+          this.bossManager.movement.changePattern("hunting");
+        }
+        break;
+
       case "SUMMONING":
         // Invocar enemigos cada 4 segundos
         if (this.phaseTimer % 240 === 0) {
           this.summonEnemies(2);
         }
+        break;
+
+      case "MINES":
+        // La fase de minas se maneja en su propio sistema
+        break;
+
+      case "BULLETS":
+        // La fase de bullets se maneja en su propio sistema
         break;
 
       case "REDLINE":
@@ -334,7 +358,11 @@ const BossPhases = {
         break;
 
       default:
-        // Otras fases no necesitan lógica continua
+        // Otras fases - asegurar persecución
+        if (this.bossManager.movement) {
+          this.bossManager.movement.enableWandering();
+          this.bossManager.movement.changePattern("hunting");
+        }
         break;
     }
   },

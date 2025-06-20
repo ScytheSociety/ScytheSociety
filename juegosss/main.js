@@ -927,55 +927,102 @@ function cleanupGame() {
 }
 
 /**
- * 🔥 NUEVO: Limpiar TODOS los elementos del boss al cambiar de pantalla
+ * CORREGIDO: Limpiar TODOS los elementos del boss al cambiar de pantalla
  */
 function cleanupBossElements() {
   console.log("🧹 Limpiando elementos del boss...");
 
-  // 🔥 RESET FORZADO DEL BOSS
-  if (window.BossManager && window.BossManager.forceReset) {
-    window.BossManager.forceReset();
+  try {
+    // 🔥 RESET FORZADO DEL BOSS con verificaciones
+    if (window.BossManager && typeof window.BossManager === "object") {
+      if (typeof window.BossManager.forceReset === "function") {
+        window.BossManager.forceReset();
+      } else if (typeof window.BossManager.reset === "function") {
+        window.BossManager.reset();
+      }
+    }
+  } catch (error) {
+    console.warn("⚠️ Error en reset del boss:", error);
   }
 
   // Limpiar botones Yan Ken Po
-  const yankenpoContainer = document.getElementById("yankenpo-container");
-  if (yankenpoContainer && yankenpoContainer.parentNode) {
-    yankenpoContainer.parentNode.removeChild(yankenpoContainer);
-    console.log("✅ Botones Yan Ken Po eliminados");
+  try {
+    const yankenpoContainer = document.getElementById("yankenpo-container");
+    if (yankenpoContainer && yankenpoContainer.parentNode) {
+      yankenpoContainer.parentNode.removeChild(yankenpoContainer);
+      console.log("✅ Botones Yan Ken Po eliminados");
+    }
+  } catch (error) {
+    console.warn("⚠️ Error eliminando Yan Ken Po:", error);
   }
 
   // Limpiar mensajes del boss
-  const bossMessage = document.getElementById("boss-speech-bubble");
-  if (bossMessage && bossMessage.parentNode) {
-    bossMessage.parentNode.removeChild(bossMessage);
-    console.log("✅ Mensaje del boss eliminado");
+  try {
+    const bossMessage = document.getElementById("boss-speech-bubble");
+    if (bossMessage && bossMessage.parentNode) {
+      bossMessage.parentNode.removeChild(bossMessage);
+      console.log("✅ Mensaje del boss eliminado");
+    }
+  } catch (error) {
+    console.warn("⚠️ Error eliminando mensaje boss:", error);
   }
 
   // Limpiar listeners globales del boss
-  if (window.BossManager && window.BossManager.yanKenPoKeyListener) {
-    document.removeEventListener(
-      "keydown",
-      window.BossManager.yanKenPoKeyListener,
-      true
-    );
-    document.removeEventListener(
-      "keypress",
-      window.BossManager.yanKenPoKeyListener,
-      true
-    );
-    window.removeEventListener(
-      "keydown",
-      window.BossManager.yanKenPoKeyListener,
-      true
-    );
-    window.BossManager.yanKenPoKeyListener = null;
-    console.log("✅ Listeners del boss eliminados");
+  try {
+    if (window.BossManager && window.BossManager.yanKenPoKeyListener) {
+      document.removeEventListener(
+        "keydown",
+        window.BossManager.yanKenPoKeyListener,
+        true
+      );
+      document.removeEventListener(
+        "keypress",
+        window.BossManager.yanKenPoKeyListener,
+        true
+      );
+      window.removeEventListener(
+        "keydown",
+        window.BossManager.yanKenPoKeyListener,
+        true
+      );
+      window.BossManager.yanKenPoKeyListener = null;
+      console.log("✅ Listeners del boss eliminados");
+    }
+  } catch (error) {
+    console.warn("⚠️ Error eliminando listeners:", error);
   }
 
   // 🔥 ASEGURAR QUE LA VELOCIDAD DEL JUGADOR SEA NORMAL
-  if (window.Player) {
-    window.Player.moveSpeed = 1.0;
-    console.log("✅ Velocidad del jugador restaurada");
+  try {
+    if (window.Player && typeof window.Player === "object") {
+      window.Player.moveSpeed = 1.0;
+      console.log("✅ Velocidad del jugador restaurada");
+    }
+  } catch (error) {
+    console.warn("⚠️ Error restaurando velocidad jugador:", error);
+  }
+
+  // 🔥 LIMPIAR CUALQUIER ELEMENTO RESIDUAL DEL BOSS
+  try {
+    // Limpiar elementos de UI del boss
+    const bossElements = [
+      "boss-health-bar",
+      "boss-phase-indicator",
+      "boss-comment",
+      "level-transition",
+      "music-ticker",
+    ];
+
+    bossElements.forEach((elementId) => {
+      const element = document.getElementById(elementId);
+      if (element && element.parentNode) {
+        element.parentNode.removeChild(element);
+      }
+    });
+
+    console.log("✅ Elementos residuales del boss limpiados");
+  } catch (error) {
+    console.warn("⚠️ Error limpiando elementos residuales:", error);
   }
 }
 
