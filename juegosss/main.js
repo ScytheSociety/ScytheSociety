@@ -255,23 +255,46 @@ function startGameLoop() {
 }
 
 /**
- * Bucle principal del juego - CORREGIDO PARA NIVEL 11
+ * Bucle principal del juego - OPTIMIZADO PARA MÓVIL
  */
 function gameLoop() {
   if (gameEnded) return;
 
   try {
-    // Actualizar tiempo
-    gameTime++;
+    // 🔥 OPTIMIZACIÓN: Detectar dispositivo móvil
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
 
-    // 🔥 Actualizar sistema de combos
-    ComboSystem.update();
+    // 🔥 REDUCIR FRECUENCIA DE ACTUALIZACIÓN EN MÓVIL
+    if (isMobile) {
+      gameTime++;
+      // Solo actualizar cada 2 frames en móvil
+      if (gameTime % 2 !== 0) {
+        return;
+      }
+    } else {
+      gameTime++;
+    }
+
+    // 🔥 Actualizar sistema de combos solo cada 3 frames
+    if (gameTime % 3 === 0) {
+      ComboSystem.update();
+    }
 
     // Limpiar canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Dibujar fondo
+    // Dibujar fondo (reducir calidad en móvil)
+    if (isMobile) {
+      ctx.save();
+      ctx.imageSmoothingEnabled = false; // 🔥 Desactivar suavizado en móvil
+    }
     drawBackground();
+    if (isMobile) {
+      ctx.restore();
+    }
 
     // 🔥 Aplicar efectos de tiempo lento si está activo
     const originalSlowFactor = window.slowMotionFactor;
@@ -287,13 +310,15 @@ function gameLoop() {
     if (level < 11) {
       EnemyManager.update();
     } else if (level === 11) {
-      // En nivel 11, solo actualizar enemigos si hay esbirros del boss
       if (EnemyManager.enemies.length > 0) {
         EnemyManager.update();
       }
     }
 
-    PowerUpManager.update();
+    // 🔥 REDUCIR FRECUENCIA DE POWER-UPS EN MÓVIL
+    if (!isMobile || gameTime % 2 === 0) {
+      PowerUpManager.update();
+    }
 
     // 🔥 SOLO verificar boss si es nivel 11
     if (level === 11) {
@@ -312,7 +337,7 @@ function gameLoop() {
     if (Player.getLives() <= 0 && !gameEnded) {
       console.log("💀 Detectada muerte del jugador en game loop");
       gameOver();
-      return; // Salir inmediatamente
+      return;
     }
 
     // 🔥 Verificar nivel completo SOLO para niveles 1-10
@@ -328,22 +353,28 @@ function gameLoop() {
     if (level < 11) {
       EnemyManager.draw(ctx);
     } else if (level === 11 && EnemyManager.enemies.length > 0) {
-      // En nivel 11, solo dibujar si hay esbirros del boss
       EnemyManager.draw(ctx);
     }
 
-    PowerUpManager.draw(ctx);
+    // 🔥 REDUCIR FRECUENCIA DE DIBUJO DE POWER-UPS EN MÓVIL
+    if (!isMobile || gameTime % 2 === 0) {
+      PowerUpManager.draw(ctx);
+    }
 
     // 🔥 SOLO dibujar boss si es nivel 11
     if (level === 11) {
       BossManager.draw(ctx);
     }
 
-    // 🔥 Efectos especiales de pantalla
-    drawSpecialEffects(ctx);
+    // 🔥 Efectos especiales REDUCIDOS en móvil
+    if (!isMobile || gameTime % 3 === 0) {
+      drawSpecialEffects(ctx);
+    }
 
-    // Actualizar UI
-    UI.update();
+    // 🔥 Actualizar UI solo cada 2 frames en móvil
+    if (!isMobile || gameTime % 2 === 0) {
+      UI.update();
+    }
   } catch (error) {
     console.error("❌ Error en game loop:", error);
   }

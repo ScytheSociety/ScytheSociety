@@ -313,8 +313,7 @@ const ComboSystem = {
   },
 
   /**
-   * ⚡ Modo frenesí (se activa con combo 40)
-   * Disparo súper rápido por 30 segundos
+   * ⚡ Modo frenesí (se activa con combo 40) - OPTIMIZADO PARA MÓVIL
    */
   triggerFrenzyMode() {
     // Verificar si ya hay otro evento activo
@@ -325,16 +324,24 @@ const ComboSystem = {
 
     UI.showScreenMessage("⚡ ¡MODO FRENESÍ! ⚡", "#FF00FF");
     window.frenzyModeActive = true;
-    console.log(
-      "⚡ Iniciando modo frenesí - disparo súper rápido por 15 segundos"
-    );
+    console.log("⚡ Iniciando modo frenesí optimizado");
 
     const originalInterval = BulletManager.autoShootInterval;
     BulletManager.stopAutoShoot();
 
+    // 🔥 DETECTAR MÓVIL Y AJUSTAR VELOCIDAD
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+    const frenzyDelay = isMobile ? 60 : 30; // 🔥 Más lento en móvil: 60ms vs 30ms
+
     const frenzyInterval = setInterval(() => {
       BulletManager.shootBullet();
-    }, 30);
+    }, frenzyDelay);
+
+    // 🔥 DURACIÓN REDUCIDA EN MÓVIL
+    const frenzyDuration = isMobile ? 10000 : 15000; // 🔥 10s en móvil vs 15s en desktop
 
     setTimeout(() => {
       clearInterval(frenzyInterval);
@@ -342,7 +349,7 @@ const ComboSystem = {
       window.frenzyModeActive = false;
       UI.showScreenMessage("Frenesí terminado", "#FFFFFF");
       console.log("⚡ Modo frenesí terminado - disparo normal restaurado");
-    }, 15000);
+    }, frenzyDuration);
 
     AudioManager.playSound("special");
   },

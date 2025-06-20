@@ -459,12 +459,21 @@ const UI = {
   // ======================================================
 
   /**
-   * Crea efecto de partículas
+   * Crea efecto de partículas - OPTIMIZADO PARA MÓVIL
    */
   createParticleEffect(x, y, color, particleCount) {
+    // 🔥 REDUCIR PARTÍCULAS EN MÓVIL
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+    const finalParticleCount = isMobile
+      ? Math.max(5, Math.floor(particleCount * 0.3))
+      : particleCount;
+
     const particles = [];
 
-    for (let i = 0; i < particleCount; i++) {
+    for (let i = 0; i < finalParticleCount; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 1 + Math.random() * 3;
 
@@ -474,8 +483,8 @@ const UI = {
         size: 2 + Math.random() * 3,
         speedX: Math.cos(angle) * speed,
         speedY: Math.sin(angle) * speed,
-        life: 30 + Math.random() * 20,
-        maxLife: 50,
+        life: isMobile ? 20 : 30 + Math.random() * 20, // 🔥 Vida más corta en móvil
+        maxLife: isMobile ? 30 : 50,
       });
     }
 
@@ -596,7 +605,7 @@ const UI = {
       displayText = `Nivel ${level}`;
     }
 
-    // 🔥 ESTILOS RESPONSIVOS MEJORADOS
+    // 🔥 ESTILOS SIN FONDO - SOLO TEXTO CON TRAZO NEGRO
     transitionDiv.innerHTML = `
     <div style="
       position: fixed;
@@ -608,23 +617,26 @@ const UI = {
       color: #ff0000;
       font-family: 'Creepster', cursive;
       text-shadow: 
-        0 0 20px #ff0000, 
-        0 0 40px #ff0000, 
-        0 0 60px #ff0000,
-        3px 3px 6px rgba(0, 0, 0, 0.8);
+        -3px -3px 0 #000,
+        3px -3px 0 #000,
+        -3px 3px 0 #000,
+        3px 3px 0 #000,
+        0 0 10px #ff0000,
+        0 0 20px #ff0000;
       animation: terrorLevelAppear 2s ease-out;
       
-      /* 🔥 RESPONSIVO: Una línea siempre */
       font-size: clamp(2rem, 8vw, 4rem);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 95vw;
       line-height: 1.1;
-      
-      /* 🔥 Ajustes adicionales para pantallas muy pequeñas */
-      padding: 0 10px;
-      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      backdrop-filter: none;
     ">
       ${displayText}
     </div>

@@ -326,7 +326,7 @@ const BossUI = {
   // ======================================================
 
   /**
-   * Mostrar mensaje en pantalla
+   * Mostrar mensaje en pantalla - INTEGRADO CON SISTEMA PRINCIPAL
    */
   showScreenMessage(
     text,
@@ -335,54 +335,14 @@ const BossUI = {
     size = "normal",
     position = "center"
   ) {
-    // Limitar número de mensajes
-    if (this.screenMessages.length >= this.maxMessages) {
-      const oldestMessage = this.screenMessages.shift();
-      if (oldestMessage.element.parentNode) {
-        oldestMessage.element.parentNode.removeChild(oldestMessage.element);
-      }
+    // 🔥 USAR EL SISTEMA PRINCIPAL DE MENSAJES
+    if (window.UI && window.UI.showScreenMessage) {
+      window.UI.showScreenMessage(text, color);
+      return;
     }
 
-    const messageElement = document.createElement("div");
-    const messageId = `screen-message-${Date.now()}-${Math.random()}`;
-    messageElement.id = messageId;
-
-    // Configurar estilos
-    const finalDuration = duration || this.messageConfig.duration;
-    const fontSize =
-      this.messageConfig.fontSize[size] || this.messageConfig.fontSize.normal;
-
-    messageElement.style.cssText = this.getMessageStyles(
-      color,
-      fontSize,
-      position
-    );
-    messageElement.textContent = text;
-
-    // Agregar al DOM
-    document.body.appendChild(messageElement);
-
-    // Animación de entrada
-    messageElement.style.opacity = "0";
-    messageElement.style.transform = this.getInitialTransform(position);
-
-    setTimeout(() => {
-      messageElement.style.opacity = "1";
-      messageElement.style.transform = this.getFinalTransform(position);
-    }, 50);
-
-    // Registrar mensaje
-    const messageObj = {
-      element: messageElement,
-      startTime: Date.now(),
-      duration: finalDuration,
-      text: text,
-      color: color,
-    };
-
-    this.screenMessages.push(messageObj);
-
-    console.log(`📢 Mensaje mostrado: "${text}"`);
+    // Fallback solo si no existe el sistema principal
+    console.log(`📢 Boss message fallback: "${text}"`);
   },
 
   /**

@@ -587,7 +587,7 @@ const BossMines = {
 
     // Pulso de energía cuando está por explotar
     if (mine.timer < 120) {
-      const pulseRadius = 5 + Math.sin(mine.blinkTimer * 0.3) * 8;
+      const pulseRadius = Math.max(1, 5 + Math.sin(mine.blinkTimer * 0.3) * 8); // 🔥 CORREGIDO: Math.max(1, ...)
       ctx.strokeStyle = `rgba(255, 255, 0, 0.8)`;
       ctx.lineWidth = 3;
       ctx.beginPath();
