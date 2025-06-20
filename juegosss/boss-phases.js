@@ -306,37 +306,33 @@ const BossPhases = {
    * Ejecutar fase de invocación - MEJORADA
    */
   executeSummoningPhase() {
-    // 🔥 OLEADAS DE INVOCACIÓN MÁS DINÁMICAS
+    // 🔥 DURACIÓN FIJA: 60 segundos (3600 frames)
+    const PHASE_DURATION = 3600;
 
-    // Primera oleada a los 2 segundos
+    console.log(
+      `⚔️ DEBUG - Timer de invocación: ${this.phaseTimer}/${PHASE_DURATION}`
+    );
+
+    // Oleadas en tiempos específicos
     if (this.phaseTimer === 120) {
       this.summonEnemies(2);
-      this.bossManager.comments.sayComment("¡Primera oleada del abismo!");
+      this.bossManager.comments?.sayComment("¡Primera oleada del abismo!");
     }
 
-    // Segunda oleada a los 15 segundos
-    if (this.phaseTimer === 900) {
-      this.summonEnemies(3);
-      this.bossManager.comments.sayComment(
-        "¡Más esbirros se unen a la batalla!"
-      );
-    }
-
-    // Tercera oleada a los 30 segundos
     if (this.phaseTimer === 1800) {
+      this.summonEnemies(3);
+      this.bossManager.comments?.sayComment("¡Segunda oleada!");
+    }
+
+    if (this.phaseTimer === 3000) {
       this.summonEnemies(4);
-      this.bossManager.comments.sayComment("¡La horda crece sin cesar!");
+      this.bossManager.comments?.sayComment("¡Oleada final!");
     }
 
-    // Oleada final a los 45 segundos
-    if (this.phaseTimer === 2700) {
-      this.summonEnemies(5);
-      this.bossManager.comments.sayComment("¡Última avalancha de terror!");
-    }
-
-    // 🔥 BOSS SE MUEVE LENTAMENTE DURANTE LA FASE
-    if (this.phaseTimer % 60 === 0 && this.bossManager.movement) {
-      this.bossManager.movement.huntPlayerSlow();
+    // 🔥 VERIFICAR FIN DE FASE
+    if (this.phaseTimer >= PHASE_DURATION) {
+      console.log("⚔️ TERMINANDO fase de invocación por tiempo");
+      this.endCurrentPhase();
     }
   },
 
@@ -580,21 +576,8 @@ const BossPhases = {
           EnemyManager.enemies.push(minion);
         }
 
-        if (this.bossManager.ui) {
-          this.bossManager.ui.createParticleEffect(
-            pos.x + size / 2,
-            pos.y + size / 2,
-            "#8B0000",
-            25
-          );
-        }
-
         console.log(`👹 Esbirro nivel ${randomLevel} invocado`);
       }, i * 400);
-    }
-
-    if (window.AudioManager) {
-      AudioManager.playSound("special");
     }
   },
 

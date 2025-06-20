@@ -206,19 +206,21 @@ const BossMovement = {
     const dy = playerCenterY - bossCenterY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // Persecución directa pero manteniendo distancia mínima
-    if (distance > 100) {
-      const speed = boss.moveSpeed * 1.8;
+    // 🔥 PERSECUCIÓN DIRECTA Y AGRESIVA
+    if (distance > 80) {
+      // Cambio: era 100, ahora 80
+      const speed = boss.moveSpeed * 2.5; // Más rápido
       this.movement.velocityX = (dx / distance) * speed;
       this.movement.velocityY = (dy / distance) * speed;
     } else {
-      // Muy cerca - moverse en círculos pequeños
-      this.movement.velocityX *= 0.5;
-      this.movement.velocityY *= 0.5;
+      // 🔥 SEGUIR MOVIÉNDOSE LENTAMENTE AUNQUE ESTÉ CERCA
+      const slowSpeed = boss.moveSpeed * 1.2;
+      this.movement.velocityX = (dx / distance) * slowSpeed;
+      this.movement.velocityY = (dy / distance) * slowSpeed;
     }
 
-    // Limitar velocidad máxima
-    this.limitVelocity(boss.moveSpeed * 2.5);
+    // 🔥 LÍMITE DE VELOCIDAD MAYOR
+    this.limitVelocity(boss.moveSpeed * 3.0);
   },
 
   /**

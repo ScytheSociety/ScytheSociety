@@ -313,12 +313,14 @@ const BossManager = {
       return;
     }
 
-    // 🔥 NUEVA: Verificar Yan Ken Po primero
-    if (this.checkYanKenPoTrigger()) {
-      return;
-    }
-
     const healthPercentage = this.currentHealth / this.maxHealth;
+
+    // 🔥 LOGS PARA DEBUG
+    console.log(
+      `👹 DEBUG - Vida: ${Math.round(
+        healthPercentage * 100
+      )}%, Fase actual: ${this.phases?.getCurrentPhase()}, Fase activa: ${this.phases?.isPhaseActive()}`
+    );
 
     // Solo cambiar fases si no está en una fase especial activa
     if (!this.phases || !this.phases.isInSpecialPhase()) {
@@ -363,15 +365,45 @@ const BossManager = {
       }
 
       // Fase 2: Invocación (75% de vida)
-      if (
-        healthPercentage <= 0.75 &&
-        healthPercentage > 0.5 &&
-        this.phases.getCurrentPhase() !== "SUMMONING"
-      ) {
-        console.log("⚔️ Iniciando Fase 2: Invocación");
-        this.startSummoningPhase();
-        return;
+      if (healthPercentage <= 0.75 && healthPercentage > 0.5) {
+        const currentPhase = this.phases.getCurrentPhase();
+        const isPhaseActive = this.phases.isPhaseActive();
+
+        console.log(
+          `👹 DEBUG INVOCACIÓN - Fase actual: ${currentPhase}, Activa: ${isPhaseActive}, Vida: ${Math.round(
+            healthPercentage * 100
+          )}%`
+        );
+
+        if (currentPhase !== "SUMMONING" && !isPhaseActive) {
+          console.log("⚔️ Iniciando Fase 2: Invocación");
+          this.startSummoningPhase();
+          return;
+        }
       }
+
+      // 🔥 NUEVO: Modo de caza libre entre fases
+      if (
+        !this.phases.isPhaseActive() &&
+        this.phases.getCurrentPhase() !== "HUNTING"
+      ) {
+        console.log("🏃 Boss entrando en modo de caza libre");
+        this.phases.currentPhase = "HUNTING";
+
+        // Reanudar movimiento de caza
+        if (this.movement) {
+          this.movement.enableWandering();
+        }
+
+        // Boss vulnerable
+        this.isImmune = false;
+        this.immunityTimer = 0;
+      }
+    } else {
+      // 🔥 DEBUG: Mostrar por qué no cambia de fase
+      console.log(
+        `👹 DEBUG - No puede cambiar fase. En fase especial: ${this.phases?.isInSpecialPhase()}`
+      );
     }
   },
 
@@ -1027,3 +1059,10 @@ window.BossManager = BossManager;
 console.log(
   "👹 boss.js (controlador principal) cargado - Sistema modular listo"
 );
+
+// 🔥 PREVENIR ERROR DE ASYNC RESPONSE
+window.addEventListener("beforeunload", () => {
+  if (window.BossManager) {
+    BossManager.active = false;
+  }
+});

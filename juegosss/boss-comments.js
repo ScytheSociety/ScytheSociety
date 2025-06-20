@@ -249,8 +249,16 @@ const BossComments = {
     const bossMessage = document.getElementById("boss-speech-bubble");
     if (bossMessage && this.bossManager.boss) {
       const boss = this.bossManager.boss;
-      bossMessage.style.left = `${boss.x + boss.width / 2}px`;
-      bossMessage.style.top = `${boss.y - 100}px`;
+      const canvas = window.getCanvas();
+
+      // 🔥 POSICIÓN RELATIVA AL CANVAS, NO FIJA
+      const rect = canvas.getBoundingClientRect();
+      const bossScreenX = rect.left + boss.x + boss.width / 2;
+      const bossScreenY = rect.top + boss.y - 60; // Solo 60px arriba del boss
+
+      bossMessage.style.left = `${bossScreenX}px`;
+      bossMessage.style.top = `${bossScreenY}px`;
+      bossMessage.style.transform = "translateX(-50%)";
     }
   },
 

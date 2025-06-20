@@ -28,40 +28,7 @@ const AudioManager = {
    * 🔥 NUEVO: Configura control de visibilidad para pausar audio - CORREGIDO
    */
   setupVisibilityControl() {
-    // Detectar cuando la pestaña/app se oculta
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // Pausa todo el audio cuando se minimiza
-        this.pauseAllAudio();
-        console.log("🔇 Audio pausado - app minimizada");
-      } else {
-        // Reanuda solo la música de fondo cuando se restaura
-        this.resumeBackgroundAudio();
-        console.log("🔊 Audio reanudado - app restaurada");
-      }
-    };
-
-    // 🔥 CORREGIDO: Guardar referencia para poder remover listeners
-    this.visibilityChangeHandler = handleVisibilityChange;
-
-    document.addEventListener("visibilitychange", this.visibilityChangeHandler);
-
-    // Para móviles - detectar cuando se pierde el foco
-    const handleBlur = () => {
-      this.pauseAllAudio();
-      console.log("🔇 Audio pausado - foco perdido");
-    };
-
-    const handleFocus = () => {
-      this.resumeBackgroundAudio();
-      console.log("🔊 Audio reanudado - foco recuperado");
-    };
-
-    this.blurHandler = handleBlur;
-    this.focusHandler = handleFocus;
-
-    window.addEventListener("blur", this.blurHandler);
-    window.addEventListener("focus", this.focusHandler);
+    console.log("🔊 Control de visibilidad deshabilitado");
   },
 
   /**
@@ -603,42 +570,6 @@ const AudioManager = {
    */
   getAvailableSounds() {
     return Object.keys(this.sounds);
-  },
-
-  /**
-   * 🔥 NUEVO: Pausa todo el audio (incluidos efectos de sonido) - CORREGIDO
-   */
-  pauseAllAudio() {
-    // 🔥 NO PAUSAR NADA SI EL BOSS ESTÁ ACTIVO
-    if (window.BossManager && window.BossManager.isActive()) {
-      console.log("🔇 Boss activo - no pausar audio");
-      return;
-    }
-
-    // NO pausar música de fondo si está en juego
-    if (
-      this.sounds.background &&
-      this.sounds.background.audio &&
-      !window.isGameEnded()
-    ) {
-      // Solo reducir volumen, no pausar completamente
-      this.sounds.background.audio.volume =
-        this.sounds.background.baseVolume * this.masterVolume * 0.3;
-      console.log("🔇 Volumen de música reducido, no pausado");
-    }
-
-    // NO pausar otros sonidos durante el juego activo
-    if (window.isGameEnded && window.isGameEnded()) {
-      // Solo pausar si el juego terminó
-      for (const [key, sound] of Object.entries(this.sounds)) {
-        if (sound.audio && key !== "background") {
-          sound.audio.pause();
-        }
-      }
-    }
-
-    // Marcar que el audio está pausado por visibilidad
-    this.pausedByVisibility = true;
   },
 
   /**
