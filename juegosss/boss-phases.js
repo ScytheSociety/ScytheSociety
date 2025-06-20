@@ -82,58 +82,71 @@ const BossPhases = {
   },
 
   /**
-   * Verificar si debe cambiar de fase basado en vida
+   * Verificar si debe cambiar de fase basado en vida - CORREGIDO
    */
   checkPhaseTransitions() {
     const healthPercentage =
       this.bossManager.currentHealth / this.bossManager.maxHealth;
 
-    // Verificar fase final (3% de vida)
+    console.log(
+      `🔥 Boss vida: ${Math.round(healthPercentage * 100)}% - Fase actual: ${
+        this.currentPhase
+      } - Activa: ${this.phaseActive} - Cooldown: ${this.phaseCooldown}`
+    );
+
+    // 🔥 FASES CRÍTICAS - FORZAR SIN COOLDOWN NI RESTRICCIONES
+
+    // Verificar fase final (3% de vida) - FORZAR
     if (healthPercentage <= 0.03 && this.currentPhase !== "YANKENPO") {
+      console.log("🎮 FORZANDO FASE FINAL: YAN KEN PO");
+      this.endCurrentPhase(); // Terminar fase actual
       this.startFinalPhase();
       return;
     }
 
-    // Verificar fase de línea roja al 10%
+    // Verificar fase de línea roja al 10% - FORZAR
     if (
       healthPercentage <= 0.1 &&
       healthPercentage > 0.03 &&
       this.currentPhase !== "REDLINE"
     ) {
+      console.log("🔴 FORZANDO FASE: HILO ROJO");
+      this.endCurrentPhase(); // Terminar fase actual
       this.changePhase("REDLINE");
       return;
     }
 
-    // Verificar fases normales
+    // 🔥 FASES NORMALES - SOLO SI NO HAY FASE CRÍTICA ACTIVA
+    if (this.currentPhase === "REDLINE" || this.currentPhase === "YANKENPO") {
+      return; // No cambiar si está en fase crítica
+    }
+
+    // Verificar fases normales con COOLDOWN REDUCIDO
     let targetPhase = null;
 
-    if (
-      healthPercentage <= 0.75 &&
-      healthPercentage > 0.5 &&
-      !this.phaseActive
-    ) {
+    if (healthPercentage <= 0.75 && healthPercentage > 0.5) {
       targetPhase = "SUMMONING";
-    } else if (
-      healthPercentage <= 0.5 &&
-      healthPercentage > 0.25 &&
-      !this.phaseActive
-    ) {
+    } else if (healthPercentage <= 0.5 && healthPercentage > 0.25) {
       targetPhase = "MINES";
-    } else if (
-      healthPercentage <= 0.25 &&
-      healthPercentage > 0.1 &&
-      !this.phaseActive
-    ) {
+    } else if (healthPercentage <= 0.25 && healthPercentage > 0.1) {
       targetPhase = "BULLETS";
     }
 
-    // Cambiar fase si es necesario
-    if (
-      targetPhase &&
-      this.currentPhase !== targetPhase &&
-      this.phaseCooldown <= 0
-    ) {
-      this.changePhase(targetPhase);
+    // 🔥 CAMBIAR FASE NORMAL - COOLDOWN REDUCIDO Y FORZAR SI ES NECESARIO
+    if (targetPhase && this.currentPhase !== targetPhase) {
+      // Si no hay fase activa O el cooldown es bajo O es una emergencia
+      if (
+        !this.phaseActive ||
+        this.phaseCooldown <= 60 ||
+        healthPercentage <= 0.15
+      ) {
+        console.log(
+          `⚔️ Cambiando a fase: ${targetPhase} (vida: ${Math.round(
+            healthPercentage * 100
+          )}%)`
+        );
+        this.changePhase(targetPhase);
+      }
     }
   },
 
@@ -270,10 +283,17 @@ const BossPhases = {
   },
 
   /**
-   * Configurar fase de balas
+   * Configurar fase de balas - CORREGIDO PARA RALENTIZAR JUGADOR
    */
   setupBulletsPhase() {
     this.bossManager.makeImmune(this.PHASE_DURATIONS.BULLETS);
+
+    // 🔥 NUEVO: Ralentizar jugador durante fase Touhou
+    if (window.Player) {
+      this.originalPlayerSpeedBullets = window.Player.moveSpeed; // Guardar velocidad
+      window.Player.moveSpeed = 0.4; // 60% más lento durante Touhou
+      console.log("🐌 Jugador ralentizado durante fase Touhou");
+    }
 
     if (this.bossManager.movement) {
       this.bossManager.movement.teleportToCenter();
@@ -328,21 +348,24 @@ const BossPhases = {
   },
 
   /**
-   * Ejecutar fase de balas Touhou
+   * Ejecutar fase de balas Touhou - OPTIMIZADA PARA MENOS LAG
    */
   executeBulletsPhase() {
-    // Patrón de balas cada 6 segundos
-    if (this.phaseTimer % 360 === 0 && this.bossManager.bullets) {
+    // 🔥 Patrón de balas MENOS FRECUENTE para evitar lag
+    if (this.phaseTimer % 480 === 0 && this.bossManager.bullets) {
+      // Era 360, ahora 480 (8 segundos)
       this.bossManager.bullets.startBulletPattern();
     }
 
-    // Invocaciones ocasionales
-    if (this.phaseTimer % 420 === 0) {
-      this.summonEnemies(2);
+    // 🔥 Invocaciones MENOS FRECUENTES
+    if (this.phaseTimer % 600 === 0) {
+      // Era 420, ahora 600 (10 segundos)
+      this.summonEnemies(1); // Era 2, ahora 1 enemigo
     }
 
-    // Escudos protectores cada 5 segundos
-    if (this.phaseTimer % 300 === 0) {
+    // 🔥 Escudos protectores MENOS FRECUENTES
+    if (this.phaseTimer % 420 === 0) {
+      // Era 300, ahora 420 (7 segundos)
       this.spawnProtectiveShield();
     }
   },
@@ -383,16 +406,34 @@ const BossPhases = {
   },
 
   /**
-   * Terminar la fase actual
+   * Terminar la fase actual - CORREGIDO PARA RESTAURAR VELOCIDAD
    */
   endCurrentPhase() {
     console.log(`👹 Terminando fase: ${this.currentPhase}`);
+
+    // 🔥 RESTAURAR velocidad del jugador según la fase que termina
+    if (window.Player) {
+      if (this.currentPhase === "BULLETS" && this.originalPlayerSpeedBullets) {
+        window.Player.moveSpeed = this.originalPlayerSpeedBullets;
+        console.log(
+          "🏃 Velocidad del jugador restaurada al terminar fase Touhou"
+        );
+      } else if (
+        this.currentPhase === "REDLINE" &&
+        this.originalPlayerSpeedRedline
+      ) {
+        window.Player.moveSpeed = this.originalPlayerSpeedRedline;
+        console.log(
+          "🏃 Velocidad del jugador restaurada al terminar fase Red Line"
+        );
+      }
+    }
 
     this.phaseActive = false;
     this.bossManager.isImmune = false;
     this.bossManager.immunityTimer = 0;
     this.phaseTimer = 0;
-    this.phaseCooldown = 300; // 5 segundos de cooldown
+    this.phaseCooldown = 60; // 🔥 REDUCIDO: era 300, ahora 60 frames (1 segundo)
 
     // Limpiar sistemas de la fase
     this.cleanupCurrentPhase();

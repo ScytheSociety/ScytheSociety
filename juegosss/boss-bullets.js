@@ -208,7 +208,7 @@ const BossBullets = {
   // ======================================================
 
   /**
-   * Iniciar un patrón de balas aleatorio
+   * Iniciar un patrón de balas aleatorio - CORREGIDO PARA RALENTIZAR JUGADOR
    */
   startBulletPattern() {
     if (this.patternActive) {
@@ -226,6 +226,13 @@ const BossBullets = {
 
     this.patternActive = true;
     this.patternTimer = 0;
+
+    // 🔥 NUEVO: Ralentizar jugador durante patrones Touhou intensos
+    if (window.Player) {
+      this.originalPlayerSpeedPattern = window.Player.moveSpeed;
+      window.Player.moveSpeed = 0.5; // 50% más lento durante patrones
+      console.log("🐌 Jugador ralentizado durante patrón Touhou");
+    }
 
     // Boss inmune durante el patrón
     this.bossManager.makeImmune(300);
@@ -284,13 +291,21 @@ const BossBullets = {
   },
 
   /**
-   * Terminar el patrón actual
+   * Terminar el patrón actual - CORREGIDO PARA RESTAURAR VELOCIDAD
    */
   endCurrentPattern() {
     console.log(`🌟 Terminando patrón: ${this.patternType}`);
 
     // Limpiar intervalos activos
     this.clearActiveIntervals();
+
+    // 🔥 RESTAURAR velocidad del jugador
+    if (window.Player && this.originalPlayerSpeedPattern) {
+      window.Player.moveSpeed = this.originalPlayerSpeedPattern;
+      console.log(
+        "🏃 Velocidad del jugador restaurada al terminar patrón Touhou"
+      );
+    }
 
     this.patternActive = false;
     this.patternType = "none";

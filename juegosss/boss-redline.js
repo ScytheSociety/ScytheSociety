@@ -74,7 +74,7 @@ const BossRedLine = {
   // ======================================================
 
   /**
-   * Iniciar la fase del hilo rojo
+   * Iniciar la fase del hilo rojo - CORREGIDO PARA RALENTIZAR JUGADOR
    */
   startPhase() {
     console.log("🔴 === INICIANDO FASE DEL HILO ROJO ===");
@@ -88,10 +88,14 @@ const BossRedLine = {
       this.bossManager.movement.stopMovementAndCenter();
     }
 
-    // Ralentizar SÚPER LENTO al jugador
-    this.originalPlayerSpeed = Player.moveSpeed;
-    Player.moveSpeed = this.playerSlowFactor;
-    console.log("🐌 Jugador SÚPER MEGA LENTO durante fase del hilo rojo");
+    // 🔥 CORREGIDO: Ralentizar SÚPER LENTO al jugador durante TODA la fase
+    if (window.Player) {
+      this.originalPlayerSpeed = window.Player.moveSpeed; // Guardar velocidad original
+      window.Player.moveSpeed = this.playerSlowFactor; // 0.05 = 95% más lento
+      console.log(
+        "🐌 Jugador SÚPER MEGA LENTO durante TODA la fase del hilo rojo"
+      );
+    }
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
@@ -111,7 +115,7 @@ const BossRedLine = {
   },
 
   /**
-   * Terminar la fase del hilo rojo
+   * Terminar la fase del hilo rojo - CORREGIDO PARA RESTAURAR VELOCIDAD
    */
   endPhase() {
     console.log("🔴 Terminando COMPLETAMENTE la fase del hilo rojo");
@@ -125,8 +129,8 @@ const BossRedLine = {
 
     // 🔥 VERIFICAR QUE EL JUGADOR EXISTE antes de restaurar velocidad
     if (window.Player && Player.moveSpeed !== undefined) {
-      Player.moveSpeed = this.originalPlayerSpeed;
-      console.log("🏃 Velocidad del jugador restaurada a normal");
+      Player.moveSpeed = this.originalPlayerSpeed || 1.0; // Restaurar velocidad original
+      console.log("🏃 Velocidad del jugador restaurada a normal en Red Line");
     }
 
     // 🔥 VERIFICAR QUE EL BOSS EXISTE antes de hacerlo vulnerable
@@ -341,7 +345,7 @@ const BossRedLine = {
   },
 
   /**
-   * Terminar movimiento de la línea (no la fase completa)
+   * Terminar movimiento de la línea (no la fase completa) - CORREGIDO
    */
   endRedLineMovement() {
     console.log("🔴 Boss terminó el recorrido - iniciando pausa vulnerable");
@@ -355,7 +359,7 @@ const BossRedLine = {
     if (this.bossManager) {
       this.bossManager.isImmune = false;
       this.bossManager.immunityTimer = 0;
-      console.log("🔴 Boss FORZADO a ser vulnerable");
+      console.log("🔴 Boss FORZADO a ser vulnerable por 3 segundos");
     }
 
     // Detener movimiento del boss
@@ -367,7 +371,7 @@ const BossRedLine = {
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        "⚔️ ¡BOSS VULNERABLE! (3s)", // 🔥 AUMENTADO a 3 segundos
+        "⚔️ ¡BOSS VULNERABLE! (3s)",
         "#00FF00"
       );
     }
@@ -376,7 +380,7 @@ const BossRedLine = {
       this.bossManager.comments.sayRandomComment("combate");
     }
 
-    // 🔥 AUMENTADO: 3 segundos en lugar de 1
+    // 🔥 AUMENTADO: 3 segundos vulnerable en lugar de 1
     const vulnerabilityTime = 3000;
 
     // Decidir siguiente acción después del período vulnerable
@@ -386,11 +390,17 @@ const BossRedLine = {
   },
 
   /**
-   * Decidir la siguiente acción
+   * Decidir la siguiente acción - CORREGIDO
    */
   decideNextAction() {
     const healthPercentage =
       this.bossManager.currentHealth / this.bossManager.maxHealth;
+
+    console.log(
+      `🔴 Decidiendo siguiente acción - Vida: ${Math.round(
+        healthPercentage * 100
+      )}% - Ciclo: ${this.cycleCount}/${this.maxCycles}`
+    );
 
     // Verificar si debe ir a fase final
     if (healthPercentage <= 0.03) {
@@ -412,13 +422,15 @@ const BossRedLine = {
       return;
     }
 
-    // Continuar con otro ciclo
+    // 🔥 CORREGIDO: NO hacer inmune inmediatamente
+    // Continuar con otro ciclo DESPUÉS de un pequeño delay
     console.log("🔄 Continuando con nuevo ciclo de hilo rojo");
-    this.bossManager.makeImmune(9999); // Volver a ser inmune
 
     setTimeout(() => {
+      // 🔥 AHORA SÍ hacer inmune cuando empiece el nuevo ciclo
+      this.bossManager.makeImmune(9999);
       this.startRedLineCycle();
-    }, 500);
+    }, 1000); // 1 segundo de delay antes del siguiente ciclo
   },
 
   /**

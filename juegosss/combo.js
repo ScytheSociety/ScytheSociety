@@ -313,7 +313,7 @@ const ComboSystem = {
   },
 
   /**
-   * ⚡ Modo frenesí (se activa con combo 40) - OPTIMIZADO PARA MÓVIL
+   * ⚡ Modo frenesí - OPTIMIZADO PARA MÓVIL Y MENOS LAG
    */
   triggerFrenzyMode() {
     // Verificar si ya hay otro evento activo
@@ -334,14 +334,14 @@ const ComboSystem = {
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
       );
-    const frenzyDelay = isMobile ? 60 : 30; // 🔥 Más lento en móvil: 60ms vs 30ms
+    const frenzyDelay = isMobile ? 80 : 40; // 🔥 Menos agresivo: 80ms móvil, 40ms desktop
 
     const frenzyInterval = setInterval(() => {
       BulletManager.shootBullet();
     }, frenzyDelay);
 
-    // 🔥 DURACIÓN REDUCIDA EN MÓVIL
-    const frenzyDuration = isMobile ? 10000 : 15000; // 🔥 10s en móvil vs 15s en desktop
+    // 🔥 DURACIÓN REDUCIDA
+    const frenzyDuration = isMobile ? 8000 : 12000; // 8s móvil vs 12s desktop
 
     setTimeout(() => {
       clearInterval(frenzyInterval);
@@ -519,8 +519,7 @@ const ComboSystem = {
   },
 
   /**
-   * 🌊 Tiempo lento épico
-   * Ralentiza todo el juego por 8 segundos
+   * 🌊 Tiempo lento épico - CORREGIDO PARA RALENTIZAR JUGADOR
    */
   triggerSlowMotion() {
     // Verificar si ya hay otro evento activo
@@ -535,9 +534,23 @@ const ComboSystem = {
     window.slowMotionActive = true;
     window.slowMotionFactor = 0.08;
 
+    // 🔥 NUEVO: Ralentizar también al jugador durante tiempo lento
+    if (window.Player) {
+      window.Player.originalMoveSpeed = window.Player.moveSpeed; // Guardar velocidad original
+      window.Player.moveSpeed = 0.15; // 85% más lento
+      console.log("🐌 Jugador también ralentizado durante tiempo submarino");
+    }
+
     setTimeout(() => {
       window.slowMotionActive = false;
       window.slowMotionFactor = 1.0;
+
+      // 🔥 RESTAURAR velocidad del jugador
+      if (window.Player && window.Player.originalMoveSpeed) {
+        window.Player.moveSpeed = window.Player.originalMoveSpeed;
+        console.log("🏃 Velocidad del jugador restaurada");
+      }
+
       UI.showScreenMessage("⚡ Superficie alcanzada", "#FFFFFF");
       console.log(
         "🌊 Tiempo submarino terminado - velocidad normal restaurada"
