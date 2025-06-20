@@ -1,5 +1,5 @@
 /**
- * Hell Shooter - Boss Manager (Controlador Principal)
+ * Hell Shooter - Boss Manager (Controlador Principal Optimizado)
  * Coordina todos los sistemas del boss y maneja el estado principal
  */
 
@@ -15,7 +15,7 @@ const BossManager = {
   maxHealth: 200,
   currentHealth: 200,
 
-  // Sistemas modulares (se cargan dinámicamente)
+  // Sistemas modulares
   movement: null,
   phases: null,
   mines: null,
@@ -28,58 +28,38 @@ const BossManager = {
   // Estado de inmunidad
   isImmune: false,
   immunityTimer: 0,
+  introductionPhase: false,
 
   // ======================================================
-  // INICIALIZACIÓN PRINCIPAL
+  // INICIALIZACIÓN
   // ======================================================
 
-  /**
-   * Inicializa el boss y todos sus sistemas modulares
-   */
   async init() {
     console.log("👹 === INICIALIZANDO BOSS MODULAR ===");
 
-    // Cargar todos los módulos
-    await this.loadModules();
-
-    // Crear el boss base
+    this.loadModules();
     this.createBoss();
-
-    // Inicializar todos los sistemas
     this.initializeSystems();
-
-    // Configurar el boss
     this.setupBoss();
 
     console.log("👹 Boss modular completamente inicializado");
   },
 
-  /**
-   * Cargar todos los módulos del boss
-   */
-  async loadModules() {
+  loadModules() {
     console.log("📦 Cargando módulos del boss...");
 
-    try {
-      // Los módulos se asignan automáticamente cuando se cargan
-      this.movement = window.BossMovement;
-      this.phases = window.BossPhases;
-      this.mines = window.BossMines;
-      this.bullets = window.BossBullets;
-      this.redline = window.BossRedLine;
-      this.yankenpo = window.BossYanKenPo;
-      this.ui = window.BossUI;
-      this.comments = window.BossComments;
+    this.movement = window.BossMovement;
+    this.phases = window.BossPhases;
+    this.mines = window.BossMines;
+    this.bullets = window.BossBullets;
+    this.redline = window.BossRedLine;
+    this.yankenpo = window.BossYanKenPo;
+    this.ui = window.BossUI;
+    this.comments = window.BossComments;
 
-      console.log("✅ Todos los módulos cargados correctamente");
-    } catch (error) {
-      console.error("❌ Error cargando módulos:", error);
-    }
+    console.log("✅ Todos los módulos cargados");
   },
 
-  /**
-   * Crear la entidad boss básica
-   */
   createBoss() {
     const canvas = window.getCanvas();
     const config = GameConfig.BOSS_CONFIG;
@@ -91,12 +71,8 @@ const BossManager = {
       height: config.size * 1.5,
       velocityX: 0,
       velocityY: 0,
-
-      // Propiedades visuales
       color: "#8B0000",
       glowIntensity: 0,
-
-      // Propiedades de comportamiento
       moveSpeed: config.speed * 1.5,
       aggressionLevel: 1.0,
     };
@@ -104,66 +80,33 @@ const BossManager = {
     console.log("👹 Entidad boss creada");
   },
 
-  /**
-   * Inicializar todos los sistemas modulares
-   */
   initializeSystems() {
     console.log("🔧 Inicializando sistemas modulares...");
 
-    // Pasar referencia del boss a todos los módulos
-    const bossRef = this;
+    const systems = [
+      { system: this.movement, name: "movimiento" },
+      { system: this.phases, name: "fases" },
+      { system: this.mines, name: "minas" },
+      { system: this.bullets, name: "balas" },
+      { system: this.redline, name: "hilo rojo" },
+      { system: this.yankenpo, name: "Yan Ken Po" },
+      { system: this.ui, name: "UI" },
+      { system: this.comments, name: "comentarios" },
+    ];
 
-    if (this.movement) {
-      this.movement.init(bossRef);
-      console.log("✅ Sistema de movimiento inicializado");
-    }
-
-    if (this.phases) {
-      this.phases.init(bossRef);
-      console.log("✅ Sistema de fases inicializado");
-    }
-
-    if (this.mines) {
-      this.mines.init(bossRef);
-      console.log("✅ Sistema de minas inicializado");
-    }
-
-    if (this.bullets) {
-      this.bullets.init(bossRef);
-      console.log("✅ Sistema de balas inicializado");
-    }
-
-    if (this.redline) {
-      this.redline.init(bossRef);
-      console.log("✅ Sistema de hilo rojo inicializado");
-    }
-
-    if (this.yankenpo) {
-      this.yankenpo.init(bossRef);
-      console.log("✅ Sistema Yan Ken Po inicializado");
-    }
-
-    if (this.ui) {
-      this.ui.init(bossRef);
-      console.log("✅ Sistema de UI inicializado");
-    }
-
-    if (this.comments) {
-      this.comments.init(bossRef);
-      console.log("✅ Sistema de comentarios inicializado");
-    }
+    systems.forEach(({ system, name }) => {
+      if (system) {
+        system.init(this);
+        console.log(`✅ Sistema de ${name} inicializado`);
+      }
+    });
   },
 
-  /**
-   * Configurar el boss después de inicializar sistemas
-   */
   setupBoss() {
     this.active = true;
     this.currentHealth = this.maxHealth;
-
-    // 🔥 FASE DE INTRODUCCIÓN: 10 SEGUNDOS INMUNE EN EL CENTRO
     this.isImmune = true;
-    this.immunityTimer = 600; // 10 segundos a 60fps
+    this.immunityTimer = 600; // 10 segundos
     this.introductionPhase = true;
 
     // Efectos de entrada
@@ -180,37 +123,37 @@ const BossManager = {
       );
     }
 
-    // 🔥 SECUENCIA DE MENSAJES DE INTRODUCCIÓN
+    // Secuencia de mensajes
     if (this.comments) {
-      setTimeout(() => {
-        this.comments.sayComment(
-          "¡Scythe Society será destruida para siempre!"
-        );
-      }, 1000);
-
-      setTimeout(() => {
-        this.comments.sayComment("¡Vengo por la reina Hell y toda su legión!");
-      }, 4000);
-
-      setTimeout(() => {
-        this.comments.sayComment("¡Prepárense para la aniquilación total!");
-      }, 7000);
+      setTimeout(
+        () =>
+          this.comments.sayComment(
+            "¡Scythe Society será destruida para siempre!"
+          ),
+        1000
+      );
+      setTimeout(
+        () =>
+          this.comments.sayComment(
+            "¡Vengo por la reina Hell y toda su legión!"
+          ),
+        4000
+      );
+      setTimeout(
+        () =>
+          this.comments.sayComment("¡Prepárense para la aniquilación total!"),
+        7000
+      );
     }
 
-    // Audio
     if (window.AudioManager) {
       AudioManager.playSound("special");
     }
 
-    // 🔥 COMENZAR MOVIMIENTO DESPUÉS DE 10 SEGUNDOS
-    setTimeout(() => {
-      this.endIntroductionPhase();
-    }, 10000);
+    // Comenzar movimiento después de 10 segundos
+    setTimeout(() => this.endIntroductionPhase(), 10000);
   },
 
-  /**
-   * 🔥 NUEVA: Termina la fase de introducción
-   */
   endIntroductionPhase() {
     console.log("👹 Terminando fase de introducción - boss vulnerable");
 
@@ -218,12 +161,10 @@ const BossManager = {
     this.isImmune = false;
     this.immunityTimer = 0;
 
-    // Comenzar movimiento fluido
     if (this.movement) {
-      this.movement.enableWandering();
+      this.movement.enableFluidHunting();
     }
 
-    // Mensaje de vulnerabilidad
     if (this.comments) {
       this.comments.sayComment("¡Ahora vengan por mí si pueden!");
     }
@@ -234,173 +175,115 @@ const BossManager = {
   },
 
   // ======================================================
-  // LOOP PRINCIPAL DE ACTUALIZACIÓN
+  // LOOP PRINCIPAL
   // ======================================================
 
-  /**
-   * Actualización principal del boss (coordinador)
-   */
   update() {
     if (!this.active || !this.boss) return;
 
-    // Actualizar inmunidad
     this.updateImmunity();
-
-    // Actualizar sistemas modulares
     this.updateSystems();
-
-    // 🎯 EJECUTAR CONTROL DE FASES
     this.executePhaseSequence();
-
-    // Verificar derrota
     this.checkDefeat();
   },
 
-  /**
-   * Actualizar todos los sistemas modulares
-   */
   updateSystems() {
-    // Movimiento
-    if (this.movement) {
-      this.movement.update();
-    }
+    const systems = [
+      this.movement,
+      this.phases,
+      this.mines,
+      this.bullets,
+      this.redline,
+      this.yankenpo,
+      this.ui,
+      this.comments,
+    ];
 
-    // Fases
-    if (this.phases) {
-      this.phases.update();
-    }
-
-    // Minas
-    if (this.mines) {
-      this.mines.update();
-    }
-
-    // Balas Touhou
-    if (this.bullets) {
-      this.bullets.update();
-    }
-
-    // Hilo rojo
-    if (this.redline) {
-      this.redline.update();
-    }
-
-    // Yan Ken Po
-    if (this.yankenpo) {
-      this.yankenpo.update();
-    }
-
-    // UI
-    if (this.ui) {
-      this.ui.update();
-    }
-
-    // Comentarios
-    if (this.comments) {
-      this.comments.update();
-    }
+    systems.forEach((system) => {
+      if (system && system.update) {
+        system.update();
+      }
+    });
   },
 
-  /**
-   * 🎯 CONTROL PRINCIPAL DE SECUENCIA DE FASES - COMPLETAMENTE CORREGIDO
-   * Ejecuta las fases según el porcentaje de vida del boss
-   */
   executePhaseSequence() {
-    if (!this.active || !this.boss) return;
-
-    // 🔥 NO EJECUTAR DURANTE LA FASE DE INTRODUCCIÓN
-    if (this.introductionPhase) {
-      return;
-    }
+    if (!this.active || !this.boss || this.introductionPhase) return;
 
     const healthPercentage = this.currentHealth / this.maxHealth;
     const currentPhase = this.phases?.getCurrentPhase() || "HUNTING";
     const isPhaseActive = this.phases?.isPhaseActive() || false;
 
-    // 🔥 DEBUG LOGS
-    console.log(
-      `👹 DEBUG - Vida: ${Math.round(
-        healthPercentage * 100
-      )}%, Fase: ${currentPhase}, Activa: ${isPhaseActive}`
-    );
-
-    // ========== FASE FINAL: YAN KEN PO (3% de vida) ==========
+    // Fase final: Yan Ken Po (3% de vida)
     if (healthPercentage <= 0.03 && !this.yankenpo.isActive()) {
       console.log("🎮 INICIANDO FASE FINAL: Yan Ken Po");
       this.startYanKenPoPhase();
       return;
     }
 
-    // ========== FASE 4: HILO ROJO (15% de vida) ==========
+    // Fase del hilo rojo (15% de vida)
     if (
       healthPercentage <= 0.15 &&
       healthPercentage > 0.03 &&
       !this.redline.isActive()
     ) {
-      console.log("🔴 INICIANDO FASE 4: Hilo Rojo");
+      console.log("🔴 INICIANDO FASE: Hilo Rojo");
       this.startRedLinePhase();
       return;
     }
 
-    // ========== FASE 3: BALAS TOUHOU (30% de vida) ==========
+    // Fase de balas Touhou (30% de vida)
     if (
       healthPercentage <= 0.3 &&
       healthPercentage > 0.15 &&
       currentPhase !== "BULLETS" &&
       !isPhaseActive
     ) {
-      console.log("🌟 INICIANDO FASE 3: Balas Touhou");
+      console.log("🌟 INICIANDO FASE: Balas Touhou");
       this.startBulletsPhase();
       return;
     }
 
-    // ========== FASE 2: MINAS (50% de vida) ==========
+    // Fase de minas (50% de vida)
     if (
       healthPercentage <= 0.5 &&
       healthPercentage > 0.3 &&
       currentPhase !== "MINES" &&
       !isPhaseActive
     ) {
-      console.log("💣 INICIANDO FASE 2: Minas");
+      console.log("💣 INICIANDO FASE: Minas");
       this.startMinesPhase();
       return;
     }
 
-    // ========== FASE 1: INVOCACIÓN (75% de vida) ==========
+    // Fase de invocación (75% de vida)
     if (
       healthPercentage <= 0.75 &&
       healthPercentage > 0.5 &&
       currentPhase !== "SUMMONING" &&
       !isPhaseActive
     ) {
-      console.log("⚔️ INICIANDO FASE 1: Invocación");
+      console.log("⚔️ INICIANDO FASE: Invocación");
       this.startSummoningPhase();
       return;
     }
 
-    // ========== MODO HUNTING ENTRE FASES ==========
+    // Modo hunting entre fases
     if (!isPhaseActive && currentPhase !== "HUNTING") {
-      console.log("🏃 Boss entrando en modo HUNTING");
       this.enterHuntingMode();
     }
   },
 
-  /**
-   * 🔥 NUEVA: Entrar en modo hunting fluido
-   */
   enterHuntingMode() {
     if (this.phases) {
       this.phases.currentPhase = "HUNTING";
       this.phases.phaseActive = false;
     }
 
-    // Boss vulnerable
     this.isImmune = false;
     this.immunityTimer = 0;
 
-    // 🔥 MOVIMIENTO FLUIDO INMEDIATO
     if (this.movement) {
-      this.movement.enableFluidHunting(); // Nueva función
+      this.movement.enableFluidHunting();
     }
 
     if (this.ui) {
@@ -408,50 +291,21 @@ const BossManager = {
     }
   },
 
-  /**
-   * 🔥 NUEVA: Verifica si debe iniciar Yan Ken Po por vida baja
-   */
-  checkYanKenPoTrigger() {
-    const healthPercentage = this.currentHealth / this.maxHealth;
-
-    if (
-      healthPercentage <= 0.03 &&
-      !this.yankenpo.isActive() &&
-      (!this.phases || !this.phases.isRandomPhase)
-    ) {
-      console.log("🎮 Vida crítica - iniciando Yan Ken Po");
-      this.startYanKenPoPhase();
-      return true;
-    }
-
-    return false;
-  },
-
   // ======================================================
-  // 🎭 FUNCIONES DE INICIO DE FASES ESPECÍFICAS
+  // INICIO DE FASES
   // ======================================================
 
-  /**
-   * 🔱 Fase 2: Invocación (60 segundos)
-   * 75% a 50% de vida
-   */
   startSummoningPhase() {
-    console.log("⚔️ === INICIANDO FASE DE INVOCACIÓN ===");
+    this.makeImmune(3600); // 60 segundos
 
-    // Hacer inmune por 60 segundos (3600 frames a 60fps)
-    this.makeImmune(3600);
-
-    // Detener movimiento y centrar
     if (this.movement) {
       this.movement.stopMovementAndCenter();
     }
 
-    // Mostrar mensaje del boss
     if (this.comments) {
       this.comments.sayComment("¡Legiones del abismo, vengan a mí!");
     }
 
-    // Iniciar fase después de 1 segundo
     setTimeout(() => {
       if (this.phases) {
         this.phases.changePhase("SUMMONING");
@@ -459,27 +313,17 @@ const BossManager = {
     }, 1000);
   },
 
-  /**
-   * 💣 Fase 4: Minas (90 segundos)
-   * 50% a 30% de vida
-   */
   startMinesPhase() {
-    console.log("💣 === INICIANDO FASE DE MINAS ===");
+    this.makeImmune(5400); // 90 segundos
 
-    // Hacer inmune por 90 segundos (5400 frames a 60fps)
-    this.makeImmune(5400);
-
-    // Detener movimiento y centrar
     if (this.movement) {
       this.movement.stopMovementAndCenter();
     }
 
-    // Mostrar mensaje del boss
     if (this.comments) {
       this.comments.sayComment("¡El suelo bajo sus pies es traicionero!");
     }
 
-    // Iniciar fase después de 1 segundo
     setTimeout(() => {
       if (this.mines) {
         this.mines.startMineSequence();
@@ -487,27 +331,17 @@ const BossManager = {
     }, 1000);
   },
 
-  /**
-   * 🌟 Fase 6: Balas Touhou (120 segundos)
-   * 30% a 15% de vida
-   */
   startBulletsPhase() {
-    console.log("🌟 === INICIANDO FASE DE BALAS TOUHOU ===");
+    this.makeImmune(7200); // 120 segundos
 
-    // Hacer inmune por 120 segundos (7200 frames a 60fps)
-    this.makeImmune(7200);
-
-    // Detener movimiento y centrar
     if (this.movement) {
       this.movement.stopMovementAndCenter();
     }
 
-    // Mostrar mensaje del boss
     if (this.comments) {
       this.comments.sayComment("¡Lluvia de muerte del inframundo!");
     }
 
-    // Iniciar fase después de 1 segundo
     setTimeout(() => {
       if (this.bullets) {
         this.bullets.startBulletPattern();
@@ -515,27 +349,17 @@ const BossManager = {
     }, 1000);
   },
 
-  /**
-   * 🔴 Fase 8: Hilo Rojo (10 rondas)
-   * 15% a 3% de vida
-   */
   startRedLinePhase() {
-    console.log("🔴 === INICIANDO FASE DEL HILO ROJO ===");
-
-    // Hacer inmune hasta completar (inmunidad infinita)
     this.makeImmune(99999);
 
-    // Detener movimiento y centrar
     if (this.movement) {
       this.movement.stopMovementAndCenter();
     }
 
-    // Mostrar mensaje del boss
     if (this.comments) {
       this.comments.sayComment("¡Sigue mi rastro mortal!");
     }
 
-    // Iniciar fase después de 1 segundo
     setTimeout(() => {
       if (this.redline) {
         this.redline.startPhase();
@@ -543,27 +367,17 @@ const BossManager = {
     }, 1000);
   },
 
-  /**
-   * 🎮 Fase Final: Yan Ken Po
-   * 3% a 0% de vida
-   */
   startYanKenPoPhase() {
-    console.log("🎮 === INICIANDO FASE FINAL: YAN KEN PO ===");
-
-    // Hacer inmune permanentemente
     this.makeImmune(99999);
 
-    // Detener movimiento y centrar
     if (this.movement) {
       this.movement.stopMovementAndCenter();
     }
 
-    // Mostrar mensaje del boss
     if (this.comments) {
       this.comments.sayComment("¡Última oportunidad, mortal!");
     }
 
-    // Iniciar fase después de 1 segundo
     setTimeout(() => {
       if (this.yankenpo) {
         this.yankenpo.startPhase();
@@ -575,9 +389,6 @@ const BossManager = {
   // SISTEMA DE INMUNIDAD
   // ======================================================
 
-  /**
-   * Hacer al boss inmune por un tiempo
-   */
   makeImmune(duration) {
     this.isImmune = true;
     this.immunityTimer = duration;
@@ -589,9 +400,6 @@ const BossManager = {
     console.log(`🛡️ Boss inmune por ${duration} frames`);
   },
 
-  /**
-   * Actualizar el sistema de inmunidad
-   */
   updateImmunity() {
     if (this.isImmune) {
       this.immunityTimer--;
@@ -612,31 +420,21 @@ const BossManager = {
   // SISTEMA DE DAÑO
   // ======================================================
 
-  /**
-   * El boss recibe daño
-   */
   takeDamage(amount) {
-    // Verificaciones básicas
     if (!this.active || this.isImmune || this.currentHealth <= 0) {
-      console.log("👹 Boss inmune o ya derrotado - no recibe daño");
       return;
     }
 
-    // Verificar si está en fase especial
     if (this.phases && this.phases.isInSpecialPhase()) {
-      console.log("👹 Boss inmune durante fase especial");
       return;
     }
 
-    // Aplicar daño reducido
     const reducedDamage = Math.max(1, Math.floor(amount * 0.7));
     this.currentHealth = Math.max(0, this.currentHealth - reducedDamage);
 
-    // Aumentar agresividad
     const healthPercentage = this.currentHealth / this.maxHealth;
     this.boss.aggressionLevel = 1.0 + (1.0 - healthPercentage) * 0.8;
 
-    // Efectos visuales
     if (this.ui) {
       this.ui.createParticleEffect(
         this.boss.x + this.boss.width / 2,
@@ -646,77 +444,54 @@ const BossManager = {
       );
     }
 
-    // Audio
     if (window.AudioManager) {
       AudioManager.playSound("hit");
     }
 
     console.log(
-      `👹 Boss recibió ${reducedDamage} daño. Vida: ${this.currentHealth}/${
-        this.maxHealth
-      } (${Math.round(healthPercentage * 100)}%)`
+      `👹 Boss recibió ${reducedDamage} daño. Vida: ${this.currentHealth}/${this.maxHealth}`
     );
 
-    // Notificar a los sistemas sobre el daño
     this.onDamageReceived(healthPercentage);
 
-    // Verificar derrota
     if (this.currentHealth <= 0) {
       this.defeat();
     }
   },
 
-  /**
-   * Reacciones al recibir daño
-   */
   onDamageReceived(healthPercentage) {
-    // Notificar a los sistemas modulares
-    if (this.phases) {
-      this.phases.onDamageReceived(healthPercentage);
-    }
+    const systems = [this.phases, this.movement, this.comments];
 
-    if (this.movement) {
-      this.movement.onDamageReceived(healthPercentage);
-    }
-
-    if (this.comments) {
-      this.comments.onDamageReceived(healthPercentage);
-    }
+    systems.forEach((system) => {
+      if (system && system.onDamageReceived) {
+        system.onDamageReceived(healthPercentage);
+      }
+    });
   },
 
   // ======================================================
   // SISTEMA DE DERROTA
   // ======================================================
 
-  /**
-   * Verificar si el boss está derrotado
-   */
   checkDefeat() {
     if (this.currentHealth <= 0 && this.active) {
       this.defeat();
     }
   },
 
-  /**
-   * Boss derrotado
-   */
   defeat() {
     console.log("👹 === BOSS DERROTADO ===");
 
-    // Marcar como inactivo
     this.active = false;
     this.currentHealth = 0;
 
-    // Comentario de derrota
     if (this.comments) {
       this.comments.sayComment("derrota_boss");
     }
 
-    // Efectos de derrota
     if (this.ui) {
       this.ui.showScreenMessage("🏆 ¡BOSS DERROTADO! 🏆", "#FFD700");
 
-      // Efectos visuales épicos
       for (let i = 0; i < 10; i++) {
         setTimeout(() => {
           this.ui.createParticleEffect(
@@ -729,7 +504,6 @@ const BossManager = {
       }
     }
 
-    // Puntos bonus
     const bonusPoints = 5000;
     if (window.setScore) {
       window.setScore(window.getScore() + bonusPoints);
@@ -739,108 +513,68 @@ const BossManager = {
       this.ui.showScreenMessage(`+${bonusPoints} PUNTOS BONUS!`, "#FFD700");
     }
 
-    // Limpiar sistemas
     this.cleanupSystems();
 
-    // Audio
     if (window.AudioManager) {
       AudioManager.playSound("victory");
     }
 
-    // Contar como enemigo eliminado
     if (window.incrementTotalEnemiesKilled) {
       window.incrementTotalEnemiesKilled();
     }
 
-    // Victoria después de 2 segundos
     setTimeout(() => {
-      console.log("🏆 Llamando a window.victory() desde boss derrotado");
       if (window.victory) {
         window.victory();
       }
     }, 2000);
   },
 
-  /**
-   * Limpiar todos los sistemas al derrotar al boss
-   */
   cleanupSystems() {
-    if (this.mines) {
-      this.mines.cleanup();
-    }
+    const systems = [
+      this.mines,
+      this.bullets,
+      this.redline,
+      this.yankenpo,
+      this.ui,
+    ];
 
-    if (this.bullets) {
-      this.bullets.cleanup();
-    }
+    systems.forEach((system) => {
+      if (system && system.cleanup) {
+        system.cleanup();
+      }
+    });
 
-    if (this.redline) {
-      this.redline.cleanup();
-    }
-
-    if (this.yankenpo) {
-      this.yankenpo.cleanup();
-    }
-
-    if (this.ui) {
-      this.ui.cleanup();
-    }
-
-    // Limpiar enemigos
     if (window.EnemyManager) {
       EnemyManager.enemies = [];
     }
   },
 
   // ======================================================
-  // RENDERIZADO PRINCIPAL
+  // RENDERIZADO
   // ======================================================
 
-  /**
-   * Dibujar el boss y todos sus sistemas
-   */
   draw(ctx) {
     if (!this.active || !this.boss) return;
 
-    // Dibujar sistemas modulares
     this.drawSystems(ctx);
-
-    // Dibujar el boss principal
     this.drawBoss(ctx);
 
-    // Dibujar UI
     if (this.ui) {
       this.ui.draw(ctx);
     }
   },
 
-  /**
-   * Dibujar todos los sistemas modulares
-   */
   drawSystems(ctx) {
-    // Hilo rojo (fondo)
-    if (this.redline) {
-      this.redline.draw(ctx);
-    }
+    const systems = [this.redline, this.bullets, this.mines, this.yankenpo];
 
-    // Balas Touhou
-    if (this.bullets) {
-      this.bullets.draw(ctx);
-    }
-
-    // Minas
-    if (this.mines) {
-      this.mines.draw(ctx);
-    }
-
-    // Yan Ken Po UI
-    if (this.yankenpo) {
-      this.yankenpo.draw(ctx);
-    }
+    systems.forEach((system) => {
+      if (system && system.draw) {
+        system.draw(ctx);
+      }
+    });
   },
 
-  /**
-   * Dibujar el boss principal
-   */
   drawBoss(ctx) {
     ctx.save();
 
@@ -860,7 +594,6 @@ const BossManager = {
       }
     }
 
-    // Intentar dibujar con imagen
     let bossDibujado = false;
 
     // Frames animados
@@ -905,16 +638,9 @@ const BossManager = {
     ctx.restore();
   },
 
-  /**
-   * Dibujar boss con fallback visual
-   */
   drawBossFallback(ctx) {
-    const phaseColor = this.phases
-      ? this.phases.getCurrentPhaseColor()
-      : "#8B0000";
-
     // Cuerpo principal
-    ctx.fillStyle = phaseColor;
+    ctx.fillStyle = "#8B0000";
     ctx.fillRect(this.boss.x, this.boss.y, this.boss.width, this.boss.height);
 
     // Bordes
@@ -966,56 +692,53 @@ const BossManager = {
   },
 
   // ======================================================
-  // SISTEMA DE RESET
+  // RESET Y UTILIDADES
   // ======================================================
 
-  /**
-   * Reset completo del boss
-   */
   reset() {
     console.log("🔄 RESET COMPLETO del boss modular");
 
-    // Reset estado principal
     this.active = false;
     this.boss = null;
     this.currentHealth = this.maxHealth;
     this.isImmune = false;
     this.immunityTimer = 0;
 
-    // Reset todos los sistemas modulares
-    if (this.movement) this.movement.reset();
-    if (this.phases) this.phases.reset();
-    if (this.mines) this.mines.reset();
-    if (this.bullets) this.bullets.reset();
-    if (this.redline) this.redline.reset();
-    if (this.yankenpo) this.yankenpo.reset();
-    if (this.ui) this.ui.reset();
-    if (this.comments) this.comments.reset();
+    const systems = [
+      this.movement,
+      this.phases,
+      this.mines,
+      this.bullets,
+      this.redline,
+      this.yankenpo,
+      this.ui,
+      this.comments,
+    ];
+
+    systems.forEach((system) => {
+      if (system && system.reset) {
+        system.reset();
+      }
+    });
 
     console.log("✅ Boss modular completamente reseteado");
   },
 
-  /**
-   * Reset forzado (para cambios de pantalla)
-   */
   forceReset() {
     console.log("🔄 RESET FORZADO del boss");
 
-    // Cleanup inmediato
     this.cleanupSystems();
     this.reset();
 
-    // Restaurar controles del jugador
     if (window.Player && Player.moveSpeed !== 1.0) {
       Player.moveSpeed = 1.0;
     }
   },
 
   // ======================================================
-  // GETTERS Y UTILIDADES
+  // GETTERS
   // ======================================================
 
-  // Getters públicos
   isActive() {
     return this.active;
   },
@@ -1031,19 +754,13 @@ const BossManager = {
   isImmuneStatus() {
     return this.isImmune;
   },
-
-  // Getters de sistemas
   getCurrentPhase() {
     return this.phases ? this.phases.getCurrentPhase() : "UNKNOWN";
   },
-
   getMines() {
     return this.mines ? this.mines.getMines() : [];
   },
 
-  /**
-   * Verificar colisión entre dos objetos
-   */
   checkCollision(obj1, obj2) {
     return (
       obj1.x < obj2.x + obj2.width &&
@@ -1057,6 +774,4 @@ const BossManager = {
 // Hacer disponible globalmente
 window.BossManager = BossManager;
 
-console.log(
-  "👹 boss.js (controlador principal) cargado - Sistema modular listo"
-);
+console.log("👹 boss.js (controlador principal) optimizado cargado");

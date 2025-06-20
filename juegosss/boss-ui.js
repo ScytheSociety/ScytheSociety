@@ -1,5 +1,5 @@
 /**
- * Hell Shooter - Boss UI System
+ * Hell Shooter - Boss UI System Optimizado
  * Sistema modular de interfaz y efectos visuales del boss
  */
 
@@ -23,32 +23,25 @@ const BossUI = {
     gravity: 0.1,
     friction: 0.98,
     fadeSpeed: 0.02,
-    maxLife: 120, // 2 segundos a 60fps
+    maxLife: 120,
     minSize: 2,
     maxSize: 8,
   },
 
   messageConfig: {
-    duration: 3000, // 3 segundos por defecto
-    fadeTime: 500, // 0.5 segundos de fade
+    duration: 3000,
+    fadeTime: 500,
     maxWidth: "80vw",
     fontSize: {
-      small: "clamp(1rem, 3vw, 1.2rem)",
       normal: "clamp(1.2rem, 4vw, 1.8rem)",
       large: "clamp(1.8rem, 6vw, 2.5rem)",
       huge: "clamp(2.5rem, 8vw, 4rem)",
     },
   },
 
-  // Elementos de UI persistentes
-  healthBarElement: null,
-  phaseIndicatorElement: null,
-
   // Configuración de barra de vida
   healthBarConfig: {
-    width: 200,
     height: 12,
-    offsetX: 0,
     offsetY: 35,
     showNumbers: true,
     showPhase: true,
@@ -58,45 +51,25 @@ const BossUI = {
   // INICIALIZACIÓN
   // ======================================================
 
-  /**
-   * Inicializar el sistema de UI
-   */
   init(bossManagerRef) {
     this.bossManager = bossManagerRef;
-    this.initUISystem();
-    console.log("🎨 Sistema de UI del boss inicializado");
-  },
-
-  /**
-   * Configurar sistema de UI
-   */
-  initUISystem() {
     this.particles = [];
     this.screenMessages = [];
-    this.healthBarElement = null;
-    this.phaseIndicatorElement = null;
+    this.addAnimationStyles();
+    console.log("🎨 Sistema de UI del boss inicializado");
   },
 
   // ======================================================
   // ACTUALIZACIÓN PRINCIPAL
   // ======================================================
 
-  /**
-   * Actualizar sistema de UI
-   */
   update() {
     if (!this.bossManager.active) return;
 
-    // Actualizar partículas
     this.updateParticles();
-
-    // Actualizar mensajes en pantalla
     this.updateScreenMessages();
   },
 
-  /**
-   * Actualizar partículas
-   */
   updateParticles() {
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const particle = this.particles[i];
@@ -114,7 +87,7 @@ const BossUI = {
       particle.life--;
       particle.alpha -= this.particleConfig.fadeSpeed;
 
-      // Actualizar tamaño (puede crecer o decrecer)
+      // Actualizar tamaño
       if (particle.sizeChange) {
         particle.size += particle.sizeChange;
         particle.size = Math.max(0, particle.size);
@@ -127,9 +100,6 @@ const BossUI = {
     }
   },
 
-  /**
-   * Actualizar mensajes en pantalla
-   */
   updateScreenMessages() {
     const currentTime = Date.now();
 
@@ -159,12 +129,8 @@ const BossUI = {
   // SISTEMA DE PARTÍCULAS
   // ======================================================
 
-  /**
-   * Crear efecto de partículas
-   */
   createParticleEffect(x, y, color, count = 10, type = "burst") {
     if (this.particles.length + count > this.maxParticles) {
-      // Limpiar partículas viejas si hay demasiadas
       this.particles.splice(0, count);
     }
 
@@ -189,9 +155,6 @@ const BossUI = {
     }
   },
 
-  /**
-   * Crear efecto de explosión
-   */
   createBurstEffect(x, y, color, count) {
     for (let i = 0; i < count; i++) {
       const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
@@ -215,9 +178,6 @@ const BossUI = {
     }
   },
 
-  /**
-   * Crear efecto de explosión más intenso
-   */
   createExplosionEffect(x, y, color, count) {
     // Onda principal
     for (let i = 0; i < count; i++) {
@@ -258,9 +218,6 @@ const BossUI = {
     }
   },
 
-  /**
-   * Crear efecto de brillos
-   */
   createSparkleEffect(x, y, color, count) {
     for (let i = 0; i < count; i++) {
       const offsetX = (Math.random() - 0.5) * 40;
@@ -281,9 +238,6 @@ const BossUI = {
     }
   },
 
-  /**
-   * Crear efecto de estela
-   */
   createTrailEffect(x, y, color, count) {
     for (let i = 0; i < count; i++) {
       this.particles.push({
@@ -301,9 +255,6 @@ const BossUI = {
     }
   },
 
-  /**
-   * Crear efecto de resplandor
-   */
   createGlowEffect(x, y, color, count) {
     for (let i = 0; i < count; i++) {
       this.particles.push({
@@ -325,9 +276,6 @@ const BossUI = {
   // SISTEMA DE MENSAJES
   // ======================================================
 
-  /**
-   * Mostrar mensaje en pantalla - INTEGRADO CON SISTEMA PRINCIPAL
-   */
   showScreenMessage(
     text,
     color = "#FFFFFF",
@@ -335,7 +283,7 @@ const BossUI = {
     size = "normal",
     position = "center"
   ) {
-    // 🔥 USAR EL SISTEMA PRINCIPAL DE MENSAJES
+    // Usar el sistema principal de mensajes si existe
     if (window.UI && window.UI.showScreenMessage) {
       window.UI.showScreenMessage(text, color);
       return;
@@ -345,101 +293,6 @@ const BossUI = {
     console.log(`📢 Boss message fallback: "${text}"`);
   },
 
-  /**
-   * Obtener estilos CSS para mensajes
-   */
-  getMessageStyles(color, fontSize, position) {
-    const baseStyles = `
-      position: fixed;
-      z-index: 2000;
-      color: ${color};
-      font-family: 'Creepster', cursive;
-      font-size: ${fontSize};
-      font-weight: bold;
-      text-align: center;
-      text-shadow: 
-        -2px -2px 0 #000,
-        2px -2px 0 #000,
-        -2px 2px 0 #000,
-        2px 2px 0 #000,
-        0 0 10px ${color},
-        0 0 20px ${color};
-      transition: all 0.3s ease-out;
-      max-width: ${this.messageConfig.maxWidth};
-      word-wrap: break-word;
-      padding: 10px 20px;
-      border-radius: 10px;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(5px);
-      border: 2px solid ${color};
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
-    `;
-
-    switch (position) {
-      case "top":
-        return (
-          baseStyles +
-          `
-          top: 10%;
-          left: 50%;
-          transform: translateX(-50%);
-        `
-        );
-      case "bottom":
-        return (
-          baseStyles +
-          `
-          bottom: 15%;
-          left: 50%;
-          transform: translateX(-50%);
-        `
-        );
-      case "center":
-      default:
-        return (
-          baseStyles +
-          `
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-        `
-        );
-    }
-  },
-
-  /**
-   * Obtener transformación inicial para animación
-   */
-  getInitialTransform(position) {
-    switch (position) {
-      case "top":
-        return "translateX(-50%) translateY(-20px)";
-      case "bottom":
-        return "translateX(-50%) translateY(20px)";
-      case "center":
-      default:
-        return "translate(-50%, -50%) scale(0.8)";
-    }
-  },
-
-  /**
-   * Obtener transformación final para animación
-   */
-  getFinalTransform(position) {
-    switch (position) {
-      case "top":
-        return "translateX(-50%) translateY(0)";
-      case "bottom":
-        return "translateX(-50%) translateY(0)";
-      case "center":
-      default:
-        return "translate(-50%, -50%) scale(1)";
-    }
-  },
-
-  /**
-   * Mostrar transición de nivel/fase
-   */
   showLevelTransition(level, callback) {
     console.log("🔄 Mostrando transición responsiva para:", level);
 
@@ -454,7 +307,6 @@ const BossUI = {
       displayText = `Nivel ${level}`;
     }
 
-    // Estilos responsivos mejorados
     transitionDiv.innerHTML = `
       <div style="
         position: fixed;
@@ -488,7 +340,6 @@ const BossUI = {
 
     document.body.appendChild(transitionDiv);
 
-    // Auto-remover y ejecutar callback
     setTimeout(() => {
       if (transitionDiv.parentNode) {
         transitionDiv.parentNode.removeChild(transitionDiv);
@@ -501,9 +352,6 @@ const BossUI = {
   // BARRA DE VIDA DEL BOSS
   // ======================================================
 
-  /**
-   * Dibujar barra de vida que sigue al boss
-   */
   drawHealthBar(ctx) {
     if (!this.bossManager.boss) return;
 
@@ -579,9 +427,6 @@ const BossUI = {
     }
   },
 
-  /**
-   * Dibujar texto de vida
-   */
   drawHealthText(ctx, boss, barY, barHeight) {
     ctx.fillStyle = "#FFFFFF";
     ctx.font = "bold 10px Arial";
@@ -593,15 +438,10 @@ const BossUI = {
     const textX = boss.x + boss.width / 2;
     const textY = barY + barHeight + 18;
 
-    // Contorno negro
     ctx.strokeText(healthText, textX, textY);
-    // Texto blanco
     ctx.fillText(healthText, textX, textY);
   },
 
-  /**
-   * Dibujar indicador de fase
-   */
   drawPhaseIndicator(ctx, boss, barY) {
     ctx.font = "bold 8px Arial";
     ctx.fillStyle = this.bossManager.isImmune ? "#00FFFF" : "#FFD700";
@@ -619,15 +459,10 @@ const BossUI = {
     const textX = boss.x + boss.width / 2;
     const textY = barY - 12;
 
-    // Contorno
     ctx.strokeText(phaseText, textX, textY);
-    // Texto
     ctx.fillText(phaseText, textX, textY);
   },
 
-  /**
-   * Dibujar indicador de inmunidad
-   */
   drawImmunityIndicator(ctx, x, y, width, height) {
     ctx.strokeStyle = "#00FFFF";
     ctx.lineWidth = 2;
@@ -640,22 +475,13 @@ const BossUI = {
   // RENDERIZADO PRINCIPAL
   // ======================================================
 
-  /**
-   * Dibujar todos los elementos de UI
-   */
   draw(ctx) {
     if (!this.bossManager.active) return;
 
-    // Dibujar partículas
     this.drawParticles(ctx);
-
-    // Dibujar barra de vida
     this.drawHealthBar(ctx);
   },
 
-  /**
-   * Dibujar todas las partículas
-   */
   drawParticles(ctx) {
     for (const particle of this.particles) {
       ctx.save();
@@ -684,18 +510,12 @@ const BossUI = {
     }
   },
 
-  /**
-   * Dibujar partícula circular
-   */
   drawCircleParticle(ctx, particle) {
     ctx.beginPath();
     ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
     ctx.fill();
   },
 
-  /**
-   * Dibujar partícula cuadrada
-   */
   drawSquareParticle(ctx, particle) {
     ctx.fillRect(
       particle.x - particle.size / 2,
@@ -705,9 +525,6 @@ const BossUI = {
     );
   },
 
-  /**
-   * Dibujar partícula estrella
-   */
   drawStarParticle(ctx, particle) {
     const spikes = 5;
     const outerRadius = particle.size;
@@ -730,9 +547,6 @@ const BossUI = {
     ctx.fill();
   },
 
-  /**
-   * Dibujar partícula con resplandor
-   */
   drawGlowParticle(ctx, particle) {
     ctx.shadowColor = particle.color;
     ctx.shadowBlur = particle.size * 2;
@@ -746,9 +560,6 @@ const BossUI = {
   // EFECTOS ESPECIALES
   // ======================================================
 
-  /**
-   * Crear efecto de daño en el boss
-   */
   createDamageEffect() {
     const boss = this.bossManager.boss;
     const centerX = boss.x + boss.width / 2;
@@ -758,9 +569,6 @@ const BossUI = {
     this.showScreenMessage("💥", "#FFFF00", 1000, "large", "center");
   },
 
-  /**
-   * Crear efecto de inmunidad
-   */
   createImmunityEffect() {
     const boss = this.bossManager.boss;
     const centerX = boss.x + boss.width / 2;
@@ -769,26 +577,18 @@ const BossUI = {
     this.createParticleEffect(centerX, centerY, "#00FFFF", 10, "sparkle");
   },
 
-  /**
-   * Crear efecto de transición de fase
-   */
   createPhaseTransitionEffect(phaseName) {
     const boss = this.bossManager.boss;
     const centerX = boss.x + boss.width / 2;
     const centerY = boss.y + boss.height / 2;
 
-    // Efecto visual grande
     this.createParticleEffect(centerX, centerY, "#FF0000", 30, "explosion");
 
-    // Efecto de resplandor
     setTimeout(() => {
       this.createParticleEffect(centerX, centerY, "#FFD700", 20, "glow");
     }, 500);
   },
 
-  /**
-   * Crear efecto de victoria
-   */
   createVictoryEffect() {
     const boss = this.bossManager.boss;
     const centerX = boss.x + boss.width / 2;
@@ -816,311 +616,9 @@ const BossUI = {
   },
 
   // ======================================================
-  // CLEANUP Y RESET
+  // ESTILOS CSS Y ANIMACIONES
   // ======================================================
 
-  /**
-   * Limpiar sistema de UI
-   */
-  cleanup() {
-    console.log("🧹 Limpiando sistema de UI");
-
-    // Limpiar partículas
-    this.particles = [];
-
-    // Limpiar mensajes
-    this.screenMessages.forEach((message) => {
-      if (message.element.parentNode) {
-        message.element.parentNode.removeChild(message.element);
-      }
-    });
-    this.screenMessages = [];
-
-    // Limpiar elementos persistentes
-    if (this.healthBarElement) {
-      this.healthBarElement.remove();
-      this.healthBarElement = null;
-    }
-
-    if (this.phaseIndicatorElement) {
-      this.phaseIndicatorElement.remove();
-      this.phaseIndicatorElement = null;
-    }
-  },
-
-  /**
-   * Reset del sistema de UI
-   */
-  reset() {
-    this.cleanup();
-    this.initUISystem();
-    console.log("🔄 Sistema de UI reseteado");
-  },
-
-  // ======================================================
-  // GETTERS Y UTILIDADES
-  // ======================================================
-
-  getParticleCount() {
-    return this.particles.length;
-  },
-
-  getMessageCount() {
-    return this.screenMessages.length;
-  },
-
-  /**
-   * Configurar barra de vida
-   */
-  configureHealthBar(config) {
-    this.healthBarConfig = { ...this.healthBarConfig, ...config };
-  },
-
-  /**
-   * Configurar sistema de partículas
-   */
-  configureParticles(config) {
-    this.particleConfig = { ...this.particleConfig, ...config };
-  },
-
-  /**
-   * Configurar sistema de mensajes
-   */
-  configureMessages(config) {
-    this.messageConfig = { ...this.messageConfig, ...config };
-  },
-
-  /**
-   * Obtener estadísticas del sistema UI
-   */
-  getStats() {
-    return {
-      particles: this.particles.length,
-      messages: this.screenMessages.length,
-      maxParticles: this.maxParticles,
-      maxMessages: this.maxMessages,
-      healthBarVisible: !!this.bossManager.boss,
-    };
-  },
-
-  /**
-   * Verificar si un efecto está disponible
-   */
-  canCreateEffect() {
-    return this.particles.length < this.maxParticles * 0.8; // 80% del límite
-  },
-
-  /**
-   * Limpiar partículas viejas para hacer espacio
-   */
-  cleanupOldParticles(count = 10) {
-    if (this.particles.length > 0) {
-      this.particles.splice(0, Math.min(count, this.particles.length));
-    }
-  },
-
-  /**
-   * Crear efecto personalizado con parámetros específicos
-   */
-  createCustomEffect(x, y, options = {}) {
-    const defaultOptions = {
-      color: "#FFFFFF",
-      count: 10,
-      type: "burst",
-      size: 5,
-      speed: 3,
-      life: 60,
-      gravity: true,
-      fade: true,
-    };
-
-    const config = { ...defaultOptions, ...options };
-
-    for (let i = 0; i < config.count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = config.speed * (0.5 + Math.random() * 0.5);
-
-      this.particles.push({
-        x: x,
-        y: y,
-        velocityX: Math.cos(angle) * speed,
-        velocityY: Math.sin(angle) * speed,
-        size: config.size * (0.5 + Math.random() * 0.5),
-        color: config.color,
-        alpha: 0.8 + Math.random() * 0.2,
-        life: config.life + Math.random() * 30,
-        type: config.type,
-        sizeChange: config.fade ? -0.05 : 0,
-        useGravity: config.gravity,
-      });
-    }
-  },
-
-  /**
-   * Mostrar mensaje con animación personalizada
-   */
-  showAnimatedMessage(text, options = {}) {
-    const defaultOptions = {
-      color: "#FFFFFF",
-      duration: 3000,
-      size: "normal",
-      position: "center",
-      animation: "bounce", // bounce, slide, fade, zoom
-    };
-
-    const config = { ...defaultOptions, ...options };
-
-    // Usar el sistema de mensajes base pero con animaciones especiales
-    this.showScreenMessage(
-      config.text || text,
-      config.color,
-      config.duration,
-      config.size,
-      config.position
-    );
-
-    // Aplicar animación personalizada
-    const latestMessage = this.screenMessages[this.screenMessages.length - 1];
-    if (latestMessage && latestMessage.element) {
-      this.applyCustomAnimation(latestMessage.element, config.animation);
-    }
-  },
-
-  /**
-   * Aplicar animación personalizada a un elemento
-   */
-  applyCustomAnimation(element, animationType) {
-    switch (animationType) {
-      case "bounce":
-        element.style.animation = "bounce 0.6s ease-out";
-        break;
-      case "slide":
-        element.style.animation = "slideInDown 0.5s ease-out";
-        break;
-      case "zoom":
-        element.style.animation = "zoomIn 0.4s ease-out";
-        break;
-      case "fade":
-      default:
-        element.style.animation = "fadeIn 0.3s ease-out";
-        break;
-    }
-  },
-
-  /**
-   * Crear efecto de pantalla completa (flash, shake, etc.)
-   */
-  createScreenEffect(type, intensity = 1.0, duration = 500) {
-    const overlay = document.createElement("div");
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 9999;
-      pointer-events: none;
-    `;
-
-    switch (type) {
-      case "flash":
-        overlay.style.background = `rgba(255, 255, 255, ${0.3 * intensity})`;
-        overlay.style.animation = `flash ${duration}ms ease-out`;
-        break;
-
-      case "redFlash":
-        overlay.style.background = `rgba(255, 0, 0, ${0.4 * intensity})`;
-        overlay.style.animation = `flash ${duration}ms ease-out`;
-        break;
-
-      case "damage":
-        overlay.style.background = `rgba(255, 0, 0, ${0.2 * intensity})`;
-        overlay.style.animation = `pulse ${duration}ms ease-out`;
-        break;
-
-      case "heal":
-        overlay.style.background = `rgba(0, 255, 0, ${0.2 * intensity})`;
-        overlay.style.animation = `pulse ${duration}ms ease-out`;
-        break;
-    }
-
-    document.body.appendChild(overlay);
-
-    setTimeout(() => {
-      if (overlay.parentNode) {
-        overlay.parentNode.removeChild(overlay);
-      }
-    }, duration);
-  },
-
-  /**
-   * Crear efecto de texto flotante
-   */
-  createFloatingText(x, y, text, color = "#FFFFFF", size = "16px") {
-    const textElement = document.createElement("div");
-    textElement.style.cssText = `
-      position: fixed;
-      left: ${x}px;
-      top: ${y}px;
-      color: ${color};
-      font-size: ${size};
-      font-weight: bold;
-      font-family: Arial, sans-serif;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-      z-index: 1500;
-      pointer-events: none;
-      transition: all 1.5s ease-out;
-    `;
-    textElement.textContent = text;
-
-    document.body.appendChild(textElement);
-
-    // Animación de flotación
-    setTimeout(() => {
-      textElement.style.transform = "translateY(-50px)";
-      textElement.style.opacity = "0";
-    }, 50);
-
-    // Limpiar después de la animación
-    setTimeout(() => {
-      if (textElement.parentNode) {
-        textElement.parentNode.removeChild(textElement);
-      }
-    }, 1600);
-  },
-
-  /**
-   * Crear barra de progreso temporal
-   */
-  createProgressBar(
-    x,
-    y,
-    width,
-    height,
-    progress,
-    color = "#00FF00",
-    backgroundColor = "#333333"
-  ) {
-    const canvas = window.getCanvas();
-    const ctx = canvas.getContext("2d");
-
-    // Fondo de la barra
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(x, y, width, height);
-
-    // Progreso
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, width * progress, height);
-
-    // Borde
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, width, height);
-  },
-
-  /**
-   * Agregar estilos CSS dinámicos para animaciones
-   */
   addAnimationStyles() {
     if (document.getElementById("boss-ui-animations")) return;
 
@@ -1193,14 +691,6 @@ const BossUI = {
         box-shadow: 0 0 15px rgba(255, 0, 0, 0.6) !important;
       }
       
-      .screen-message-enter {
-        animation: slideInDown 0.5s ease-out;
-      }
-      
-      .screen-message-exit {
-        animation: fadeOut 0.3s ease-in;
-      }
-      
       @keyframes fadeOut {
         0% { opacity: 1; }
         100% { opacity: 0; }
@@ -1210,20 +700,72 @@ const BossUI = {
     document.head.appendChild(style);
   },
 
-  /**
-   * Inicializar estilos CSS al cargar el sistema
-   */
-  initializeStyles() {
-    this.addAnimationStyles();
+  // ======================================================
+  // CLEANUP Y UTILIDADES
+  // ======================================================
+
+  cleanup() {
+    console.log("🧹 Limpiando sistema de UI");
+
+    this.particles = [];
+
+    this.screenMessages.forEach((message) => {
+      if (message.element.parentNode) {
+        message.element.parentNode.removeChild(message.element);
+      }
+    });
+    this.screenMessages = [];
+  },
+
+  reset() {
+    this.cleanup();
+    console.log("🔄 Sistema de UI reseteado");
+  },
+
+  // ======================================================
+  // GETTERS Y CONFIGURACIÓN
+  // ======================================================
+
+  getParticleCount() {
+    return this.particles.length;
+  },
+  getMessageCount() {
+    return this.screenMessages.length;
+  },
+
+  configureHealthBar(config) {
+    this.healthBarConfig = { ...this.healthBarConfig, ...config };
+  },
+
+  configureParticles(config) {
+    this.particleConfig = { ...this.particleConfig, ...config };
+  },
+
+  configureMessages(config) {
+    this.messageConfig = { ...this.messageConfig, ...config };
+  },
+
+  getStats() {
+    return {
+      particles: this.particles.length,
+      messages: this.screenMessages.length,
+      maxParticles: this.maxParticles,
+      maxMessages: this.maxMessages,
+      healthBarVisible: !!this.bossManager.boss,
+    };
+  },
+
+  canCreateEffect() {
+    return this.particles.length < this.maxParticles * 0.8;
+  },
+
+  cleanupOldParticles(count = 10) {
+    if (this.particles.length > 0) {
+      this.particles.splice(0, Math.min(count, this.particles.length));
+    }
   },
 };
 
-// Inicializar estilos cuando se carga el módulo
-if (typeof document !== "undefined") {
-  BossUI.initializeStyles();
-}
-
-// Hacer disponible globalmente
 window.BossUI = BossUI;
 
-console.log("🎨 boss-ui.js cargado - Sistema de UI y efectos listo");
+console.log("🎨 boss-ui.js optimizado cargado");

@@ -1,5 +1,5 @@
 /**
- * Hell Shooter - Boss Bullets System
+ * Hell Shooter - Boss Bullets System Optimizado
  * Sistema modular de patrones de balas estilo Touhou
  */
 
@@ -9,126 +9,87 @@ const BossBullets = {
   // ======================================================
 
   bossManager: null,
-
-  // Lista de balas activas
   bulletPatterns: [],
-
-  // Estado del sistema
-  patternType: "none",
   patternActive: false,
-  patternTimer: 0,
+  currentPatternIndex: 0,
+  patternSequence: ["spiral", "walls", "burst", "rain", "laser"],
 
   // Configuración de balas
   bulletConfig: {
     size: 12,
-    life: 500, // Duración en frames
-    baseSpeed: 0.003, // Velocidad base relativa al canvas
+    life: 500,
+    baseSpeed: 0.003,
     glowIntensity: 0.5,
   },
-
-  // Tipos de patrones disponibles
-  availablePatterns: ["spiral", "walls", "cross", "rain", "burst", "laser"],
 
   // Configuración específica por patrón
   patternConfigs: {
     spiral: {
-      duration: 240, // 4 segundos
-      bulletInterval: 50, // Cada 50ms
+      bulletInterval: 50,
       rotationSpeed: 0.15,
       bulletsPerFrame: 2,
       speed: 0.002,
       color: "#FF6B6B",
     },
     walls: {
-      duration: 300, // 5 segundos
-      wallInterval: 1000, // Cada segundo
+      wallInterval: 1000,
       bulletCount: 12,
-      gapSize: 4, // Tamaño del hueco para esquivar
+      gapSize: 4,
       speed: 0.004,
       color: "#4ECDC4",
     },
     cross: {
-      duration: 180, // 3 segundos
-      bulletInterval: 100, // Cada 100ms
-      directions: 4, // Direcciones principales
-      diagonalFreq: 30, // Cada 30 frames diagonales
+      bulletInterval: 100,
+      directions: 4,
+      diagonalFreq: 30,
       speed: 0.004,
       color: "#9B59B6",
     },
     rain: {
-      duration: 200, // 3.3 segundos
-      bulletInterval: 80, // Cada 80ms
+      bulletInterval: 80,
       bulletsPerShot: 3,
-      spread: 0.5, // Dispersión angular
+      spread: 0.5,
       speed: 0.005,
       color: "#F39C12",
     },
     burst: {
-      duration: 150, // 2.5 segundos
-      burstInterval: 60, // Cada segundo
+      burstInterval: 60,
       bulletsPerBurst: 16,
       speed: 0.003,
       color: "#E74C3C",
     },
     laser: {
-      duration: 120, // 2 segundos
-      chargeTime: 60, // 1 segundo de carga
+      chargeTime: 60,
       laserWidth: 30,
       speed: 0.008,
       color: "#FF00FF",
     },
   },
 
-  // Estado de intervalos activos
   activeIntervals: [],
 
   // ======================================================
   // INICIALIZACIÓN
   // ======================================================
 
-  /**
-   * Inicializar el sistema de balas
-   */
   init(bossManagerRef) {
     this.bossManager = bossManagerRef;
-    this.initBulletSystem();
-    console.log("🌟 Sistema de balas Touhou del boss inicializado");
-  },
-
-  /**
-   * Configurar sistema de balas
-   */
-  initBulletSystem() {
     this.bulletPatterns = [];
-    this.patternType = "none";
     this.patternActive = false;
-    this.patternTimer = 0;
     this.activeIntervals = [];
+    console.log("🌟 Sistema de balas Touhou del boss inicializado");
   },
 
   // ======================================================
   // ACTUALIZACIÓN PRINCIPAL
   // ======================================================
 
-  /**
-   * Actualizar sistema de balas
-   */
   update() {
     if (!this.bossManager.active) return;
 
-    // Actualizar todas las balas
     this.updateBullets();
-
-    // Actualizar timer del patrón activo
-    if (this.patternActive) {
-      this.patternTimer++;
-      this.checkPatternCompletion();
-    }
   },
 
-  /**
-   * Actualizar todas las balas individuales
-   */
   updateBullets() {
     const canvas = window.getCanvas();
 
@@ -143,16 +104,13 @@ const BossBullets = {
       // Efecto de brillo
       bullet.glowIntensity = 0.5 + Math.sin(window.getGameTime() * 0.3) * 0.3;
 
-      // Verificar colisión con jugador (solo si está vivo)
+      // Verificar colisión con jugador
       if (Player.getLives() > 0) {
         if (this.checkBulletPlayerCollision(bullet)) {
-          // Eliminar la bala ANTES de aplicar daño
           this.bulletPatterns.splice(i, 1);
 
-          // Aplicar daño y verificar resultado
           const playerDied = Player.takeDamage();
 
-          // Si el jugador murió, activar game over inmediatamente
           if (Player.getLives() <= 0) {
             console.log(
               "💀 Jugador murió por bala Touhou - activando game over"
@@ -176,9 +134,6 @@ const BossBullets = {
     }
   },
 
-  /**
-   * Verificar colisión entre bala y jugador
-   */
   checkBulletPlayerCollision(bullet) {
     const playerPos = Player.getPosition();
     const playerSize = Player.getSize();
@@ -191,9 +146,6 @@ const BossBullets = {
     );
   },
 
-  /**
-   * Verificar si una bala está fuera de pantalla
-   */
   isBulletOutOfBounds(bullet, canvas) {
     return (
       bullet.x < -50 ||
@@ -207,9 +159,6 @@ const BossBullets = {
   // GESTIÓN DE PATRONES
   // ======================================================
 
-  /**
-   * Iniciar secuencia de patrones Touhou - MEJORADA PARA 120 SEGUNDOS
-   */
   startBulletPattern() {
     if (this.patternActive) {
       console.log("🌟 Patrón ya activo, ignorando nuevo inicio");
@@ -219,9 +168,7 @@ const BossBullets = {
     console.log("🌟 === INICIANDO FASE TOUHOU (120 SEGUNDOS) ===");
 
     this.patternActive = true;
-    this.patternTimer = 0;
     this.currentPatternIndex = 0;
-    this.patternSequence = ["spiral", "walls", "burst", "rain", "laser"];
 
     // Centrar boss
     if (this.bossManager.movement) {
@@ -235,30 +182,21 @@ const BossBullets = {
       );
     }
 
-    // 🔥 SECUENCIA DE PATRONES CADA 20 SEGUNDOS
+    // Secuencia de patrones cada 20 segundos
     this.executePatternSequence();
 
-    // 🔥 ESCUDOS CADA 4 SEGUNDOS
+    // Escudos cada 4 segundos
     this.startShieldSpawning();
 
-    // 🔥 BOSS SE MUEVE LENTAMENTE
-    if (this.bossManager.movement) {
-      this.bossManager.movement.changePattern("circling");
-    }
-
-    // 🔥 TERMINAR DESPUÉS DE 120 SEGUNDOS
+    // Terminar después de 120 segundos
     setTimeout(() => {
       this.endBulletPhase();
     }, 120000);
   },
 
-  /**
-   * 🔥 NUEVA: Ejecuta secuencia de patrones cada 20 segundos
-   */
   executePatternSequence() {
     if (!this.patternActive) return;
 
-    // Obtener patrón actual
     const currentPattern =
       this.patternSequence[
         this.currentPatternIndex % this.patternSequence.length
@@ -280,59 +218,61 @@ const BossBullets = {
       this.bossManager.comments.sayComment(messages[currentPattern]);
     }
 
-    // Ejecutar patrón
     this.executePattern(currentPattern);
 
     // Programar siguiente patrón
     this.currentPatternIndex++;
     if (this.currentPatternIndex < 6) {
-      // 6 patrones en 120 segundos
       setTimeout(() => {
         this.executePatternSequence();
       }, 20000);
     }
   },
 
-  /**
-   * 🔥 NUEVA: Spawning de escudos cada 4 segundos
-   */
   startShieldSpawning() {
     let shieldCount = 0;
-    const maxShields = 30; // 120 segundos / 4 = 30 escudos máximo
+    const maxShields = 30;
 
     const spawnShield = () => {
       if (!this.patternActive || shieldCount >= maxShields) return;
 
-      // Máximo 2 escudos en pantalla
       if (window.PowerUpManager && window.PowerUpManager.powerUps.length < 2) {
         this.spawnProtectiveShield();
         shieldCount++;
       }
 
-      // Programar siguiente escudo
       setTimeout(spawnShield, 4000);
     };
 
-    // Primer escudo a los 2 segundos
     setTimeout(spawnShield, 2000);
   },
 
-  /**
-   * 🔥 NUEVA: Termina la fase de balas
-   */
+  spawnProtectiveShield() {
+    // Implementar spawning de escudos protectores
+    if (window.PowerUpManager) {
+      const canvas = window.getCanvas();
+      const shield = {
+        x: Math.random() * (canvas.width - 40) + 20,
+        y: Math.random() * (canvas.height - 40) + 20,
+        type: "shield",
+        // Propiedades del escudo
+      };
+      window.PowerUpManager.powerUps.push(shield);
+    }
+  },
+
   endBulletPhase() {
     console.log("🌟 Terminando fase Touhou (120s completados)");
 
     this.patternActive = false;
-    this.patternTimer = 0;
     this.cleanup();
 
-    // 🔥 NUEVO: Si es fase aleatoria, no hacer vulnerable automáticamente
+    // Si es fase aleatoria, no hacer vulnerable automáticamente
     if (this.bossManager.phases && this.bossManager.phases.isRandomPhase) {
       console.log(
         "🌟 Fase aleatoria completada - delegando al sistema de fases"
       );
-      return; // El sistema de fases manejará el retorno a Yan Ken Po
+      return;
     }
 
     // Centrar boss y mensaje final
@@ -357,14 +297,11 @@ const BossBullets = {
     // Reanudar movimiento normal
     setTimeout(() => {
       if (this.bossManager.movement) {
-        this.bossManager.movement.enableWandering();
+        this.bossManager.movement.enableFluidHunting();
       }
     }, 2000);
   },
 
-  /**
-   * Ejecutar un patrón específico
-   */
   executePattern(patternType) {
     switch (patternType) {
       case "spiral":
@@ -388,48 +325,16 @@ const BossBullets = {
     }
   },
 
-  /**
-   * Verificar si el patrón debe completarse
-   */
-  checkPatternCompletion() {
-    const config = this.patternConfigs[this.patternType];
-
-    if (config && this.patternTimer >= config.duration) {
-      this.endCurrentPattern();
-    }
-  },
-
-  /**
-   * Terminar el patrón actual
-   */
-  endCurrentPattern() {
-    console.log(`🌟 Terminando patrón: ${this.patternType}`);
-
-    // Limpiar intervalos activos
-    this.clearActiveIntervals();
-
-    this.patternActive = false;
-    this.patternType = "none";
-    this.patternTimer = 0;
-
-    if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage("⚔️ Patrón completado", "#00FF00");
-    }
-  },
-
   // ======================================================
   // PATRONES ESPECÍFICOS
   // ======================================================
 
-  /**
-   * Patrón espiral de balas
-   */
   createSpiralPattern() {
     const config = this.patternConfigs.spiral;
     let angle = 0;
 
     const spiralInterval = setInterval(() => {
-      if (!this.patternActive || this.patternType !== "spiral") {
+      if (!this.patternActive) {
         clearInterval(spiralInterval);
         return;
       }
@@ -446,19 +351,12 @@ const BossBullets = {
     this.activeIntervals.push(spiralInterval);
   },
 
-  /**
-   * Patrón de muros con espacios
-   */
   createWallPattern() {
     const config = this.patternConfigs.walls;
     let wallCount = 0;
 
     const wallInterval = setInterval(() => {
-      if (
-        !this.patternActive ||
-        this.patternType !== "walls" ||
-        wallCount >= 4
-      ) {
+      if (!this.patternActive || wallCount >= 4) {
         clearInterval(wallInterval);
         return;
       }
@@ -470,9 +368,6 @@ const BossBullets = {
     this.activeIntervals.push(wallInterval);
   },
 
-  /**
-   * Crear muro de balas con espacio para esquivar
-   */
   createWallOfBullets(config) {
     const canvas = window.getCanvas();
     const playerPos = Player.getPosition();
@@ -483,7 +378,6 @@ const BossBullets = {
     const safeZoneEnd = safeZoneStart + config.gapSize;
 
     for (let i = 0; i < config.bulletCount; i++) {
-      // No crear balas en la zona segura
       if (i >= safeZoneStart && i <= safeZoneEnd) continue;
 
       const x = (canvas.width / config.bulletCount) * i;
@@ -501,14 +395,11 @@ const BossBullets = {
     console.log("🧱 Muro de balas creado con zona segura");
   },
 
-  /**
-   * Patrón en cruz
-   */
   createCrossPattern() {
     const config = this.patternConfigs.cross;
 
     const crossInterval = setInterval(() => {
-      if (!this.patternActive || this.patternType !== "cross") {
+      if (!this.patternActive) {
         clearInterval(crossInterval);
         return;
       }
@@ -520,8 +411,8 @@ const BossBullets = {
         this.createTouhouBullet(angle, config.speed, config.color);
       });
 
-      // Direcciones diagonales cada cierto tiempo
-      if (this.patternTimer % config.diagonalFreq === 0) {
+      // Direcciones diagonales ocasionalmente
+      if (Math.random() < 0.3) {
         const diagonals = [
           Math.PI / 4,
           (3 * Math.PI) / 4,
@@ -537,14 +428,11 @@ const BossBullets = {
     this.activeIntervals.push(crossInterval);
   },
 
-  /**
-   * Patrón de lluvia dirigida
-   */
   createRainPattern() {
     const config = this.patternConfigs.rain;
 
     const rainInterval = setInterval(() => {
-      if (!this.patternActive || this.patternType !== "rain") {
+      if (!this.patternActive) {
         clearInterval(rainInterval);
         return;
       }
@@ -575,14 +463,11 @@ const BossBullets = {
     this.activeIntervals.push(rainInterval);
   },
 
-  /**
-   * Patrón de ráfagas
-   */
   createBurstPattern() {
     const config = this.patternConfigs.burst;
 
     const burstInterval = setInterval(() => {
-      if (!this.patternActive || this.patternType !== "burst") {
+      if (!this.patternActive) {
         clearInterval(burstInterval);
         return;
       }
@@ -606,9 +491,6 @@ const BossBullets = {
     this.activeIntervals.push(burstInterval);
   },
 
-  /**
-   * Patrón de láser
-   */
   createLaserPattern() {
     const config = this.patternConfigs.laser;
 
@@ -618,7 +500,7 @@ const BossBullets = {
     }
 
     setTimeout(() => {
-      if (!this.patternActive || this.patternType !== "laser") return;
+      if (!this.patternActive) return;
 
       // Disparar láser hacia el jugador
       const playerPos = Player.getPosition();
@@ -648,16 +530,13 @@ const BossBullets = {
           "#FFFF00"
         );
       }
-    }, config.chargeTime * 16.67); // Convertir frames a ms
+    }, config.chargeTime * 16.67);
   },
 
   // ======================================================
   // CREACIÓN DE BALAS
   // ======================================================
 
-  /**
-   * Crear bala Touhou individual
-   */
   createTouhouBullet(angle, speed, color, isLaser = false) {
     const canvas = window.getCanvas();
     const boss = this.bossManager.boss;
@@ -676,9 +555,6 @@ const BossBullets = {
     this.bulletPatterns.push(bullet);
   },
 
-  /**
-   * Crear objeto bala con propiedades completas
-   */
   createBulletObject(x, y, velocityX, velocityY, color, isLaser = false) {
     return {
       x: x,
@@ -700,18 +576,12 @@ const BossBullets = {
   // RENDERIZADO
   // ======================================================
 
-  /**
-   * Dibujar todas las balas
-   */
   draw(ctx) {
     for (const bullet of this.bulletPatterns) {
       this.drawSingleBullet(ctx, bullet);
     }
   },
 
-  /**
-   * Dibujar una bala individual
-   */
   drawSingleBullet(ctx, bullet) {
     ctx.save();
 
@@ -728,9 +598,6 @@ const BossBullets = {
     ctx.restore();
   },
 
-  /**
-   * Dibujar bala normal
-   */
   drawNormalBullet(ctx, bullet) {
     const centerX = bullet.x + bullet.width / 2;
     const centerY = bullet.y + bullet.height / 2;
@@ -759,9 +626,6 @@ const BossBullets = {
     ctx.stroke();
   },
 
-  /**
-   * Dibujar bala láser
-   */
   drawLaserBullet(ctx, bullet) {
     const centerX = bullet.x + bullet.width / 2;
     const centerY = bullet.y + bullet.height / 2;
@@ -787,93 +651,45 @@ const BossBullets = {
   },
 
   // ======================================================
-  // UTILIDADES
+  // CLEANUP Y UTILIDADES
   // ======================================================
 
-  /**
-   * Limpiar intervalos activos
-   */
   clearActiveIntervals() {
     this.activeIntervals.forEach((interval) => clearInterval(interval));
     this.activeIntervals = [];
   },
 
-  /**
-   * Limpiar todas las balas y patrones
-   */
   cleanup() {
     console.log("🧹 Limpiando sistema de balas");
 
     this.clearActiveIntervals();
     this.bulletPatterns = [];
     this.patternActive = false;
-    this.patternType = "none";
-    this.patternTimer = 0;
+    this.currentPatternIndex = 0;
   },
 
-  // ======================================================
-  // RESET
-  // ======================================================
-
-  /**
-   * Reset del sistema de balas
-   */
   reset() {
     this.cleanup();
-    this.initBulletSystem();
     console.log("🔄 Sistema de balas reseteado");
   },
 
   // ======================================================
-  // GETTERS Y UTILIDADES
+  // GETTERS
   // ======================================================
 
   getBullets() {
     return this.bulletPatterns;
   },
-
   getBulletCount() {
     return this.bulletPatterns.length;
   },
-
   isPatternActive() {
     return this.patternActive;
   },
 
-  getCurrentPattern() {
-    return this.patternType;
-  },
-
-  getPatternProgress() {
-    if (!this.patternActive) return 0;
-
-    const config = this.patternConfigs[this.patternType];
-    if (!config) return 0;
-
-    return Math.min(1, this.patternTimer / config.duration);
-  },
-
-  /**
-   * Verificar si hay balas cerca de una posición
-   */
-  checkBulletsNearPosition(x, y, radius = 50) {
-    return this.bulletPatterns.some((bullet) => {
-      const distance = Math.sqrt(
-        Math.pow(x - (bullet.x + bullet.width / 2), 2) +
-          Math.pow(y - (bullet.y + bullet.height / 2), 2)
-      );
-      return distance < radius;
-    });
-  },
-
-  /**
-   * Obtener estadísticas del sistema
-   */
   getStats() {
     return {
       totalBullets: this.bulletPatterns.length,
-      activePattern: this.patternType,
-      patternProgress: this.getPatternProgress(),
       isActive: this.patternActive,
       laserBullets: this.bulletPatterns.filter((b) => b.isLaser).length,
       normalBullets: this.bulletPatterns.filter((b) => !b.isLaser).length,
@@ -881,7 +697,6 @@ const BossBullets = {
   },
 };
 
-// Hacer disponible globalmente
 window.BossBullets = BossBullets;
 
-console.log("🌟 boss-bullets.js cargado - Sistema de balas Touhou listo");
+console.log("🌟 boss-bullets.js optimizado cargado");

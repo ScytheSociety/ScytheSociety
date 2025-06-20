@@ -1,5 +1,5 @@
 /**
- * Hell Shooter - Boss Yan Ken Po System
+ * Hell Shooter - Boss Yan Ken Po System Optimizado
  * Sistema modular del minijuego final Yan Ken Po
  */
 
@@ -18,8 +18,8 @@ const BossYanKenPo = {
   gameConfig: {
     roundsToWin: 3,
     selectionTimeLimit: 180, // 3 segundos a 60fps
-    countdownDuration: 3, // 3 segundos de countdown
-    resultDisplayTime: 2000, // 2 segundos para mostrar resultado
+    countdownDuration: 3,
+    resultDisplayTime: 2000,
   },
 
   // Estado del juego
@@ -50,19 +50,8 @@ const BossYanKenPo = {
   // INICIALIZACIÓN
   // ======================================================
 
-  /**
-   * Inicializar el sistema Yan Ken Po
-   */
   init(bossManagerRef) {
     this.bossManager = bossManagerRef;
-    this.initYanKenPoSystem();
-    console.log("✂️ Sistema Yan Ken Po del boss inicializado");
-  },
-
-  /**
-   * Configurar sistema Yan Ken Po
-   */
-  initYanKenPoSystem() {
     this.phaseActive = false;
     this.gameState = "inactive";
     this.roundsWon = 0;
@@ -73,15 +62,13 @@ const BossYanKenPo = {
     this.uiCreated = false;
     this.keyHandler = null;
     this.originalPlayerControls = null;
+    console.log("✂️ Sistema Yan Ken Po del boss inicializado");
   },
 
   // ======================================================
   // CONTROL DE FASE
   // ======================================================
 
-  /**
-   * Iniciar la fase Yan Ken Po
-   */
   startPhase() {
     console.log("✂️ === INICIANDO FASE YAN KEN PO ===");
 
@@ -99,10 +86,7 @@ const BossYanKenPo = {
       this.bossManager.movement.stopMovementAndCenter();
     }
 
-    // Crear UI del juego
     this.createGameUI();
-
-    // Configurar controles
     this.setupControls();
 
     if (this.bossManager.ui) {
@@ -119,19 +103,13 @@ const BossYanKenPo = {
     console.log("✂️ Yan Ken Po inicializado correctamente");
   },
 
-  /**
-   * Terminar la fase Yan Ken Po
-   */
   endPhase() {
     console.log("✂️ Terminando fase Yan Ken Po");
 
     this.phaseActive = false;
     this.gameState = "inactive";
 
-    // Limpiar UI y controles
     this.cleanup();
-
-    // Restaurar controles del jugador
     this.restorePlayerControls();
 
     // Boss vuelve a ser vulnerable
@@ -143,9 +121,6 @@ const BossYanKenPo = {
   // ACTUALIZACIÓN PRINCIPAL
   // ======================================================
 
-  /**
-   * Actualizar sistema Yan Ken Po
-   */
   update() {
     if (!this.phaseActive) return;
 
@@ -153,24 +128,18 @@ const BossYanKenPo = {
       case "countdown":
         this.updateCountdown();
         break;
-
       case "selection":
         this.updateSelection();
         break;
-
       case "result":
         // Los resultados se manejan con timeouts
         break;
-
       case "completed":
         // Fase completada
         break;
     }
   },
 
-  /**
-   * Actualizar countdown inicial
-   */
   updateCountdown() {
     this.countdownTimer++;
 
@@ -187,9 +156,6 @@ const BossYanKenPo = {
     }
   },
 
-  /**
-   * Actualizar fase de selección
-   */
   updateSelection() {
     this.selectionTimer++;
 
@@ -204,9 +170,6 @@ const BossYanKenPo = {
   // FASES DEL JUEGO
   // ======================================================
 
-  /**
-   * Iniciar fase de selección
-   */
   startSelection() {
     console.log("⏰ Iniciando fase de selección");
 
@@ -219,9 +182,6 @@ const BossYanKenPo = {
     this.enableButtons();
   },
 
-  /**
-   * Procesar selección del jugador
-   */
   selectChoice(choiceIndex) {
     if (this.gameState !== "selection" || this.playerChoice !== null) {
       console.log("❌ Selección inválida o ya realizada");
@@ -235,17 +195,11 @@ const BossYanKenPo = {
 
     console.log(`🤖 Boss seleccionó: ${this.choices[this.bossChoice].name}`);
 
-    // Deshabilitar botones
     this.disableButtons();
-
-    // Cambiar a fase de resultado
     this.gameState = "result";
     this.processResult();
   },
 
-  /**
-   * Procesar resultado de la ronda
-   */
   processResult() {
     const playerChoice = this.playerChoice;
     const bossChoice = this.bossChoice;
@@ -274,18 +228,13 @@ const BossYanKenPo = {
       `📊 Resultado: ${result} - Rondas ganadas: ${this.roundsWon}/${this.gameConfig.roundsToWin}`
     );
 
-    // Mostrar resultado en UI
     this.showResult();
 
-    // Decidir siguiente acción después de mostrar resultado
     setTimeout(() => {
       this.processGameResult();
     }, this.gameConfig.resultDisplayTime);
   },
 
-  /**
-   * Procesar el resultado del juego completo
-   */
   processGameResult() {
     if (this.roundsWon >= this.gameConfig.roundsToWin) {
       this.handleGameWin();
@@ -297,44 +246,6 @@ const BossYanKenPo = {
     }
   },
 
-  /**
-   * 🔥 NUEVA: Maneja la victoria en Yan Ken Po
-   */
-  handleSingleWin() {
-    console.log(`🏆 Victoria ${this.roundsWon}/3 en Yan Ken Po`);
-
-    // Dañar al boss (1% de vida por victoria)
-    const damage = this.bossManager.maxHealth * 0.01;
-    this.bossManager.currentHealth = Math.max(
-      0,
-      this.bossManager.currentHealth - damage
-    );
-
-    // Efectos visuales de victoria parcial
-    if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage(
-        `🎉 Victoria ${this.roundsWon}/3!`,
-        "#00FF00"
-      );
-      this.bossManager.ui.createParticleEffect(
-        this.bossManager.boss.x + this.bossManager.boss.width / 2,
-        this.bossManager.boss.y + this.bossManager.boss.height / 2,
-        "#00FF00",
-        20
-      );
-    }
-
-    // Si aún no tiene 3 victorias, continuar
-    if (this.roundsWon < 3) {
-      setTimeout(() => {
-        this.startNextRound();
-      }, 2000);
-    }
-  },
-
-  /**
-   * Manejar victoria del jugador
-   */
   handleGameWin() {
     console.log("🏆 ¡Jugador ganó el Yan Ken Po!");
 
@@ -352,7 +263,7 @@ const BossYanKenPo = {
     }
 
     // Dañar significativamente al boss
-    const damage = 20; // 10% del máximo de vida
+    const damage = 20; // Daño fijo
     this.bossManager.currentHealth = Math.max(
       0,
       this.bossManager.currentHealth - damage
@@ -387,15 +298,12 @@ const BossYanKenPo = {
       setTimeout(() => {
         this.endPhase();
         if (this.bossManager.movement) {
-          this.bossManager.movement.enableWandering();
+          this.bossManager.movement.enableFluidHunting();
         }
       }, 3000);
     }
   },
 
-  /**
-   * Manejar derrota del jugador
-   */
   handleGameLoss() {
     console.log("💀 Jugador perdió el Yan Ken Po - iniciando fase aleatoria");
 
@@ -408,20 +316,15 @@ const BossYanKenPo = {
       );
     }
 
-    // Limpiar Yan Ken Po
     setTimeout(() => {
       this.endPhase();
 
-      // 🔥 NUEVO: Delegar al sistema de fases
       if (this.bossManager.phases) {
         this.bossManager.phases.handleYanKenPoLoss();
       }
     }, 2000);
   },
 
-  /**
-   * Iniciar siguiente ronda
-   */
   startNextRound() {
     console.log(`🔄 Iniciando ronda ${this.currentRound + 1}`);
 
@@ -440,9 +343,6 @@ const BossYanKenPo = {
   // INTERFAZ DE USUARIO
   // ======================================================
 
-  /**
-   * Crear UI del juego
-   */
   createGameUI() {
     if (this.uiCreated) {
       this.removeGameUI();
@@ -566,9 +466,6 @@ const BossYanKenPo = {
     console.log("✅ UI de Yan Ken Po creada");
   },
 
-  /**
-   * Actualizar información mostrada
-   */
   updateInfoDisplay() {
     const info = document.getElementById("yankenpo-info");
     if (!info) return;
@@ -626,9 +523,6 @@ const BossYanKenPo = {
     info.innerHTML = content;
   },
 
-  /**
-   * Mostrar resultado de la ronda
-   */
   showResult() {
     this.updateInfoDisplay();
 
@@ -650,9 +544,6 @@ const BossYanKenPo = {
     }
   },
 
-  /**
-   * Habilitar botones
-   */
   enableButtons() {
     const buttons = document.querySelectorAll(".yankenpo-button");
     buttons.forEach((button) => {
@@ -662,9 +553,6 @@ const BossYanKenPo = {
     });
   },
 
-  /**
-   * Deshabilitar botones
-   */
   disableButtons() {
     const buttons = document.querySelectorAll(".yankenpo-button");
     buttons.forEach((button) => {
@@ -674,9 +562,6 @@ const BossYanKenPo = {
     });
   },
 
-  /**
-   * Remover UI del juego
-   */
   removeGameUI() {
     const container = document.getElementById("yankenpo-container");
     if (container) {
@@ -690,19 +575,12 @@ const BossYanKenPo = {
   // CONTROLES
   // ======================================================
 
-  /**
-   * Configurar controles del teclado
-   */
   setupControls() {
     console.log("⌨️ Configurando controles Q, W, E para Yan Ken Po");
 
-    // Eliminar handler anterior si existe
     this.removeKeyHandler();
-
-    // Deshabilitar controles del jugador
     this.disablePlayerControls();
 
-    // Nuevo handler
     this.keyHandler = (event) => {
       if (this.gameState !== "selection") return;
 
@@ -733,15 +611,11 @@ const BossYanKenPo = {
       }
     };
 
-    // Agregar listener
     document.addEventListener("keydown", this.keyHandler, true);
 
     console.log("✅ Controles de Yan Ken Po configurados");
   },
 
-  /**
-   * Remover handler de teclado
-   */
   removeKeyHandler() {
     if (this.keyHandler) {
       document.removeEventListener("keydown", this.keyHandler, true);
@@ -749,9 +623,6 @@ const BossYanKenPo = {
     }
   },
 
-  /**
-   * Deshabilitar controles del jugador
-   */
   disablePlayerControls() {
     if (window.Player && Player.setupControls) {
       this.originalPlayerControls = Player.setupControls;
@@ -759,14 +630,10 @@ const BossYanKenPo = {
     }
   },
 
-  /**
-   * Restaurar controles del jugador
-   */
   restorePlayerControls() {
     if (this.originalPlayerControls && window.Player) {
       Player.setupControls = this.originalPlayerControls;
 
-      // Reconfigurar controles si hay canvas disponible
       const canvas = window.getCanvas();
       if (canvas) {
         Player.setupControls(canvas);
@@ -778,21 +645,14 @@ const BossYanKenPo = {
   // RENDERIZADO
   // ======================================================
 
-  /**
-   * Dibujar elementos especiales del Yan Ken Po
-   */
   draw(ctx) {
     if (!this.phaseActive) return;
 
-    // Dibujar indicadores visuales si es necesario
     if (this.gameState === "result" && this.bossChoice !== null) {
       this.drawBossChoice(ctx);
     }
   },
 
-  /**
-   * Dibujar elección del boss sobre él
-   */
   drawBossChoice(ctx) {
     const boss = this.bossManager.boss;
     const centerX = boss.x + boss.width / 2;
@@ -807,78 +667,56 @@ const BossYanKenPo = {
 
     const bossSymbol = this.choices[this.bossChoice].symbol;
 
-    // Contorno negro
     ctx.strokeText(bossSymbol, centerX, centerY);
-    // Símbolo blanco
     ctx.fillText(bossSymbol, centerX, centerY);
 
     ctx.restore();
   },
 
   // ======================================================
-  // CLEANUP Y RESET
+  // CLEANUP Y UTILIDADES
   // ======================================================
 
-  /**
-   * Limpiar sistema completamente
-   */
   cleanup() {
     console.log("🧹 Limpiando sistema Yan Ken Po");
 
-    // Remover UI
     this.removeGameUI();
-
-    // Remover controles
     this.removeKeyHandler();
-
-    // Restaurar controles del jugador
     this.restorePlayerControls();
 
-    // Reset estado
     this.gameState = "inactive";
     this.phaseActive = false;
   },
 
-  /**
-   * Reset del sistema
-   */
   reset() {
     this.cleanup();
-    this.initYanKenPoSystem();
+    this.init(this.bossManager);
     console.log("🔄 Sistema Yan Ken Po reseteado");
   },
 
   // ======================================================
-  // GETTERS Y UTILIDADES
+  // GETTERS
   // ======================================================
 
   isActive() {
     return this.phaseActive;
   },
-
   getCurrentRound() {
     return this.currentRound;
   },
-
   getRoundsWon() {
     return this.roundsWon;
   },
-
   getRoundsToWin() {
     return this.gameConfig.roundsToWin;
   },
-
   getGameState() {
     return this.gameState;
   },
-
   getProgress() {
     return this.roundsWon / this.gameConfig.roundsToWin;
   },
 
-  /**
-   * Obtener estadísticas del juego
-   */
   getStats() {
     return {
       active: this.phaseActive,
@@ -894,7 +732,6 @@ const BossYanKenPo = {
   },
 };
 
-// Hacer disponible globalmente
 window.BossYanKenPo = BossYanKenPo;
 
-console.log("✂️ boss-yankenpo.js cargado - Sistema Yan Ken Po listo");
+console.log("✂️ boss-yankenpo.js optimizado cargado");

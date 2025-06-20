@@ -1,5 +1,5 @@
 /**
- * Hell Shooter - Boss Mines System OPTIMIZADO
+ * Hell Shooter - Boss Mines System Optimizado
  * Sistema modular de minas explosivas del boss
  */
 
@@ -13,16 +13,17 @@ const BossMines = {
   miningPhase: false,
   sequenceActive: false,
   teleportInterval: null,
+  staticMineInterval: null,
 
   // Configuración de minas
   mineConfig: {
     size: 40,
-    dangerRadius: 120, // Radio más grande
+    dangerRadius: 120,
     armingTime: 60,
     explosionTime: 300, // 5 segundos
     warningTime: 120,
     blinkSpeed: 10,
-    chainReactionRadius: 150, // 🔥 NUEVO: Radio de explosión en cadena
+    chainReactionRadius: 150,
   },
 
   // ======================================================
@@ -78,31 +79,23 @@ const BossMines = {
   },
 
   // ======================================================
-  // 🔥 SISTEMA DE MINAS MEJORADO
+  // SISTEMA DE MINAS
   // ======================================================
 
-  /**
-   * 🔥 CORREGIDO: Secuencia agresiva de 90 segundos
-   */
   startMineSequence() {
     console.log("💣 === INICIANDO FASE DE MINAS AGRESIVA (90s) ===");
 
     this.miningPhase = true;
     this.sequenceActive = true;
 
-    // 🔥 ESTRATEGIA AGRESIVA:
-    // - Teletransporte cada 1.5 segundos
-    // - Mina inmediata en cada teletransporte
-    // - Minas estáticas cada 5 segundos
-    // - Minas con timer aleatorio
-
+    // Teletransporte cada 1.5 segundos
     this.teleportInterval = setInterval(() => {
       if (this.sequenceActive) {
         this.aggressiveTeleportAndMine();
       }
-    }, 1500); // 🔥 MÁS RÁPIDO: cada 1.5 segundos
+    }, 1500);
 
-    // 🔥 MINAS ESTÁTICAS cada 5 segundos
+    // Minas estáticas cada 5 segundos
     this.staticMineInterval = setInterval(() => {
       if (this.sequenceActive) {
         this.spawnStaticMineField();
@@ -115,14 +108,11 @@ const BossMines = {
     }, 90000);
   },
 
-  /**
-   * 🔥 NUEVO: Teletransporte agresivo cerca del jugador
-   */
   aggressiveTeleportAndMine() {
     const playerPos = Player.getPosition();
     const canvas = window.getCanvas();
 
-    // 🔥 POSICIONES MUY CERCA DEL JUGADOR (más agresivo)
+    // Posiciones cerca del jugador
     const huntingPositions = [
       { x: playerPos.x + 120, y: playerPos.y + 80 },
       { x: playerPos.x - 120, y: playerPos.y + 80 },
@@ -146,11 +136,11 @@ const BossMines = {
       const targetPos =
         validPositions[Math.floor(Math.random() * validPositions.length)];
 
-      // 🔥 TELETRANSPORTAR BOSS AGRESIVAMENTE
+      // Teletransportar boss
       this.bossManager.boss.x = targetPos.x - this.bossManager.boss.width / 2;
       this.bossManager.boss.y = targetPos.y - this.bossManager.boss.height / 2;
 
-      // Efecto visual intenso
+      // Efecto visual
       if (this.bossManager.ui) {
         this.bossManager.ui.createParticleEffect(
           targetPos.x,
@@ -160,7 +150,7 @@ const BossMines = {
         );
       }
 
-      // 🔥 MINA INMEDIATA con timer aleatorio
+      // Crear mina inmediata
       const randomTimer = 180 + Math.random() * 120; // 3-5 segundos
       const mine = this.createMine(
         targetPos.x - 20,
@@ -168,45 +158,39 @@ const BossMines = {
         randomTimer
       );
       mine.armed = true;
-      mine.type = "teleport"; // Tipo especial
+      mine.type = "teleport";
       this.mines.push(mine);
 
       console.log(
-        `💣 Boss teletransportado a (${Math.round(targetPos.x)}, ${Math.round(
-          targetPos.y
-        )}) + mina`
+        `💣 Boss teletransportado y mina creada en (${Math.round(
+          targetPos.x
+        )}, ${Math.round(targetPos.y)})`
       );
     }
   },
 
-  /**
-   * 🔥 NUEVO: Campo de minas estáticas
-   */
   spawnStaticMineField() {
     const canvas = window.getCanvas();
     const playerPos = Player.getPosition();
-
-    // 🔥 3-4 minas estáticas en posiciones estratégicas
     const mineCount = 3 + Math.floor(Math.random() * 2);
 
     for (let i = 0; i < mineCount; i++) {
-      // Posiciones que bloquean rutas de escape
       let x, y;
 
       if (i === 0) {
-        // Primera mina: bloquear ruta hacia esquina superior izquierda
+        // Bloquear ruta hacia esquina superior izquierda
         x = playerPos.x - 150 - Math.random() * 100;
         y = playerPos.y - 150 - Math.random() * 100;
       } else if (i === 1) {
-        // Segunda mina: bloquear ruta hacia esquina superior derecha
+        // Bloquear ruta hacia esquina superior derecha
         x = playerPos.x + 150 + Math.random() * 100;
         y = playerPos.y - 150 - Math.random() * 100;
       } else if (i === 2) {
-        // Tercera mina: bloquear escape hacia abajo
+        // Bloquear escape hacia abajo
         x = playerPos.x + (Math.random() - 0.5) * 200;
         y = playerPos.y + 200 + Math.random() * 100;
       } else {
-        // Mina extra: posición aleatoria peligrosa
+        // Mina extra: posición aleatoria
         x = playerPos.x + (Math.random() - 0.5) * 300;
         y = playerPos.y + (Math.random() - 0.5) * 300;
       }
@@ -215,9 +199,9 @@ const BossMines = {
       x = Math.max(60, Math.min(canvas.width - 60, x));
       y = Math.max(60, Math.min(canvas.height - 60, y));
 
-      // 🔥 MINA ESTÁTICA (sin timer, explota solo por cadena o daño)
+      // Crear mina estática
       const staticMine = this.createMine(x, y, null);
-      staticMine.isStatic = true; // 🔥 NUEVA propiedad
+      staticMine.isStatic = true;
       staticMine.armed = true;
       staticMine.type = "static";
       this.mines.push(staticMine);
@@ -226,9 +210,6 @@ const BossMines = {
     console.log(`💣 Campo de ${mineCount} minas estáticas spawneado`);
   },
 
-  /**
-   * 🔥 CORREGIDO: Crear mina con tipos
-   */
   createMine(x, y, customTimer = null) {
     return {
       x: x,
@@ -244,33 +225,23 @@ const BossMines = {
       warningPhase: false,
       pulseIntensity: 0,
       glowIntensity: 0.5,
-
-      // 🔥 NUEVAS propiedades
-      isStatic: false, // Mina estática (no explota por timer)
-      type: "normal", // normal, teleport, static
+      isStatic: false,
+      type: "normal",
     };
   },
 
   // ======================================================
-  // 🔥 SISTEMA DE EXPLOSIONES EN CADENA
+  // SISTEMA DE EXPLOSIONES
   // ======================================================
 
-  /**
-   * 🔥 MEJORADO: Explotar mina con cadena
-   */
   explodeMine(index) {
     if (index < 0 || index >= this.mines.length) return;
 
     const mine = this.mines[index];
     console.log(`💥 Mina ${mine.type} explotando en (${mine.x}, ${mine.y})`);
 
-    // Efectos visuales
     this.createExplosionEffects(mine);
-
-    // Verificar daño al jugador
     this.checkPlayerDamage(mine);
-
-    // 🔥 EXPLOSIÓN EN CADENA
     this.triggerChainReaction(mine, index);
 
     // Eliminar mina original
@@ -281,19 +252,15 @@ const BossMines = {
     }
   },
 
-  /**
-   * 🔥 NUEVO: Sistema de explosión en cadena
-   */
   triggerChainReaction(explodedMine, excludeIndex) {
     const chainRadius = this.mineConfig.chainReactionRadius;
     const explodedX = explodedMine.x + explodedMine.width / 2;
     const explodedY = explodedMine.y + explodedMine.height / 2;
 
-    // Buscar minas cercanas para explosión en cadena
     const minesToExplode = [];
 
     for (let i = 0; i < this.mines.length; i++) {
-      if (i === excludeIndex) continue; // No explotar la misma mina
+      if (i === excludeIndex) continue;
 
       const mine = this.mines[i];
       const mineX = mine.x + mine.width / 2;
@@ -308,24 +275,19 @@ const BossMines = {
       }
     }
 
-    // Explotar minas en cadena con delay
     if (minesToExplode.length > 0) {
       console.log(`🔥 Explosión en cadena: ${minesToExplode.length} minas`);
 
       minesToExplode.forEach((mineIndex, delay) => {
         setTimeout(() => {
-          // Verificar que la mina aún existe (podría haber sido eliminada por otra cadena)
           if (mineIndex < this.mines.length && this.mines[mineIndex]) {
             this.explodeMine(mineIndex);
           }
-        }, delay * 150); // 150ms entre explosiones
+        }, delay * 150);
       });
     }
   },
 
-  /**
-   * Verificar daño al jugador
-   */
   checkPlayerDamage(mine) {
     const player = Player;
     const playerPos = player.getPosition();
@@ -355,16 +317,11 @@ const BossMines = {
     }
   },
 
-  /**
-   * Crear efectos visuales de explosión
-   */
   createExplosionEffects(mine) {
     if (!this.bossManager.ui) return;
 
     const centerX = mine.x + mine.width / 2;
     const centerY = mine.y + mine.height / 2;
-
-    // Múltiples ondas según tipo de mina
     const waveCount = mine.type === "static" ? 7 : 5;
 
     for (let i = 0; i < waveCount; i++) {
@@ -379,7 +336,6 @@ const BossMines = {
       }, i * 100);
     }
 
-    // Onda de choque especial para minas estáticas
     if (mine.type === "static") {
       setTimeout(() => {
         this.bossManager.ui.createParticleEffect(
@@ -393,7 +349,7 @@ const BossMines = {
   },
 
   // ======================================================
-  // RENDERIZADO MEJORADO
+  // RENDERIZADO
   // ======================================================
 
   draw(ctx) {
@@ -405,20 +361,16 @@ const BossMines = {
   drawSingleMine(ctx, mine) {
     ctx.save();
 
-    // Zona de peligro
     if (mine.showDangerZone) {
       this.drawDangerZone(ctx, mine);
     }
 
-    // Cuerpo de la mina con tipo
     this.drawMineBody(ctx, mine);
 
-    // 🔥 CONTADOR solo para minas con timer
     if (!mine.isStatic && mine.timer < 180) {
       this.drawTimeCounter(ctx, mine);
     }
 
-    // 🔥 INDICADOR de mina estática
     if (mine.isStatic) {
       this.drawStaticIndicator(ctx, mine);
     }
@@ -433,18 +385,14 @@ const BossMines = {
     ctx.beginPath();
     ctx.arc(centerX, centerY, mine.dangerRadius, 0, Math.PI * 2);
 
-    // Color según tipo y fase
     if (mine.isStatic) {
-      // Minas estáticas: amarillo constante
       ctx.strokeStyle = "rgba(255, 255, 0, 0.7)";
       ctx.fillStyle = "rgba(255, 255, 0, 0.1)";
     } else if (mine.warningPhase) {
-      // Rojo parpadeante
       const alpha = 0.3 + Math.sin(mine.blinkTimer * 0.5) * 0.2;
       ctx.strokeStyle = `rgba(255, 0, 0, ${alpha})`;
       ctx.fillStyle = `rgba(255, 0, 0, ${alpha * 0.1})`;
     } else {
-      // Naranja normal
       ctx.strokeStyle = "rgba(255, 136, 0, 0.6)";
       ctx.fillStyle = "rgba(255, 136, 0, 0.05)";
     }
@@ -457,16 +405,12 @@ const BossMines = {
   },
 
   drawMineBody(ctx, mine) {
-    let mineColor;
+    let mineColor = mine.isStatic
+      ? "#FFFF00"
+      : mine.armed
+      ? "#FF0000"
+      : "#FF8800";
 
-    // Color según tipo
-    if (mine.isStatic) {
-      mineColor = "#FFFF00"; // Amarillo para estáticas
-    } else {
-      mineColor = mine.armed ? "#FF0000" : "#FF8800";
-    }
-
-    // Parpadeo cuando está por explotar
     if (!mine.isStatic && mine.timer < 60) {
       const blinkIntensity =
         mine.blinkTimer % mine.blinkSpeed < mine.blinkSpeed / 2;
@@ -497,7 +441,6 @@ const BossMines = {
       centerSize
     );
 
-    // Detalles según tipo
     this.drawMineDetails(ctx, mine);
   },
 
@@ -533,9 +476,6 @@ const BossMines = {
     }
   },
 
-  /**
-   * 🔥 NUEVO: Indicador para minas estáticas
-   */
   drawStaticIndicator(ctx, mine) {
     const centerX = mine.x + mine.width / 2;
     const textY = mine.y - 15;
@@ -546,9 +486,7 @@ const BossMines = {
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 2;
 
-    // Contorno negro
     ctx.strokeText("∞", centerX, textY);
-    // Símbolo infinito amarillo
     ctx.fillText("∞", centerX, textY);
   },
 
@@ -569,7 +507,7 @@ const BossMines = {
   },
 
   // ======================================================
-  // CLEANUP
+  // CLEANUP Y GESTIÓN
   // ======================================================
 
   endMineSequence() {
@@ -578,7 +516,6 @@ const BossMines = {
     this.miningPhase = false;
     this.sequenceActive = false;
 
-    // Limpiar intervalos
     if (this.teleportInterval) {
       clearInterval(this.teleportInterval);
       this.teleportInterval = null;
@@ -589,7 +526,7 @@ const BossMines = {
       this.staticMineInterval = null;
     }
 
-    // 🔥 NUEVA lógica: Si es fase aleatoria, no hacer vulnerable
+    // Si es fase aleatoria, no hacer vulnerable
     if (this.bossManager.phases && this.bossManager.phases.isRandomPhase) {
       console.log(
         "💣 Fase aleatoria completada - delegando al sistema de fases"
@@ -605,7 +542,6 @@ const BossMines = {
       this.bossManager.ui.showScreenMessage("⚔️ ¡BOSS VULNERABLE!", "#00FF00");
     }
 
-    // Entrar en modo hunting fluido
     setTimeout(() => {
       if (this.bossManager.movement) {
         this.bossManager.movement.enableFluidHunting();
@@ -657,6 +593,5 @@ const BossMines = {
 };
 
 window.BossMines = BossMines;
-console.log(
-  "💣 boss-mines.js OPTIMIZADO cargado - Sistema de minas mejorado listo"
-);
+
+console.log("💣 boss-mines.js optimizado cargado");

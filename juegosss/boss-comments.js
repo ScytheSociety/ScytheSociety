@@ -1,5 +1,5 @@
 /**
- * Hell Shooter - Boss Comments System
+ * Hell Shooter - Boss Comments System Optimizado
  * Sistema modular de comentarios épicos y sombríos del boss
  */
 
@@ -13,11 +13,11 @@ const BossComments = {
   // Control de timing
   lastCommentTime: 0,
   commentCooldowns: {
-    entrada: 300, // 5 segundos
-    combate: 180, // 3 segundos
-    derrota_boss: 0, // Sin cooldown para derrota
-    fase: 120, // 2 segundos
-    dano: 60, // 1 segundo
+    entrada: 300,
+    combate: 180,
+    derrota_boss: 0,
+    fase: 120,
+    dano: 60,
   },
 
   // Estado de comentarios
@@ -26,15 +26,15 @@ const BossComments = {
 
   // Configuración visual
   commentConfig: {
-    duration: 4000, // 4 segundos por defecto
-    fadeDuration: 500, // 0.5 segundos de fade
+    duration: 4000,
+    fadeDuration: 500,
     maxWidth: "300px",
     fontSize: "14px",
-    position: "above_boss", // above_boss, screen_top, floating
+    position: "above_boss",
   },
 
   // ======================================================
-  // BASE DE DATOS DE COMENTARIOS ÉPICOS
+  // BASE DE DATOS DE COMENTARIOS
   // ======================================================
 
   commentDatabase: {
@@ -183,14 +183,6 @@ const BossComments = {
       "¡Observen mi poder absoluto!",
     ],
 
-    teletransporte: [
-      "¡No pueden atraparme!",
-      "¡La sombra es mi aliada!",
-      "¡Hell no sabe dónde golpear!",
-      "¡Soy uno con las tinieblas!",
-      "¡Aparezco donde menos lo esperan!",
-    ],
-
     vida_critica: [
       "¡No... esto no puede estar pasando!",
       "¡Mi poder se desvanece!",
@@ -205,46 +197,25 @@ const BossComments = {
   // INICIALIZACIÓN
   // ======================================================
 
-  /**
-   * Inicializar el sistema de comentarios
-   */
   init(bossManagerRef) {
     this.bossManager = bossManagerRef;
-    this.initCommentSystem();
-    console.log("💬 Sistema de comentarios del boss inicializado");
-  },
-
-  /**
-   * Configurar sistema de comentarios
-   */
-  initCommentSystem() {
     this.lastCommentTime = 0;
     this.activeComments = [];
+    console.log("💬 Sistema de comentarios del boss inicializado");
   },
 
   // ======================================================
   // ACTUALIZACIÓN PRINCIPAL
   // ======================================================
 
-  /**
-   * Actualizar sistema de comentarios
-   */
   update() {
     if (!this.bossManager.active) return;
 
-    // Actualizar comentarios activos
     this.updateActiveComments();
-
-    // 🔥 ACTUALIZAR POSICIÓN DEL MENSAJE DEL BOSS
     this.updateBossMessagePosition();
-
-    // Comentarios automáticos durante combate
     this.updateAutomaticComments();
   },
 
-  /**
-   * 🔥 CORREGIDA: Actualiza la posición del mensaje para que siga al boss fluidamente
-   */
   updateBossMessagePosition() {
     const bossMessage = document.getElementById("boss-speech-bubble");
     if (bossMessage && this.bossManager.boss) {
@@ -252,12 +223,10 @@ const BossComments = {
       const canvas = window.getCanvas();
 
       if (canvas) {
-        // Posición relativa al canvas
         const rect = canvas.getBoundingClientRect();
         const bossScreenX = rect.left + boss.x + boss.width / 2;
-        const bossScreenY = rect.top + boss.y - 80; // 80px arriba del boss
+        const bossScreenY = rect.top + boss.y - 80;
 
-        // Actualizar posición suavemente
         bossMessage.style.left = `${bossScreenX}px`;
         bossMessage.style.top = `${bossScreenY}px`;
         bossMessage.style.transform = "translateX(-50%)";
@@ -266,9 +235,6 @@ const BossComments = {
     }
   },
 
-  /**
-   * Actualizar comentarios activos
-   */
   updateActiveComments() {
     const currentTime = Date.now();
 
@@ -276,7 +242,6 @@ const BossComments = {
       const comment = this.activeComments[i];
       const elapsed = currentTime - comment.startTime;
 
-      // Verificar si debe empezar a desvanecer
       if (elapsed > comment.duration - this.commentConfig.fadeDuration) {
         const fadeProgress =
           (elapsed - (comment.duration - this.commentConfig.fadeDuration)) /
@@ -286,20 +251,15 @@ const BossComments = {
           comment.baseTransform + ` translateY(-${fadeProgress * 10}px)`;
       }
 
-      // Eliminar comentario expirado
       if (elapsed > comment.duration) {
         this.removeComment(i);
       }
     }
   },
 
-  /**
-   * Comentarios automáticos durante el combate
-   */
   updateAutomaticComments() {
     const currentTime = window.getGameTime();
 
-    // Comentarios aleatorios cada cierto tiempo
     if (currentTime - this.lastCommentTime > 600) {
       // Cada 10 segundos
       if (Math.random() < 0.3) {
@@ -313,14 +273,10 @@ const BossComments = {
   // SISTEMA PRINCIPAL DE COMENTARIOS
   // ======================================================
 
-  /**
-   * Decir comentario aleatorio de una categoría
-   */
   sayRandomComment(situation) {
     const currentTime = window.getGameTime();
     const cooldown = this.commentCooldowns[situation] || 180;
 
-    // Verificar cooldown
     if (
       currentTime - this.lastCommentTime < cooldown &&
       situation !== "derrota_boss"
@@ -341,22 +297,13 @@ const BossComments = {
     console.log(`👹 Boss dice (${situation}): ${randomComment}`);
   },
 
-  /**
-   * Decir comentario específico
-   */
   sayComment(text, situation = "custom") {
     this.showBossMessage(text, situation);
     console.log(`👹 Boss dice: ${text}`);
   },
 
-  /**
-   * Mostrar mensaje del boss con estilo épico
-   */
-  /**
-   * Mostrar mensaje del boss con estilo épico
-   */
   showBossMessage(message, category = "combate") {
-    // 🔥 ELIMINAR MENSAJE ANTERIOR SI EXISTE
+    // Eliminar mensaje anterior si existe
     const existingMessage = document.getElementById("boss-speech-bubble");
     if (existingMessage) {
       existingMessage.remove();
@@ -364,7 +311,7 @@ const BossComments = {
 
     const messageElement = this.createMessageElement(message, category);
 
-    // 🔥 POSICIONAR RELATIVO AL BOSS
+    // Posicionar relativo al boss
     if (this.bossManager.boss) {
       const boss = this.bossManager.boss;
       messageElement.style.left = `${boss.x + boss.width / 2}px`;
@@ -374,15 +321,11 @@ const BossComments = {
       this.positionMessage(messageElement, category);
     }
 
-    // 🔥 ASIGNAR ID ÚNICO
     messageElement.id = "boss-speech-bubble";
-
     document.body.appendChild(messageElement);
 
-    // Animación de entrada
     this.animateMessageEntrance(messageElement);
 
-    // Registrar comentario activo
     const commentObj = {
       element: messageElement,
       startTime: Date.now(),
@@ -395,9 +338,6 @@ const BossComments = {
     this.activeComments.push(commentObj);
   },
 
-  /**
-   * Crear elemento de mensaje
-   */
   createMessageElement(message, category) {
     const messageElement = document.createElement("div");
     messageElement.className = "boss-comment";
@@ -409,9 +349,6 @@ const BossComments = {
     return messageElement;
   },
 
-  /**
-   * Obtener estilos según categoría
-   */
   getMessageStyles(category) {
     const baseStyles = `
       position: fixed;
@@ -430,7 +367,6 @@ const BossComments = {
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
     `;
 
-    // Estilos específicos por categoría
     const categoryStyles = {
       entrada: `
         background: linear-gradient(135deg, rgba(139, 0, 0, 0.95), rgba(0, 0, 0, 0.95));
@@ -496,9 +432,6 @@ const BossComments = {
     return baseStyles + (categoryStyles[category] || categoryStyles.default);
   },
 
-  /**
-   * Formatear mensaje según categoría
-   */
   formatMessage(message, category) {
     const prefixes = {
       entrada: "👹",
@@ -513,52 +446,23 @@ const BossComments = {
     return `${prefix} "${message}" ${prefix}`;
   },
 
-  /**
-   * Posicionar mensaje según configuración
-   */
   positionMessage(element, category) {
     const boss = this.bossManager.boss;
 
-    switch (this.commentConfig.position) {
-      case "above_boss":
-        if (boss) {
-          const bossX = boss.x + boss.width / 2;
-          const bossY = boss.y - 80;
+    if (boss) {
+      const bossX = boss.x + boss.width / 2;
+      const bossY = boss.y - 80;
 
-          element.style.left = `${bossX}px`;
-          element.style.top = `${bossY}px`;
-          element.style.transform = "translateX(-50%)";
-        } else {
-          // Fallback si no hay boss
-          element.style.top = "20%";
-          element.style.left = "50%";
-          element.style.transform = "translateX(-50%)";
-        }
-        break;
-
-      case "screen_top":
-        element.style.top = "15%";
-        element.style.left = "50%";
-        element.style.transform = "translateX(-50%)";
-        break;
-
-      case "floating":
-        const offsetIndex = this.activeComments.length;
-        element.style.top = `${20 + offsetIndex * 15}%`;
-        element.style.left = "50%";
-        element.style.transform = "translateX(-50%)";
-        break;
-
-      default:
-        element.style.top = "20%";
-        element.style.left = "50%";
-        element.style.transform = "translateX(-50%)";
+      element.style.left = `${bossX}px`;
+      element.style.top = `${bossY}px`;
+      element.style.transform = "translateX(-50%)";
+    } else {
+      element.style.top = "20%";
+      element.style.left = "50%";
+      element.style.transform = "translateX(-50%)";
     }
   },
 
-  /**
-   * Animar entrada del mensaje
-   */
   animateMessageEntrance(element) {
     element.style.opacity = "0";
     element.style.transform += " scale(0.8) translateY(-10px)";
@@ -571,25 +475,19 @@ const BossComments = {
     }, 50);
   },
 
-  /**
-   * Obtener duración según categoría
-   */
   getDuration(category) {
     const durations = {
-      entrada: 6000, // 6 segundos
-      combate: 4000, // 4 segundos
-      derrota_boss: 8000, // 8 segundos
-      vida_critica: 5000, // 5 segundos
-      fase: 4000, // 4 segundos
+      entrada: 6000,
+      combate: 4000,
+      derrota_boss: 8000,
+      vida_critica: 5000,
+      fase: 4000,
       default: 4000,
     };
 
     return durations[category] || durations.default;
   },
 
-  /**
-   * Eliminar comentario
-   */
   removeComment(index) {
     if (index >= 0 && index < this.activeComments.length) {
       const comment = this.activeComments[index];
@@ -606,11 +504,7 @@ const BossComments = {
   // REACCIONES A EVENTOS
   // ======================================================
 
-  /**
-   * Reaccionar al recibir daño
-   */
   onDamageReceived(healthPercentage) {
-    // Comentarios según el daño recibido
     if (Math.random() < 0.15) {
       // 15% probabilidad
       if (healthPercentage > 0.5) {
@@ -623,23 +517,16 @@ const BossComments = {
     }
   },
 
-  /**
-   * Reaccionar a cambio de fase
-   */
   onPhaseChange(newPhase) {
     const phaseKey = `fase_${newPhase.toLowerCase()}`;
 
     if (this.commentDatabase[phaseKey]) {
       this.sayRandomComment(phaseKey);
     } else {
-      // Comentario genérico de fase
       this.sayComment(`¡Hora de la fase ${newPhase}!`, "fase");
     }
   },
 
-  /**
-   * Reaccionar a inmunidad
-   */
   onImmunityActivated() {
     if (Math.random() < 0.4) {
       // 40% probabilidad
@@ -647,30 +534,14 @@ const BossComments = {
     }
   },
 
-  /**
-   * Reaccionar a teletransporte
-   */
-  onTeleport() {
-    if (Math.random() < 0.3) {
-      // 30% probabilidad
-      this.sayRandomComment("teletransporte");
-    }
-  },
-
   // ======================================================
   // UTILIDADES
   // ======================================================
 
-  /**
-   * Configurar sistema de comentarios
-   */
   configure(config) {
     this.commentConfig = { ...this.commentConfig, ...config };
   },
 
-  /**
-   * Agregar comentarios personalizados
-   */
   addCustomComments(category, comments) {
     if (!this.commentDatabase[category]) {
       this.commentDatabase[category] = [];
@@ -682,9 +553,6 @@ const BossComments = {
     );
   },
 
-  /**
-   * Limpiar comentarios activos
-   */
   clearActiveComments() {
     this.activeComments.forEach((comment, index) => {
       this.removeComment(index);
@@ -692,12 +560,9 @@ const BossComments = {
     this.activeComments = [];
   },
 
-  /**
-   * Forzar comentario inmediato (ignora cooldowns)
-   */
   forceComment(text, category = "custom") {
     const oldCooldown = this.lastCommentTime;
-    this.lastCommentTime = 0; // Reset cooldown temporalmente
+    this.lastCommentTime = 0;
 
     this.sayComment(text, category);
 
@@ -708,49 +573,34 @@ const BossComments = {
   // CLEANUP Y RESET
   // ======================================================
 
-  /**
-   * Limpiar sistema de comentarios
-   */
   cleanup() {
     console.log("🧹 Limpiando sistema de comentarios");
 
-    // Eliminar todos los comentarios activos
     this.clearActiveComments();
-
-    // Reset timers
     this.lastCommentTime = 0;
   },
 
-  /**
-   * Reset del sistema
-   */
   reset() {
     this.cleanup();
-    this.initCommentSystem();
     console.log("🔄 Sistema de comentarios reseteado");
   },
 
   // ======================================================
-  // GETTERS Y ESTADÍSTICAS
+  // GETTERS
   // ======================================================
 
   getActiveCommentCount() {
     return this.activeComments.length;
   },
-
   getCommentDatabase() {
     return this.commentDatabase;
   },
-
   getCategoryCount(category) {
     return this.commentDatabase[category]
       ? this.commentDatabase[category].length
       : 0;
   },
 
-  /**
-   * Obtener estadísticas del sistema
-   */
   getStats() {
     const stats = {
       activeComments: this.activeComments.length,
@@ -760,7 +610,6 @@ const BossComments = {
       lastCommentTime: this.lastCommentTime,
     };
 
-    // Contar total de comentarios
     Object.values(this.commentDatabase).forEach((comments) => {
       stats.totalComments += comments.length;
     });
@@ -768,9 +617,6 @@ const BossComments = {
     return stats;
   },
 
-  /**
-   * Obtener comentarios por categoría
-   */
   getCategoryStats() {
     const categoryStats = {};
 
@@ -785,9 +631,6 @@ const BossComments = {
   },
 };
 
-// Hacer disponible globalmente
 window.BossComments = BossComments;
 
-console.log(
-  "💬 boss-comments.js cargado - Sistema de comentarios épicos listo"
-);
+console.log("💬 boss-comments.js optimizado cargado");

@@ -1,5 +1,5 @@
 /**
- * Hell Shooter - Boss Red Line System OPTIMIZADO
+ * Hell Shooter - Boss Red Line System Optimizado
  * Sistema modular de la fase del hilo rojo
  */
 
@@ -22,15 +22,15 @@ const BossRedLine = {
 
   // Control del jugador
   originalPlayerSpeed: 1.0,
-  playerSlowFactor: 0.05, // Jugador SÚPER LENTO
+  playerSlowFactor: 0.05,
 
   // Estado de ciclos
   cycleCount: 0,
-  maxCycles: 10, // EXACTAMENTE 10 RONDAS
+  maxCycles: 10,
 
-  // Configuración de líneas
+  // Configuración
   lineConfig: {
-    previewDuration: 2000, // 2 segundos para memorizar
+    previewDuration: 2000,
     lineWidth: 8,
     glowBlur: 20,
     trailLength: 20,
@@ -56,24 +56,20 @@ const BossRedLine = {
   // CONTROL DE FASE
   // ======================================================
 
-  /**
-   * Iniciar la fase del hilo rojo
-   */
   startPhase() {
     console.log("🔴 === INICIANDO FASE DEL HILO ROJO (10 RONDAS) ===");
 
     this.phaseActive = true;
     this.cycleCount = 0;
-    this.maxCycles = 10; // EXACTAMENTE 10 RONDAS
+    this.maxCycles = 10;
 
     this.bossManager.makeImmune(9999);
 
-    // Detener movimiento del boss
     if (this.bossManager.movement) {
       this.bossManager.movement.stopMovementAndCenter();
     }
 
-    // 🔥 RALENTIZAR JUGADOR para que pueda ver el recorrido
+    // Ralentizar jugador
     this.originalPlayerSpeed = Player.moveSpeed;
     Player.moveSpeed = this.playerSlowFactor;
 
@@ -132,7 +128,6 @@ const BossRedLine = {
       return;
     }
 
-    // Actualizar movimiento del boss por la línea
     if (this.redLineMoving) {
       this.updateBossMovement();
     }
@@ -181,7 +176,6 @@ const BossRedLine = {
       }
     }
 
-    // Avanzar en la línea
     this.redLineIndex += this.redLineSpeed;
   },
 
@@ -221,10 +215,7 @@ const BossRedLine = {
       return;
     }
 
-    // Ajustar dificultad según la ronda
     this.adjustDifficultyForRound(this.cycleCount + 1);
-
-    // 🔥 GENERAR FORMA GEOMÉTRICA COMPLEJA
     this.generateComplexGeometricLine();
 
     if (this.redLinePath.length === 0) {
@@ -233,21 +224,15 @@ const BossRedLine = {
       return;
     }
 
-    // PASO 1: Mostrar línea para memorizar
     this.showLinePreview();
   },
 
   adjustDifficultyForRound(roundNumber) {
-    // Rondas 1-3: Formas simples y velocidad lenta
     if (roundNumber <= 3) {
       this.redLineSpeed = 3;
-    }
-    // Rondas 4-6: Formas medianas y velocidad normal
-    else if (roundNumber <= 6) {
+    } else if (roundNumber <= 6) {
       this.redLineSpeed = 4;
-    }
-    // Rondas 7-10: Formas complejas y velocidad rápida
-    else {
+    } else {
       this.redLineSpeed = 5;
     }
 
@@ -265,7 +250,6 @@ const BossRedLine = {
       this.bossManager.ui.showScreenMessage("¡MEMORIZA LA RUTA!", "#FFFF00");
     }
 
-    // 🔥 TIEMPO SUFICIENTE PARA MEMORIZAR (2 segundos)
     setTimeout(() => {
       this.showingPreview = false;
       console.log("🔴 Preview terminado - boss iniciará movimiento");
@@ -335,7 +319,6 @@ const BossRedLine = {
       this.bossManager.comments.sayRandomComment("combate");
     }
 
-    // Decidir siguiente acción después de 3 segundos
     setTimeout(() => {
       this.decideNextAction();
     }, 3000);
@@ -360,7 +343,6 @@ const BossRedLine = {
       console.log("🔄 Máximo de ciclos alcanzado - terminando fase");
       this.endPhase();
 
-      // Volver a hunting fluido
       if (this.bossManager.movement) {
         this.bossManager.movement.enableFluidHunting();
       }
@@ -377,7 +359,7 @@ const BossRedLine = {
   },
 
   // ======================================================
-  // 🔥 GENERACIÓN DE FORMAS GEOMÉTRICAS COMPLEJAS
+  // GENERACIÓN DE FORMAS GEOMÉTRICAS
   // ======================================================
 
   generateComplexGeometricLine() {
@@ -425,7 +407,6 @@ const BossRedLine = {
         break;
     }
 
-    // Verificar que se generó correctamente
     if (this.redLinePath.length === 0) {
       console.error("🔴 Error: No se generaron puntos para la línea");
       this.generateFallbackLine(canvas);
@@ -469,7 +450,7 @@ const BossRedLine = {
       });
     }
 
-    points.push(points[0]); // Cerrar estrella
+    points.push(points[0]);
     this.createSmoothPath(points);
   },
 
@@ -480,14 +461,14 @@ const BossRedLine = {
 
     const points = [];
     for (let i = 0; i < 3; i++) {
-      const angle = (i * 2 * Math.PI) / 3 - Math.PI / 2; // Empezar desde arriba
+      const angle = (i * 2 * Math.PI) / 3 - Math.PI / 2;
       points.push({
         x: centerX + Math.cos(angle) * radius,
         y: centerY + Math.sin(angle) * radius,
       });
     }
 
-    points.push(points[0]); // Cerrar triángulo
+    points.push(points[0]);
     this.createSmoothPath(points);
   },
 
@@ -498,11 +479,11 @@ const BossRedLine = {
     const height = Math.min(canvas.width, canvas.height) * 0.3;
 
     const points = [
-      { x: centerX, y: centerY - height }, // Arriba
-      { x: centerX + width, y: centerY }, // Derecha
-      { x: centerX, y: centerY + height }, // Abajo
-      { x: centerX - width, y: centerY }, // Izquierda
-      { x: centerX, y: centerY - height }, // Cerrar
+      { x: centerX, y: centerY - height },
+      { x: centerX + width, y: centerY },
+      { x: centerX, y: centerY + height },
+      { x: centerX - width, y: centerY },
+      { x: centerX, y: centerY - height },
     ];
 
     this.createSmoothPath(points);
@@ -557,14 +538,12 @@ const BossRedLine = {
 
     points.push({ x: startX, y: startY });
 
-    // Crear segmentos con desviaciones aleatorias
     const segments = 8;
     for (let i = 1; i <= segments; i++) {
       const t = i / segments;
       const baseX = startX + (endX - startX) * t;
       const baseY = startY + (endY - startY) * t;
 
-      // Desviación aleatoria para efecto de rayo
       const deviation = (Math.random() - 0.5) * 100;
       const perpX =
         -(endY - startY) /
@@ -589,7 +568,6 @@ const BossRedLine = {
       const start = points[i];
       const end = points[i + 1];
 
-      // Interpolación suave entre puntos
       const steps = 30;
       for (let j = 0; j <= steps; j++) {
         const t = j / steps;
@@ -633,12 +611,10 @@ const BossRedLine = {
 
     ctx.save();
 
-    // 🔥 MOSTRAR LÍNEA DURANTE EL PREVIEW (para memorizar)
     if (this.showingPreview) {
       this.drawPreviewLine(ctx);
     }
 
-    // 🔥 MOSTRAR ESTELA cuando el boss se mueve
     if (this.redLineMoving && this.redLineIndex > 0) {
       this.drawBossTrail(ctx);
     }
@@ -664,7 +640,7 @@ const BossRedLine = {
     }
     ctx.stroke();
 
-    // Efecto de parpadeo para llamar la atención
+    // Efecto de parpadeo
     const pulse = Math.sin(window.getGameTime() * 0.5) * 0.4 + 0.6;
     ctx.globalAlpha = pulse;
     ctx.strokeStyle = "#FFFF00";
@@ -702,7 +678,7 @@ const BossRedLine = {
   },
 
   // ======================================================
-  // CLEANUP
+  // CLEANUP Y UTILIDADES
   // ======================================================
 
   cleanup() {
@@ -715,7 +691,6 @@ const BossRedLine = {
     this.redLineIndex = 0;
     this.cycleCount = 0;
 
-    // Restaurar velocidad del jugador
     if (Player.moveSpeed !== this.originalPlayerSpeed) {
       Player.moveSpeed = this.originalPlayerSpeed;
     }
@@ -755,6 +730,5 @@ const BossRedLine = {
 };
 
 window.BossRedLine = BossRedLine;
-console.log(
-  "🔴 boss-redline.js OPTIMIZADO cargado - Sistema de hilo rojo mejorado listo"
-);
+
+console.log("🔴 boss-redline.js optimizado cargado");
