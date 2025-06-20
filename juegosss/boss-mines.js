@@ -85,46 +85,34 @@ const BossMines = {
   },
 
   /**
-   * Actualizar una mina individual - CORREGIDA para tipos
+   * Actualizar una mina individual
    */
   updateSingleMine(mine) {
+    mine.timer--;
     mine.blinkTimer++;
 
-    if (mine.type === "timer") {
-      // Mina de tiempo - cuenta regresiva normal
-      mine.timer--;
+    // Armar mina después del tiempo de armado
+    if (
+      !mine.armed &&
+      mine.timer <= this.mineConfig.explosionTime - this.mineConfig.armingTime
+    ) {
+      mine.armed = true;
+      console.log("💣 Mina armada y peligrosa");
 
-      // Parpadeo más rápido al final
-      if (mine.timer <= 60) {
-        // Último segundo
-        mine.blinkSpeed = 3;
-        mine.warningPhase = true;
-      } else if (mine.timer <= 120) {
-        // Últimos 2 segundos
-        mine.blinkSpeed = 6;
-        mine.warningPhase = true;
+      if (this.bossManager.ui) {
+        this.bossManager.ui.showScreenMessage("⚠️ MINA ARMADA", "#FF8800");
       }
-    } else if (mine.type === "proximity") {
-      // Mina de proximidad - verificar si el jugador está cerca
-      const playerPos = Player.getPosition();
-      const playerSize = Player.getSize();
+    }
 
-      const playerCenterX = playerPos.x + playerSize.width / 2;
-      const playerCenterY = playerPos.y + playerSize.height / 2;
-      const mineCenterX = mine.x + mine.width / 2;
-      const mineCenterY = mine.y + mine.height / 2;
+    // Activar fase de advertencia
+    if (mine.timer <= this.mineConfig.warningTime) {
+      mine.warningPhase = true;
+    }
 
-      const distance = Math.sqrt(
-        Math.pow(playerCenterX - mineCenterX, 2) +
-          Math.pow(playerCenterY - mineCenterY, 2)
-      );
-
-      // Si el jugador pisa la mina, activarla
-      if (distance < mine.activationRadius) {
-        console.log("💥 Mina de proximidad activada por jugador");
-        mine.timer = 0; // Explotar inmediatamente
-        mine.type = "timer"; // Cambiar a tipo timer para que explote
-      }
+    // Aumentar intensidad de parpadeo cerca de la explosión
+    if (mine.timer <= 60) {
+      // Último segundo
+      mine.blinkSpeed = 5; // Parpadeo más rápido
     }
   },
 
@@ -133,19 +121,19 @@ const BossMines = {
   // ======================================================
 
   /**
-   * Iniciar secuencia de minas con teletransporte - CORREGIDA
+   * Iniciar secuencia inteligente de minas
    */
   startMineSequence() {
-    console.log("💣 Boss iniciando secuencia de minas con teletransporte");
+    console.log("💣 Boss iniciando secuencia de minas inteligente");
 
     this.miningPhase = true;
     this.sequenceActive = true;
     this.mineTimer = 0;
 
     // Boss se vuelve inmune durante la secuencia
-    this.bossManager.makeImmune(600); // 10 segundos
+    this.bossManager.makeImmune(480); // 8 segundos
 
-    // Centrar boss inicialmente
+    // Centrar boss para lanzar minas
     if (this.bossManager.movement) {
       this.bossManager.movement.teleportToCenter();
     }
@@ -157,197 +145,19 @@ const BossMines = {
       );
     }
 
-    // 🔥 NUEVA SECUENCIA: Teletransporte + Minas
-    let mineCount = 0;
-    const totalMines = 8;
-
-    const placeMineWithTeleport = () => {
-      if (mineCount >= totalMines || !this.sequenceActive) {
-        this.endMineSequence();
-        return;
-      }
-
-      // Teletransportar a posición aleatoria
-      this.teleportToRandomPosition();
-
-      // Esperar 500ms y colocar mina
+    // Programar 6 minas con patrón inteligente
+    for (let i = 0; i < 6; i++) {
       setTimeout(() => {
         if (this.sequenceActive) {
-          this.placeMineAtBossPosition();
-          mineCount++;
-
-          // Programar siguiente mina después de 1.5 segundos
-          setTimeout(() => {
-            placeMineWithTeleport();
-          }, 1500);
+          this.spawnIntelligentMine();
         }
-      }, 500);
-    };
+      }, i * 800); // Una mina cada 0.8 segundos
+    }
 
-    // Iniciar secuencia después de 1 segundo
+    // Terminar secuencia después de las explosiones
     setTimeout(() => {
-      placeMineWithTeleport();
-    }, 1000);
-  },
-
-  /**
-   * Teletransportar boss a posición aleatoria - NUEVO
-   */
-  teleportToRandomPosition() {
-    const canvas = window.getCanvas();
-    const boss = this.bossManager.boss;
-
-    if (!boss || !canvas) return;
-
-    // Efecto visual en posición actual
-    if (this.bossManager.ui) {
-      this.bossManager.ui.createParticleEffect(
-        boss.x + boss.width / 2,
-        boss.y + boss.height / 2,
-        "#8B0000",
-        25
-      );
-    }
-
-    // Generar posición aleatoria con márgenes
-    const margin = 100;
-    const newX =
-      margin + Math.random() * (canvas.width - boss.width - margin * 2);
-    const newY =
-      margin + Math.random() * (canvas.height - boss.height - margin * 2);
-
-    // Teletransportar
-    boss.x = newX;
-    boss.y = newY;
-
-    // Efecto visual en nueva posición
-    if (this.bossManager.ui) {
-      this.bossManager.ui.createParticleEffect(
-        boss.x + boss.width / 2,
-        boss.y + boss.height / 2,
-        "#FF0000",
-        30
-      );
-    }
-
-    if (window.AudioManager) {
-      AudioManager.playSound("special");
-    }
-
-    console.log(
-      `💣 Boss teletransportado a (${Math.round(newX)}, ${Math.round(newY)})`
-    );
-  },
-
-  /**
-   * Colocar mina en la posición actual del boss - NUEVO
-   */
-  placeMineAtBossPosition() {
-    const boss = this.bossManager.boss;
-    if (!boss) return;
-
-    const centerX = boss.x + boss.width / 2;
-    const centerY = boss.y + boss.height / 2;
-
-    // Decidir tipo de mina aleatoriamente
-    const mineType = Math.random();
-
-    if (mineType < 0.6) {
-      // 60% - Mina de tiempo (3 segundos)
-      this.createTimerMine(centerX - 20, centerY - 20);
-    } else {
-      // 40% - Mina de proximidad (permanente hasta pisarla)
-      this.createProximityMine(centerX - 20, centerY - 20);
-    }
-
-    // Efecto visual
-    if (this.bossManager.ui) {
-      this.bossManager.ui.createParticleEffect(centerX, centerY, "#FF8800", 15);
-    }
-
-    console.log(
-      `💣 Mina colocada en posición del boss (${Math.round(
-        centerX
-      )}, ${Math.round(centerY)})`
-    );
-  },
-
-  /**
-   * Crear mina con contador de 3 segundos - NUEVO
-   */
-  createTimerMine(x, y) {
-    const mine = {
-      x: x,
-      y: y,
-      width: this.mineConfig.size,
-      height: this.mineConfig.size,
-      timer: 180, // 3 segundos a 60fps
-      armed: true, // Armada inmediatamente
-      blinkTimer: 0,
-      blinkSpeed: 8,
-
-      // Tipo específico
-      type: "timer",
-      dangerRadius: 120,
-      showDangerZone: true,
-      warningPhase: true,
-
-      // Efectos visuales
-      pulseIntensity: 0,
-      glowIntensity: 0.8,
-
-      // 🔥 EXPLOSIÓN EN CADENA
-      chainExplosion: true,
-    };
-
-    this.mines.push(mine);
-
-    if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage("💣 ¡MINA TEMPORAL!", "#FF4400");
-    }
-
-    console.log("💣 Mina temporal creada (3 segundos)");
-  },
-
-  /**
-   * Crear mina de proximidad (se activa al pisarla) - NUEVO
-   */
-  createProximityMine(x, y) {
-    const mine = {
-      x: x,
-      y: y,
-      width: this.mineConfig.size,
-      height: this.mineConfig.size,
-      timer: 9999, // No explota por tiempo
-      armed: true,
-      blinkTimer: 0,
-      blinkSpeed: 15, // Parpadeo más lento
-
-      // Tipo específico
-      type: "proximity",
-      dangerRadius: 80, // Radio más pequeño
-      showDangerZone: true,
-      warningPhase: false, // No está en fase de advertencia
-      activationRadius: 50, // Radio para activarse
-
-      // Efectos visuales diferentes
-      pulseIntensity: 0,
-      glowIntensity: 0.5,
-
-      // Color diferente
-      color: "#FF6600",
-    };
-
-    this.mines.push(mine);
-
-    if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage(
-        "💣 ¡MINA DE PROXIMIDAD!",
-        "#FF6600"
-      );
-    }
-
-    console.log("💣 Mina de proximidad creada (se activa al pisarla)");
+      this.endMineSequence();
+    }, 8000);
   },
 
   /**
@@ -523,14 +333,14 @@ const BossMines = {
   // ======================================================
 
   /**
-   * Explotar una mina específica - CORREGIDA con explosión en cadena
+   * Explotar una mina específica
    */
   explodeMine(index) {
     if (index < 0 || index >= this.mines.length) return;
 
     const mine = this.mines[index];
 
-    console.log(`💥 Mina ${mine.type} explotando en (${mine.x}, ${mine.y})`);
+    console.log(`💥 Mina explotando en (${mine.x}, ${mine.y})`);
 
     // Efectos visuales espectaculares
     this.createExplosionEffects(mine);
@@ -538,71 +348,14 @@ const BossMines = {
     // Verificar daño al jugador
     this.checkPlayerDamage(mine);
 
-    // 🔥 EXPLOSIÓN EN CADENA - otras minas en el radio
-    if (mine.chainExplosion) {
-      this.triggerChainExplosion(mine, index);
-    }
+    // Verificar daño a otros enemigos
+    this.checkEnemyDamage(mine);
 
     // Eliminar mina
     this.mines.splice(index, 1);
 
     if (window.AudioManager) {
       AudioManager.playSound("explosion");
-    }
-  },
-
-  /**
-   * Explosión en cadena - activar otras minas cercanas - NUEVO
-   */
-  triggerChainExplosion(explodedMine, explodedIndex) {
-    const chainRadius = 150; // Radio para activar otras minas
-    const explodedCenterX = explodedMine.x + explodedMine.width / 2;
-    const explodedCenterY = explodedMine.y + explodedMine.height / 2;
-
-    // Lista para minas a explotar (para evitar modificar array mientras iteramos)
-    const minesToExplode = [];
-
-    for (let i = 0; i < this.mines.length; i++) {
-      if (i === explodedIndex) continue; // No la mina que ya explotó
-
-      const otherMine = this.mines[i];
-      const otherCenterX = otherMine.x + otherMine.width / 2;
-      const otherCenterY = otherMine.y + otherMine.height / 2;
-
-      const distance = Math.sqrt(
-        Math.pow(explodedCenterX - otherCenterX, 2) +
-          Math.pow(explodedCenterY - otherCenterY, 2)
-      );
-
-      if (distance < chainRadius) {
-        minesToExplode.push(i);
-        console.log(
-          `⛓️ Mina en cadena detectada a distancia ${Math.round(distance)}`
-        );
-      }
-    }
-
-    // Explotar minas en cadena con delay para efecto visual
-    minesToExplode.forEach((mineIndex, chainIndex) => {
-      setTimeout(() => {
-        // Verificar que la mina aún existe (índices pueden cambiar)
-        if (mineIndex < this.mines.length) {
-          this.explodeMine(mineIndex);
-        }
-      }, chainIndex * 200); // 200ms entre cada explosión en cadena
-    });
-
-    if (minesToExplode.length > 0) {
-      console.log(
-        `⛓️ Activando ${minesToExplode.length} explosiones en cadena`
-      );
-
-      if (this.bossManager.ui) {
-        this.bossManager.ui.showScreenMessage(
-          `⛓️ ¡CADENA x${minesToExplode.length + 1}!`,
-          "#FF8800"
-        );
-      }
     }
   },
 
@@ -718,27 +471,22 @@ const BossMines = {
   },
 
   /**
-   * Dibujar una mina individual con tipos diferentes - CORREGIDA
+   * Dibujar una mina individual
    */
   drawSingleMine(ctx, mine) {
     ctx.save();
 
-    // Dibujar zona de peligro según tipo
+    // Dibujar zona de peligro
     if (mine.showDangerZone) {
       this.drawDangerZone(ctx, mine);
     }
 
-    // Dibujar la mina según su tipo
-    if (mine.type === "timer") {
-      this.drawTimerMine(ctx, mine);
-    } else if (mine.type === "proximity") {
-      this.drawProximityMine(ctx, mine);
-    } else {
-      this.drawMineBody(ctx, mine); // Fallback para minas antiguas
-    }
+    // Dibujar la mina
+    this.drawMineBody(ctx, mine);
 
-    // Dibujar contador de tiempo solo para minas de tiempo
-    if (mine.type === "timer" && mine.timer < 180) {
+    // Dibujar contador de tiempo
+    if (mine.timer < 180) {
+      // Mostrar en los últimos 3 segundos
       this.drawTimeCounter(ctx, mine);
     }
 
@@ -846,137 +594,6 @@ const BossMines = {
       ctx.arc(centerX, centerY, pulseRadius, 0, Math.PI * 2);
       ctx.stroke();
     }
-  },
-
-  /**
-   * Dibujar mina de tiempo (3 segundos) - NUEVO
-   */
-  drawTimerMine(ctx, mine) {
-    let mineColor = "#FF4400";
-
-    // Parpadeo intenso cuando está por explotar
-    if (mine.timer < 60) {
-      const blinkIntensity =
-        mine.blinkTimer % mine.blinkSpeed < mine.blinkSpeed / 2;
-      ctx.globalAlpha = blinkIntensity ? 1.0 : 0.3;
-      mineColor = "#FFFFFF";
-    } else if (mine.timer < 120) {
-      const blinkIntensity =
-        mine.blinkTimer % mine.blinkSpeed < mine.blinkSpeed / 2;
-      ctx.globalAlpha = blinkIntensity ? 1.0 : 0.7;
-      mineColor = "#FF6600";
-    }
-
-    // Sombra para la mina
-    ctx.shadowColor = mineColor;
-    ctx.shadowBlur = 20;
-
-    // Cuerpo de la mina (circular para diferenciarse)
-    const centerX = mine.x + mine.width / 2;
-    const centerY = mine.y + mine.height / 2;
-    const radius = mine.width / 2;
-
-    ctx.fillStyle = mineColor;
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Borde visible
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    // Indicador central
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius * 0.3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Líneas de advertencia en cruz
-    ctx.strokeStyle = mine.warningPhase ? "#FFFF00" : "#FF8800";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(centerX - 12, centerY);
-    ctx.lineTo(centerX + 12, centerY);
-    ctx.moveTo(centerX, centerY - 12);
-    ctx.lineTo(centerX, centerY + 12);
-    ctx.stroke();
-
-    // Pulso de energía cuando está por explotar
-    if (mine.timer < 120) {
-      const pulseRadius = radius + Math.sin(mine.blinkTimer * 0.3) * 8;
-      ctx.strokeStyle = `rgba(255, 255, 0, 0.8)`;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, pulseRadius, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-  },
-
-  /**
-   * Dibujar mina de proximidad (se activa al pisarla) - NUEVO
-   */
-  drawProximityMine(ctx, mine) {
-    const mineColor = mine.color || "#FF6600";
-
-    // Parpadeo lento para minas de proximidad
-    const blinkIntensity =
-      mine.blinkTimer % mine.blinkSpeed < mine.blinkSpeed / 2;
-    ctx.globalAlpha = blinkIntensity ? 1.0 : 0.6;
-
-    // Sombra para la mina
-    ctx.shadowColor = mineColor;
-    ctx.shadowBlur = 15;
-
-    // Cuerpo de la mina (hexagonal para diferenciarse)
-    const centerX = mine.x + mine.width / 2;
-    const centerY = mine.y + mine.height / 2;
-    const radius = mine.width / 2;
-
-    // Dibujar hexágono
-    ctx.fillStyle = mineColor;
-    ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-      const angle = (i * Math.PI) / 3;
-      const x = centerX + radius * Math.cos(angle);
-      const y = centerY + radius * Math.sin(angle);
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-    ctx.closePath();
-    ctx.fill();
-
-    // Borde visible
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Indicador central (triángulo de advertencia)
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY - 8);
-    ctx.lineTo(centerX - 7, centerY + 5);
-    ctx.lineTo(centerX + 7, centerY + 5);
-    ctx.closePath();
-    ctx.fill();
-
-    // Símbolo de exclamación
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(centerX - 1, centerY - 3, 2, 4);
-    ctx.fillRect(centerX - 1, centerY + 2, 2, 2);
-
-    // Ondas de proximidad
-    const waveRadius = radius + Math.sin(mine.blinkTimer * 0.2) * 15;
-    ctx.strokeStyle = `rgba(255, 102, 0, 0.4)`;
-    ctx.lineWidth = 2;
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, waveRadius, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
   },
 
   /**

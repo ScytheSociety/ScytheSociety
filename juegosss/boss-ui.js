@@ -600,7 +600,7 @@ const BossUI = {
   },
 
   /**
-   * Dibujar indicador de fase - MODIFICADO para español
+   * Dibujar indicador de fase
    */
   drawPhaseIndicator(ctx, boss, barY) {
     ctx.font = "bold 8px Arial";
@@ -609,14 +609,12 @@ const BossUI = {
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 2;
 
-    // 🔥 USAR FASE EN ESPAÑOL
-    const currentPhaseSpanish = this.bossManager.phases
-      ? this.bossManager.phases.getCurrentPhaseSpanish()
-      : "DESCONOCIDO";
-
+    const currentPhase = this.bossManager.phases
+      ? this.bossManager.phases.getCurrentPhase()
+      : "UNKNOWN";
     const phaseText = this.bossManager.isImmune
-      ? `INMUNE - ${currentPhaseSpanish}`
-      : currentPhaseSpanish;
+      ? `INMUNE - ${currentPhase}`
+      : currentPhase;
 
     const textX = boss.x + boss.width / 2;
     const textY = barY - 12;

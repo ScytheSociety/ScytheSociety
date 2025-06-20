@@ -1,426 +1,424 @@
 /**
- * Hell Shooter - Boss Phases System COMPLETAMENTE REDISEÑADO
- * Sistema con tiempos específicos y transiciones correctas
+ * Hell Shooter - Boss Phases System
+ * Sistema modular de gestión de fases inteligentes del boss
  */
 
 const BossPhases = {
   // ======================================================
-  // ESTADO DEL SISTEMA DE FASES - REDISEÑADO
+  // ESTADO DEL SISTEMA DE FASES
   // ======================================================
 
   bossManager: null,
 
-  // Configuración de fases con tiempos específicos - MODIFICADO
-  PHASE_CONFIGS: {
-    INTRO: {
-      name: "INTRO",
-      duration: 600, // 10 segundos
-      healthThreshold: 1.0,
-      isImmune: true,
-      message: "👹 ¡EL REY DEL INFIERNO APARECE! 👹",
-    },
-    HUNTING_1: {
-      name: "HUNTING_1",
-      duration: -1, // Indefinido hasta 75%
-      healthThreshold: 0.75, // 375/500 vida
-      isImmune: false,
-      message: "⚔️ ¡A la caza!",
-    },
-    SUMMONING: {
-      name: "SUMMONING",
-      duration: 3600, // 🔥 CAMBIADO: 60 segundos (era 600)
-      healthThreshold: 0.75,
-      isImmune: true,
-      message: "⚔️ FASE DE INVOCACIÓN",
-    },
-    HUNTING_2: {
-      name: "HUNTING_2",
-      duration: -1, // Indefinido hasta 50%
-      healthThreshold: 0.5, // 250/500 vida
-      isImmune: false,
-      message: "⚔️ ¡Boss vulnerable!",
-    },
-    MINES: {
-      name: "MINES",
-      duration: 5400, // 🔥 CAMBIADO: 90 segundos (era 900)
-      healthThreshold: 0.5,
-      isImmune: true,
-      message: "💣 FASE DE MINAS",
-    },
-    HUNTING_3: {
-      name: "HUNTING_3",
-      duration: -1, // Indefinido hasta 30%
-      healthThreshold: 0.3, // 150/500 vida
-      isImmune: false,
-      message: "⚔️ ¡Boss vulnerable!",
-    },
-    BULLETS: {
-      name: "BULLETS",
-      duration: 7200, // 🔥 CAMBIADO: 120 segundos (era 1200)
-      healthThreshold: 0.3,
-      isImmune: true,
-      message: "🌟 FASE TOUHOU",
-    },
-    HUNTING_4: {
-      name: "HUNTING_4",
-      duration: -1, // Indefinido hasta 15%
-      healthThreshold: 0.15, // 75/500 vida
-      isImmune: false,
-      message: "⚔️ ¡Boss vulnerable!",
-    },
-    REDLINE: {
-      name: "REDLINE",
-      duration: 6000, // 🔥 CAMBIADO: 100 segundos para 10 rondas (era 3000)
-      healthThreshold: 0.15,
-      isImmune: true,
-      message: "🔴 FASE DEL HILO ROJO",
-      redLineCount: 10,
-      pauseBetweenLines: 180, // 3 segundos
-    },
-    HUNTING_5: {
-      name: "HUNTING_5",
-      duration: -1, // Indefinido hasta 3%
-      healthThreshold: 0.03, // 15/500 vida
-      isImmune: false,
-      message: "⚔️ ¡Última oportunidad!",
-    },
-    YANKENPO: {
-      name: "YANKENPO",
-      duration: -1, // Indefinido hasta muerte
-      healthThreshold: 0.03,
-      isImmune: true,
-      message: "🎮 ¡FASE FINAL: YAN KEN PO!",
-      winsRequired: 3,
-    },
+  // Configuración de fases
+  PHASE_DURATIONS: {
+    SUMMONING: 900, // 15 segundos
+    MINES: 1500, // 25 segundos
+    BULLETS: 2100, // 35 segundos
   },
 
   // Estado actual
-  currentPhase: "INTRO",
-  phaseTimer: 0,
+  currentPhase: "HUNTING",
   phaseActive: false,
-  phaseTransitioning: false,
+  phaseTimer: 0,
+  phaseCooldown: 0,
 
-  // Para Yan Ken Po
-  yanKenPoWins: 0,
-  yanKenPoRequired: 3,
-
-  // Para Red Line
-  redLinesCompleted: 0,
-  redLinePausing: false,
-  redLinePauseTimer: 0,
+  // Colores de fase
+  phaseColors: {
+    HUNTING: "#8B0000",
+    SUMMONING: "#8B0000",
+    MINES: "#FF8800",
+    BULLETS: "#9B59B6",
+    REDLINE: "#FF0000",
+    YANKENPO: "#FFD700",
+    FINAL: "#000000",
+  },
 
   // ======================================================
   // INICIALIZACIÓN
   // ======================================================
 
+  /**
+   * Inicializar el sistema de fases
+   */
   init(bossManagerRef) {
     this.bossManager = bossManagerRef;
     this.initPhaseSystem();
-    console.log("⚔️ Sistema de fases REDISEÑADO inicializado");
+    console.log("⚔️ Sistema de fases del boss inicializado");
   },
 
+  /**
+   * Configurar sistema de fases
+   */
   initPhaseSystem() {
-    this.currentPhase = "INTRO";
-    this.phaseTimer = 0;
+    this.currentPhase = "HUNTING";
     this.phaseActive = false;
-    this.phaseTransitioning = false;
-    this.yanKenPoWins = 0;
-    this.redLinesCompleted = 0;
-    this.redLinePausing = false;
-    this.redLinePauseTimer = 0;
+    this.phaseTimer = 0;
+    this.phaseCooldown = 0;
   },
 
   // ======================================================
   // ACTUALIZACIÓN PRINCIPAL
   // ======================================================
 
+  /**
+   * Actualizar sistema de fases
+   */
   update() {
     if (!this.bossManager.active) return;
 
+    // Actualizar cooldown
+    if (this.phaseCooldown > 0) {
+      this.phaseCooldown--;
+    }
+
+    // Verificar transiciones de fase basadas en vida
+    this.checkPhaseTransitions();
+
+    // Ejecutar fase actual si está activa
+    if (this.phaseActive) {
+      this.executeCurrentPhase();
+    }
+  },
+
+  /**
+   * Verificar si debe cambiar de fase basado en vida
+   */
+  checkPhaseTransitions() {
     const healthPercentage =
       this.bossManager.currentHealth / this.bossManager.maxHealth;
 
-    // Actualizar timer de fase actual
-    this.phaseTimer++;
-
-    // Manejar transiciones
-    if (!this.phaseTransitioning) {
-      this.checkPhaseTransition(healthPercentage);
+    // Verificar fase final (3% de vida)
+    if (healthPercentage <= 0.03 && this.currentPhase !== "YANKENPO") {
+      this.startFinalPhase();
+      return;
     }
 
-    // Ejecutar fase actual
-    this.executeCurrentPhase();
+    // Verificar fase de línea roja al 10%
+    if (
+      healthPercentage <= 0.1 &&
+      healthPercentage > 0.03 &&
+      this.currentPhase !== "REDLINE"
+    ) {
+      this.changePhase("REDLINE");
+      return;
+    }
 
-    // Verificar finalización de fase por tiempo
+    // Verificar fases normales
+    let targetPhase = null;
+
+    if (
+      healthPercentage <= 0.75 &&
+      healthPercentage > 0.5 &&
+      !this.phaseActive
+    ) {
+      targetPhase = "SUMMONING";
+    } else if (
+      healthPercentage <= 0.5 &&
+      healthPercentage > 0.25 &&
+      !this.phaseActive
+    ) {
+      targetPhase = "MINES";
+    } else if (
+      healthPercentage <= 0.25 &&
+      healthPercentage > 0.1 &&
+      !this.phaseActive
+    ) {
+      targetPhase = "BULLETS";
+    }
+
+    // Cambiar fase si es necesario
+    if (
+      targetPhase &&
+      this.currentPhase !== targetPhase &&
+      this.phaseCooldown <= 0
+    ) {
+      this.changePhase(targetPhase);
+    }
+  },
+
+  /**
+   * Ejecutar la fase actual
+   */
+  executeCurrentPhase() {
+    this.phaseTimer++;
+
+    switch (this.currentPhase) {
+      case "SUMMONING":
+        this.executeSummoningPhase();
+        break;
+
+      case "MINES":
+        this.executeMinesPhase();
+        break;
+
+      case "BULLETS":
+        this.executeBulletsPhase();
+        break;
+
+      case "REDLINE":
+        // El sistema de redline maneja su propia lógica
+        break;
+
+      case "YANKENPO":
+        // El sistema de yankenpo maneja su propia lógica
+        break;
+    }
+
+    // Verificar si la fase debe terminar
     this.checkPhaseCompletion();
   },
 
-  /**
-   * Verificar si debe cambiar de fase
-   */
-  checkPhaseTransition(healthPercentage) {
-    const config = this.PHASE_CONFIGS[this.currentPhase];
-
-    // Verificar si debe cambiar por umbral de vida
-    if (config.name.startsWith("HUNTING")) {
-      if (healthPercentage <= config.healthThreshold) {
-        this.startPhaseTransition(healthPercentage);
-      }
-    }
-  },
-
-  /**
-   * Iniciar transición de fase
-   */
-  startPhaseTransition(healthPercentage) {
-    this.phaseTransitioning = true;
-
-    // Determinar siguiente fase según vida
-    let nextPhase;
-    if (healthPercentage <= 0.03) {
-      nextPhase = "YANKENPO";
-    } else if (healthPercentage <= 0.15) {
-      nextPhase = "REDLINE";
-    } else if (healthPercentage <= 0.3) {
-      nextPhase = "BULLETS";
-    } else if (healthPercentage <= 0.5) {
-      nextPhase = "MINES";
-    } else if (healthPercentage <= 0.75) {
-      nextPhase = "SUMMONING";
-    }
-
-    if (nextPhase) {
-      this.changePhase(nextPhase);
-    }
-  },
+  // ======================================================
+  // CAMBIO DE FASES
+  // ======================================================
 
   /**
    * Cambiar a una nueva fase
    */
   changePhase(newPhase) {
-    console.log(`👹 Boss cambiando de ${this.currentPhase} a ${newPhase}`);
+    console.log(`👹 Boss cambiando a fase: ${newPhase}`);
 
-    // Limpiar fase anterior
+    // Cleanup de fase anterior
     this.endCurrentPhase();
 
-    // Configurar nueva fase
     this.currentPhase = newPhase;
     this.phaseTimer = 0;
     this.phaseActive = true;
-    this.phaseTransitioning = false;
 
-    const config = this.PHASE_CONFIGS[newPhase];
+    // Configurar nueva fase
+    this.setupPhase(newPhase);
 
-    // Centrar boss y mostrar mensaje
+    // Notificar otros sistemas
+    this.notifyPhaseChange(newPhase);
+  },
+
+  /**
+   * Configurar una fase específica
+   */
+  setupPhase(phase) {
+    switch (phase) {
+      case "SUMMONING":
+        this.setupSummoningPhase();
+        break;
+
+      case "MINES":
+        this.setupMinesPhase();
+        break;
+
+      case "BULLETS":
+        this.setupBulletsPhase();
+        break;
+
+      case "REDLINE":
+        this.setupRedLinePhase();
+        break;
+
+      case "YANKENPO":
+        this.setupYanKenPoPhase();
+        break;
+    }
+  },
+
+  /**
+   * Notificar cambio de fase a otros sistemas
+   */
+  notifyPhaseChange(newPhase) {
+    // Ajustar movimiento
     if (this.bossManager.movement) {
-      this.bossManager.movement.stopMovementAndCenter();
+      this.bossManager.movement.adjustForPhase(newPhase);
     }
 
+    // Mostrar transición en UI
     if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage(config.message, "#FF0000");
+      const phaseMessages = {
+        SUMMONING: "⚔️ FASE DE INVOCACIÓN",
+        MINES: "💣 FASE DE MINAS",
+        BULLETS: "🌟 FASE TOUHOU",
+        REDLINE: "🔴 FASE DEL HILO ROJO",
+        YANKENPO: "🎮 FASE FINAL: YAN KEN PO",
+      };
+
+      this.bossManager.ui.showScreenMessage(phaseMessages[newPhase], "#FF0000");
     }
-
-    // Configurar inmunidad
-    if (config.isImmune) {
-      this.bossManager.makeImmune(9999); // Inmune indefinido
-    } else {
-      this.bossManager.isImmune = false;
-      this.bossManager.immunityTimer = 0;
-    }
-
-    // Configurar fase específica
-    this.setupSpecificPhase(newPhase);
-
-    console.log(`✅ Fase ${newPhase} iniciada`);
   },
 
+  // ======================================================
+  // CONFIGURACIÓN DE FASES ESPECÍFICAS
+  // ======================================================
+
   /**
-   * Configurar fases específicas
+   * Configurar fase de invocación
    */
-  setupSpecificPhase(phaseName) {
-    switch (phaseName) {
-      case "INTRO":
-        // Solo esperar 10 segundos
-        break;
+  setupSummoningPhase() {
+    this.bossManager.makeImmune(this.PHASE_DURATIONS.SUMMONING);
 
-      case "SUMMONING":
-        // Ya está inmune, solo invocar
-        break;
-
-      case "MINES":
-        if (this.bossManager.mines) {
-          setTimeout(() => {
-            this.bossManager.mines.startMineSequence();
-          }, 1000);
-        }
-        break;
-
-      case "BULLETS":
-        if (this.bossManager.bullets) {
-          setTimeout(() => {
-            this.bossManager.bullets.startBulletPattern();
-          }, 1000);
-        }
-        break;
-
-      case "REDLINE":
-        this.redLinesCompleted = 0;
-        this.redLinePausing = false;
-        if (this.bossManager.redline) {
-          setTimeout(() => {
-            this.startRedLineSequence();
-          }, 1000);
-        }
-        break;
-
-      case "YANKENPO":
-        this.yanKenPoWins = 0;
-        if (this.bossManager.yankenpo) {
-          setTimeout(() => {
-            this.bossManager.yankenpo.startPhase();
-          }, 1000);
-        }
-        break;
-
-      default:
-        // Fases de caza - activar movimiento después de 2 segundos
-        setTimeout(() => {
-          if (this.bossManager.movement) {
-            this.bossManager.movement.enableWandering();
-          }
-
-          // Hacer vulnerable si corresponde
-          const config = this.PHASE_CONFIGS[phaseName];
-          if (!config.isImmune) {
-            this.bossManager.isImmune = false;
-            this.bossManager.immunityTimer = 0;
-
-            if (this.bossManager.ui) {
-              this.bossManager.ui.showScreenMessage(
-                "⚔️ Boss vulnerable",
-                "#00FF00"
-              );
-            }
-          }
-        }, 2000);
-        break;
+    if (this.bossManager.movement) {
+      this.bossManager.movement.teleportToCenter();
     }
   },
 
   /**
-   * Ejecutar fase actual - CORREGIDO PARA PERSECUCIÓN
+   * Configurar fase de minas
    */
-  executeCurrentPhase() {
-    const config = this.PHASE_CONFIGS[this.currentPhase];
+  setupMinesPhase() {
+    this.bossManager.makeImmune(this.PHASE_DURATIONS.MINES);
 
-    switch (this.currentPhase) {
-      case "INTRO":
-        // Boss inmóvil en el centro
-        break;
-
-      case "HUNTING_1":
-      case "HUNTING_2":
-      case "HUNTING_3":
-      case "HUNTING_4":
-      case "HUNTING_5":
-        // 🔥 PERSECUCIÓN FLUIDA DEL JUGADOR
-        if (this.bossManager.movement) {
-          this.bossManager.movement.enableWandering();
-          this.bossManager.movement.changePattern("hunting");
-        }
-        break;
-
-      case "SUMMONING":
-        // Invocar enemigos cada 4 segundos
-        if (this.phaseTimer % 240 === 0) {
-          this.summonEnemies(2);
-        }
-        break;
-
-      case "MINES":
-        // La fase de minas se maneja en su propio sistema
-        break;
-
-      case "BULLETS":
-        // La fase de bullets se maneja en su propio sistema
-        break;
-
-      case "REDLINE":
-        if (!this.redLinePausing) {
-          this.updateRedLineSequence();
-        } else {
-          this.updateRedLinePause();
-        }
-        break;
-
-      case "YANKENPO":
-        // El sistema de Yan Ken Po maneja su propia lógica
-        break;
-
-      default:
-        // Otras fases - asegurar persecución
-        if (this.bossManager.movement) {
-          this.bossManager.movement.enableWandering();
-          this.bossManager.movement.changePattern("hunting");
-        }
-        break;
+    if (this.bossManager.movement) {
+      this.bossManager.movement.teleportToCenter();
     }
   },
 
   /**
-   * Verificar si la fase debe completarse
+   * Configurar fase de balas
+   */
+  setupBulletsPhase() {
+    this.bossManager.makeImmune(this.PHASE_DURATIONS.BULLETS);
+
+    if (this.bossManager.movement) {
+      this.bossManager.movement.teleportToCenter();
+    }
+  },
+
+  /**
+   * Configurar fase de línea roja
+   */
+  setupRedLinePhase() {
+    if (this.bossManager.redline) {
+      this.bossManager.redline.startPhase();
+    }
+  },
+
+  /**
+   * Configurar fase de Yan Ken Po
+   */
+  setupYanKenPoPhase() {
+    if (this.bossManager.yankenpo) {
+      this.bossManager.yankenpo.startPhase();
+    }
+  },
+
+  // ======================================================
+  // EJECUCIÓN DE FASES
+  // ======================================================
+
+  /**
+   * Ejecutar fase de invocación
+   */
+  executeSummoningPhase() {
+    // Invocar enemigos cada 4 segundos
+    if (this.phaseTimer % 240 === 0) {
+      this.summonEnemies(3);
+    }
+  },
+
+  /**
+   * Ejecutar fase de minas
+   */
+  executeMinesPhase() {
+    // Ciclo de minas cada 8 segundos
+    if (this.phaseTimer % 480 === 0 && this.bossManager.mines) {
+      this.bossManager.mines.startMineSequence();
+    }
+
+    // Teletransporte más frecuente
+    if (this.phaseTimer % 180 === 0 && this.bossManager.movement) {
+      this.bossManager.movement.intelligentTeleport();
+    }
+  },
+
+  /**
+   * Ejecutar fase de balas Touhou
+   */
+  executeBulletsPhase() {
+    // Patrón de balas cada 6 segundos
+    if (this.phaseTimer % 360 === 0 && this.bossManager.bullets) {
+      this.bossManager.bullets.startBulletPattern();
+    }
+
+    // Invocaciones ocasionales
+    if (this.phaseTimer % 420 === 0) {
+      this.summonEnemies(2);
+    }
+
+    // Escudos protectores cada 5 segundos
+    if (this.phaseTimer % 300 === 0) {
+      this.spawnProtectiveShield();
+    }
+  },
+
+  // ======================================================
+  // FINALIZACIÓN DE FASES
+  // ======================================================
+
+  /**
+   * Verificar si la fase actual debe completarse
    */
   checkPhaseCompletion() {
-    const config = this.PHASE_CONFIGS[this.currentPhase];
+    let shouldEnd = false;
 
-    // Solo verificar fases con duración definida
-    if (config.duration > 0 && this.phaseTimer >= config.duration) {
-      this.completePhase();
-    }
-  },
-
-  /**
-   * Completar fase actual
-   */
-  completePhase() {
-    console.log(`✅ Fase ${this.currentPhase} completada`);
-
-    const currentPhase = this.currentPhase;
-
-    // Determinar siguiente fase
-    let nextPhase;
-    switch (currentPhase) {
-      case "INTRO":
-        nextPhase = "HUNTING_1";
-        break;
+    switch (this.currentPhase) {
       case "SUMMONING":
-        nextPhase = "HUNTING_2";
+        shouldEnd = this.phaseTimer >= this.PHASE_DURATIONS.SUMMONING;
         break;
+
       case "MINES":
-        nextPhase = "HUNTING_3";
+        shouldEnd = this.phaseTimer >= this.PHASE_DURATIONS.MINES;
         break;
+
       case "BULLETS":
-        nextPhase = "HUNTING_4";
+        shouldEnd = this.phaseTimer >= this.PHASE_DURATIONS.BULLETS;
         break;
+
+      // Las fases especiales se manejan en sus propios sistemas
       case "REDLINE":
-        nextPhase = "HUNTING_5";
+      case "YANKENPO":
+        // No se terminan automáticamente por tiempo
         break;
-      default:
-        // No cambiar automáticamente
-        return;
     }
 
-    if (nextPhase) {
-      this.changePhase(nextPhase);
+    if (shouldEnd) {
+      this.endCurrentPhase();
     }
   },
 
   /**
-   * Terminar fase actual
+   * Terminar la fase actual
    */
   endCurrentPhase() {
-    // Limpiar sistemas según la fase
+    console.log(`👹 Terminando fase: ${this.currentPhase}`);
+
+    this.phaseActive = false;
+    this.bossManager.isImmune = false;
+    this.bossManager.immunityTimer = 0;
+    this.phaseTimer = 0;
+    this.phaseCooldown = 300; // 5 segundos de cooldown
+
+    // Limpiar sistemas de la fase
+    this.cleanupCurrentPhase();
+
+    // Volver a modo de caza
+    this.currentPhase = "HUNTING";
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage("⚔️ BOSS VULNERABLE", "#00FF00");
+    }
+
+    // Reanudar movimiento normal
+    if (this.bossManager.movement) {
+      this.bossManager.movement.changePattern("hunting");
+    }
+  },
+
+  /**
+   * Limpiar sistemas de la fase actual
+   */
+  cleanupCurrentPhase() {
     switch (this.currentPhase) {
+      case "SUMMONING":
+        // No cleanup específico necesario
+        break;
+
       case "MINES":
         if (this.bossManager.mines) {
           this.bossManager.mines.endMineSequence();
@@ -432,203 +430,88 @@ const BossPhases = {
           this.bossManager.bullets.cleanup();
         }
         break;
-
-      case "REDLINE":
-        if (this.bossManager.redline) {
-          this.bossManager.redline.endPhase();
-        }
-        break;
-    }
-
-    this.phaseActive = false;
-  },
-
-  // ======================================================
-  // SISTEMA DE HILO ROJO REDISEÑADO
-  // ======================================================
-
-  /**
-   * Iniciar secuencia de 10 hilos rojos
-   */
-  startRedLineSequence() {
-    console.log("🔴 Iniciando secuencia de 10 hilos rojos");
-    this.executeNextRedLine();
-  },
-
-  /**
-   * Ejecutar siguiente hilo rojo
-   */
-  executeNextRedLine() {
-    if (this.redLinesCompleted >= 10) {
-      // Completar fase
-      this.completePhase();
-      return;
-    }
-
-    console.log(`🔴 Ejecutando hilo rojo ${this.redLinesCompleted + 1}/10`);
-
-    if (this.bossManager.redline) {
-      this.bossManager.redline.startRedLineCycle();
-    }
-
-    this.redLinesCompleted++;
-
-    // Si no es el último hilo, programar pausa
-    if (this.redLinesCompleted < 10) {
-      this.redLinePausing = true;
-      this.redLinePauseTimer = 0;
-    }
-  },
-
-  /**
-   * Actualizar secuencia de hilo rojo
-   */
-  updateRedLineSequence() {
-    // La lógica está en executeNextRedLine, llamado desde redline system
-  },
-
-  /**
-   * Actualizar pausa entre hilos rojos
-   */
-  updateRedLinePause() {
-    this.redLinePauseTimer++;
-
-    if (
-      this.redLinePauseTimer >= this.PHASE_CONFIGS.REDLINE.pauseBetweenLines
-    ) {
-      this.redLinePausing = false;
-      this.redLinePauseTimer = 0;
-
-      // Ejecutar siguiente hilo
-      setTimeout(() => {
-        this.executeNextRedLine();
-      }, 500);
     }
   },
 
   // ======================================================
-  // SISTEMA YAN KEN PO REDISEÑADO
+  // FASE FINAL
   // ======================================================
 
   /**
-   * Manejar resultado de Yan Ken Po
+   * Iniciar la fase final (Yan Ken Po)
    */
-  handleYanKenPoResult(playerWon) {
-    if (playerWon) {
-      this.yanKenPoWins++;
+  startFinalPhase() {
+    console.log("🎮 Iniciando fase final: YAN KEN PO");
 
-      // Reducir 1% de vida del boss
-      const damage = this.bossManager.maxHealth * 0.01;
-      this.bossManager.currentHealth = Math.max(
-        0,
-        this.bossManager.currentHealth - damage
-      );
+    this.currentPhase = "YANKENPO";
+    this.phaseActive = true;
+    this.bossManager.makeImmune(9999); // Inmune hasta completar Yan Ken Po
 
-      if (this.bossManager.ui) {
-        this.bossManager.ui.showScreenMessage(
-          `🏆 ¡Ganaste! (${this.yanKenPoWins}/${this.yanKenPoRequired})`,
-          "#00FF00"
-        );
-      }
-
-      // Verificar si ganó el juego
-      if (this.yanKenPoWins >= this.yanKenPoRequired) {
-        this.bossManager.defeat();
-        return;
-      }
-
-      // Continuar Yan Ken Po
-      setTimeout(() => {
-        if (this.bossManager.yankenpo) {
-          this.bossManager.yankenpo.startPhase();
-        }
-      }, 2000);
-    } else {
-      // Jugador perdió - invocar fase aleatoria
-      if (this.bossManager.ui) {
-        this.bossManager.ui.showScreenMessage(
-          "💀 ¡Perdiste! Fase aleatoria",
-          "#FF0000"
-        );
-      }
-
-      // Seleccionar fase aleatoria
-      const randomPhases = ["SUMMONING", "MINES", "BULLETS"];
-      const randomPhase =
-        randomPhases[Math.floor(Math.random() * randomPhases.length)];
-
-      console.log(`🎲 Fase aleatoria seleccionada: ${randomPhase}`);
-
-      setTimeout(() => {
-        this.executeRandomPhase(randomPhase);
-      }, 2000);
+    // Limpiar otros sistemas
+    if (this.bossManager.mines) {
+      this.bossManager.mines.cleanup();
     }
-  },
 
-  /**
-   * Ejecutar fase aleatoria después de perder Yan Ken Po
-   */
-  executeRandomPhase(phaseName) {
-    // Boss sigue inmune
-    this.bossManager.makeImmune(9999);
+    if (this.bossManager.bullets) {
+      this.bossManager.bullets.cleanup();
+    }
 
-    // Centrar y mostrar mensaje
+    // Detener hilo rojo si está activo
+    if (this.bossManager.redline && this.bossManager.redline.isActive()) {
+      this.bossManager.redline.endPhase();
+    }
+
+    // Centrar boss
     if (this.bossManager.movement) {
-      this.bossManager.movement.stopMovementAndCenter();
+      this.bossManager.movement.teleportToCenter();
     }
 
-    const config = this.PHASE_CONFIGS[phaseName];
     if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage(`🎲 ${config.message}`, "#FF00FF");
+      this.bossManager.ui.showScreenMessage(
+        "🎮 ¡FASE FINAL: YAN KEN PO!",
+        "#FFD700"
+      );
     }
 
-    // Ejecutar fase específica
+    // Iniciar Yan Ken Po después de un delay
     setTimeout(() => {
-      this.setupSpecificPhase(phaseName);
-    }, 1000);
-
-    // Volver a Yan Ken Po después del tiempo de la fase
-    setTimeout(() => {
-      if (this.bossManager.ui) {
-        this.bossManager.ui.showScreenMessage(
-          "🎮 Volviendo a Yan Ken Po",
-          "#FFD700"
-        );
+      if (this.bossManager.yankenpo) {
+        this.bossManager.yankenpo.startPhase();
       }
-
-      setTimeout(() => {
-        if (this.bossManager.yankenpo) {
-          this.bossManager.yankenpo.startPhase();
-        }
-      }, 2000);
-    }, config.duration);
+    }, 1000);
   },
 
   // ======================================================
   // INVOCACIÓN DE ENEMIGOS
   // ======================================================
 
+  /**
+   * Invocar enemigos inteligentes
+   */
   summonEnemies(count) {
-    // Usar el sistema existente
     const canvas = window.getCanvas();
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        `👹 ¡${count} ESBIRROS INVOCADOS!`,
+        `👹 ¡${count} ESBIRROS DE TODOS LOS NIVELES!`,
         "#FF4444"
       );
     }
 
     for (let i = 0; i < count; i++) {
       setTimeout(() => {
+        // Enemigos de niveles aleatorios (1-10)
         const randomLevel = 1 + Math.floor(Math.random() * 10);
         const size = GameConfig.ENEMY_MIN_SIZE + randomLevel * 3;
 
+        // Posiciones estratégicas
         const positions = [
           { x: 50, y: 50 },
           { x: canvas.width - 100, y: 50 },
           { x: 50, y: canvas.height - 100 },
           { x: canvas.width - 100, y: canvas.height - 100 },
+          { x: canvas.width / 4, y: 50 },
+          { x: (canvas.width * 3) / 4, y: 50 },
         ];
 
         const pos = positions[i % positions.length];
@@ -640,6 +523,7 @@ const BossPhases = {
           height: size,
           velocityX: (Math.random() - 0.5) * 0.008 * canvas.height,
           velocityY: (Math.random() - 0.5) * 0.008 * canvas.height,
+
           image:
             GameConfig.enemyImages[
               Math.min(randomLevel - 1, GameConfig.enemyImages.length - 1)
@@ -647,9 +531,11 @@ const BossPhases = {
           speedFactor: 1.0 + randomLevel * 0.1,
           bounceCount: 0,
           maxBounces: 5 + randomLevel,
+
           level: randomLevel,
           type: "boss_minion",
           isBossMinion: true,
+
           dynamicScaling: {
             enabled: true,
             baseSize: size,
@@ -674,6 +560,8 @@ const BossPhases = {
             25
           );
         }
+
+        console.log(`👹 Esbirro nivel ${randomLevel} invocado`);
       }, i * 400);
     }
 
@@ -682,8 +570,133 @@ const BossPhases = {
     }
   },
 
+  /**
+   * Crear escudo protector durante fase Touhou
+   */
+  spawnProtectiveShield() {
+    const canvas = window.getCanvas();
+
+    const shieldPowerUp = {
+      x: Math.random() * (canvas.width - 60) + 30,
+      y: Math.random() * (canvas.height - 60) + 30,
+      width: 50,
+      height: 50,
+      velocityX: 0,
+      velocityY: 0,
+      type: {
+        id: 0,
+        name: "Escudo Protector",
+        color: "#00FF00",
+        duration: 240,
+      },
+      pulseTimer: 0,
+      glowIntensity: 1.0,
+      spawnTime: window.getGameTime(),
+    };
+
+    if (window.PowerUpManager) {
+      PowerUpManager.powerUps.push(shieldPowerUp);
+    }
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        "🛡️ ¡ESCUDO DISPONIBLE!",
+        "#00FF00"
+      );
+    }
+
+    console.log("🛡️ Escudo protector spawneado durante fase Touhou");
+  },
+
   // ======================================================
-  // GETTERS Y UTILIDADES
+  // REACCIONES A EVENTOS
+  // ======================================================
+
+  /**
+   * Reaccionar al recibir daño
+   */
+  onDamageReceived(healthPercentage) {
+    // Invocación de emergencia si vida muy baja
+    if (healthPercentage < 0.15 && Math.random() < 0.2) {
+      this.summonEnemies(2);
+
+      if (this.bossManager.ui) {
+        this.bossManager.ui.showScreenMessage(
+          "👹 ¡Refuerzos de emergencia!",
+          "#FF0000"
+        );
+      }
+    }
+
+    // Acelerar fase actual si está activa
+    if (this.phaseActive && healthPercentage < 0.3) {
+      // Reducir duración restante de la fase
+      this.phaseTimer += 60; // Acelerar 1 segundo
+    }
+  },
+
+  // ======================================================
+  // GESTIÓN DE FASES ESPECIALES
+  // ======================================================
+
+  /**
+   * Manejar pérdida en Yan Ken Po
+   */
+  handleYanKenPoLoss() {
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        "¡PERDISTE! Nueva fase aleatoria",
+        "#FF0000"
+      );
+    }
+
+    console.log("🎮 Yan Ken Po perdido - iniciando fase aleatoria");
+
+    // Limpiar Yan Ken Po
+    this.currentPhase = "HUNTING";
+    this.phaseActive = false;
+
+    // Seleccionar fase aleatoria
+    const phases = ["SUMMONING", "MINES", "BULLETS", "REDLINE"];
+    const randomPhase = phases[Math.floor(Math.random() * phases.length)];
+
+    console.log(`🎲 Fase aleatoria seleccionada: ${randomPhase}`);
+
+    setTimeout(() => {
+      this.changePhase(randomPhase);
+    }, 2000);
+  },
+
+  /**
+   * Verificar si está en fase especial
+   */
+  isInSpecialPhase() {
+    return (
+      this.currentPhase === "REDLINE" ||
+      this.currentPhase === "YANKENPO" ||
+      (this.phaseActive &&
+        ["SUMMONING", "MINES", "BULLETS"].includes(this.currentPhase))
+    );
+  },
+
+  // ======================================================
+  // RESET Y CLEANUP
+  // ======================================================
+
+  /**
+   * Reset del sistema de fases
+   */
+  reset() {
+    this.currentPhase = "HUNTING";
+    this.phaseActive = false;
+    this.phaseTimer = 0;
+    this.phaseCooldown = 0;
+
+    console.log("🔄 Sistema de fases reseteado");
+  },
+
+  // ======================================================
+  // GETTERS
   // ======================================================
 
   getCurrentPhase() {
@@ -691,20 +704,7 @@ const BossPhases = {
   },
 
   getCurrentPhaseColor() {
-    const phaseColors = {
-      INTRO: "#8B0000",
-      HUNTING_1: "#8B0000",
-      SUMMONING: "#8B0000",
-      HUNTING_2: "#8B0000",
-      MINES: "#FF8800",
-      HUNTING_3: "#8B0000",
-      BULLETS: "#9B59B6",
-      HUNTING_4: "#8B0000",
-      REDLINE: "#FF0000",
-      HUNTING_5: "#8B0000",
-      YANKENPO: "#FFD700",
-    };
-    return phaseColors[this.currentPhase] || "#8B0000";
+    return this.phaseColors[this.currentPhase] || "#8B0000";
   },
 
   isPhaseActive() {
@@ -716,90 +716,16 @@ const BossPhases = {
   },
 
   getPhaseProgress() {
-    const config = this.PHASE_CONFIGS[this.currentPhase];
-    if (!config || config.duration <= 0) return 0;
-    return Math.min(1, this.phaseTimer / config.duration);
-  },
+    if (!this.phaseActive) return 0;
 
-  isInSpecialPhase() {
-    const specialPhases = [
-      "SUMMONING",
-      "MINES",
-      "BULLETS",
-      "REDLINE",
-      "YANKENPO",
-    ];
-    return specialPhases.includes(this.currentPhase);
-  },
+    const maxDuration = this.PHASE_DURATIONS[this.currentPhase];
+    if (!maxDuration) return 0;
 
-  // ======================================================
-  // RESET
-  // ======================================================
-
-  reset() {
-    this.currentPhase = "INTRO";
-    this.phaseTimer = 0;
-    this.phaseActive = false;
-    this.phaseTransitioning = false;
-    this.yanKenPoWins = 0;
-    this.redLinesCompleted = 0;
-    this.redLinePausing = false;
-    this.redLinePauseTimer = 0;
-
-    console.log("🔄 Sistema de fases reseteado");
-  },
-
-  /**
-   * Obtener nombre de fase en español - NUEVO
-   */
-  getPhaseNameInSpanish(phaseName) {
-    const translations = {
-      INTRO: "PRESENTACIÓN",
-      HUNTING_1: "CAZANDO",
-      SUMMONING: "INVOCANDO",
-      HUNTING_2: "CAZANDO",
-      MINES: "MINAS",
-      HUNTING_3: "CAZANDO",
-      BULLETS: "LLUVIA DE BALAS",
-      HUNTING_4: "CAZANDO",
-      REDLINE: "HILO ROJO",
-      HUNTING_5: "CAZANDO",
-      YANKENPO: "YAN KEN PO",
-    };
-
-    return translations[phaseName] || phaseName;
-  },
-
-  /**
-   * Obtener fase actual en español - NUEVO
-   */
-  getCurrentPhaseSpanish() {
-    return this.getPhaseNameInSpanish(this.currentPhase);
-  },
-
-  // ======================================================
-  // EVENTOS (para compatibilidad)
-  // ======================================================
-
-  onDamageReceived(healthPercentage) {
-    // La transición de fase se maneja en checkPhaseTransition
-    console.log(
-      `👹 Boss recibió daño - Vida: ${Math.round(healthPercentage * 100)}%`
-    );
-  },
-
-  handleYanKenPoLoss() {
-    this.handleYanKenPoResult(false);
-  },
-
-  startFinalPhase() {
-    this.changePhase("YANKENPO");
+    return Math.min(1, this.phaseTimer / maxDuration);
   },
 };
 
 // Hacer disponible globalmente
 window.BossPhases = BossPhases;
 
-console.log(
-  "⚔️ boss-phases.js REDISEÑADO cargado - Sistema de fases con tiempos específicos"
-);
+console.log("⚔️ boss-phases.js cargado - Sistema de fases listo");

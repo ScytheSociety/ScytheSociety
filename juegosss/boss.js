@@ -12,8 +12,8 @@ const BossManager = {
   active: false,
 
   // Estadísticas básicas
-  maxHealth: 2000,
-  currentHealth: 2000,
+  maxHealth: 200,
+  currentHealth: 200,
 
   // Sistemas modulares (se cargan dinámicamente)
   movement: null,
@@ -78,15 +78,15 @@ const BossManager = {
   },
 
   /**
-   * Crear la entidad boss básica - CENTRADO
+   * Crear la entidad boss básica
    */
   createBoss() {
     const canvas = window.getCanvas();
     const config = GameConfig.BOSS_CONFIG;
 
     this.boss = {
-      x: canvas.width / 2 - (config.size * 1.5) / 2, // CENTRADO
-      y: canvas.height / 2 - (config.size * 1.5) / 2, // CENTRADO
+      x: canvas.width / 2 - (config.size * 1.5) / 2,
+      y: 80,
       width: config.size * 1.5,
       height: config.size * 1.5,
       velocityX: 0,
@@ -101,7 +101,7 @@ const BossManager = {
       aggressionLevel: 1.0,
     };
 
-    console.log("👹 Entidad boss creada en el centro");
+    console.log("👹 Entidad boss creada");
   },
 
   /**
@@ -155,13 +155,13 @@ const BossManager = {
   },
 
   /**
-   * Configurar el boss después de inicializar sistemas - REDISEÑADO
+   * Configurar el boss después de inicializar sistemas
    */
   setupBoss() {
     this.active = true;
     this.currentHealth = this.maxHealth;
-    this.isImmune = true; // 🔥 Empezar inmune en INTRO
-    this.immunityTimer = 9999;
+    this.isImmune = false;
+    this.immunityTimer = 0;
 
     // Efectos de entrada
     if (this.ui) {
@@ -177,24 +177,24 @@ const BossManager = {
       );
     }
 
+    // Comentario de entrada
+    if (this.comments) {
+      setTimeout(() => {
+        this.comments.sayComment("entrada");
+      }, 2000);
+    }
+
     // Audio
     if (window.AudioManager) {
       AudioManager.playSound("special");
     }
 
-    // 🔥 NUEVO: Iniciar con fase INTRO (10 segundos inmune en el centro)
-    if (this.phases) {
-      this.phases.changePhase("INTRO");
-    }
-
-    // Comentario de entrada después de 2 segundos
-    if (this.comments) {
+    // Comenzar con movimiento libre
+    if (this.movement) {
       setTimeout(() => {
-        this.comments.sayRandomComment("entrada");
-      }, 2000);
+        this.movement.enableWandering();
+      }, 1000);
     }
-
-    console.log("👹 Boss configurado - Iniciando con fase INTRO");
   },
 
   // ======================================================
@@ -304,7 +304,7 @@ const BossManager = {
   // ======================================================
 
   /**
-   * El boss recibe daño - MODIFICADO para más resistencia
+   * El boss recibe daño
    */
   takeDamage(amount) {
     // Verificaciones básicas
@@ -319,8 +319,8 @@ const BossManager = {
       return;
     }
 
-    // 🔥 DAÑO MÁS REDUCIDO para mayor duración
-    const reducedDamage = Math.max(1, Math.floor(amount * 0.4)); // Era 0.7, ahora 0.4
+    // Aplicar daño reducido
+    const reducedDamage = Math.max(1, Math.floor(amount * 0.7));
     this.currentHealth = Math.max(0, this.currentHealth - reducedDamage);
 
     // Aumentar agresividad
@@ -389,7 +389,7 @@ const BossManager = {
   },
 
   /**
-   * Boss derrotado - MEJORADO CON CONTADORES
+   * Boss derrotado
    */
   defeat() {
     console.log("👹 === BOSS DERROTADO ===");
@@ -400,7 +400,7 @@ const BossManager = {
 
     // Comentario de derrota
     if (this.comments) {
-      this.comments.sayRandomComment("derrota_boss");
+      this.comments.sayComment("derrota_boss");
     }
 
     // Efectos de derrota
@@ -420,25 +420,14 @@ const BossManager = {
       }
     }
 
-    // Puntos bonus épicos
-    const bonusPoints = 10000; // 🔥 Aumentado de 5000 a 10000
+    // Puntos bonus
+    const bonusPoints = 5000;
     if (window.setScore) {
       window.setScore(window.getScore() + bonusPoints);
     }
 
     if (this.ui) {
       this.ui.showScreenMessage(`+${bonusPoints} PUNTOS BONUS!`, "#FFD700");
-    }
-
-    // 🔥 NUEVO: Contar boss como enemigo eliminado para el total
-    if (window.incrementTotalEnemiesKilled) {
-      window.incrementTotalEnemiesKilled();
-      console.log("👹 Boss contado en total de enemigos eliminados");
-    }
-
-    // 🔥 NUEVO: Mega combo bonus
-    if (window.ComboSystem) {
-      window.ComboSystem.addKill(); // Boss cuenta como kill para combo
     }
 
     // Limpiar sistemas
@@ -449,6 +438,11 @@ const BossManager = {
       AudioManager.playSound("victory");
     }
 
+    // Contar como enemigo eliminado
+    if (window.incrementTotalEnemiesKilled) {
+      window.incrementTotalEnemiesKilled();
+    }
+
     // Victoria después de 2 segundos
     setTimeout(() => {
       console.log("🏆 Llamando a window.victory() desde boss derrotado");
@@ -456,6 +450,36 @@ const BossManager = {
         window.victory();
       }
     }, 2000);
+  },
+
+  /**
+   * Limpiar todos los sistemas al derrotar al boss
+   */
+  cleanupSystems() {
+    if (this.mines) {
+      this.mines.cleanup();
+    }
+
+    if (this.bullets) {
+      this.bullets.cleanup();
+    }
+
+    if (this.redline) {
+      this.redline.cleanup();
+    }
+
+    if (this.yankenpo) {
+      this.yankenpo.cleanup();
+    }
+
+    if (this.ui) {
+      this.ui.cleanup();
+    }
+
+    // Limpiar enemigos
+    if (window.EnemyManager) {
+      EnemyManager.enemies = [];
+    }
   },
 
   // ======================================================
@@ -663,69 +687,19 @@ const BossManager = {
   },
 
   /**
-   * Reset forzado (para cambios de pantalla) - CORREGIDO
+   * Reset forzado (para cambios de pantalla)
    */
   forceReset() {
     console.log("🔄 RESET FORZADO del boss");
 
-    // Marcar como inactivo inmediatamente
-    this.active = false;
-
-    // Cleanup inmediato de sistemas
+    // Cleanup inmediato
     this.cleanupSystems();
-
-    // Reset completo
     this.reset();
 
     // Restaurar controles del jugador
     if (window.Player && Player.moveSpeed !== 1.0) {
       Player.moveSpeed = 1.0;
-      console.log("✅ Velocidad del jugador restaurada");
     }
-
-    console.log("✅ Reset forzado del boss completado");
-  },
-
-  /**
-   * Limpiar todos los sistemas modulares
-   */
-  cleanupSystems() {
-    console.log("🧹 Limpiando todos los sistemas del boss");
-
-    // Limpiar cada sistema modular si existe
-    if (this.movement) {
-      this.movement.reset();
-    }
-
-    if (this.phases) {
-      this.phases.reset();
-    }
-
-    if (this.mines) {
-      this.mines.cleanup();
-    }
-
-    if (this.bullets) {
-      this.bullets.cleanup();
-    }
-
-    if (this.redline) {
-      this.redline.cleanup();
-    }
-
-    if (this.yankenpo) {
-      this.yankenpo.cleanup();
-    }
-
-    if (this.ui) {
-      this.ui.cleanup();
-    }
-
-    if (this.comments) {
-      this.comments.cleanup();
-    }
-
-    console.log("✅ Todos los sistemas del boss limpiados");
   },
 
   // ======================================================

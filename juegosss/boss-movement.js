@@ -190,7 +190,7 @@ const BossMovement = {
   // ======================================================
 
   /**
-   * Perseguir al jugador inteligentemente - MEJORADA
+   * Perseguir al jugador inteligentemente
    */
   huntPlayer() {
     const playerPos = Player.getPosition();
@@ -206,38 +206,19 @@ const BossMovement = {
     const dy = playerCenterY - bossCenterY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // 🔥 PERSECUCIÓN MÁS FLUIDA Y AGRESIVA
-    if (distance > 80) {
-      // Reducido de 100 a 80
-      const speed = boss.moveSpeed * 2.2; // Más rápido
+    // Persecución directa pero manteniendo distancia mínima
+    if (distance > 100) {
+      const speed = boss.moveSpeed * 1.8;
       this.movement.velocityX = (dx / distance) * speed;
       this.movement.velocityY = (dy / distance) * speed;
     } else {
-      // Muy cerca - movimiento orbital
-      const orbitSpeed = boss.moveSpeed * 1.5;
-      const orbitAngle = Math.atan2(dy, dx) + Math.PI / 2; // 90 grados
-
-      this.movement.velocityX = Math.cos(orbitAngle) * orbitSpeed;
-      this.movement.velocityY = Math.sin(orbitAngle) * orbitSpeed;
+      // Muy cerca - moverse en círculos pequeños
+      this.movement.velocityX *= 0.5;
+      this.movement.velocityY *= 0.5;
     }
 
-    // 🔥 MOVIMIENTO PREDICTIVO - anticipar movimiento del jugador
-    const playerVelocityX =
-      playerPos.x - (this.lastPlayerX || playerPos.x) || 0;
-    const playerVelocityY =
-      playerPos.y - (this.lastPlayerY || playerPos.y) || 0;
-
-    // Agregar predicción al movimiento
-    const predictionFactor = 0.3;
-    this.movement.velocityX += playerVelocityX * predictionFactor;
-    this.movement.velocityY += playerVelocityY * predictionFactor;
-
-    // Guardar posición anterior del jugador
-    this.lastPlayerX = playerPos.x;
-    this.lastPlayerY = playerPos.y;
-
     // Limitar velocidad máxima
-    this.limitVelocity(boss.moveSpeed * 3.0); // Aumentado de 2.5 a 3.0
+    this.limitVelocity(boss.moveSpeed * 2.5);
   },
 
   /**

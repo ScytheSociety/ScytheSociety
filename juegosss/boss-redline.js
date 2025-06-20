@@ -24,15 +24,15 @@ const BossRedLine = {
   originalPlayerSpeed: 1.0,
   playerSlowFactor: 0.05, // Jugador SÚPER LENTO
 
-  // Configuración de líneas - CORREGIDA
+  // Configuración de líneas
   lineConfig: {
-    previewDuration: 1000, // 1 segundo para memorizar (sin cambios)
-    lineWidth: 10, // Más gruesa para mejor visibilidad
-    glowBlur: 25, // Más brillo
-    trailLength: 25, // Estela más larga
-    minSegments: 4, // Más segmentos mínimos
-    maxSegments: 6, // Menos segmentos máximos para evitar complejidad excesiva
-    pointsPerSegment: 20, // Menos densidad para movimiento más fluido
+    previewDuration: 1000, // 1 segundo para memorizar
+    lineWidth: 8,
+    glowBlur: 20,
+    trailLength: 20, // Puntos de estela
+    minSegments: 3,
+    maxSegments: 8,
+    pointsPerSegment: 25, // Densidad de puntos
   },
 
   // Estado de ciclos
@@ -74,7 +74,7 @@ const BossRedLine = {
   // ======================================================
 
   /**
-   * Iniciar la fase del hilo rojo - CORREGIDA velocidad jugador extrema
+   * Iniciar la fase del hilo rojo
    */
   startPhase() {
     console.log("🔴 === INICIANDO FASE DEL HILO ROJO ===");
@@ -88,12 +88,10 @@ const BossRedLine = {
       this.bossManager.movement.stopMovementAndCenter();
     }
 
-    // 🔥 JUGADOR SÚPER SÚPER LENTO durante TODA la fase
-    if (window.Player) {
-      this.originalPlayerSpeed = window.Player.moveSpeed;
-      window.Player.moveSpeed = 0.02; // Era 0.05, ahora 0.02 = 98% más lento
-      console.log("🐌 Jugador EXTREMADAMENTE LENTO durante fase del hilo rojo");
-    }
+    // Ralentizar SÚPER LENTO al jugador
+    this.originalPlayerSpeed = Player.moveSpeed;
+    Player.moveSpeed = this.playerSlowFactor;
+    console.log("🐌 Jugador SÚPER MEGA LENTO durante fase del hilo rojo");
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
@@ -113,7 +111,7 @@ const BossRedLine = {
   },
 
   /**
-   * Terminar la fase del hilo rojo - CORREGIDO PARA RESTAURAR VELOCIDAD
+   * Terminar la fase del hilo rojo
    */
   endPhase() {
     console.log("🔴 Terminando COMPLETAMENTE la fase del hilo rojo");
@@ -127,8 +125,8 @@ const BossRedLine = {
 
     // 🔥 VERIFICAR QUE EL JUGADOR EXISTE antes de restaurar velocidad
     if (window.Player && Player.moveSpeed !== undefined) {
-      Player.moveSpeed = this.originalPlayerSpeed || 1.0; // Restaurar velocidad original
-      console.log("🏃 Velocidad del jugador restaurada a normal en Red Line");
+      Player.moveSpeed = this.originalPlayerSpeed;
+      console.log("🏃 Velocidad del jugador restaurada a normal");
     }
 
     // 🔥 VERIFICAR QUE EL BOSS EXISTE antes de hacerlo vulnerable
@@ -275,57 +273,48 @@ const BossRedLine = {
   },
 
   /**
-   * Mostrar preview de la línea - CORREGIDA
+   * Mostrar preview de la línea
    */
   showLinePreview() {
-    console.log("🔴 Mostrando preview de la línea por 1 segundo...");
+    console.log("🔴 Mostrando preview de la línea...");
 
     this.showingPreview = true;
 
     if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage("👁️ ¡MEMORIZA LA RUTA!", "#FFFF00");
+      this.bossManager.ui.showScreenMessage("¡MEMORIZA LA RUTA!", "#FFFF00");
     }
 
-    // 🔥 PREVIEW CORTO: Solo 1 segundo para memorizar
+    // Mostrar por tiempo configurado
     setTimeout(() => {
       this.showingPreview = false;
-      console.log(
-        "🔴 Preview terminado - línea desaparece, boss iniciará movimiento"
-      );
+      console.log("🔴 Preview terminado - boss iniciará movimiento");
 
-      if (this.bossManager.ui) {
-        this.bossManager.ui.showScreenMessage("🔴 ¡LÍNEA OCULTA!", "#FF0000");
-      }
-
-      // Pequeño delay antes del movimiento para crear tensión
+      // Pequeño delay antes del movimiento
       setTimeout(() => {
         this.startRedLineMovement();
-      }, 500);
-    }, 1000); // Solo 1 segundo de preview
+      }, 200);
+    }, this.lineConfig.previewDuration);
   },
 
   /**
-   * Iniciar movimiento del boss por la línea - CORREGIDA velocidad
+   * Iniciar movimiento del boss por la línea
    */
   startRedLineMovement() {
     // 🔥 VERIFICAR QUE EL BOSS EXISTE
     if (!this.bossManager || !this.bossManager.boss) {
       console.error("🔴 Error: Boss no existe para red line movement");
-      this.endPhase();
+      this.endPhase(); // Terminar la fase si no hay boss
       return;
     }
 
     if (this.redLinePath.length === 0) {
       console.error("🔴 Error: No hay línea roja generada");
-      this.endPhase();
+      this.endPhase(); // 🔥 CORREGIDO: usar endPhase en lugar de endRedLinePhase
       return;
     }
 
     this.redLineIndex = 0;
     this.redLineMoving = true;
-
-    // 🔥 VELOCIDAD MÁS RÁPIDA DEL BOSS
-    this.redLineSpeed = 6; // Era 4, ahora 6 (50% más rápido)
 
     // Posicionar boss al inicio de la línea
     const startPoint = this.redLinePath[0];
@@ -343,63 +332,65 @@ const BossRedLine = {
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        "🔴 ¡BOSS EN MOVIMIENTO RÁPIDO!",
+        "🔴 ¡BOSS EN MOVIMIENTO!",
         "#FF0000"
       );
     }
 
-    console.log("🔴 Boss iniciando movimiento RÁPIDO por la línea");
+    console.log("🔴 Boss iniciando movimiento por la línea");
   },
 
   /**
-   * Terminar movimiento de la línea (no la fase completa) - INTEGRADO
+   * Terminar movimiento de la línea (no la fase completa)
    */
   endRedLineMovement() {
-    console.log(
-      "🔴 Boss terminó el recorrido - notificando a sistema de fases"
-    );
+    console.log("🔴 Boss terminó el recorrido - iniciando pausa vulnerable");
 
     this.redLineMoving = false;
     this.redLinePath = [];
     this.redLineIndex = 0;
+    this.cycleCount++;
 
-    // Notificar al sistema de fases que terminó este hilo
-    if (this.bossManager.phases) {
-      // En el nuevo sistema, la fase maneja la secuencia
-      console.log("🔴 Hilo rojo completado, esperando siguiente...");
+    // 🔥 CORREGIDO: FORZAR que el boss sea vulnerable
+    if (this.bossManager) {
+      this.bossManager.isImmune = false;
+      this.bossManager.immunityTimer = 0;
+      console.log("🔴 Boss FORZADO a ser vulnerable");
     }
 
-    // El boss NO se hace vulnerable aquí, eso lo maneja el sistema de fases
-    console.log("🔴 Hilo rojo individual completado");
+    // Detener movimiento del boss
+    if (this.bossManager && this.bossManager.boss) {
+      const boss = this.bossManager.boss;
+      boss.velocityX = 0;
+      boss.velocityY = 0;
+    }
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        "⚔️ ¡BOSS VULNERABLE! (3s)", // 🔥 AUMENTADO a 3 segundos
+        "#00FF00"
+      );
+    }
+
+    if (this.bossManager.comments) {
+      this.bossManager.comments.sayRandomComment("combate");
+    }
+
+    // 🔥 AUMENTADO: 3 segundos en lugar de 1
+    const vulnerabilityTime = 3000;
+
+    // Decidir siguiente acción después del período vulnerable
+    setTimeout(() => {
+      this.decideNextAction();
+    }, vulnerabilityTime);
   },
 
   /**
-   * 🔥 NUEVO: Método para ser llamado por el sistema de fases
-   */
-  startRedLineCycleFromPhases() {
-    console.log("🔴 Iniciando ciclo de hilo rojo desde sistema de fases");
-    this.startRedLineCycle();
-  },
-
-  /**
-   * 🔥 NUEVO: Verificar si el hilo actual terminó
-   */
-  isCurrentRedLineComplete() {
-    return !this.redLineMoving && this.redLinePath.length === 0;
-  },
-
-  /**
-   * Decidir la siguiente acción - CORREGIDO
+   * Decidir la siguiente acción
    */
   decideNextAction() {
     const healthPercentage =
       this.bossManager.currentHealth / this.bossManager.maxHealth;
-
-    console.log(
-      `🔴 Decidiendo siguiente acción - Vida: ${Math.round(
-        healthPercentage * 100
-      )}% - Ciclo: ${this.cycleCount}/${this.maxCycles}`
-    );
 
     // Verificar si debe ir a fase final
     if (healthPercentage <= 0.03) {
@@ -421,15 +412,13 @@ const BossRedLine = {
       return;
     }
 
-    // 🔥 CORREGIDO: NO hacer inmune inmediatamente
-    // Continuar con otro ciclo DESPUÉS de un pequeño delay
+    // Continuar con otro ciclo
     console.log("🔄 Continuando con nuevo ciclo de hilo rojo");
+    this.bossManager.makeImmune(9999); // Volver a ser inmune
 
     setTimeout(() => {
-      // 🔥 AHORA SÍ hacer inmune cuando empiece el nuevo ciclo
-      this.bossManager.makeImmune(9999);
       this.startRedLineCycle();
-    }, 1000); // 1 segundo de delay antes del siguiente ciclo
+    }, 500);
   },
 
   /**
@@ -446,7 +435,7 @@ const BossRedLine = {
   // ======================================================
 
   /**
-   * Generar línea roja con rebotes en paredes - CORREGIDA
+   * Generar línea roja aleatoria
    */
   generateRedLine() {
     this.redLinePath = [];
@@ -459,323 +448,37 @@ const BossRedLine = {
       return;
     }
 
-    console.log("🔴 Generando línea con rebotes inteligentes");
+    const lineType =
+      this.lineTypes[Math.floor(Math.random() * this.lineTypes.length)];
 
-    // Márgenes para mantener línea dentro del área visible
-    const margin = 50;
-    const boundaries = {
-      left: margin,
-      right: canvas.width - margin,
-      top: margin + 50, // Evitar UI superior
-      bottom: canvas.height - margin,
-    };
+    console.log(`🔴 Generando línea tipo: ${lineType}`);
 
-    // Punto inicial aleatorio en el borde
-    let currentPoint = this.getRandomBorderPoint(canvas, boundaries);
-    this.redLinePath.push({ x: currentPoint.x, y: currentPoint.y });
-
-    // Generar 4-6 segmentos con rebotes
-    const segmentCount = 4 + Math.floor(Math.random() * 3);
-    let currentDirection = this.getRandomDirection();
-
-    for (let segment = 0; segment < segmentCount; segment++) {
-      const segmentLength = 80 + Math.random() * 120; // Longitud variable
-      const newSegment = this.generateSegmentWithBounces(
-        currentPoint,
-        currentDirection,
-        segmentLength,
-        boundaries
-      );
-
-      // Agregar puntos del segmento
-      newSegment.points.forEach((point) => {
-        this.redLinePath.push(point);
-      });
-
-      // Actualizar para siguiente segmento
-      if (newSegment.points.length > 0) {
-        currentPoint = newSegment.points[newSegment.points.length - 1];
-        currentDirection = newSegment.finalDirection;
-      }
+    switch (lineType) {
+      case "random":
+        this.generateRandomLine(canvas);
+        break;
+      case "zigzag":
+        this.generateZigzagLine(canvas);
+        break;
+      case "curve":
+        this.generateCurvedLine(canvas);
+        break;
+      case "arc":
+        this.generateArcLine(canvas);
+        break;
+      case "spiral":
+        this.generateSpiralLine(canvas);
+        break;
     }
 
-    console.log(
-      `🔴 Línea generada con ${this.redLinePath.length} puntos y rebotes`
-    );
+    console.log(`🔴 Línea generada con ${this.redLinePath.length} puntos`);
 
     // 🔥 VERIFICAR QUE SE GENERARON PUNTOS
     if (this.redLinePath.length === 0) {
       console.error("🔴 Error: No se generaron puntos para la línea");
+      // Generar línea simple de respaldo
       this.generateFallbackLine(canvas);
     }
-  },
-
-  /**
-   * Generar segmento con rebotes en paredes - NUEVO
-   */
-  generateSegmentWithBounces(startPoint, direction, maxLength, boundaries) {
-    const points = [];
-    let currentX = startPoint.x;
-    let currentY = startPoint.y;
-    let currentDirX = Math.cos(direction);
-    let currentDirY = Math.sin(direction);
-    let remainingLength = maxLength;
-
-    const stepSize = 5; // Tamaño de paso para detectar colisiones
-
-    while (remainingLength > 0) {
-      // Calcular próxima posición
-      const nextX = currentX + currentDirX * stepSize;
-      const nextY = currentY + currentDirY * stepSize;
-
-      // Verificar colisiones con límites
-      let bounced = false;
-
-      // Rebote en paredes laterales
-      if (nextX <= boundaries.left || nextX >= boundaries.right) {
-        currentDirX = -currentDirX; // Invertir dirección X
-        bounced = true;
-        console.log("🔴 Rebote en pared lateral");
-      }
-
-      // Rebote en paredes superior/inferior
-      if (nextY <= boundaries.top || nextY >= boundaries.bottom) {
-        currentDirY = -currentDirY; // Invertir dirección Y
-        bounced = true;
-        console.log("🔴 Rebote en pared vertical");
-      }
-
-      // Si rebotó, recalcular posición
-      if (bounced) {
-        currentX = Math.max(boundaries.left, Math.min(boundaries.right, nextX));
-        currentY = Math.max(boundaries.top, Math.min(boundaries.bottom, nextY));
-      } else {
-        currentX = nextX;
-        currentY = nextY;
-      }
-
-      // Agregar punto
-      points.push({ x: currentX, y: currentY });
-
-      remainingLength -= stepSize;
-
-      // Evitar bucles infinitos
-      if (points.length > 200) {
-        console.warn("🔴 Segmento muy largo, cortando");
-        break;
-      }
-    }
-
-    // Calcular dirección final
-    const finalDirection = Math.atan2(currentDirY, currentDirX);
-
-    return {
-      points: points,
-      finalDirection: finalDirection,
-    };
-  },
-
-  /**
-   * Obtener dirección aleatoria - NUEVO
-   */
-  getRandomDirection() {
-    // Direcciones preferidas (evitar ángulos muy verticales)
-    const angles = [
-      0, // Derecha
-      Math.PI / 4, // Diagonal derecha-abajo
-      Math.PI / 2, // Abajo
-      (3 * Math.PI) / 4, // Diagonal izquierda-abajo
-      Math.PI, // Izquierda
-      (5 * Math.PI) / 4, // Diagonal izquierda-arriba
-      (3 * Math.PI) / 2, // Arriba
-      (7 * Math.PI) / 4, // Diagonal derecha-arriba
-    ];
-
-    return angles[Math.floor(Math.random() * angles.length)];
-  },
-
-  /**
-   * Calcular rebotes de la línea en las paredes - NUEVO
-   */
-  calculateBounces(startX, startY, endX, endY, canvas, margin) {
-    const points = [];
-    const segmentPoints = 25; // Densidad de puntos por segmento
-
-    let currentX = startX;
-    let currentY = startY;
-    let dirX = endX - startX;
-    let dirY = endY - startY;
-
-    // Normalizar dirección
-    const length = Math.sqrt(dirX * dirX + dirY * dirY);
-    if (length === 0) return points;
-
-    dirX /= length;
-    dirY /= length;
-
-    let remainingDistance = length;
-    const stepSize = length / segmentPoints;
-
-    for (let i = 0; i < segmentPoints && remainingDistance > 0; i++) {
-      // Calcular siguiente punto
-      const nextX = currentX + dirX * stepSize;
-      const nextY = currentY + dirY * stepSize;
-
-      // Verificar colisión con paredes y rebotar
-      let bounced = false;
-
-      // Rebote en pared izquierda o derecha
-      if (nextX <= margin || nextX >= canvas.width - margin) {
-        dirX = -dirX; // Invertir dirección X
-        bounced = true;
-        currentX = nextX <= margin ? margin : canvas.width - margin;
-      } else {
-        currentX = nextX;
-      }
-
-      // Rebote en pared superior o inferior
-      if (nextY <= margin || nextY >= canvas.height - margin) {
-        dirY = -dirY; // Invertir dirección Y
-        bounced = true;
-        currentY = nextY <= margin ? margin : canvas.height - margin;
-      } else {
-        currentY = nextY;
-      }
-
-      points.push({ x: currentX, y: currentY });
-
-      if (bounced) {
-        console.log(
-          `🔴 Rebote en (${Math.round(currentX)}, ${Math.round(currentY)})`
-        );
-      }
-
-      remainingDistance -= stepSize;
-    }
-
-    return points;
-  },
-
-  /**
-   * Generar línea aleatoria con rebotes en paredes - NUEVO
-   */
-  generateBouncingRandomLine(canvas, margin, safeWidth, safeHeight) {
-    // Punto de inicio aleatorio en el área segura
-    let currentX = margin + Math.random() * safeWidth;
-    let currentY = margin + Math.random() * safeHeight;
-
-    // Dirección inicial aleatoria
-    let directionX = (Math.random() - 0.5) * 2; // -1 a 1
-    let directionY = (Math.random() - 0.5) * 2;
-
-    // Normalizar dirección
-    const magnitude = Math.sqrt(
-      directionX * directionX + directionY * directionY
-    );
-    directionX /= magnitude;
-    directionY /= magnitude;
-
-    const stepSize = 15; // Tamaño del paso
-    const maxPoints = 120; // Máximo de puntos
-
-    this.redLinePath.push({ x: currentX, y: currentY });
-
-    for (let i = 0; i < maxPoints; i++) {
-      // Calcular nueva posición
-      const newX = currentX + directionX * stepSize;
-      const newY = currentY + directionY * stepSize;
-
-      // 🔥 VERIFICAR REBOTES EN PAREDES
-      if (newX <= margin || newX >= canvas.width - margin) {
-        directionX = -directionX; // Rebote horizontal
-        console.log(`🔴 Rebote horizontal en X=${Math.round(newX)}`);
-      }
-
-      if (newY <= margin || newY >= canvas.height - margin) {
-        directionY = -directionY; // Rebote vertical
-        console.log(`🔴 Rebote vertical en Y=${Math.round(newY)}`);
-      }
-
-      // Actualizar posición con rebotes aplicados
-      currentX = Math.max(margin, Math.min(canvas.width - margin, newX));
-      currentY = Math.max(margin, Math.min(canvas.height - margin, newY));
-
-      this.redLinePath.push({ x: currentX, y: currentY });
-
-      // Cambio de dirección ocasional (10% probabilidad)
-      if (Math.random() < 0.1) {
-        const angleChange = (Math.random() - 0.5) * 0.8; // Cambio ligero
-        const currentAngle = Math.atan2(directionY, directionX);
-        const newAngle = currentAngle + angleChange;
-
-        directionX = Math.cos(newAngle);
-        directionY = Math.sin(newAngle);
-      }
-    }
-
-    console.log(
-      `🔴 Línea aleatoria con rebotes: ${this.redLinePath.length} puntos`
-    );
-  },
-
-  /**
-   * Generar línea de respaldo simple con rebotes - NUEVO
-   */
-  generateSafeBouncingLine(canvas, margin, safeWidth, safeHeight) {
-    console.log("🔴 Generando línea de respaldo con rebotes");
-
-    // Línea simple que rebota en forma de zigzag
-    const startX = margin + 50;
-    const startY = margin + 50;
-    const endX = canvas.width - margin - 50;
-    const endY = canvas.height - margin - 50;
-
-    const segments = 8;
-    const pointsPerSegment = 15;
-
-    for (let seg = 0; seg <= segments; seg++) {
-      const segmentProgress = seg / segments;
-
-      // Zigzag que rebota en los bordes
-      let x, y;
-
-      if (seg % 2 === 0) {
-        // Segmento hacia la derecha
-        x = startX + (endX - startX) * segmentProgress;
-        y =
-          startY + Math.sin(segmentProgress * Math.PI * 2) * (safeHeight * 0.3);
-      } else {
-        // Segmento hacia la izquierda
-        x =
-          endX -
-          (endX - startX) * (segmentProgress - Math.floor(segmentProgress));
-        y =
-          startY + Math.sin(segmentProgress * Math.PI * 2) * (safeHeight * 0.3);
-      }
-
-      // Asegurar que esté dentro del área segura
-      x = Math.max(margin, Math.min(canvas.width - margin, x));
-      y = Math.max(margin, Math.min(canvas.height - margin, y));
-
-      // Crear puntos intermedios para suavidad
-      if (seg > 0) {
-        const prevPoint = this.redLinePath[this.redLinePath.length - 1];
-
-        for (let p = 1; p <= pointsPerSegment; p++) {
-          const t = p / pointsPerSegment;
-          const interpX = prevPoint.x + (x - prevPoint.x) * t;
-          const interpY = prevPoint.y + (y - prevPoint.y) * t;
-
-          this.redLinePath.push({ x: interpX, y: interpY });
-        }
-      } else {
-        this.redLinePath.push({ x, y });
-      }
-    }
-
-    console.log(
-      `🔴 Línea de respaldo creada con ${this.redLinePath.length} puntos`
-    );
   },
 
   /**
@@ -951,51 +654,22 @@ const BossRedLine = {
   // ======================================================
 
   /**
-   * Obtener punto aleatorio en los bordes con límites - CORREGIDA
+   * Obtener punto aleatorio en los bordes
    */
-  getRandomBorderPoint(canvas, boundaries = null) {
-    if (!boundaries) {
-      boundaries = {
-        left: 50,
-        right: canvas.width - 50,
-        top: 100, // Más abajo para evitar UI
-        bottom: canvas.height - 50,
-      };
-    }
-
+  getRandomBorderPoint(canvas) {
     const border = Math.floor(Math.random() * 4);
 
     switch (border) {
       case 0: // Top
-        return {
-          x:
-            boundaries.left +
-            Math.random() * (boundaries.right - boundaries.left),
-          y: boundaries.top,
-        };
+        return { x: Math.random() * canvas.width, y: 50 };
       case 1: // Right
-        return {
-          x: boundaries.right,
-          y:
-            boundaries.top +
-            Math.random() * (boundaries.bottom - boundaries.top),
-        };
+        return { x: canvas.width - 50, y: Math.random() * canvas.height };
       case 2: // Bottom
-        return {
-          x:
-            boundaries.left +
-            Math.random() * (boundaries.right - boundaries.left),
-          y: boundaries.bottom,
-        };
+        return { x: Math.random() * canvas.width, y: canvas.height - 50 };
       case 3: // Left
-        return {
-          x: boundaries.left,
-          y:
-            boundaries.top +
-            Math.random() * (boundaries.bottom - boundaries.top),
-        };
+        return { x: 50, y: Math.random() * canvas.height };
       default:
-        return { x: boundaries.left, y: boundaries.top };
+        return { x: 50, y: 50 };
     }
   },
 
