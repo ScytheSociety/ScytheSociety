@@ -10,7 +10,7 @@ const BossPhases = {
 
   bossManager: null,
 
-  // Configuración de fases con tiempos específicos
+  // Configuración de fases con tiempos específicos - MODIFICADO
   PHASE_CONFIGS: {
     INTRO: {
       name: "INTRO",
@@ -22,13 +22,13 @@ const BossPhases = {
     HUNTING_1: {
       name: "HUNTING_1",
       duration: -1, // Indefinido hasta 75%
-      healthThreshold: 0.75,
+      healthThreshold: 0.75, // 375/500 vida
       isImmune: false,
       message: "⚔️ ¡A la caza!",
     },
     SUMMONING: {
       name: "SUMMONING",
-      duration: 600, // 10 segundos
+      duration: 3600, // 🔥 CAMBIADO: 60 segundos (era 600)
       healthThreshold: 0.75,
       isImmune: true,
       message: "⚔️ FASE DE INVOCACIÓN",
@@ -36,13 +36,13 @@ const BossPhases = {
     HUNTING_2: {
       name: "HUNTING_2",
       duration: -1, // Indefinido hasta 50%
-      healthThreshold: 0.5,
+      healthThreshold: 0.5, // 250/500 vida
       isImmune: false,
       message: "⚔️ ¡Boss vulnerable!",
     },
     MINES: {
       name: "MINES",
-      duration: 900, // 15 segundos
+      duration: 5400, // 🔥 CAMBIADO: 90 segundos (era 900)
       healthThreshold: 0.5,
       isImmune: true,
       message: "💣 FASE DE MINAS",
@@ -50,13 +50,13 @@ const BossPhases = {
     HUNTING_3: {
       name: "HUNTING_3",
       duration: -1, // Indefinido hasta 30%
-      healthThreshold: 0.3,
+      healthThreshold: 0.3, // 150/500 vida
       isImmune: false,
       message: "⚔️ ¡Boss vulnerable!",
     },
     BULLETS: {
       name: "BULLETS",
-      duration: 1200, // 20 segundos
+      duration: 7200, // 🔥 CAMBIADO: 120 segundos (era 1200)
       healthThreshold: 0.3,
       isImmune: true,
       message: "🌟 FASE TOUHOU",
@@ -64,13 +64,13 @@ const BossPhases = {
     HUNTING_4: {
       name: "HUNTING_4",
       duration: -1, // Indefinido hasta 15%
-      healthThreshold: 0.15,
+      healthThreshold: 0.15, // 75/500 vida
       isImmune: false,
       message: "⚔️ ¡Boss vulnerable!",
     },
     REDLINE: {
       name: "REDLINE",
-      duration: 3000, // 50 segundos (10 hilos x 5s cada uno)
+      duration: 6000, // 🔥 CAMBIADO: 100 segundos para 10 rondas (era 3000)
       healthThreshold: 0.15,
       isImmune: true,
       message: "🔴 FASE DEL HILO ROJO",
@@ -80,7 +80,7 @@ const BossPhases = {
     HUNTING_5: {
       name: "HUNTING_5",
       duration: -1, // Indefinido hasta 3%
-      healthThreshold: 0.03,
+      healthThreshold: 0.03, // 15/500 vida
       isImmune: false,
       message: "⚔️ ¡Última oportunidad!",
     },

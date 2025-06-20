@@ -298,37 +298,228 @@ const BossYanKenPo = {
   },
 
   /**
-   * Manejar victoria del jugador - INTEGRADO CON NUEVO SISTEMA
+   * Manejar victoria del jugador - CORREGIDO PARA 1% DE DAÑO
    */
   handleGameWin() {
-    console.log("🏆 ¡Jugador ganó el Yan Ken Po!");
+    console.log("🏆 ¡Jugador ganó la ronda de Yan Ken Po!");
 
-    this.gameState = "completed";
+    this.roundsWon++;
 
-    // Notificar al sistema de fases
-    if (this.bossManager.phases) {
-      this.bossManager.phases.handleYanKenPoResult(true);
+    // 🔥 EL BOSS PIERDE 1% DE VIDA (5 puntos de 500 total)
+    const damage = this.bossManager.maxHealth * 0.01; // 1% exacto
+    this.bossManager.currentHealth = Math.max(
+      0,
+      this.bossManager.currentHealth - damage
+    );
+
+    console.log(
+      `👹 Boss perdió ${damage} vida (1%). Vida actual: ${this.bossManager.currentHealth}/${this.bossManager.maxHealth}`
+    );
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        `🏆 ¡Ganaste! Boss -1% vida`,
+        "#00FF00"
+      );
     }
 
-    // Limpiar UI
-    this.cleanup();
+    // 🔥 VERIFICAR SI SE LOGRAN 3 VICTORIAS
+    if (this.roundsWon >= 3) {
+      console.log("🏆 ¡3 VICTORIAS! Boss derrotado");
+
+      if (this.bossManager.ui) {
+        this.bossManager.ui.showScreenMessage(
+          "🏆 ¡3 VICTORIAS! ¡BOSS DERROTADO!",
+          "#FFD700"
+        );
+      }
+
+      // Limpiar UI y terminar
+      this.cleanup();
+
+      // Boss derrotado
+      setTimeout(() => {
+        this.bossManager.defeat();
+      }, 1000);
+
+      return;
+    }
+
+    // Continuar con siguiente ronda
+    setTimeout(() => {
+      this.startNextRound();
+    }, 2000);
   },
 
   /**
-   * Manejar derrota del jugador - INTEGRADO CON NUEVO SISTEMA
+   * Manejar derrota/empate del jugador - CORREGIDO PARA FASES ALEATORIAS
    */
   handleGameLoss() {
-    console.log("💀 Jugador perdió el Yan Ken Po");
+    console.log("💀 Jugador perdió/empató - ejecutando fase aleatoria");
 
     this.gameState = "completed";
 
-    // Notificar al sistema de fases
-    if (this.bossManager.phases) {
-      this.bossManager.phases.handleYanKenPoResult(false);
+    // 🔥 ELIMINAR BOTONES TEMPORALMENTE
+    this.removeGameUI();
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        "💀 ¡Perdiste! Fase aleatoria incoming...",
+        "#FF0000"
+      );
     }
 
-    // Limpiar UI
-    this.cleanup();
+    // 🔥 FASES ALEATORIAS DISPONIBLES
+    const randomPhases = ["SUMMONING", "MINES", "BULLETS", "REDLINE"];
+    const selectedPhase =
+      randomPhases[Math.floor(Math.random() * randomPhases.length)];
+
+    console.log(`🎲 Fase aleatoria seleccionada: ${selectedPhase}`);
+
+    setTimeout(() => {
+      this.executeRandomPhase(selectedPhase);
+    }, 2000);
+  },
+
+  /**
+   * Ejecutar fase aleatoria y volver a Yan Ken Po - CORREGIDO
+   */
+  executeRandomPhase(phaseName) {
+    console.log(`🎲 Ejecutando fase aleatoria: ${phaseName}`);
+
+    // Boss se centra y ejecuta la fase
+    if (this.bossManager.movement) {
+      this.bossManager.movement.stopMovementAndCenter();
+    }
+
+    const config = this.bossManager.phases.PHASE_CONFIGS[phaseName];
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        `🎲 FASE ALEATORIA: ${this.bossManager.phases.getPhaseNameInSpanish(
+          phaseName
+        )}`,
+        "#FF00FF"
+      );
+    }
+
+    // Ejecutar la fase específica
+    setTimeout(() => {
+      switch (phaseName) {
+        case "SUMMONING":
+          // Invocar enemigos por 30 segundos
+          this.executeRandomSummoning();
+          break;
+        case "MINES":
+          // Minas por 45 segundos
+          if (this.bossManager.mines) {
+            this.bossManager.mines.startMineSequence();
+          }
+          break;
+        case "BULLETS":
+          // Touhou por 60 segundos
+          if (this.bossManager.bullets) {
+            this.bossManager.bullets.startBulletPattern();
+          }
+          break;
+        case "REDLINE":
+          // Hilo rojo por 5 rondas
+          if (this.bossManager.redline) {
+            this.bossManager.redline.startPhase();
+          }
+          break;
+      }
+    }, 1000);
+
+    // 🔥 VOLVER A YAN KEN PO DESPUÉS DEL TIEMPO DE LA FASE
+    const phaseDuration = this.getRandomPhaseDuration(phaseName);
+
+    setTimeout(() => {
+      console.log("🎮 Fase aleatoria terminada - volviendo a Yan Ken Po");
+
+      // Limpiar fase actual
+      this.cleanupRandomPhase(phaseName);
+
+      // Centrar boss
+      if (this.bossManager.movement) {
+        this.bossManager.movement.stopMovementAndCenter();
+      }
+
+      if (this.bossManager.ui) {
+        this.bossManager.ui.showScreenMessage(
+          "🎮 Volviendo a Yan Ken Po...",
+          "#FFD700"
+        );
+      }
+
+      // Recrear UI de Yan Ken Po
+      setTimeout(() => {
+        this.gameState = "countdown";
+        this.countdown = 3;
+        this.countdownTimer = 0;
+        this.createGameUI();
+        this.startSelection();
+      }, 2000);
+    }, phaseDuration);
+  },
+
+  /**
+   * Obtener duración de fase aleatoria - NUEVO
+   */
+  getRandomPhaseDuration(phaseName) {
+    const durations = {
+      SUMMONING: 30000, // 30 segundos
+      MINES: 45000, // 45 segundos
+      BULLETS: 60000, // 60 segundos
+      REDLINE: 50000, // 50 segundos
+    };
+
+    return durations[phaseName] || 30000;
+  },
+
+  /**
+   * Limpiar fase aleatoria - NUEVO
+   */
+  cleanupRandomPhase(phaseName) {
+    switch (phaseName) {
+      case "MINES":
+        if (this.bossManager.mines) {
+          this.bossManager.mines.cleanup();
+        }
+        break;
+      case "BULLETS":
+        if (this.bossManager.bullets) {
+          this.bossManager.bullets.cleanup();
+        }
+        break;
+      case "REDLINE":
+        if (this.bossManager.redline) {
+          this.bossManager.redline.cleanup();
+        }
+        break;
+    }
+  },
+
+  /**
+   * Ejecutar invocación aleatoria - NUEVO
+   */
+  executeRandomSummoning() {
+    let enemiesSpawned = 0;
+    const maxEnemies = 6;
+
+    const spawnInterval = setInterval(() => {
+      if (enemiesSpawned >= maxEnemies) {
+        clearInterval(spawnInterval);
+        return;
+      }
+
+      // Invocar 2 enemigos
+      if (this.bossManager.phases) {
+        this.bossManager.phases.summonEnemies(2);
+      }
+
+      enemiesSpawned += 2;
+    }, 5000); // Cada 5 segundos
   },
 
   /**
@@ -368,114 +559,92 @@ const BossYanKenPo = {
   // ======================================================
 
   /**
-   * Crear UI del juego
+   * Crear UI del juego - CORREGIDO SEGÚN ESPECIFICACIÓN EXACTA
    */
   createGameUI() {
     if (this.uiCreated) {
       this.removeGameUI();
     }
 
-    console.log("🎨 Creando UI de Yan Ken Po");
+    console.log("🎨 Creando UI Yan Ken Po bajo la barra del boss");
 
+    // 🔥 OBTENER POSICIÓN DE LA BARRA DE VIDA DEL BOSS
+    const boss = this.bossManager.boss;
+    if (!boss) return;
+
+    const bossBarWidth = boss.width * 1.2;
+    const bossBarX = boss.x + (boss.width - bossBarWidth) / 2;
+    const bossBarY = boss.y + boss.height + 35 + 12; // Debajo de la barra
+
+    // 🔥 CONTENEDOR PRINCIPAL - POSICIONADO BAJO LA BARRA DEL BOSS
     const container = document.createElement("div");
     container.id = "yankenpo-container";
     container.style.cssText = `
-      position: fixed;
-      bottom: 20%;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-      background: rgba(0, 0, 0, 0.9);
-      padding: 20px;
-      border-radius: 15px;
-      border: 3px solid #ff0000;
-      box-shadow: 0 0 30px #ff0000;
-      min-width: 300px;
-    `;
+    position: fixed;
+    left: ${bossBarX}px;
+    top: ${bossBarY + 20}px;
+    width: ${bossBarWidth}px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid #ff0000;
+    box-shadow: 0 0 20px #ff0000;
+  `;
 
-    // Título
-    const title = document.createElement("div");
-    title.style.cssText = `
-      color: #ff0000;
-      font-family: 'Creepster', cursive;
-      font-size: clamp(1.2rem, 4vw, 1.8rem);
-      text-shadow: 0 0 10px #ff0000;
-      margin-bottom: 10px;
-      text-align: center;
-      white-space: nowrap;
-    `;
-    title.textContent = "✂️ YAN KEN PO ✂️";
-    container.appendChild(title);
-
-    // Información del juego
-    const info = document.createElement("div");
-    info.id = "yankenpo-info";
-    info.style.cssText = `
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-      font-size: clamp(0.9rem, 3vw, 1.1rem);
-      text-align: center;
-      margin-bottom: 15px;
-      line-height: 1.4;
-    `;
-    container.appendChild(info);
-
-    // Contenedor de botones
+    // 🔥 BOTONES QUE OCUPAN EL ANCHO TOTAL DE LA BARRA
     const buttonsContainer = document.createElement("div");
     buttonsContainer.id = "yankenpo-buttons";
     buttonsContainer.style.cssText = `
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-    `;
+    display: flex;
+    width: 100%;
+    gap: 2px;
+    justify-content: space-between;
+  `;
 
-    // Crear botones para cada opción
+    // 🔥 CREAR BOTONES CON ANCHO EXACTO (1/3 cada uno)
+    const buttonWidth = Math.floor((bossBarWidth - 20 - 4) / 3); // -20 padding, -4 gaps
+
     this.choices.forEach((choice, index) => {
       const button = document.createElement("button");
       button.id = `yankenpo-${choice.key}`;
       button.className = "yankenpo-button";
       button.style.cssText = `
-        width: clamp(70px, 15vw, 90px);
-        height: clamp(70px, 15vw, 90px);
-        font-size: clamp(1.2rem, 6vw, 1.8rem);
-        background: linear-gradient(135deg, #8b0000, #aa0000);
-        border: 2px solid #ff0000;
-        border-radius: 12px;
-        color: #ffffff;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-family: Arial, sans-serif;
-        line-height: 1;
-        position: relative;
-        overflow: hidden;
-      `;
+      width: ${buttonWidth}px;
+      height: 50px;
+      font-size: 14px;
+      background: linear-gradient(135deg, #8b0000, #aa0000);
+      border: 2px solid #ff0000;
+      border-radius: 6px;
+      color: #ffffff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      line-height: 1;
+    `;
 
       button.innerHTML = `
-        <div style="font-size: 1em; margin-bottom: 4px;">${choice.symbol}</div>
-        <div style="font-size: 0.5em; font-weight: bold; opacity: 0.8;">${choice.key.toUpperCase()}</div>
-      `;
+      <div style="font-size: 16px; margin-bottom: 2px;">${choice.symbol}</div>
+      <div style="font-size: 10px; font-weight: bold;">${choice.key.toUpperCase()}</div>
+    `;
 
       // Efectos hover
       button.addEventListener("mouseenter", () => {
         button.style.transform = "scale(1.05)";
-        button.style.boxShadow = "0 0 15px rgba(255, 0, 0, 0.6)";
-        button.style.background = "linear-gradient(135deg, #aa0000, #cc0000)";
+        button.style.boxShadow = "0 0 10px rgba(255, 0, 0, 0.6)";
       });
 
       button.addEventListener("mouseleave", () => {
         button.style.transform = "scale(1)";
         button.style.boxShadow = "none";
-        button.style.background = "linear-gradient(135deg, #8b0000, #aa0000)";
       });
 
       // Click handler
@@ -484,40 +653,68 @@ const BossYanKenPo = {
       buttonsContainer.appendChild(button);
     });
 
+    // 🔥 MARCADOR "Victorias 0/3" DEBAJO DE LOS BOTONES
+    const scoreDisplay = document.createElement("div");
+    scoreDisplay.id = "yankenpo-score";
+    scoreDisplay.style.cssText = `
+    color: #FFD700;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  `;
+    scoreDisplay.textContent = `Victorias ${this.roundsWon}/3`;
+
+    // 🔥 INFORMACIÓN DEL ESTADO
+    const info = document.createElement("div");
+    info.id = "yankenpo-info";
+    info.style.cssText = `
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.2;
+  `;
+
+    // Ensamblar
     container.appendChild(buttonsContainer);
+    container.appendChild(scoreDisplay);
+    container.appendChild(info);
     document.body.appendChild(container);
 
     this.uiCreated = true;
     this.updateInfoDisplay();
 
-    console.log("✅ UI de Yan Ken Po creada");
+    console.log("✅ UI Yan Ken Po creada bajo la barra del boss");
   },
 
   /**
-   * Actualizar información mostrada
+   * Actualizar información mostrada - CORREGIDO
    */
   updateInfoDisplay() {
     const info = document.getElementById("yankenpo-info");
-    if (!info) return;
+    const score = document.getElementById("yankenpo-score");
+
+    if (!info || !score) return;
+
+    // 🔥 ACTUALIZAR MARCADOR DE VICTORIAS
+    score.textContent = `Victorias ${this.roundsWon}/3`;
 
     let content = "";
 
     switch (this.gameState) {
       case "countdown":
         content = `
-          <div>Ronda ${this.currentRound} - Prepárate...</div>
-          <div style="font-size: 1.5em; color: #ffff00; margin: 5px 0;">${this.countdown}</div>
-          <div>Victorias: ${this.roundsWon}/${this.gameConfig.roundsToWin}</div>
-        `;
+        <div style="color: #ffff00;">Preparándote... ${this.countdown}</div>
+      `;
         break;
 
       case "selection":
         content = `
-          <div>Ronda ${this.currentRound}</div>
-          <div style="color: #00ff00; font-weight: bold;">¡ELIGE TU OPCIÓN!</div>
-          <div style="font-size: 0.9em;">Presiona Q, W o E</div>
-          <div>Victorias: ${this.roundsWon}/${this.gameConfig.roundsToWin}</div>
-        `;
+        <div style="color: #00ff00; font-weight: bold;">¡ELIGE TU OPCIÓN!</div>
+        <div style="font-size: 11px;">Presiona Q, W o E</div>
+      `;
         break;
 
       case "result":
@@ -534,20 +731,21 @@ const BossYanKenPo = {
         };
 
         content = `
-          <div>Ronda ${this.currentRound}</div>
-          <div style="margin: 10px 0;">
-            <span>TÚ: ${choices[this.playerChoice]}</span>
-            <span style="margin: 0 10px;">VS</span>
-            <span>BOSS: ${choices[this.bossChoice]}</span>
-          </div>
-          <div style="color: ${
-            resultColors[this.lastResult]
-          }; font-weight: bold; font-size: 1.2em;">
-            ${resultTexts[this.lastResult]}
-          </div>
-          <div>Victorias: ${this.roundsWon}/${this.gameConfig.roundsToWin}</div>
-        `;
+        <div style="margin: 5px 0;">
+          <span>TÚ: ${choices[this.playerChoice]}</span>
+          <span style="margin: 0 8px;">VS</span>
+          <span>BOSS: ${choices[this.bossChoice]}</span>
+        </div>
+        <div style="color: ${
+          resultColors[this.lastResult]
+        }; font-weight: bold;">
+          ${resultTexts[this.lastResult]}
+        </div>
+      `;
         break;
+
+      default:
+        content = `<div>Yan Ken Po - Final</div>`;
     }
 
     info.innerHTML = content;

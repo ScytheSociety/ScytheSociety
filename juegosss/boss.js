@@ -12,8 +12,8 @@ const BossManager = {
   active: false,
 
   // Estadísticas básicas
-  maxHealth: 200,
-  currentHealth: 200,
+  maxHealth: 2000,
+  currentHealth: 2000,
 
   // Sistemas modulares (se cargan dinámicamente)
   movement: null,
@@ -304,7 +304,7 @@ const BossManager = {
   // ======================================================
 
   /**
-   * El boss recibe daño
+   * El boss recibe daño - MODIFICADO para más resistencia
    */
   takeDamage(amount) {
     // Verificaciones básicas
@@ -319,8 +319,8 @@ const BossManager = {
       return;
     }
 
-    // Aplicar daño reducido
-    const reducedDamage = Math.max(1, Math.floor(amount * 0.7));
+    // 🔥 DAÑO MÁS REDUCIDO para mayor duración
+    const reducedDamage = Math.max(1, Math.floor(amount * 0.4)); // Era 0.7, ahora 0.4
     this.currentHealth = Math.max(0, this.currentHealth - reducedDamage);
 
     // Aumentar agresividad

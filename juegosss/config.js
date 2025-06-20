@@ -156,7 +156,7 @@ const GameConfig = {
   // ======================================================
 
   BOSS_CONFIG: {
-    health: 50, // Vida del boss
+    health: 2000, // Vida del boss
     size: 120, // Tamaño
     speed: 0.002, // Velocidad base
 

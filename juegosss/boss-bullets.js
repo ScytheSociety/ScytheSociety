@@ -208,7 +208,7 @@ const BossBullets = {
   // ======================================================
 
   /**
-   * Iniciar un patrón de balas con persecución - CORREGIDA
+   * Iniciar un patrón de balas con persecución - CORREGIDO PARA PERSEGUIR SIEMPRE
    */
   startBulletPattern() {
     if (this.patternActive) {
@@ -216,10 +216,13 @@ const BossBullets = {
       return;
     }
 
-    // Boss persigue al jugador durante esta fase
+    console.log("🌟 Iniciando fase Touhou con persecución constante");
+
+    // 🔥 BOSS PERSIGUE AL JUGADOR DURANTE TODA LA FASE
     if (this.bossManager.movement) {
       this.bossManager.movement.enableWandering();
       this.bossManager.movement.changePattern("hunting");
+      console.log("👹 Boss configurado para perseguir durante Touhou");
     }
 
     // Seleccionar patrón aleatorio
@@ -228,110 +231,241 @@ const BossBullets = {
         Math.floor(Math.random() * this.availablePatterns.length)
       ];
 
-    console.log(
-      `🌟 Boss iniciando patrón: ${this.patternType} (con persecución)`
-    );
-
     this.patternActive = true;
     this.patternTimer = 0;
 
-    // 🔥 RALENTIZAR JUGADOR SOLO UN POCO durante patrones Touhou
+    // 🔥 JUGADOR LIGERAMENTE RALENTIZADO
     if (window.Player) {
       this.originalPlayerSpeedPattern = window.Player.moveSpeed;
-      window.Player.moveSpeed = 0.7; // Solo 30% más lento, no tan extremo
-      console.log("🐌 Jugador ligeramente ralentizado durante patrón Touhou");
+      window.Player.moveSpeed = 0.7; // 30% más lento
+      console.log("🐌 Jugador ralentizado durante Touhou");
     }
-
-    // 🔥 Boss NO inmune - persigue mientras dispara
-    // NO hacer inmune aquí para que sea vulnerable
 
     // Iniciar el patrón específico
     this.executePattern(this.patternType);
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        `🌟 PATRÓN ${this.patternType.toUpperCase()}!`,
+        `🌟 TOUHOU: ${this.patternType.toUpperCase()}!`,
         "#FFD700"
       );
     }
 
-    // 🔥 SPAWEAR ESCUDOS PROTECTORES durante la fase
+    // 🔥 SPAWEAR ESCUDOS CON CONTROL ESTRICTO
     this.spawnProtectiveShields();
+
+    // 🔥 MANTENER PERSECUCIÓN ACTIVA durante toda la fase
+    const huntingInterval = setInterval(() => {
+      if (!this.patternActive) {
+        clearInterval(huntingInterval);
+        return;
+      }
+
+      // Reactivar persecución si se desactiva
+      if (this.bossManager.movement) {
+        this.bossManager.movement.enableWandering();
+        this.bossManager.movement.changePattern("hunting");
+      }
+    }, 2000); // Cada 2 segundos verificar persecución
+
+    this.activeIntervals.push(huntingInterval);
   },
 
   /**
-   * Spawear escudos protectores durante fase Touhou - NUEVO
+   * Spawear escudos protectores durante fase Touhou - CORREGIDO SEGÚN ESPECIFICACIÓN
    */
   spawnProtectiveShields() {
-    console.log("🛡️ Spaweando escudos protectores para fase Touhou");
+    console.log("🛡️ Sistema de escudos Touhou iniciado");
 
-    // Spawear 3-4 escudos durante la fase
-    const shieldCount = 3 + Math.floor(Math.random() * 2); // 3-4 escudos
+    // 🔥 VARIABLES DE CONTROL ESTRICTO
+    let activeFixedShields = 0;
+    const maxFixedShields = 2;
+    let lastFixedShieldTime = 0;
+    let lastFallingShieldTime = 0;
 
-    for (let i = 0; i < shieldCount; i++) {
-      setTimeout(() => {
-        if (this.patternActive && window.PowerUpManager) {
-          // Forzar spawn de escudo protector
-          const canvas = window.getCanvas();
-          const size = GameConfig.PLAYER_SIZE * 0.7;
+    // 🔥 ESCUDOS FIJOS: cada 4 segundos, máximo 2, no juntos
+    const fixedShieldInterval = setInterval(() => {
+      if (!this.patternActive) {
+        clearInterval(fixedShieldInterval);
+        return;
+      }
 
-          // Posición estratégica (no muy cerca del boss)
-          let x, y;
-          let validPosition = false;
-          let attempts = 0;
+      const currentTime = Date.now();
 
-          do {
-            x = size + Math.random() * (canvas.width - size * 2);
-            y = size + Math.random() * (canvas.height - size * 2);
+      // Verificar tiempo mínimo entre escudos fijos (no juntos)
+      if (currentTime - lastFixedShieldTime < 4000) return;
 
-            // Verificar que no esté muy cerca del boss
-            const boss = this.bossManager.boss;
-            const distanceToBoss = Math.sqrt(
-              Math.pow(x - (boss.x + boss.width / 2), 2) +
-                Math.pow(y - (boss.y + boss.height / 2), 2)
-            );
+      // Verificar límite máximo en pantalla
+      if (activeFixedShields >= maxFixedShields) return;
 
-            validPosition = distanceToBoss > 150; // Al menos 150px del boss
-            attempts++;
-          } while (!validPosition && attempts < 10);
+      // Contar escudos reales en pantalla
+      const realActiveShields = window.PowerUpManager.powerUps.filter(
+        (p) => p.isFixed && p.type.id === 0
+      ).length;
 
-          // Crear escudo protector
-          const shield = {
-            x: x,
-            y: y,
-            width: size,
-            height: size,
-            velocityY: 0, // Estático
-            velocityX: 0,
-            type: {
-              id: 0,
-              name: "Escudo Protector",
-              color: "#00FF00",
-              duration: 240,
-            },
-            pulseTimer: 0,
-            glowIntensity: 0.8,
-            spawnTime: window.getGameTime(),
-          };
+      if (realActiveShields >= maxFixedShields) {
+        activeFixedShields = realActiveShields;
+        return;
+      }
 
-          window.PowerUpManager.powerUps.push(shield);
+      this.createFixedShield();
+      activeFixedShields++;
+      lastFixedShieldTime = currentTime;
 
-          if (this.bossManager.ui) {
-            this.bossManager.ui.createParticleEffect(
-              x + size / 2,
-              y + size / 2,
-              "#00FF00",
-              20
-            );
-          }
+      console.log(
+        `🛡️ Escudo fijo spaweado (${activeFixedShields}/${maxFixedShields})`
+      );
+    }, 1000); // Verificar cada segundo
 
-          console.log(
-            `🛡️ Escudo ${i + 1} spaweado en (${Math.round(x)}, ${Math.round(
-              y
-            )})`
-          );
-        }
-      }, i * 4000); // Cada 4 segundos un escudo
+    // 🔥 ESCUDOS QUE CAEN: cada 30 segundos, uno a la vez
+    const fallingShieldInterval = setInterval(() => {
+      if (!this.patternActive) {
+        clearInterval(fallingShieldInterval);
+        return;
+      }
+
+      const currentTime = Date.now();
+
+      // Verificar tiempo mínimo entre escudos que caen
+      if (currentTime - lastFallingShieldTime < 30000) return;
+
+      // Verificar que no haya escudos cayendo activos
+      const activeFallingShields = window.PowerUpManager.powerUps.filter(
+        (p) => p.isFalling && p.type.id === 0
+      ).length;
+
+      if (activeFallingShields > 0) return;
+
+      this.createFallingShield();
+      lastFallingShieldTime = currentTime;
+
+      console.log("🛡️ Escudo cayendo del cielo spaweado");
+    }, 5000); // Verificar cada 5 segundos
+
+    // 🔥 LIMPIEZA AUTOMÁTICA de escudos expirados
+    const cleanupInterval = setInterval(() => {
+      if (!this.patternActive) {
+        clearInterval(cleanupInterval);
+        return;
+      }
+
+      // Limpiar contador de escudos fijos
+      const realActiveShields = window.PowerUpManager.powerUps.filter(
+        (p) => p.isFixed && p.type.id === 0
+      ).length;
+      activeFixedShields = realActiveShields;
+    }, 2000);
+
+    // Guardar intervalos para limpieza
+    this.activeIntervals.push(fixedShieldInterval);
+    this.activeIntervals.push(fallingShieldInterval);
+    this.activeIntervals.push(cleanupInterval);
+  },
+
+  /**
+   * Crear escudo fijo en posición estratégica - NUEVO
+   */
+  createFixedShield() {
+    const canvas = window.getCanvas();
+    const size = GameConfig.PLAYER_SIZE * 0.7;
+
+    let x, y;
+    let validPosition = false;
+    let attempts = 0;
+
+    do {
+      x = size + Math.random() * (canvas.width - size * 2);
+      y = size + Math.random() * (canvas.height - size * 2);
+
+      // No muy cerca del boss
+      const boss = this.bossManager.boss;
+      const distanceToBoss = Math.sqrt(
+        Math.pow(x - (boss.x + boss.width / 2), 2) +
+          Math.pow(y - (boss.y + boss.height / 2), 2)
+      );
+
+      // No muy cerca de otros escudos fijos
+      const otherShields = window.PowerUpManager.powerUps.filter(
+        (p) => p.isFixed
+      );
+      const tooCloseToOther = otherShields.some((shield) => {
+        const distance = Math.sqrt(
+          Math.pow(x - shield.x, 2) + Math.pow(y - shield.y, 2)
+        );
+        return distance < 120; // Separación mínima
+      });
+
+      validPosition = distanceToBoss > 150 && !tooCloseToOther;
+      attempts++;
+    } while (!validPosition && attempts < 20);
+
+    // Crear escudo fijo
+    const shield = {
+      x: x,
+      y: y,
+      width: size,
+      height: size,
+      velocityY: 0,
+      velocityX: 0,
+      type: {
+        id: 0,
+        name: "Escudo Protector",
+        color: "#00FF00",
+        duration: 240, // 4 segundos
+      },
+      isFixed: true, // 🔥 MARCADOR FIJO
+      spawnTime: window.getGameTime(),
+      pulseTimer: 0,
+      glowIntensity: 0.8,
+    };
+
+    window.PowerUpManager.powerUps.push(shield);
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.createParticleEffect(
+        x + size / 2,
+        y + size / 2,
+        "#00FF00",
+        20
+      );
+    }
+  },
+
+  /**
+   * Crear escudo que cae del cielo - NUEVO
+   */
+  createFallingShield() {
+    const canvas = window.getCanvas();
+    const size = GameConfig.PLAYER_SIZE * 0.7;
+
+    const shield = {
+      x: Math.random() * (canvas.width - size),
+      y: -size, // Empezar arriba
+      width: size,
+      height: size,
+      velocityY: 3, // Velocidad de caída
+      velocityX: 0,
+      type: {
+        id: 0,
+        name: "Escudo Protector",
+        color: "#00FF00",
+        duration: 240,
+      },
+      isFalling: true, // 🔥 MARCADOR DE CAÍDA
+      spawnTime: window.getGameTime(),
+      pulseTimer: 0,
+      glowIntensity: 0.8,
+    };
+
+    window.PowerUpManager.powerUps.push(shield);
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.createParticleEffect(
+        shield.x + size / 2,
+        shield.y + size / 2,
+        "#00FFFF",
+        15
+      );
     }
   },
 
