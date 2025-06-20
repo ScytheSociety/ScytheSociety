@@ -29,52 +29,52 @@ const BossBullets = {
   // Tipos de patrones disponibles
   availablePatterns: ["spiral", "walls", "cross", "rain", "burst", "laser"],
 
-  // Configuración específica por patrón
+  // Configuración específica por patrón - CORREGIDA para mejor espaciado
   patternConfigs: {
     spiral: {
-      duration: 240, // 4 segundos
-      bulletInterval: 50, // Cada 50ms
-      rotationSpeed: 0.15,
-      bulletsPerFrame: 2,
-      speed: 0.002,
+      duration: 300, // 5 segundos
+      bulletInterval: 80, // Cada 80ms (más espaciado)
+      rotationSpeed: 0.12,
+      bulletsPerFrame: 1, // Solo 1 bala por frame
+      speed: 0.0015, // Más lento
       color: "#FF6B6B",
     },
     walls: {
-      duration: 300, // 5 segundos
-      wallInterval: 1000, // Cada segundo
-      bulletCount: 12,
-      gapSize: 4, // Tamaño del hueco para esquivar
-      speed: 0.004,
+      duration: 360, // 6 segundos
+      wallInterval: 1500, // Cada 1.5 segundos (más espaciado)
+      bulletCount: 8, // Menos balas por muro
+      gapSize: 6, // Hueco más grande para esquivar
+      speed: 0.003, // Más lento
       color: "#4ECDC4",
     },
     cross: {
-      duration: 180, // 3 segundos
-      bulletInterval: 100, // Cada 100ms
+      duration: 240, // 4 segundos
+      bulletInterval: 150, // Cada 150ms (más espaciado)
       directions: 4, // Direcciones principales
-      diagonalFreq: 30, // Cada 30 frames diagonales
-      speed: 0.004,
+      diagonalFreq: 40, // Cada 40 frames diagonales (menos frecuente)
+      speed: 0.003, // Más lento
       color: "#9B59B6",
     },
     rain: {
-      duration: 200, // 3.3 segundos
-      bulletInterval: 80, // Cada 80ms
-      bulletsPerShot: 3,
-      spread: 0.5, // Dispersión angular
-      speed: 0.005,
+      duration: 300, // 5 segundos
+      bulletInterval: 120, // Cada 120ms (más espaciado)
+      bulletsPerShot: 2, // Solo 2 balas por disparo
+      spread: 0.4, // Menos dispersión
+      speed: 0.004, // Más lento
       color: "#F39C12",
     },
     burst: {
-      duration: 150, // 2.5 segundos
-      burstInterval: 60, // Cada segundo
-      bulletsPerBurst: 16,
-      speed: 0.003,
+      duration: 240, // 4 segundos
+      burstInterval: 90, // Cada 1.5 segundos (más espaciado)
+      bulletsPerBurst: 12, // Menos balas por ráfaga
+      speed: 0.002, // Más lento
       color: "#E74C3C",
     },
     laser: {
-      duration: 120, // 2 segundos
-      chargeTime: 60, // 1 segundo de carga
-      laserWidth: 30,
-      speed: 0.008,
+      duration: 180, // 3 segundos
+      chargeTime: 90, // 1.5 segundos de carga (más tiempo)
+      laserWidth: 25, // Más delgado
+      speed: 0.006, // Más lento
       color: "#FF00FF",
     },
   },
@@ -263,25 +263,45 @@ const BossBullets = {
    * Spawear escudos protectores durante fase Touhou - NUEVO
    */
   spawnProtectiveShields() {
-    const canvas = window.getCanvas();
+    console.log("🛡️ Spaweando escudos protectores para fase Touhou");
 
     // Spawear 3-4 escudos durante la fase
-    const shieldCount = 3 + Math.floor(Math.random() * 2);
+    const shieldCount = 3 + Math.floor(Math.random() * 2); // 3-4 escudos
 
     for (let i = 0; i < shieldCount; i++) {
       setTimeout(() => {
-        // Posición aleatoria pero accesible
-        const x = 100 + Math.random() * (canvas.width - 200);
-        const y = 100 + Math.random() * (canvas.height - 200);
+        if (this.patternActive && window.PowerUpManager) {
+          // Forzar spawn de escudo protector
+          const canvas = window.getCanvas();
+          const size = GameConfig.PLAYER_SIZE * 0.7;
 
-        // Crear power-up de escudo
-        if (window.PowerUpManager) {
+          // Posición estratégica (no muy cerca del boss)
+          let x, y;
+          let validPosition = false;
+          let attempts = 0;
+
+          do {
+            x = size + Math.random() * (canvas.width - size * 2);
+            y = size + Math.random() * (canvas.height - size * 2);
+
+            // Verificar que no esté muy cerca del boss
+            const boss = this.bossManager.boss;
+            const distanceToBoss = Math.sqrt(
+              Math.pow(x - (boss.x + boss.width / 2), 2) +
+                Math.pow(y - (boss.y + boss.height / 2), 2)
+            );
+
+            validPosition = distanceToBoss > 150; // Al menos 150px del boss
+            attempts++;
+          } while (!validPosition && attempts < 10);
+
+          // Crear escudo protector
           const shield = {
             x: x,
             y: y,
-            width: 50,
-            height: 50,
-            velocityY: 0,
+            width: size,
+            height: size,
+            velocityY: 0, // Estático
             velocityX: 0,
             type: {
               id: 0,
@@ -294,27 +314,24 @@ const BossBullets = {
             spawnTime: window.getGameTime(),
           };
 
-          PowerUpManager.powerUps.push(shield);
+          window.PowerUpManager.powerUps.push(shield);
 
-          // Efecto visual
           if (this.bossManager.ui) {
-            this.bossManager.ui.createParticleEffect(x, y, "#00FF00", 20);
+            this.bossManager.ui.createParticleEffect(
+              x + size / 2,
+              y + size / 2,
+              "#00FF00",
+              20
+            );
           }
+
+          console.log(
+            `🛡️ Escudo ${i + 1} spaweado en (${Math.round(x)}, ${Math.round(
+              y
+            )})`
+          );
         }
-
-        console.log(
-          `🛡️ Escudo protector spawneado en (${Math.round(x)}, ${Math.round(
-            y
-          )})`
-        );
-      }, i * 3000); // Cada 3 segundos un escudo
-    }
-
-    if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage(
-        "🛡️ ¡ESCUDOS DISPONIBLES!",
-        "#00FF00"
-      );
+      }, i * 4000); // Cada 4 segundos un escudo
     }
   },
 
