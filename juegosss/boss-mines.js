@@ -19,11 +19,13 @@ const BossMines = {
   mineConfig: {
     size: 40,
     dangerRadius: 120,
+    staticDangerRadius: 80, // Radio más pequeño para minas estáticas
     armingTime: 60,
     explosionTime: 300, // 5 segundos
     warningTime: 120,
     blinkSpeed: 10,
     chainReactionRadius: 150,
+    minDistanceBetweenMines: 60, // Distancia mínima entre minas
   },
 
   // ======================================================
@@ -79,7 +81,7 @@ const BossMines = {
   },
 
   // ======================================================
-  // SISTEMA DE MINAS
+  // SISTEMA DE MINAS MEJORADO
   // ======================================================
 
   startMineSequence() {
@@ -88,7 +90,7 @@ const BossMines = {
     this.miningPhase = true;
     this.sequenceActive = true;
 
-    // Teletransporte cada 1.5 segundos
+    // Teletransporte cada 2.5 segundos
     this.teleportInterval = setInterval(() => {
       if (this.sequenceActive) {
         this.aggressiveTeleportAndMine();
@@ -112,59 +114,74 @@ const BossMines = {
     const playerPos = Player.getPosition();
     const canvas = window.getCanvas();
 
-    // Posiciones con MÁS DISTANCIA del jugador para dar tiempo de reacción
+    // Posiciones cercanas pero NO encima del jugador
     const huntingPositions = [
-      { x: playerPos.x + 180, y: playerPos.y + 120 }, // Más lejos
-      { x: playerPos.x - 180, y: playerPos.y + 120 },
-      { x: playerPos.x + 120, y: playerPos.y - 180 },
-      { x: playerPos.x - 120, y: playerPos.y - 180 },
-      { x: playerPos.x + 150, y: playerPos.y + 50 },
-      { x: playerPos.x - 150, y: playerPos.y + 50 },
-      { x: playerPos.x + 50, y: playerPos.y + 150 },
-      { x: playerPos.x + 50, y: playerPos.y - 150 },
-      { x: playerPos.x - 50, y: playerPos.y + 150 },
-      { x: playerPos.x - 50, y: playerPos.y - 150 },
+      { x: playerPos.x + 200, y: playerPos.y + 100 }, // Derecha-abajo
+      { x: playerPos.x - 200, y: playerPos.y + 100 }, // Izquierda-abajo
+      { x: playerPos.x + 100, y: playerPos.y - 200 }, // Derecha-arriba
+      { x: playerPos.x - 100, y: playerPos.y - 200 }, // Izquierda-arriba
+      { x: playerPos.x + 250, y: playerPos.y }, // Derecha
+      { x: playerPos.x - 250, y: playerPos.y }, // Izquierda
+      { x: playerPos.x, y: playerPos.y + 250 }, // Abajo
+      { x: playerPos.x, y: playerPos.y - 250 }, // Arriba
+      { x: playerPos.x + 180, y: playerPos.y + 180 }, // Diagonal
+      { x: playerPos.x - 180, y: playerPos.y - 180 }, // Diagonal opuesta
     ];
 
     const validPositions = huntingPositions.filter(
       (pos) =>
-        pos.x >= 100 && // Más margen de los bordes
-        pos.x <= canvas.width - 100 &&
-        pos.y >= 100 &&
-        pos.y <= canvas.height - 100
+        pos.x >= 120 &&
+        pos.x <= canvas.width - 120 &&
+        pos.y >= 120 &&
+        pos.y <= canvas.height - 120
     );
 
     if (validPositions.length > 0 && this.bossManager.boss) {
       const targetPos =
         validPositions[Math.floor(Math.random() * validPositions.length)];
 
-      // Teletransportar boss
-      this.bossManager.boss.x = targetPos.x - this.bossManager.boss.width / 2;
-      this.bossManager.boss.y = targetPos.y - this.bossManager.boss.height / 2;
+      // Teletransportar boss cerca de la posición objetivo (no exactamente)
+      const bossX =
+        targetPos.x -
+        this.bossManager.boss.width / 2 +
+        (Math.random() - 0.5) * 100;
+      const bossY =
+        targetPos.y -
+        this.bossManager.boss.height / 2 +
+        (Math.random() - 0.5) * 100;
+
+      this.bossManager.boss.x = Math.max(
+        50,
+        Math.min(canvas.width - this.bossManager.boss.width - 50, bossX)
+      );
+      this.bossManager.boss.y = Math.max(
+        50,
+        Math.min(canvas.height - this.bossManager.boss.height - 50, bossY)
+      );
 
       // Efecto visual
       if (this.bossManager.ui) {
         this.bossManager.ui.createParticleEffect(
-          targetPos.x,
-          targetPos.y,
+          this.bossManager.boss.x + this.bossManager.boss.width / 2,
+          this.bossManager.boss.y + this.bossManager.boss.height / 2,
           "#FF8800",
           40
         );
       }
 
-      // Crear mina con MÁS TIEMPO antes de explotar
-      const randomTimer = 240 + Math.random() * 120; // 4-6 segundos (era 3-5)
-      const mine = this.createMine(
+      // Crear mina con posición validada
+      const minePos = this.getValidMinePosition(
         targetPos.x - 20,
-        targetPos.y - 20,
-        randomTimer
+        targetPos.y - 20
       );
+      const randomTimer = 300 + Math.random() * 120; // 5-7 segundos
+      const mine = this.createMine(minePos.x, minePos.y, randomTimer);
       mine.armed = true;
       mine.type = "teleport";
       this.mines.push(mine);
 
       console.log(
-        `💣 Boss teletransportado con más distancia en (${Math.round(
+        `💣 Boss teletransportado cerca de (${Math.round(
           targetPos.x
         )}, ${Math.round(targetPos.y)}) - Mina: ${Math.round(
           randomTimer / 60
@@ -183,35 +200,74 @@ const BossMines = {
 
       if (i === 0) {
         // Bloquear ruta hacia esquina superior izquierda
-        x = playerPos.x - 150 - Math.random() * 100;
-        y = playerPos.y - 150 - Math.random() * 100;
+        x = playerPos.x - 200 - Math.random() * 80;
+        y = playerPos.y - 200 - Math.random() * 80;
       } else if (i === 1) {
         // Bloquear ruta hacia esquina superior derecha
-        x = playerPos.x + 150 + Math.random() * 100;
-        y = playerPos.y - 150 - Math.random() * 100;
+        x = playerPos.x + 200 + Math.random() * 80;
+        y = playerPos.y - 200 - Math.random() * 80;
       } else if (i === 2) {
         // Bloquear escape hacia abajo
-        x = playerPos.x + (Math.random() - 0.5) * 200;
-        y = playerPos.y + 200 + Math.random() * 100;
+        x = playerPos.x + (Math.random() - 0.5) * 150;
+        y = playerPos.y + 250 + Math.random() * 80;
       } else {
         // Mina extra: posición aleatoria
-        x = playerPos.x + (Math.random() - 0.5) * 300;
-        y = playerPos.y + (Math.random() - 0.5) * 300;
+        x = playerPos.x + (Math.random() - 0.5) * 400;
+        y = playerPos.y + (Math.random() - 0.5) * 400;
       }
 
       // Mantener dentro de pantalla
-      x = Math.max(60, Math.min(canvas.width - 60, x));
-      y = Math.max(60, Math.min(canvas.height - 60, y));
+      x = Math.max(80, Math.min(canvas.width - 80, x));
+      y = Math.max(80, Math.min(canvas.height - 80, y));
+
+      // Validar posición para evitar superposición
+      const validPos = this.getValidMinePosition(x, y);
 
       // Crear mina estática
-      const staticMine = this.createMine(x, y, null);
+      const staticMine = this.createMine(validPos.x, validPos.y, null);
       staticMine.isStatic = true;
       staticMine.armed = true;
       staticMine.type = "static";
+      staticMine.dangerRadius = this.mineConfig.staticDangerRadius; // Radio más pequeño
       this.mines.push(staticMine);
     }
 
     console.log(`💣 Campo de ${mineCount} minas estáticas spawneado`);
+  },
+
+  // Función para evitar minas superpuestas
+  getValidMinePosition(x, y) {
+    const maxAttempts = 10;
+    let attempts = 0;
+    let validX = x;
+    let validY = y;
+
+    while (attempts < maxAttempts) {
+      let tooClose = false;
+
+      for (const existingMine of this.mines) {
+        const distance = Math.sqrt(
+          Math.pow(validX - existingMine.x, 2) +
+            Math.pow(validY - existingMine.y, 2)
+        );
+
+        if (distance < this.mineConfig.minDistanceBetweenMines) {
+          tooClose = true;
+          break;
+        }
+      }
+
+      if (!tooClose) {
+        break;
+      }
+
+      // Intentar nueva posición
+      validX = x + (Math.random() - 0.5) * 120;
+      validY = y + (Math.random() - 0.5) * 120;
+      attempts++;
+    }
+
+    return { x: validX, y: validY };
   },
 
   createMine(x, y, customTimer = null) {
@@ -224,7 +280,7 @@ const BossMines = {
       armed: false,
       blinkTimer: 0,
       blinkSpeed: this.mineConfig.blinkSpeed,
-      dangerRadius: this.mineConfig.dangerRadius,
+      dangerRadius: this.mineConfig.dangerRadius, // Se ajustará para estáticas
       showDangerZone: true,
       warningPhase: false,
       pulseIntensity: 0,
@@ -353,7 +409,7 @@ const BossMines = {
   },
 
   // ======================================================
-  // RENDERIZADO
+  // RENDERIZADO MEJORADO
   // ======================================================
 
   draw(ctx) {
@@ -390,15 +446,15 @@ const BossMines = {
     ctx.arc(centerX, centerY, mine.dangerRadius, 0, Math.PI * 2);
 
     if (mine.isStatic) {
-      ctx.strokeStyle = "rgba(255, 255, 0, 0.7)";
-      ctx.fillStyle = "rgba(255, 255, 0, 0.1)";
+      ctx.strokeStyle = "rgba(255, 255, 0, 0.8)";
+      ctx.fillStyle = "rgba(255, 255, 0, 0.15)";
     } else if (mine.warningPhase) {
-      const alpha = 0.3 + Math.sin(mine.blinkTimer * 0.5) * 0.2;
+      const alpha = 0.4 + Math.sin(mine.blinkTimer * 0.5) * 0.3;
       ctx.strokeStyle = `rgba(255, 0, 0, ${alpha})`;
-      ctx.fillStyle = `rgba(255, 0, 0, ${alpha * 0.1})`;
+      ctx.fillStyle = `rgba(255, 0, 0, ${alpha * 0.15})`;
     } else {
-      ctx.strokeStyle = "rgba(255, 136, 0, 0.6)";
-      ctx.fillStyle = "rgba(255, 136, 0, 0.05)";
+      ctx.strokeStyle = "rgba(255, 136, 0, 0.7)";
+      ctx.fillStyle = "rgba(255, 136, 0, 0.08)";
     }
 
     ctx.fill();
@@ -409,86 +465,137 @@ const BossMines = {
   },
 
   drawMineBody(ctx, mine) {
-    let mineColor = mine.isStatic
-      ? "#FFFF00"
+    const centerX = mine.x + mine.width / 2;
+    const centerY = mine.y + mine.height / 2;
+    const radius = mine.width / 2;
+
+    // Color base según tipo y estado
+    let baseColor = mine.isStatic
+      ? "#FFAA00"
       : mine.armed
-      ? "#FF0000"
-      : "#FF8800";
+      ? "#CC0000"
+      : "#FF6600";
 
     if (!mine.isStatic && mine.timer < 60) {
       const blinkIntensity =
         mine.blinkTimer % mine.blinkSpeed < mine.blinkSpeed / 2;
-      ctx.globalAlpha = blinkIntensity ? 1.0 : 0.3;
-      mineColor = "#FFFFFF";
+      ctx.globalAlpha = blinkIntensity ? 1.0 : 0.4;
+      baseColor = "#FFFFFF";
     }
 
-    // Sombra
-    ctx.shadowColor = mineColor;
-    ctx.shadowBlur = 15;
+    // Sombra y resplandor
+    ctx.shadowColor = baseColor;
+    ctx.shadowBlur = mine.isStatic ? 25 : 20;
 
-    // Cuerpo
-    ctx.fillStyle = mineColor;
-    ctx.fillRect(mine.x, mine.y, mine.width, mine.height);
-
-    // Borde
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(mine.x, mine.y, mine.width, mine.height);
-
-    // Centro
-    ctx.fillStyle = "#FFFFFF";
-    const centerSize = mine.width * 0.3;
-    ctx.fillRect(
-      mine.x + (mine.width - centerSize) / 2,
-      mine.y + (mine.height - centerSize) / 2,
-      centerSize,
-      centerSize
+    // Cuerpo principal (círculo)
+    const gradient = ctx.createRadialGradient(
+      centerX,
+      centerY,
+      0,
+      centerX,
+      centerY,
+      radius
     );
+    gradient.addColorStop(0, this.lightenColor(baseColor, 0.3));
+    gradient.addColorStop(0.7, baseColor);
+    gradient.addColorStop(1, this.darkenColor(baseColor, 0.3));
 
-    this.drawMineDetails(ctx, mine);
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Borde exterior
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Borde interior
+    ctx.strokeStyle = this.darkenColor(baseColor, 0.4);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius * 0.8, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Centro brillante
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+
+    this.drawMineDetails(ctx, mine, centerX, centerY, radius);
   },
 
-  drawMineDetails(ctx, mine) {
-    const centerX = mine.x + mine.width / 2;
-    const centerY = mine.y + mine.height / 2;
-
+  drawMineDetails(ctx, mine, centerX, centerY, radius) {
     if (mine.armed) {
+      // Cruz central más detallada
       ctx.strokeStyle = mine.isStatic
         ? "#000000"
         : mine.warningPhase
         ? "#FFFF00"
-        : "#FF8800";
-      ctx.lineWidth = 2;
+        : "#FFAA00";
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
 
-      // Cruz central
       ctx.beginPath();
-      ctx.moveTo(centerX - 10, centerY);
-      ctx.lineTo(centerX + 10, centerY);
-      ctx.moveTo(centerX, centerY - 10);
-      ctx.lineTo(centerX, centerY + 10);
+      ctx.moveTo(centerX - radius * 0.6, centerY);
+      ctx.lineTo(centerX + radius * 0.6, centerY);
+      ctx.moveTo(centerX, centerY - radius * 0.6);
+      ctx.lineTo(centerX, centerY + radius * 0.6);
+      ctx.stroke();
+
+      // Pequeños círculos en los extremos de la cruz
+      const crossPoints = [
+        { x: centerX - radius * 0.6, y: centerY },
+        { x: centerX + radius * 0.6, y: centerY },
+        { x: centerX, y: centerY - radius * 0.6 },
+        { x: centerX, y: centerY + radius * 0.6 },
+      ];
+
+      ctx.fillStyle = ctx.strokeStyle;
+      crossPoints.forEach((point) => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    // Pulso de advertencia para minas con timer bajo
+    if (!mine.isStatic && mine.timer < 120) {
+      const pulseRadius = radius + 5 + Math.sin(mine.blinkTimer * 0.4) * 15;
+      const pulseAlpha = 0.8 - ((mine.blinkTimer % 60) / 60) * 0.6;
+
+      ctx.strokeStyle = `rgba(255, 255, 0, ${pulseAlpha})`;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, pulseRadius, 0, Math.PI * 2);
       ctx.stroke();
     }
 
-    // Pulso para minas con timer bajo
-    if (!mine.isStatic && mine.timer < 120) {
-      const pulseRadius = Math.max(1, 5 + Math.sin(mine.blinkTimer * 0.3) * 8);
-      ctx.strokeStyle = "rgba(255, 255, 0, 0.8)";
-      ctx.lineWidth = 3;
+    // Efecto de peligro para minas estáticas
+    if (mine.isStatic) {
+      const dangerPulse = Math.sin(mine.blinkTimer * 0.1) * 0.3 + 0.7;
+      ctx.strokeStyle = `rgba(255, 255, 0, ${dangerPulse})`;
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, pulseRadius, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, radius * 1.2, 0, Math.PI * 2);
       ctx.stroke();
     }
   },
 
   drawStaticIndicator(ctx, mine) {
     const centerX = mine.x + mine.width / 2;
-    const textY = mine.y - 15;
+    const textY = mine.y - 20;
+
+    // Fondo para el símbolo
+    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    ctx.fillRect(centerX - 15, textY - 15, 30, 20);
 
     ctx.fillStyle = "#FFFF00";
-    ctx.font = "bold 12px Arial";
+    ctx.font = "bold 16px Arial";
     ctx.textAlign = "center";
     ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
 
     ctx.strokeText("∞", centerX, textY);
     ctx.fillText("∞", centerX, textY);
@@ -496,18 +603,72 @@ const BossMines = {
 
   drawTimeCounter(ctx, mine) {
     const centerX = mine.x + mine.width / 2;
-    const textY = mine.y - 10;
+    const textY = mine.y - 15;
 
-    ctx.fillStyle = "#FFFFFF";
+    const timeLeft = Math.ceil(mine.timer / 60);
+
+    // Fondo para el contador
+    ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+    ctx.fillRect(centerX - 12, textY - 12, 24, 18);
+
+    // Color del texto según tiempo restante
+    let textColor = "#FFFFFF";
+    if (timeLeft <= 2) {
+      textColor = "#FF0000";
+    } else if (timeLeft <= 3) {
+      textColor = "#FFAA00";
+    }
+
+    ctx.fillStyle = textColor;
     ctx.font = "bold 14px Arial";
     ctx.textAlign = "center";
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 2;
 
-    const timeLeft = Math.ceil(mine.timer / 60);
-
     ctx.strokeText(timeLeft.toString(), centerX, textY);
     ctx.fillText(timeLeft.toString(), centerX, textY);
+  },
+
+  // ======================================================
+  // FUNCIONES AUXILIARES PARA COLORES
+  // ======================================================
+
+  lightenColor(color, percent) {
+    const num = parseInt(color.replace("#", ""), 16);
+    const amt = Math.round(2.55 * percent * 100);
+    const R = (num >> 16) + amt;
+    const G = ((num >> 8) & 0x00ff) + amt;
+    const B = (num & 0x0000ff) + amt;
+    return (
+      "#" +
+      (
+        0x1000000 +
+        (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+        (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+        (B < 255 ? (B < 1 ? 0 : B) : 255)
+      )
+        .toString(16)
+        .slice(1)
+    );
+  },
+
+  darkenColor(color, percent) {
+    const num = parseInt(color.replace("#", ""), 16);
+    const amt = Math.round(2.55 * percent * 100);
+    const R = (num >> 16) - amt;
+    const G = ((num >> 8) & 0x00ff) - amt;
+    const B = (num & 0x0000ff) - amt;
+    return (
+      "#" +
+      (
+        0x1000000 +
+        (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
+        (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
+        (B > 255 ? 255 : B < 0 ? 0 : B)
+      )
+        .toString(16)
+        .slice(1)
+    );
   },
 
   // ======================================================
