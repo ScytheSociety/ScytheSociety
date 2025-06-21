@@ -308,8 +308,11 @@ const BossManager = {
       this.comments.sayComment("¡Legiones del abismo, vengan a mí!");
     }
 
-    // Cambiar fase INMEDIATAMENTE, no con timeout
+    // MARCAR FASE ANTES DE CAMBIAR
     if (this.phases) {
+      this.phases.currentPhase = "SUMMONING";
+      this.phases.phaseActive = true;
+      this.phases.phaseTimer = 0;
       this.phases.changePhase("SUMMONING");
     }
 
@@ -327,11 +330,13 @@ const BossManager = {
       this.comments.sayComment("¡El suelo bajo sus pies es traicionero!");
     }
 
-    setTimeout(() => {
-      if (this.mines) {
-        this.mines.startMineSequence();
-      }
-    }, 1000);
+    // MARCAR FASE ANTES DE CAMBIAR
+    if (this.phases) {
+      this.phases.currentPhase = "MINES";
+      this.phases.phaseActive = true;
+      this.phases.phaseTimer = 0;
+      this.phases.changePhase("MINES");
+    }
   },
 
   startBulletsPhase() {
@@ -345,11 +350,13 @@ const BossManager = {
       this.comments.sayComment("¡Lluvia de muerte del inframundo!");
     }
 
-    setTimeout(() => {
-      if (this.bullets) {
-        this.bullets.startBulletPattern();
-      }
-    }, 1000);
+    // MARCAR FASE ANTES DE CAMBIAR
+    if (this.phases) {
+      this.phases.currentPhase = "BULLETS";
+      this.phases.phaseActive = true;
+      this.phases.phaseTimer = 0;
+      this.phases.changePhase("BULLETS");
+    }
   },
 
   startRedLinePhase() {
@@ -363,11 +370,13 @@ const BossManager = {
       this.comments.sayComment("¡Sigue mi rastro mortal!");
     }
 
-    setTimeout(() => {
-      if (this.redline) {
-        this.redline.startPhase();
-      }
-    }, 1000);
+    // MARCAR FASE ANTES DE CAMBIAR
+    if (this.phases) {
+      this.phases.currentPhase = "REDLINE";
+      this.phases.phaseActive = true;
+      this.phases.phaseTimer = 0;
+      this.phases.changePhase("REDLINE");
+    }
   },
 
   startYanKenPoPhase() {
@@ -381,11 +390,13 @@ const BossManager = {
       this.comments.sayComment("¡Última oportunidad, mortal!");
     }
 
-    setTimeout(() => {
-      if (this.yankenpo) {
-        this.yankenpo.startPhase();
-      }
-    }, 1000);
+    // MARCAR FASE ANTES DE CAMBIAR
+    if (this.phases) {
+      this.phases.currentPhase = "YANKENPO";
+      this.phases.phaseActive = true;
+      this.phases.phaseTimer = 0;
+      this.phases.changePhase("YANKENPO");
+    }
   },
 
   // ======================================================

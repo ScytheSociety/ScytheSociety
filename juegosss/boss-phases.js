@@ -89,40 +89,25 @@ const BossPhases = {
     timerDiv.id = "boss-phase-timer";
     timerDiv.style.cssText = `
     position: fixed;
-    top: 45px;
+    top: 120px;
     left: 20px;
     z-index: 2000;
-    background: rgba(0, 0, 0, 0.8);
-    color: #FF0000;
     font-family: Arial, sans-serif;
-    font-size: 14px;
+    font-size: 18px;
     font-weight: bold;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 2px solid #FF0000;
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
-    min-width: 200px;
+    pointer-events: none;
+    text-shadow: 
+      -2px -2px 0 #000000,  
+       2px -2px 0 #000000,
+      -2px  2px 0 #000000,
+       2px  2px 0 #000000;
   `;
 
-    let content = "";
-    if (secondsLeft !== null) {
-      // Fase con duración fija
-      const progress = ((elapsed / maxDuration) * 100).toFixed(1);
-      content = `
-      <div style="color: #FFD700;">FASE: ${phase}</div>
-      <div style="color: #FFFFFF;">Tiempo restante: ${secondsLeft}s</div>
-      <div style="color: #00FF00;">Progreso: ${progress}%</div>
-    `;
-    } else {
-      // Fase sin duración fija
-      content = `
-      <div style="color: #FFD700;">FASE: ${phase}</div>
-      <div style="color: #FFFFFF;">Tiempo: ${elapsed}s</div>
-      <div style="color: #FFFF00;">En progreso...</div>
-    `;
-    }
+    timerDiv.innerHTML = `
+    <span style="color: #FFD700;">${phase}:</span> 
+    <span style="color: #FFFFFF;">${secondsLeft}s</span>
+  `;
 
-    timerDiv.innerHTML = content;
     document.body.appendChild(timerDiv);
   },
 
