@@ -16,17 +16,17 @@ const PowerUpManager = {
   // ======================================================
 
   /**
-   * Actualiza todos los power-ups y corazones
+   * Actualiza todos los power-ups y corazones - IDÉNTICO PC/MÓVIL
    */
   update() {
-    // 🔥 Spawn más frecuente y dinámico
+    // 🔥 IDÉNTICO: Spawn igual para todos - sin optimizaciones de móvil
     this.trySpawnHeart();
     this.trySpawnPowerUp();
 
     // Eventos especiales aleatorios
     this.checkSpecialEvents();
 
-    // Actualizar items existentes
+    // 🔥 IDÉNTICO: Actualizar items igual para todos
     this.updatePowerUps();
     this.updateHearts();
 
