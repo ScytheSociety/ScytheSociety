@@ -30,25 +30,25 @@ const GameConfig = {
   ENEMY_MAX_SIZE: 40, // Era 60, ahora 40 (33% más pequeño)
 
   // ======================================================
-  // CONFIGURACIÓN DE NIVELES - 10 NIVELES BALANCEADOS
+  // CONFIGURACIÓN DE NIVELES - CONFIGURACIÓN ORIGINAL BUENA
   // ======================================================
 
   LEVEL_CONFIG: {
-    // Enemigos requeridos por nivel (progresión más equilibrada)
-    enemiesPerLevel: [50, 75, 105, 140, 180, 225, 275, 330, 390, 460],
+    // Enemigos requeridos por nivel (configuración original)
+    enemiesPerLevel: [80, 120, 180, 260, 360, 480, 620, 780, 960, 1220],
 
-    // Velocidad de spawn de enemigos (más controlada)
+    // Velocidad de spawn de enemigos (configuración original)
     spawnDelay: [
-      90, // Nivel 1 - Suave
-      80, // Nivel 2
-      70, // Nivel 3
-      62, // Nivel 4
-      55, // Nivel 5
-      50, // Nivel 6
-      45, // Nivel 7
-      42, // Nivel 8
-      38, // Nivel 9
-      35, // Nivel 10 - Challenging pero fair
+      80, // Nivel 1 - Más lento
+      70, // Nivel 2
+      60, // Nivel 3
+      50, // Nivel 4
+      45, // Nivel 5
+      40, // Nivel 6
+      35, // Nivel 7
+      30, // Nivel 8
+      25, // Nivel 9
+      20, // Nivel 10
     ],
   },
 

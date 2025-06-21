@@ -247,43 +247,29 @@ const EnemyManager = {
   },
 
   /**
-   * Controla el spawn de enemigos - IDÉNTICO PARA TODOS
+   * Controla el spawn de enemigos - CON LÍMITES INTELIGENTES
    */
   updateSpawning() {
-    // NO SPAWNAR SI ES BOSS LEVEL (nivel 11)
-    if (window.getLevel() >= 11) {
-      return;
-    }
-
-    // No spawnar si el nivel está completo
+    if (window.getLevel() >= 11) return;
     if (this.isLevelComplete()) return;
 
-    // 🔥 IDÉNTICO: mismo límite para todos
-    if (this.enemies.length > 40) return;
+    // 🔥 NUEVO: Límite inteligente basado en nivel
+    const maxEnemies = Math.min(15 + window.getLevel() * 2, 30); // Máximo 30 enemigos
+
+    if (this.enemies.length > maxEnemies) return;
 
     this.spawnTimer++;
 
-    // 🔥 MISMA VELOCIDAD DE SPAWN PARA TODOS - SIN DIFERENCIAS
     let effectiveDelay = this.currentSpawnDelay;
 
-    // Bonus por combo (igual para todos)
-    if (window.ComboSystem) {
-      const combo = window.ComboSystem.getCurrentCombo();
-      if (combo >= 10) {
-        effectiveDelay = Math.max(8, effectiveDelay * 0.8);
-      }
-      if (combo >= 20) {
-        effectiveDelay = Math.max(6, effectiveDelay * 0.6);
-      }
-    }
-
+    // Sin modificaciones por combo, solo spawn normal
     if (this.spawnTimer >= effectiveDelay) {
       this.spawnEnemy();
       this.spawnTimer = 0;
 
-      // Spawn adicional aleatorio (igual para todos)
-      if (Math.random() < 0.3) {
-        setTimeout(() => this.spawnEnemy(), 100);
+      // Spawn adicional ocasional (más controlado)
+      if (Math.random() < 0.2 && this.enemies.length < maxEnemies - 5) {
+        setTimeout(() => this.spawnEnemy(), 200);
       }
     }
   },

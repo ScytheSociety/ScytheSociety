@@ -243,43 +243,20 @@ const ComboSystem = {
   },
 
   /**
-   * 🔥 Activa bonificaciones especiales rebalanceadas
+   * 🔥 NUEVO: Sistema basado en vidas, NO en combos
    */
   triggerComboBonus() {
-    // Bonus de puntos cada 15 combos (más frecuente)
-    if (this.currentCombo > 0 && this.currentCombo % 15 === 0) {
-      const bonusPoints = this.currentCombo * 12;
+    // Solo bonus de puntos por combos
+    if (this.currentCombo > 0 && this.currentCombo % 20 === 0) {
+      const bonusPoints = this.currentCombo * 10;
       window.setScore(window.getScore() + bonusPoints);
       UI.showScreenMessage(`💰 +${bonusPoints} BONUS!`, "#FFD700");
+      console.log(
+        `💰 Bonus de puntos por combo ${this.currentCombo}: +${bonusPoints}`
+      );
     }
 
-    // Eventos especiales más útiles y frecuentes
-    if (this.currentCombo === 20 || this.currentCombo === 45) {
-      if (Math.random() < 0.7) {
-        // 70% probabilidad
-        this.triggerSlowMotion();
-      }
-    }
-
-    if (this.currentCombo === 25 || this.currentCombo === 50) {
-      if (Math.random() < 0.8) {
-        // 80% probabilidad
-        this.triggerFrenzyMode();
-      }
-    }
-
-    if (this.currentCombo === 30 || this.currentCombo === 60) {
-      if (Math.random() < 0.6) {
-        // 60% probabilidad
-        this.triggerMeteorShower();
-      }
-    }
-
-    // Lluvia de power-ups cada 35 combos
-    if (this.currentCombo === 35 || this.currentCombo === 70) {
-      console.log("🌟 MEGA COMBO! Lluvia especial");
-      this.triggerPowerUpRain();
-    }
+    // Las fases especiales ahora se manejan por vidas en el sistema principal
   },
 
   /**

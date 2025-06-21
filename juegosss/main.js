@@ -336,6 +336,11 @@ function gameLoop() {
       ComboSystem.update();
     }
 
+    // 🔥 NUEVO: Verificar eventos basados en vida cada 60 frames (1 segundo)
+    if (gameTime % 60 === 0) {
+      checkLifeBasedEvents();
+    }
+
     // Limpiar canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -493,6 +498,130 @@ function checkCollisions() {
         return; // ⬅️ IMPORTANTE: Salir inmediatamente
       }
     }
+  }
+
+  /**
+   * 🔥 NUEVO: Sistema de fases basado en vidas del jugador
+   */
+  function checkLifeBasedEvents() {
+    const playerLives = Player.getLives();
+
+    // Verificar si ya hay algún evento activo
+    if (window.slowMotionActive || window.frenzyModeActive) {
+      return; // No activar eventos si ya hay uno activo
+    }
+
+    // Lluvia de power-ups - ÚLTIMO RECURSO (1 vida)
+    if (playerLives === 1 && Math.random() < 0.01) {
+      // 1% por frame
+      triggerPowerUpRain();
+      return;
+    }
+
+    // Modo frenesí - EMERGENCIA (2 vidas o menos)
+    if (playerLives <= 2 && Math.random() < 0.005) {
+      // 0.5% por frame
+      triggerFrenzyMode();
+      return;
+    }
+
+    // Tiempo lento/mundo acuático - AYUDA MEDIA (5 vidas o menos)
+    if (playerLives <= 5 && Math.random() < 0.003) {
+      // 0.3% por frame
+      triggerSlowMotion();
+      return;
+    }
+
+    // Meteoritos - DESAFÍO CON MUCHA VIDA (7+ vidas)
+    if (playerLives >= 7 && Math.random() < 0.002) {
+      // 0.2% por frame
+      triggerMeteorShower(playerLives);
+      return;
+    }
+  }
+
+  function triggerPowerUpRain() {
+    UI.showScreenMessage("🌟 ¡LLUVIA DE EMERGENCIA! 🌟", "#FFD700");
+
+    for (let i = 0; i < 4; i++) {
+      // 4 power-ups de emergencia
+      setTimeout(() => {
+        PowerUpManager.forceSpawnPowerUp();
+      }, i * 400);
+    }
+
+    AudioManager.playSound("special");
+    console.log("🌟 Lluvia de emergencia activada (1 vida)");
+  }
+
+  function triggerFrenzyMode() {
+    if (window.frenzyModeActive) return;
+
+    UI.showScreenMessage("⚡ ¡MODO FRENESÍ DE EMERGENCIA! ⚡", "#FF00FF");
+    window.frenzyModeActive = true;
+
+    BulletManager.stopAutoShoot();
+
+    const frenzyInterval = setInterval(() => {
+      BulletManager.shootBullet();
+    }, 35); // Muy rápido en emergencia
+
+    setTimeout(() => {
+      clearInterval(frenzyInterval);
+      BulletManager.startAutoShoot();
+      window.frenzyModeActive = false;
+      UI.showScreenMessage("Frenesí de emergencia terminado", "#FFFFFF");
+    }, 15000); // 15 segundos
+
+    AudioManager.playSound("special");
+    console.log("⚡ Modo frenesí de emergencia activado (≤2 vidas)");
+  }
+
+  function triggerSlowMotion() {
+    if (window.slowMotionActive) return;
+
+    UI.showScreenMessage("🌊 ¡MUNDO ACUÁTICO! 🌊", "#0080FF");
+    window.slowMotionActive = true;
+    window.slowMotionFactor = 0.1; // Muy lento
+
+    // 🔥 NUEVO: Ralentizar también al jugador
+    if (window.Player) {
+      window.Player.originalMoveSpeed = window.Player.moveSpeed;
+      window.Player.moveSpeed = 0.2; // Jugador también más lento
+    }
+
+    setTimeout(() => {
+      window.slowMotionActive = false;
+      window.slowMotionFactor = 1.0;
+
+      if (window.Player && window.Player.originalMoveSpeed) {
+        window.Player.moveSpeed = window.Player.originalMoveSpeed;
+      }
+
+      UI.showScreenMessage("⚡ Superficie alcanzada", "#FFFFFF");
+    }, 10000); // 10 segundos
+
+    AudioManager.playSound("special");
+    console.log("🌊 Mundo acuático activado (≤5 vidas)");
+  }
+
+  function triggerMeteorShower(playerLives) {
+    const meteorCount = Math.min(playerLives - 5, 4); // Máximo 4 meteoritos
+
+    UI.showScreenMessage(`☄️ ¡${meteorCount} METEORITOS! ☄️`, "#FF8800");
+
+    for (let i = 0; i < meteorCount; i++) {
+      setTimeout(() => {
+        if (window.EnemyManager && window.EnemyManager.spawnMeteorEnemy) {
+          window.EnemyManager.spawnMeteorEnemy();
+        }
+      }, i * 800); // Espaciados
+    }
+
+    AudioManager.playSound("special");
+    console.log(
+      `☄️ ${meteorCount} meteoritos spawneados (${playerLives} vidas)`
+    );
   }
 
   // Jugador vs Power-ups (siempre)

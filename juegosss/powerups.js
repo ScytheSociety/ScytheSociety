@@ -39,54 +39,37 @@ const PowerUpManager = {
   // ======================================================
 
   /**
-   * Intenta crear un corazón - MÁS DIFÍCIL DE OBTENER
+   * Intenta crear un corazón - SISTEMA INTELIGENTE POR VIDAS
    */
   trySpawnHeart() {
-    // 🔥 Máximo 2 corazones en pantalla (era 3)
-    if (this.hearts.length >= 2) return;
-    // 🔥 NO CORAZONES DURANTE BOSS FINAL
-    if (window.getLevel() >= 11) return;
+    if (this.hearts.length >= 2) return; // Máximo 2 corazones
+    if (window.getLevel() >= 11) return; // No en boss level
 
     const playerLives = Player.getLives();
-    const combo = window.ComboSystem ? window.ComboSystem.getCurrentCombo() : 0;
+    let heartChance = 0;
 
-    // 🔥 PROBABILIDAD MUCHO MÁS BAJA
-    let baseChance = 0.0004; // Era 0.0002, ahora 0.0004, un poquito mas frecuente
-
-    // Aumentar según vidas perdidas
-    if (playerLives <= 2) {
-      baseChance *= 3; // Era 4x, ahora 3x
+    // 🔥 NUEVO: Sistema inteligente basado en vidas
+    if (playerLives <= 1) {
+      heartChance = 0.004; // MUY probable con 1 vida
+    } else if (playerLives <= 2) {
+      heartChance = 0.003; // Muy probable con 2 vidas
+    } else if (playerLives <= 3) {
+      heartChance = 0.002; // Probable con 3 vidas
     } else if (playerLives <= 4) {
-      baseChance *= 1.8; // Era 2x, ahora 1.8x
+      heartChance = 0.001; // Menos probable con 4 vidas
+    } else if (playerLives <= 5) {
+      heartChance = 0.0005; // Poco probable con 5 vidas
     } else if (playerLives <= 6) {
-      baseChance *= 1.3; // Era 1.2x, ahora 1.3x
+      heartChance = 0.0003; // Muy poco probable con 6 vidas
+    } else if (playerLives <= 7) {
+      heartChance = 0.0001; // Casi imposible con 7 vidas
+    } else if (playerLives >= 8) {
+      heartChance = 0; // IMPOSIBLE con 8+ vidas
     }
 
-    // Bonus por combo más restrictivo
-    if (combo >= 15) {
-      // Era 10, ahora 15
-      baseChance *= 1.3; // Era 1.5x, ahora 1.3x
-    }
-    if (combo >= 25) {
-      // Era 20, ahora 25
-      baseChance *= 1.8; // Era 2x, ahora 1.8x
-    }
-    if (combo >= 40) {
-      // Era 30, ahora 40
-      baseChance *= 2.2; // Era 2.5x, ahora 2.2x
-    }
-
-    // Límite más estricto para muchas vidas
-    if (playerLives >= 8) {
-      // Era 10, ahora 8
-      baseChance *= 0.05; // Era 0.1, ahora 0.05 (95% menos probable)
-    }
-
-    if (Math.random() < baseChance) {
+    if (Math.random() < heartChance) {
       this.spawnHeart();
-      console.log(
-        `❤️ Corazón spawneado (Vidas: ${playerLives}, Combo: ${combo})`
-      );
+      console.log(`❤️ Corazón spawneado (Vidas: ${playerLives})`);
     }
   },
 
@@ -161,38 +144,30 @@ const PowerUpManager = {
   // ======================================================
 
   /**
-   * Intenta crear un power-up - MÁS DIFÍCIL DE OBTENER
+   * Intenta crear un power-up - BASADO EN VIDA DEL JUGADOR
    */
   trySpawnPowerUp() {
-    // 🔥 Máximo 3 power-ups en pantalla (era 4)
-    if (this.powerUps.length >= 3) return;
+    if (this.powerUps.length >= 2) return; // Máximo 2 en pantalla
 
-    const combo = window.ComboSystem ? window.ComboSystem.getCurrentCombo() : 0;
+    const playerLives = Player.getLives();
 
-    // 🔥 PROBABILIDAD MÁS BAJA
-    let baseChance = 0.0018; // Era 0.003, ahora 0.0018 (40% menos frecuente)
+    // 🔥 NUEVO: Probabilidad basada en vidas, NO en combos
+    let baseChance = 0.0005; // Muy baja probabilidad base
 
-    // Bonus por combo más restrictivo
-    if (combo >= 8) {
-      // Era 5, ahora 8
-      baseChance *= 1.3; // Era 1.5x, ahora 1.3x
-    }
-    if (combo >= 15) {
-      // Era 10, ahora 15
-      baseChance *= 1.8; // Era 2x, ahora 1.8x
-    }
-    if (combo >= 25) {
-      // Era 20, ahora 25
-      baseChance *= 2.5; // Era 3x, ahora 2.5x
-    }
-    if (combo >= 35) {
-      // Era 30, ahora 35
-      baseChance *= 3.2; // Era 4x, ahora 3.2x
+    // Aumentar probabilidad según vidas perdidas
+    if (playerLives <= 2) {
+      baseChance = 0.003; // Mucho más probable con poca vida
+    } else if (playerLives <= 4) {
+      baseChance = 0.0015; // Más probable
+    } else if (playerLives <= 6) {
+      baseChance = 0.001; // Un poco más probable
+    } else {
+      baseChance = 0.0005; // Probabilidad baja con mucha vida
     }
 
     if (Math.random() < baseChance) {
       this.spawnPowerUp();
-      console.log(`⚡ Power-up spawneado (Combo: ${combo})`);
+      console.log(`⚡ Power-up spawneado (Vidas: ${playerLives})`);
     }
   },
 
