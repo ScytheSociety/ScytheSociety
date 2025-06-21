@@ -393,10 +393,10 @@ const BossPhases = {
         const randomLevel =
           1 + Math.floor(Math.random() * Math.max(1, currentLevel - 1));
 
-        // Usar el tamaño base del sistema de enemigos
-        const baseSize = 40 + randomLevel * 8; // Tamaño escalado por nivel
-        const sizeVariation = Math.random() * 20; // Variación aleatoria
-        const enemySize = baseSize + sizeVariation;
+        // Tamaño más pequeño para esbirros (más pequeños que el boss)
+        const baseSize = 25 + randomLevel * 3; // Tamaño base más pequeño
+        const sizeVariation = Math.random() * 10; // Menos variación
+        const enemySize = Math.min(50, baseSize + sizeVariation); // Máximo 50px
 
         // Posiciones de spawn variadas pero alejadas del centro donde está el boss
         const spawnPositions = [
