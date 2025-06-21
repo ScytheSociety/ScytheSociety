@@ -737,18 +737,20 @@ const BossManager = {
       }
     });
 
-    console.log("✅ Boss modular completamente reseteado");
-  },
-
-  forceReset() {
-    console.log("🔄 RESET FORZADO del boss");
-
-    this.cleanupSystems();
-    this.reset();
-
-    if (window.Player && Player.moveSpeed !== 1.0) {
-      Player.moveSpeed = 1.0;
+    // DOUBLE CHECK: Asegurar que fases estén reseteadas
+    if (this.phases && this.phases.phasesExecuted) {
+      this.phases.phasesExecuted = {
+        SUMMONING: false,
+        MINES: false,
+        BULLETS: false,
+        REDLINE: false,
+        YANKENPO: false,
+      };
     }
+
+    console.log(
+      "✅ Boss modular completamente reseteado - Fases ejecutadas limpiadas"
+    );
   },
 
   // ======================================================

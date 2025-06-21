@@ -105,7 +105,7 @@ const BossPhases = {
     height: 60px;
     overflow: hidden;
     border-radius: 50%;
-    border: 3px solid #FF0000;
+    border: 1px solid #FF0000;
     box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
   `;
 
@@ -669,7 +669,19 @@ const BossPhases = {
     this.phaseActive = false;
     this.phaseTimer = 0;
     this.isRandomPhase = false;
-    console.log("🔄 Sistema de fases reseteado");
+
+    // RESETEAR fases ejecutadas para nueva partida
+    this.phasesExecuted = {
+      SUMMONING: false,
+      MINES: false,
+      BULLETS: false,
+      REDLINE: false,
+      YANKENPO: false,
+    };
+
+    console.log(
+      "🔄 Sistema de fases reseteado - Todas las fases disponibles de nuevo"
+    );
   },
 
   getCurrentPhase() {
@@ -759,8 +771,16 @@ const BossPhases = {
     this.currentPhase = "HUNTING";
     this.phaseTimer = 0;
 
-    // RESET de fases ejecutadas si necesario
-    // this.phasesExecuted = { SUMMONING: false, MINES: false, BULLETS: false, REDLINE: false, YANKENPO: false };
+    // RESETEAR fases ejecutadas
+    this.phasesExecuted = {
+      SUMMONING: false,
+      MINES: false,
+      BULLETS: false,
+      REDLINE: false,
+      YANKENPO: false,
+    };
+
+    console.log("🧹 Fases ejecutadas limpiadas");
   },
 };
 
