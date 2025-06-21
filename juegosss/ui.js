@@ -459,14 +459,17 @@ const UI = {
 
   /**
    * REEMPLAZA LA FUNCIÓN createParticleEffect() en ui.js
-   * Crea efecto de partículas - IDÉNTICO PARA TODOS
+   * Crea efecto de partículas - SIN PARTÍCULAS EN MÓVIL
    */
   createParticleEffect(x, y, color, particleCount) {
-    // 🔥 ELIMINADO: Toda la detección de móvil que reducía partículas
+    // 🔥 NUEVO: No mostrar partículas en móvil para evitar lag
+    if (GameConfig.isMobile) {
+      return; // Salir inmediatamente en móvil
+    }
 
     const particles = [];
 
-    // 🔥 IDÉNTICO: Mismo número de partículas para todos
+    // Solo ejecutar en PC/Desktop
     for (let i = 0; i < particleCount; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 1 + Math.random() * 3;
@@ -477,7 +480,7 @@ const UI = {
         size: 2 + Math.random() * 3,
         speedX: Math.cos(angle) * speed,
         speedY: Math.sin(angle) * speed,
-        life: 30 + Math.random() * 20, // 🔥 IDÉNTICO: Vida completa para todos
+        life: 30 + Math.random() * 20,
         maxLife: 50,
       });
     }

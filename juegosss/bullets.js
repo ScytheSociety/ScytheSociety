@@ -193,7 +193,7 @@ const BulletManager = {
   },
 
   /**
-   * Activa el poder especial - MÁS ÉPICO
+   * Activa el poder especial - SIN EXPLOSIÓN
    */
   activateSpecialPower() {
     if (!this.specialPowerReady || this.specialPowerActive) return;
@@ -206,11 +206,10 @@ const BulletManager = {
     const playerSize = Player.getSize();
     const canvas = window.getCanvas();
 
-    // 🔥 MÁS BALAS ESPECIALES
-    const bulletCount = 20; // Era 16, ahora 20
-    const bulletSpeed = canvas.height * 0.012; // Más rápidas
+    const bulletCount = 18; // Más balas
+    const bulletSpeed = canvas.height * 0.014; // Más rápidas
 
-    // Crear balas en círculo
+    // Crear balas en círculo - SIN PROPIEDAD EXPLOSIVA
     for (let i = 0; i < bulletCount; i++) {
       const angle = (i / bulletCount) * Math.PI * 2;
 
@@ -222,10 +221,11 @@ const BulletManager = {
         velocityX: Math.cos(angle) * bulletSpeed,
         velocityY: Math.sin(angle) * bulletSpeed,
 
-        // Propiedades especiales
-        explosive: true,
+        // 🔥 SIN EXPLOSIÓN - solo balas penetrantes
+        penetrating: true,
+        penetrationCount: 3, // Atraviesa 3 enemigos
         fromSpecialPower: true,
-        life: 4000 / 16.67, // 4 segundos en frames (más duración)
+        life: 300, // 5 segundos
 
         level: window.getLevel(),
       };
@@ -233,23 +233,22 @@ const BulletManager = {
       this.specialBullets.push(specialBullet);
     }
 
-    // Efectos más épicos
+    // Efectos
     UI.createParticleEffect(
       playerPos.x + playerSize.width / 2,
       playerPos.y + playerSize.height / 2,
       "#FF0000",
-      80 // Más partículas
+      60
     );
 
     AudioManager.playSound("special");
-    UI.showScreenMessage("🔥 PODER DEVASTADOR 🔥", "#FF0000");
+    UI.showScreenMessage("🔥 PODER PENETRANTE 🔥", "#FF0000");
 
-    // Resetear estado
     setTimeout(() => {
       this.specialPowerActive = false;
-    }, 4000); // Más duración
+    }, 4000);
 
-    console.log("🔥 Poder especial ÉPICO activado");
+    console.log("🔥 Poder especial penetrante activado");
   },
 
   // ======================================================

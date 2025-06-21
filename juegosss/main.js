@@ -13,6 +13,8 @@ let gameTime = 0;
 let level = 1;
 let score = 0;
 let gameEnded = false;
+let gamePaused = false;
+let pausedByVisibility = false;
 
 // Contador total de TODOS los enemigos eliminados (para Excel)
 let totalEnemiesKilled = 0;
@@ -29,22 +31,14 @@ let frenzyModeActive = false;
 window.onload = function () {
   console.log("🎮 Hell Shooter ÉPICO - Iniciando juego...");
 
-  // Detectar dispositivo
   GameConfig.detectDevice();
-
-  // Configurar canvas
   setupCanvas();
-
-  // Inicializar módulos
   AudioManager.init();
   UI.init();
-  ComboSystem.init(); // 🔥 NUEVO: Inicializar sistema de combos
-
-  // Precargar recursos
+  ComboSystem.init();
   loadGameAssets();
-
-  // Configurar eventos
   setupEventListeners();
+  setupGamePauseSystem(); // 🔥 AGREGAR ESTA LÍNEA
 
   console.log("✅ Juego ÉPICO inicializado correctamente");
 };
@@ -188,6 +182,76 @@ function setupEventListeners() {
 }
 
 /**
+ * 🔥 NUEVO: Sistema de pausa por Alt+Tab
+ */
+function setupGamePauseSystem() {
+  // Función para pausar completamente el juego
+  const pauseGame = () => {
+    if (gameEnded || gamePaused) return;
+
+    console.log("⏸️ Juego pausado por cambio de ventana");
+    gamePaused = true;
+    pausedByVisibility = true;
+
+    // Pausar música
+    if (AudioManager.isBackgroundMusicPlaying()) {
+      AudioManager.stopBackgroundMusic();
+    }
+
+    // Pausar todos los intervalos del juego
+    if (gameInterval) {
+      clearInterval(gameInterval);
+      gameInterval = null;
+    }
+
+    // Pausar auto-disparo
+    BulletManager.stopAutoShoot();
+
+    // Mostrar mensaje de pausa
+    UI.showScreenMessage("⏸️ JUEGO PAUSADO", "#FFFF00");
+  };
+
+  // Función para reanudar el juego
+  const resumeGame = () => {
+    if (gameEnded || !gamePaused) return;
+
+    console.log("▶️ Reanudando juego");
+    gamePaused = false;
+    pausedByVisibility = false;
+
+    // Reanudar música
+    AudioManager.startBackgroundMusic();
+
+    // Reanudar intervalos del juego
+    if (!gameInterval) {
+      gameInterval = setInterval(gameLoop, 1000 / 60);
+    }
+
+    // Reanudar auto-disparo
+    BulletManager.startAutoShoot();
+
+    // Mensaje de reanudación
+    UI.showScreenMessage("▶️ JUEGO REANUDADO", "#00FF00");
+  };
+
+  // Event listeners para pausa/reanudación
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      pauseGame();
+    } else {
+      setTimeout(resumeGame, 100); // Pequeño delay para estabilidad
+    }
+  });
+
+  window.addEventListener("blur", pauseGame);
+  window.addEventListener("focus", () => {
+    setTimeout(resumeGame, 100);
+  });
+
+  console.log("⏸️ Sistema de pausa configurado");
+}
+
+/**
  * Iniciar el juego
  */
 function startGame() {
@@ -260,7 +324,7 @@ function startGameLoop() {
  * Bucle principal del juego - IDÉNTICO PARA PC Y MÓVIL
  */
 function gameLoop() {
-  if (gameEnded) return;
+  if (gameEnded || gamePaused) return; // 🔥 AGREGAR gamePaused
 
   try {
     // 🔥 ELIMINADO: Toda la detección de móvil que ralentizaba

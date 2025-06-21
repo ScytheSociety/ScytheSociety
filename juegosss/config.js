@@ -33,48 +33,48 @@ const GameConfig = {
   // CONFIGURACIÓN DE NIVELES - 10 NIVELES BALANCEADOS
   // ======================================================
 
-  LEVEL_CONFIG: {
-    // Enemigos requeridos por nivel (más progresivo)
-    enemiesPerLevel: [80, 120, 180, 260, 360, 480, 620, 780, 960, 1220],
+  LLEVEL_CONFIG: {
+    // Enemigos requeridos por nivel (progresión más equilibrada)
+    enemiesPerLevel: [50, 75, 105, 140, 180, 225, 275, 330, 390, 460],
 
-    // Velocidad de spawn de enemigos
+    // Velocidad de spawn de enemigos (más controlada)
     spawnDelay: [
-      80, // Nivel 1 - Más lento
-      70, // Nivel 2
-      60, // Nivel 3
-      50, // Nivel 4
-      45, // Nivel 5
-      40, // Nivel 6
-      35, // Nivel 7
-      30, // Nivel 8
-      25, // Nivel 9
-      20, // Nivel 10
+      90, // Nivel 1 - Suave
+      80, // Nivel 2
+      70, // Nivel 3
+      62, // Nivel 4
+      55, // Nivel 5
+      50, // Nivel 6
+      45, // Nivel 7
+      42, // Nivel 8
+      38, // Nivel 9
+      35, // Nivel 10 - Challenging pero fair
     ],
   },
 
   // ======================================================
-  // CONFIGURACIÓN DEL JUGADOR
+  // CONFIGURACIÓN DEL JUGADOR REBALANCEADA
   // ======================================================
 
   PLAYER_CONFIG: {
     initialLives: 7,
-    maxLives: 9, // 🔥 CORREGIDO: Era 14, ahora 9
-    invulnerabilityFrames: 120, // 2 segundos a 60fps
+    maxLives: 9,
+    invulnerabilityFrames: 120,
 
-    // Sistema de disparo mejorado
+    // Sistema de disparo rebalanceado
     shooting: {
-      baseDelay: 200, // Milisegundos entre disparos
-      delayReduction: 15, // Reducción por nivel
-      minDelay: 80, // Mínimo delay
-      maxBullets: 2, // 🔥 MÁXIMO 2 BALAS NORMALES
-      bulletSpeed: 0.015, // Velocidad base de balas
+      baseDelay: 180, // Era 200
+      delayReduction: 12, // Era 15
+      minDelay: 70, // Era 80
+      maxBullets: 2,
+      bulletSpeed: 0.016, // Ligeramente más rápido
     },
 
-    // Poder especial
+    // Poder especial SIN EXPLOSIÓN
     specialPower: {
-      enemiesRequired: 25, // Enemigos para cargar
-      duration: 4000, // 4 segundos
-      bulletCount: 16, // Balas en círculo
+      enemiesRequired: 20, // Era 25 (más frecuente)
+      duration: 4000,
+      bulletCount: 18, // Era 16
     },
   },
 
@@ -101,52 +101,43 @@ const GameConfig = {
   },
 
   // ======================================================
-  // CONFIGURACIÓN DE POWER-UPS MEJORADA
+  // CONFIGURACIÓN DE POWER-UPS REBALANCEADA
   // ======================================================
 
   POWERUP_CONFIG: {
-    spawnChance: 0.008, // Probabilidad por frame
-    heartSpawnChance: 0.01, // Corazones más frecuentes
+    spawnChance: 0.002, // Reducido de 0.0018
+    heartSpawnChance: 0.006, // Reducido de 0.01
 
-    // Tipos de power-ups
     types: {
       SHIELD: {
-        id: 0, // Mantener el mismo ID para no romper el sistema
+        id: 0,
         name: "Escudo Protector",
         color: "#00FF00",
-        duration: 4000, // 4 segundos
+        duration: 300, // 5 segundos (era 180)
         description: "Inmunidad total al daño",
       },
       WIDE_SHOT: {
         id: 1,
         name: "Disparo Amplio",
         color: "#00FFFF",
-        duration: 6000, // 6 segundos
-        description: "Dispara 7 balas en abanico", // 🔥 Aumentado de 3 a 7
+        duration: 360, // 6 segundos (era 240)
+        description: "Dispara 5 balas en abanico",
       },
       EXPLOSIVE: {
         id: 2,
         name: "Balas Explosivas",
         color: "#FF8800",
-        duration: 7000, // 7 segundos
-        explosionRadius: 200, // 🔥 AUMENTADO: Era 120, ahora 200
+        duration: 300, // 5 segundos (era 180)
+        explosionRadius: 150, // REDUCIDO: era 200, ahora 150
         description: "Las balas explotan al impactar",
       },
       RAPID_FIRE: {
         id: 3,
         name: "Disparo Súper Rápido",
         color: "#FF00FF",
-        duration: 5000, // 5 segundos
-        shootDelay: 30, // Muy rápido
-        bulletSizeMultiplier: 1.5, // 🔥 BALAS MÁS GRANDES
-        description: "Disparo ultra-rápido con balas grandes",
-      },
-      SHIELD: {
-        id: 4,
-        name: "Escudo Protector",
-        color: "#00FF00",
-        duration: 6000, // 6 segundos
-        description: "Inmunidad total al daño", // 🔥 INMUNIDAD TOTAL
+        duration: 420, // 7 segundos (era 300)
+        shootDelay: 25, // Era 30
+        description: "Disparo ultra-rápido",
       },
     },
   },
