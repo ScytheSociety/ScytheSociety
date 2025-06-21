@@ -33,7 +33,7 @@ const GameConfig = {
   // CONFIGURACIÓN DE NIVELES - 10 NIVELES BALANCEADOS
   // ======================================================
 
-  LLEVEL_CONFIG: {
+  LEVEL_CONFIG: {
     // Enemigos requeridos por nivel (progresión más equilibrada)
     enemiesPerLevel: [50, 75, 105, 140, 180, 225, 275, 330, 390, 460],
 
