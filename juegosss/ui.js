@@ -44,23 +44,13 @@ const UI = {
   },
 
   /**
-   * REEMPLAZA LA FUNCIÓN update() en powerups.js
-   * Sistema de power-ups - IDÉNTICO PARA TODOS
+   * Actualiza la UI cada frame
    */
   update() {
-    // 🔥 IDÉNTICO: Spawn igual para todos - sin optimizaciones de móvil
-    this.trySpawnHeart();
-    this.trySpawnPowerUp();
-
-    // Eventos especiales aleatorios
-    this.checkSpecialEvents();
-
-    // 🔥 IDÉNTICO: Actualizar items igual para todos
-    this.updatePowerUps();
-    this.updateHearts();
-
-    // Limpiar items fuera de pantalla
-    this.cleanupItems();
+    this.updateGameInfo();
+    this.updateSpecialPowerIndicator();
+    this.updateLivesDisplay();
+    this.updatePowerUpIndicator();
   },
   // ======================================================
   // SISTEMA DE MENSAJES EN PANTALLA - MEJORADO
