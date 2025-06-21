@@ -257,8 +257,12 @@ function setupGamePauseSystem() {
       AudioManager.stopBackgroundMusic();
     }
 
-    // Mostrar mensaje de pausa
-    if (typeof UI !== "undefined" && UI.showScreenMessage) {
+    // 🔥 MOSTRAR MENSAJE DE PAUSA SOLO SI ESTAMOS JUGANDO
+    if (
+      isCurrentlyPlaying() &&
+      typeof UI !== "undefined" &&
+      UI.showScreenMessage
+    ) {
       UI.showScreenMessage("⏸️ JUEGO PAUSADO", "#FFFF00");
     }
 
@@ -302,8 +306,12 @@ function setupGamePauseSystem() {
       console.log("▶️ Música REANUDADA");
     }
 
-    // Mensaje de reanudación
-    if (typeof UI !== "undefined" && UI.showScreenMessage) {
+    // 🔥 MOSTRAR MENSAJE DE REANUDACIÓN SOLO SI ESTAMOS JUGANDO
+    if (
+      isCurrentlyPlaying() &&
+      typeof UI !== "undefined" &&
+      UI.showScreenMessage
+    ) {
       UI.showScreenMessage("▶️ JUEGO REANUDADO", "#00FF00");
     }
 
@@ -519,6 +527,39 @@ function startGameLoop() {
   }
 
   console.log("🔄 Bucle de juego iniciado");
+}
+
+/**
+ * 🔥 FUNCIÓN AUXILIAR PARA VERIFICAR SI ESTAMOS ACTUALMENTE JUGANDO
+ */
+function isCurrentlyPlaying() {
+  // Verificar si estamos en la pantalla de juego activa
+  const gameArea = document.getElementById("game-area");
+  const mainMenu = document.getElementById("main-menu");
+  const rankingContainer = document.getElementById("ranking-container");
+  const gameOverScreen = document.getElementById("game-over");
+
+  // Estamos jugando si:
+  // 1. El área de juego está visible
+  // 2. No estamos en el menú principal
+  // 3. No estamos en ranking
+  // 4. No estamos en game over
+  // 5. El juego no ha terminado
+  const gameAreaVisible = gameArea && gameArea.style.display !== "none";
+  const menuHidden = !mainMenu || mainMenu.style.display === "none";
+  const rankingHidden =
+    !rankingContainer || rankingContainer.style.display === "none";
+  const gameOverHidden =
+    !gameOverScreen || gameOverScreen.style.display === "none";
+  const gameActive = !gameEnded && gameInterval !== null;
+
+  return (
+    gameAreaVisible &&
+    menuHidden &&
+    rankingHidden &&
+    gameOverHidden &&
+    gameActive
+  );
 }
 
 /**
@@ -1728,6 +1769,9 @@ window.showInstructions = () => {
 
 // 🔥 NUEVA: Función auxiliar de verificación de pausa
 window.shouldGameBePaused = shouldGameBePaused;
+
+// 🔥 NUEVA: Función para verificar si estamos jugando
+window.isCurrentlyPlaying = isCurrentlyPlaying;
 
 console.log("📁 main.js CORREGIDO con SISTEMA DE PAUSA MEJORADO cargado!");
 console.log(
