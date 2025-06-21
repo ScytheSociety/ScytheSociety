@@ -463,7 +463,7 @@ const BulletManager = {
    * 🔥 CORREGIDO: Crear explosión épica - NO incrementar contador para esbirros
    */
   createExplosion(center, enemies) {
-    const explosionRadius = 140; // Radio más grande
+    const explosionRadius = 200; // 🔥 AUMENTADO: Era 140, ahora 200 (43% más grande)
 
     // Crear efecto visual más épico
     UI.createExplosionEffect(center.x, center.y);
@@ -497,16 +497,16 @@ const BulletManager = {
           if (enemyLevel === window.getLevel()) {
             EnemyManager.enemiesKilled++;
             console.log(
-              `💥 Enemigo del nivel ${enemyLevel} eliminado por explosión. Para pasar nivel: ${EnemyManager.enemiesKilled}/${EnemyManager.enemiesRequired}`
+              `💥 Enemigo del nivel ${enemyLevel} eliminado por explosión ÉPICA. Para pasar nivel: ${EnemyManager.enemiesKilled}/${EnemyManager.enemiesRequired}`
             );
           } else {
             console.log(
-              `💥 Enemigo de nivel anterior (${enemyLevel}) eliminado por explosión (NO cuenta para pasar nivel, SÍ para total)`
+              `💥 Enemigo de nivel anterior (${enemyLevel}) eliminado por explosión ÉPICA (NO cuenta para pasar nivel, SÍ para total)`
             );
           }
         } else {
           console.log(
-            `💥 Esbirro del boss eliminado por explosión (NO cuenta para pasar nivel, SÍ para total)`
+            `💥 Esbirro del boss eliminado por explosión ÉPICA (NO cuenta para pasar nivel, SÍ para total)`
           );
         }
 

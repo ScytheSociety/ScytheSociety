@@ -93,7 +93,7 @@ const BossMines = {
       if (this.sequenceActive) {
         this.aggressiveTeleportAndMine();
       }
-    }, 1500);
+    }, 2500);
 
     // Minas estáticas cada 5 segundos
     this.staticMineInterval = setInterval(() => {
@@ -112,24 +112,26 @@ const BossMines = {
     const playerPos = Player.getPosition();
     const canvas = window.getCanvas();
 
-    // Posiciones cerca del jugador
+    // Posiciones con MÁS DISTANCIA del jugador para dar tiempo de reacción
     const huntingPositions = [
-      { x: playerPos.x + 120, y: playerPos.y + 80 },
-      { x: playerPos.x - 120, y: playerPos.y + 80 },
-      { x: playerPos.x + 80, y: playerPos.y - 120 },
-      { x: playerPos.x - 80, y: playerPos.y - 120 },
-      { x: playerPos.x + 100, y: playerPos.y },
-      { x: playerPos.x - 100, y: playerPos.y },
-      { x: playerPos.x, y: playerPos.y + 100 },
-      { x: playerPos.x, y: playerPos.y - 100 },
+      { x: playerPos.x + 180, y: playerPos.y + 120 }, // Más lejos
+      { x: playerPos.x - 180, y: playerPos.y + 120 },
+      { x: playerPos.x + 120, y: playerPos.y - 180 },
+      { x: playerPos.x - 120, y: playerPos.y - 180 },
+      { x: playerPos.x + 150, y: playerPos.y + 50 },
+      { x: playerPos.x - 150, y: playerPos.y + 50 },
+      { x: playerPos.x + 50, y: playerPos.y + 150 },
+      { x: playerPos.x + 50, y: playerPos.y - 150 },
+      { x: playerPos.x - 50, y: playerPos.y + 150 },
+      { x: playerPos.x - 50, y: playerPos.y - 150 },
     ];
 
     const validPositions = huntingPositions.filter(
       (pos) =>
-        pos.x >= 80 &&
-        pos.x <= canvas.width - 80 &&
-        pos.y >= 80 &&
-        pos.y <= canvas.height - 80
+        pos.x >= 100 && // Más margen de los bordes
+        pos.x <= canvas.width - 100 &&
+        pos.y >= 100 &&
+        pos.y <= canvas.height - 100
     );
 
     if (validPositions.length > 0 && this.bossManager.boss) {
@@ -150,8 +152,8 @@ const BossMines = {
         );
       }
 
-      // Crear mina inmediata
-      const randomTimer = 180 + Math.random() * 120; // 3-5 segundos
+      // Crear mina con MÁS TIEMPO antes de explotar
+      const randomTimer = 240 + Math.random() * 120; // 4-6 segundos (era 3-5)
       const mine = this.createMine(
         targetPos.x - 20,
         targetPos.y - 20,
@@ -162,9 +164,11 @@ const BossMines = {
       this.mines.push(mine);
 
       console.log(
-        `💣 Boss teletransportado y mina creada en (${Math.round(
+        `💣 Boss teletransportado con más distancia en (${Math.round(
           targetPos.x
-        )}, ${Math.round(targetPos.y)})`
+        )}, ${Math.round(targetPos.y)}) - Mina: ${Math.round(
+          randomTimer / 60
+        )}s`
       );
     }
   },

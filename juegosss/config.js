@@ -129,7 +129,7 @@ const GameConfig = {
         name: "Balas Explosivas",
         color: "#FF8800",
         duration: 7000, // 7 segundos
-        explosionRadius: 120, // 🔥 RADIO MÁS AMPLIO
+        explosionRadius: 200, // 🔥 AUMENTADO: Era 120, ahora 200
         description: "Las balas explotan al impactar",
       },
       RAPID_FIRE: {

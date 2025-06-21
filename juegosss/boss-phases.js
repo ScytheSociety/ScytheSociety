@@ -95,10 +95,6 @@ const BossPhases = {
     left: 20px;
     z-index: 2000;
     pointer-events: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
   `;
 
     // Contenedor de la calavera con máscara de sangre
@@ -125,7 +121,7 @@ const BossPhases = {
     z-index: 1;
   `;
 
-    // Máscara de sangre que se llena
+    // Máscara de sangre más transparente
     const bloodFill = document.createElement("div");
     const fillHeight = progress * 100; // Convertir progreso a porcentaje
     bloodFill.style.cssText = `
@@ -135,36 +131,18 @@ const BossPhases = {
     width: 100%;
     height: ${fillHeight}%;
     background: linear-gradient(to top, 
-      #8B0000 0%, 
-      #DC143C 30%, 
-      #FF4500 60%, 
-      #FF6347 100%);
+      rgba(139, 0, 0, 0.6) 0%, 
+      rgba(220, 20, 60, 0.6) 30%, 
+      rgba(255, 69, 0, 0.6) 60%, 
+      rgba(255, 99, 71, 0.6) 100%);
     z-index: 2;
     transition: height 0.3s ease;
-    opacity: 0.9;
   `;
 
-    // Texto de fase debajo
-    const phaseText = document.createElement("div");
-    phaseText.style.cssText = `
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    font-weight: bold;
-    color: #FFD700;
-    text-shadow: 
-      -2px -2px 0 #000000,  
-       2px -2px 0 #000000,
-      -2px  2px 0 #000000,
-       2px  2px 0 #000000;
-    text-align: center;
-  `;
-    phaseText.textContent = phase;
-
-    // Ensamblar elementos
+    // Ensamblar elementos (SIN texto de fase)
     skullContainer.appendChild(skullImage);
     skullContainer.appendChild(bloodFill);
     timerContainer.appendChild(skullContainer);
-    timerContainer.appendChild(phaseText);
 
     document.body.appendChild(timerContainer);
 

@@ -521,15 +521,15 @@ const UI = {
    * Crea efecto de explosión
    */
   createExplosionEffect(x, y) {
-    this.createParticleEffect(x, y, "#FF8800", 30);
+    this.createParticleEffect(x, y, "#FF8800", 40); // 🔥 Más partículas: era 30, ahora 40
 
     const canvas = window.getCanvas();
     const ctx = window.getContext();
     if (!ctx) return;
 
     let radius = 5;
-    const maxRadius = 120;
-    let life = 20;
+    const maxRadius = 200; // 🔥 AUMENTADO: Era 120, ahora 200 (67% más grande)
+    let life = 25; // 🔥 AUMENTADO: Era 20, ahora 25 (más duración)
 
     const animateShockwave = () => {
       if (life <= 0) return;
@@ -541,8 +541,8 @@ const UI = {
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.strokeStyle = "#FF8800";
-      ctx.globalAlpha = life / 20;
-      ctx.lineWidth = 3;
+      ctx.globalAlpha = life / 25; // Ajustar a nueva duración
+      ctx.lineWidth = 4; // 🔥 AUMENTADO: Era 3, ahora 4 (línea más gruesa)
       ctx.stroke();
       ctx.restore();
 
