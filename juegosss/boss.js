@@ -209,12 +209,17 @@ const BossManager = {
   executePhaseSequence() {
     if (!this.active || !this.boss || this.introductionPhase) return;
 
+    // NO interferir con fases aleatorias del Yan Ken Po
+    if (this.phases?.randomPhaseActive) {
+      return;
+    }
+
     const healthPercentage = this.currentHealth / this.maxHealth;
     const currentPhase = this.phases?.getCurrentPhase() || "HUNTING";
     const isPhaseActive = this.phases?.isPhaseActive() || false;
 
     // Fase final: Yan Ken Po (3% de vida)
-    if (healthPercentage <= 0.03 && !this.yankenpo.isActive()) {
+    if (healthPercentage <= 0.03 && !this.phases.phasesExecuted.YANKENPO) {
       console.log("🎮 INICIANDO FASE FINAL: Yan Ken Po");
       this.startYanKenPoPhase();
       return;
@@ -224,7 +229,7 @@ const BossManager = {
     if (
       healthPercentage <= 0.15 &&
       healthPercentage > 0.03 &&
-      !this.redline.isActive()
+      !this.phases.phasesExecuted.REDLINE
     ) {
       console.log("🔴 INICIANDO FASE: Hilo Rojo");
       this.startRedLinePhase();
@@ -235,8 +240,7 @@ const BossManager = {
     if (
       healthPercentage <= 0.3 &&
       healthPercentage > 0.15 &&
-      currentPhase !== "BULLETS" &&
-      !isPhaseActive
+      !this.phases.phasesExecuted.BULLETS
     ) {
       console.log("🌟 INICIANDO FASE: Balas Touhou");
       this.startBulletsPhase();
@@ -247,8 +251,7 @@ const BossManager = {
     if (
       healthPercentage <= 0.5 &&
       healthPercentage > 0.3 &&
-      currentPhase !== "MINES" &&
-      !isPhaseActive
+      !this.phases.phasesExecuted.MINES
     ) {
       console.log("💣 INICIANDO FASE: Minas");
       this.startMinesPhase();
@@ -259,8 +262,7 @@ const BossManager = {
     if (
       healthPercentage <= 0.75 &&
       healthPercentage > 0.5 &&
-      currentPhase !== "SUMMONING" &&
-      !isPhaseActive
+      !this.phases.phasesExecuted.SUMMONING
     ) {
       console.log("⚔️ INICIANDO FASE: Invocación");
       this.startSummoningPhase();

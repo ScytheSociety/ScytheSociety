@@ -27,6 +27,18 @@ const BossPhases = {
   // Control de timeouts
   summoningTimeouts: [],
 
+  // Control de fases ejecutadas
+  phasesExecuted: {
+    SUMMONING: false,
+    MINES: false,
+    BULLETS: false,
+    REDLINE: false,
+    YANKENPO: false,
+  },
+
+  // Control para fases aleatorias (pueden repetirse)
+  randomPhaseActive: false,
+
   // ======================================================
   // INICIALIZACIÓN
   // ======================================================
@@ -37,6 +49,7 @@ const BossPhases = {
     this.phaseActive = false;
     this.phaseTimer = 0;
     this.isRandomPhase = false;
+    this.addSkullTimerStyles(); // ← AGREGAR ESTA LÍNEA
     console.log("⚔️ Sistema de fases del boss inicializado");
   },
 
@@ -55,60 +68,110 @@ const BossPhases = {
   },
 
   // ======================================================
-  // SISTEMA DE TIMER VISUAL
+  // SISTEMA DE TIMER VISUAL CON CALAVERA
   // ======================================================
 
   updatePhaseTimerDisplay() {
     const maxDuration = this.PHASE_DURATIONS[this.currentPhase];
 
     if (maxDuration) {
-      const timeLeft = Math.max(0, maxDuration - this.phaseTimer);
-      const secondsLeft = Math.ceil(timeLeft / 60); // 60fps
-
-      this.showPhaseTimer(
-        this.currentPhase,
-        secondsLeft,
-        this.phaseTimer,
-        maxDuration
-      );
-    } else {
-      // Para fases sin duración fija (como REDLINE, YANKENPO)
-      const secondsElapsed = Math.floor(this.phaseTimer / 60);
-      this.showPhaseTimer(this.currentPhase, null, secondsElapsed, null);
+      const progress = this.phaseTimer / maxDuration; // 0.0 a 1.0
+      this.showSkullTimer(this.currentPhase, progress);
     }
   },
 
-  showPhaseTimer(phase, secondsLeft, elapsed, maxDuration) {
+  showSkullTimer(phase, progress) {
     // Eliminar timer anterior si existe
     const existingTimer = document.getElementById("boss-phase-timer");
     if (existingTimer) {
       existingTimer.remove();
     }
 
-    const timerDiv = document.createElement("div");
-    timerDiv.id = "boss-phase-timer";
-    timerDiv.style.cssText = `
+    const timerContainer = document.createElement("div");
+    timerContainer.id = "boss-phase-timer";
+    timerContainer.style.cssText = `
     position: fixed;
     top: 120px;
     left: 20px;
     z-index: 2000;
-    font-family: Arial, sans-serif;
-    font-size: 18px;
-    font-weight: bold;
     pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  `;
+
+    // Contenedor de la calavera con máscara de sangre
+    const skullContainer = document.createElement("div");
+    skullContainer.style.cssText = `
+    position: relative;
+    width: 60px;
+    height: 60px;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 3px solid #FF0000;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+  `;
+
+    // Imagen de calavera base
+    const skullImage = document.createElement("img");
+    skullImage.src = "images/calaveratimer.png";
+    skullImage.style.cssText = `
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+  `;
+
+    // Máscara de sangre que se llena
+    const bloodFill = document.createElement("div");
+    const fillHeight = progress * 100; // Convertir progreso a porcentaje
+    bloodFill.style.cssText = `
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: ${fillHeight}%;
+    background: linear-gradient(to top, 
+      #8B0000 0%, 
+      #DC143C 30%, 
+      #FF4500 60%, 
+      #FF6347 100%);
+    z-index: 2;
+    transition: height 0.3s ease;
+    opacity: 0.9;
+  `;
+
+    // Texto de fase debajo
+    const phaseText = document.createElement("div");
+    phaseText.style.cssText = `
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    color: #FFD700;
     text-shadow: 
       -2px -2px 0 #000000,  
        2px -2px 0 #000000,
       -2px  2px 0 #000000,
        2px  2px 0 #000000;
+    text-align: center;
   `;
+    phaseText.textContent = phase;
 
-    timerDiv.innerHTML = `
-    <span style="color: #FFD700;">${phase}:</span> 
-    <span style="color: #FFFFFF;">${secondsLeft}s</span>
-  `;
+    // Ensamblar elementos
+    skullContainer.appendChild(skullImage);
+    skullContainer.appendChild(bloodFill);
+    timerContainer.appendChild(skullContainer);
+    timerContainer.appendChild(phaseText);
 
-    document.body.appendChild(timerDiv);
+    document.body.appendChild(timerContainer);
+
+    // Efecto de pulso cuando está casi llena
+    if (progress > 0.8) {
+      skullContainer.style.animation = "pulse 1s infinite";
+    }
   },
 
   // ======================================================
@@ -132,6 +195,10 @@ const BossPhases = {
     this.currentPhase = newPhase;
     this.phaseActive = true;
     this.phaseTimer = 0;
+
+    // MARCAR FASE COMO EJECUTADA
+    this.phasesExecuted[newPhase] = true;
+    console.log(`✅ Fase ${newPhase} marcada como ejecutada`);
 
     this.notifyPhaseChange(newPhase);
 
@@ -346,6 +413,7 @@ const BossPhases = {
     console.log(`🎲 Ejecutando fase aleatoria: ${randomPhase}`);
 
     this.isRandomPhase = true;
+    this.randomPhaseActive = true; // ← NUEVO FLAG
     this.currentPhase = randomPhase;
     this.phaseActive = true;
     this.phaseTimer = 0;
@@ -451,6 +519,7 @@ const BossPhases = {
 
     this.phaseActive = false;
     this.isRandomPhase = false;
+    this.randomPhaseActive = false; // ← LIMPIAR FLAG
 
     this.cleanupAllSystems();
 
@@ -655,6 +724,41 @@ const BossPhases = {
   },
 
   // ======================================================
+  // ESTILOS CSS PARA CALAVERA
+  // ======================================================
+
+  addSkullTimerStyles() {
+    // Solo agregar una vez
+    if (document.getElementById("skull-timer-styles")) return;
+
+    const style = document.createElement("style");
+    style.id = "skull-timer-styles";
+    style.textContent = `
+    @keyframes pulse {
+      0% { 
+        transform: scale(1); 
+        box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+      }
+      50% { 
+        transform: scale(1.1); 
+        box-shadow: 0 0 25px rgba(255, 0, 0, 1.0);
+      }
+      100% { 
+        transform: scale(1); 
+        box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+      }
+    }
+    
+    @keyframes bloodDrip {
+      0% { height: 0%; }
+      100% { height: var(--fill-height); }
+    }
+  `;
+
+    document.head.appendChild(style);
+  },
+
+  // ======================================================
   // CLEANUP MEJORADO
   // ======================================================
 
@@ -676,6 +780,9 @@ const BossPhases = {
     this.phaseActive = false;
     this.currentPhase = "HUNTING";
     this.phaseTimer = 0;
+
+    // RESET de fases ejecutadas si necesario
+    // this.phasesExecuted = { SUMMONING: false, MINES: false, BULLETS: false, REDLINE: false, YANKENPO: false };
   },
 };
 
