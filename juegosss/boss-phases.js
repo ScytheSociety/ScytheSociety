@@ -373,7 +373,7 @@ const BossPhases = {
   },
 
   // ======================================================
-  // INVOCACIÓN DE ENEMIGOS
+  // INVOCACIÓN DE ENEMIGOS CORREGIDA
   // ======================================================
 
   summonEnemies(count) {
@@ -388,10 +388,17 @@ const BossPhases = {
 
     for (let i = 0; i < count; i++) {
       setTimeout(() => {
-        const randomLevel = 1 + Math.floor(Math.random() * 10);
-        const size = 30 + randomLevel * 3;
+        // Nivel aleatorio de enemigos previamente enfrentados
+        const currentLevel = window.getLevel();
+        const randomLevel =
+          1 + Math.floor(Math.random() * Math.max(1, currentLevel - 1));
 
-        // Posiciones de spawn variadas
+        // Usar el tamaño base del sistema de enemigos
+        const baseSize = 40 + randomLevel * 8; // Tamaño escalado por nivel
+        const sizeVariation = Math.random() * 20; // Variación aleatoria
+        const enemySize = baseSize + sizeVariation;
+
+        // Posiciones de spawn variadas pero alejadas del centro donde está el boss
         const spawnPositions = [
           { x: 50, y: 50 },
           { x: canvas.width - 100, y: 50 },
@@ -405,17 +412,16 @@ const BossPhases = {
           { x: canvas.width / 4, y: canvas.height - 50 },
           { x: 50, y: (canvas.height * 2) / 3 },
           { x: 50, y: canvas.height / 3 },
-          { x: canvas.width / 2 - 100, y: canvas.height / 2 },
-          { x: canvas.width / 2 + 100, y: canvas.height / 2 },
         ];
 
         const pos = spawnPositions[i % spawnPositions.length];
 
+        // Crear enemigo usando el sistema completo de EnemyManager
         const enemy = {
           x: pos.x,
           y: pos.y,
-          width: size,
-          height: size,
+          width: enemySize,
+          height: enemySize,
           velocityX: (Math.random() - 0.5) * 4,
           velocityY: (Math.random() - 0.5) * 4,
           level: randomLevel,
@@ -425,17 +431,50 @@ const BossPhases = {
           aggressionLevel: 1.2,
           bounceCount: 0,
           maxBounces: 3 + randomLevel,
+          spawnTime: window.getGameTime(),
+
+          // Usar el sistema de imágenes de EnemyManager
+          image: this.getEnemyImageForLevel(randomLevel),
+
+          // Sistema de escalado dinámico como en EnemyManager
+          dynamicScaling: {
+            enabled: Math.random() < 0.5, // 50% de esbirros con escalado
+            baseSize: enemySize,
+            currentScale: 1.0,
+            scaleDirection: 1,
+            scaleSpeed: 0.004,
+            minScale: 0.8,
+            maxScale: 1.3,
+            pulseTimer: 0,
+          },
         };
 
+        // Agregar al sistema de enemigos
         if (window.EnemyManager) {
           EnemyManager.enemies.push(enemy);
         }
 
         console.log(
-          `👹 Esbirro nivel ${randomLevel} invocado en (${pos.x}, ${pos.y})`
+          `👹 Esbirro nivel ${randomLevel} invocado en (${pos.x}, ${pos.y}) con imagen`
         );
-      }, i * 300);
+      }, i * 300); // Spawn escalonado cada 300ms
     }
+  },
+
+  // ======================================================
+  // FUNCIÓN AUXILIAR PARA OBTENER IMÁGENES
+  // ======================================================
+
+  getEnemyImageForLevel(level) {
+    // Usar el mismo sistema que EnemyManager
+    if (window.GameConfig && window.GameConfig.enemyImages) {
+      const imageIndex = Math.min(
+        level - 1,
+        window.GameConfig.enemyImages.length - 1
+      );
+      return window.GameConfig.enemyImages[imageIndex] || null;
+    }
+    return null;
   },
 
   // ======================================================
