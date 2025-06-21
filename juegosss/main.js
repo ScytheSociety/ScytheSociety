@@ -183,81 +183,69 @@ function setupEventListeners() {
 }
 
 /**
- * 🔥 SISTEMA DE PAUSA ROBUSTO - NO SE REACTIVA SOLO
+ * 🔥 SISTEMA DE PAUSA SIMPLE Y EFECTIVO
  */
 function setupGamePauseSystem() {
   // Función para pausar DEFINITIVAMENTE
   const forceGamePause = () => {
     if (gameEnded) return;
 
-    console.log("⏸️ JUEGO FORZADAMENTE PAUSADO - Alt+Tab detectado");
+    console.log("⏸️ JUEGO PAUSADO - Alt+Tab detectado");
 
     // Guardar estado anterior
     gameWasPausedBeforeHiding = gamePaused;
     gamePaused = true;
     pausedByVisibility = true;
 
-    // DETENER TODO COMPLETAMENTE
-    if (gameInterval) {
-      clearInterval(gameInterval);
-      gameInterval = null;
-      console.log("⏸️ Game loop DETENIDO");
+    // DETENER auto-disparo
+    if (BulletManager) {
+      BulletManager.stopAutoShoot();
     }
 
-    // DETENER auto-disparo
-    BulletManager.stopAutoShoot();
-    console.log("⏸️ Auto-disparo DETENIDO");
-
-    // PARAR música y sonidos COMPLETAMENTE
-    if (AudioManager.isBackgroundMusicPlaying()) {
+    // PARAR música COMPLETAMENTE
+    if (AudioManager && AudioManager.isBackgroundMusicPlaying()) {
       AudioManager.stopBackgroundMusic();
       console.log("⏸️ Música DETENIDA");
     }
 
-    // Mensaje de pausa FIJO
-    UI.showScreenMessage("⏸️ JUEGO PAUSADO (Alt+Tab)", "#FFFF00");
+    // Mostrar mensaje de pausa
+    UI.showScreenMessage("⏸️ JUEGO PAUSADO", "#FFFF00");
   };
 
   // Función para reanudar SOLO cuando volvemos
   const resumeGameManually = () => {
     if (gameEnded || !pausedByVisibility) return;
 
-    // Esperar un poco para asegurar que realmente volvimos
+    // Esperar un poco para confirmar que realmente volvimos
     setTimeout(() => {
       if (document.hidden) {
         console.log("⏸️ Falsa alarma - seguimos ocultos");
-        return; // Aún estamos ocultos, no reanudar
+        return;
       }
 
       console.log("▶️ REANUDANDO JUEGO - Usuario regresó");
 
-      gamePaused = gameWasPausedBeforeHiding; // Restaurar estado original
+      gamePaused = gameWasPausedBeforeHiding;
       pausedByVisibility = false;
 
-      // REANUDAR game loop
-      if (!gameInterval && !gameEnded) {
-        gameInterval = setInterval(gameLoop, 1000 / 60);
-        console.log("▶️ Game loop REANUDADO");
-      }
-
       // REANUDAR auto-disparo
-      if (!gameEnded) {
+      if (!gameEnded && BulletManager) {
         BulletManager.startAutoShoot();
         console.log("▶️ Auto-disparo REANUDADO");
       }
 
       // REANUDAR música
-      if (!gameEnded) {
+      if (!gameEnded && AudioManager) {
         AudioManager.startBackgroundMusic();
         console.log("▶️ Música REANUDADA");
       }
 
       // Mensaje de reanudación
       UI.showScreenMessage("▶️ JUEGO REANUDADO", "#00FF00");
-    }, 500); // Esperar 500ms para confirmar que realmente volvimos
+    }, 500);
   };
 
-  // Event listeners MÁS ESPECÍFICOS
+  // Event listeners para pausa/reanudación
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       console.log("👁️ Pestaña OCULTA - pausando");
@@ -268,7 +256,7 @@ function setupGamePauseSystem() {
     }
   });
 
-  // Backup con blur/focus (menos confiable pero útil)
+  // Backup con blur/focus
   window.addEventListener("blur", () => {
     console.log("🔍 Ventana perdió FOCO - pausando");
     forceGamePause();
@@ -276,13 +264,12 @@ function setupGamePauseSystem() {
 
   window.addEventListener("focus", () => {
     console.log("🔍 Ventana ganó FOCO - intentando reanudar");
-    // Solo reanudar si no estamos ocultos
     if (!document.hidden) {
       resumeGameManually();
     }
   });
 
-  console.log("⏸️ Sistema de pausa ROBUSTO configurado");
+  console.log("⏸️ Sistema de pausa SIMPLE configurado");
 }
 
 /**
@@ -351,6 +338,128 @@ function startGameLoop() {
   }
 
   console.log("🔄 Bucle de juego ÉPICO iniciado");
+}
+
+/**
+ * 🔥 NUEVO: Sistema de fases basado en vidas del jugador
+ */
+function checkLifeBasedEvents() {
+  const playerLives = Player.getLives();
+
+  // Verificar si ya hay algún evento activo
+  if (window.slowMotionActive || window.frenzyModeActive) {
+    return; // No activar eventos si ya hay uno activo
+  }
+
+  // Lluvia de power-ups - ÚLTIMO RECURSO (1 vida)
+  if (playerLives === 1 && Math.random() < 0.01) {
+    // 1% por frame
+    triggerPowerUpRain();
+    return;
+  }
+
+  // Modo frenesí - EMERGENCIA (2 vidas o menos)
+  if (playerLives <= 2 && Math.random() < 0.005) {
+    // 0.5% por frame
+    triggerFrenzyMode();
+    return;
+  }
+
+  // Tiempo lento/mundo acuático - AYUDA MEDIA (5 vidas o menos)
+  if (playerLives <= 5 && Math.random() < 0.003) {
+    // 0.3% por frame
+    triggerSlowMotion();
+    return;
+  }
+
+  // Meteoritos - DESAFÍO CON MUCHA VIDA (7+ vidas)
+  if (playerLives >= 7 && Math.random() < 0.002) {
+    // 0.2% por frame
+    triggerMeteorShower(playerLives);
+    return;
+  }
+}
+
+function triggerPowerUpRain() {
+  UI.showScreenMessage("🌟 ¡LLUVIA DE EMERGENCIA! 🌟", "#FFD700");
+
+  for (let i = 0; i < 4; i++) {
+    // 4 power-ups de emergencia
+    setTimeout(() => {
+      PowerUpManager.forceSpawnPowerUp();
+    }, i * 400);
+  }
+
+  AudioManager.playSound("special");
+  console.log("🌟 Lluvia de emergencia activada (1 vida)");
+}
+
+function triggerFrenzyMode() {
+  if (window.frenzyModeActive) return;
+
+  UI.showScreenMessage("⚡ ¡MODO FRENESÍ DE EMERGENCIA! ⚡", "#FF00FF");
+  window.frenzyModeActive = true;
+
+  BulletManager.stopAutoShoot();
+
+  const frenzyInterval = setInterval(() => {
+    BulletManager.shootBullet();
+  }, 35); // Muy rápido en emergencia
+
+  setTimeout(() => {
+    clearInterval(frenzyInterval);
+    BulletManager.startAutoShoot();
+    window.frenzyModeActive = false;
+    UI.showScreenMessage("Frenesí de emergencia terminado", "#FFFFFF");
+  }, 15000); // 15 segundos
+
+  AudioManager.playSound("special");
+  console.log("⚡ Modo frenesí de emergencia activado (≤2 vidas)");
+}
+
+function triggerSlowMotion() {
+  if (window.slowMotionActive) return;
+
+  UI.showScreenMessage("🌊 ¡MUNDO ACUÁTICO! 🌊", "#0080FF");
+  window.slowMotionActive = true;
+  window.slowMotionFactor = 0.1; // Muy lento
+
+  // 🔥 NUEVO: Ralentizar también al jugador
+  if (window.Player) {
+    window.Player.originalMoveSpeed = window.Player.moveSpeed;
+    window.Player.moveSpeed = 0.2; // Jugador también más lento
+  }
+
+  setTimeout(() => {
+    window.slowMotionActive = false;
+    window.slowMotionFactor = 1.0;
+
+    if (window.Player && window.Player.originalMoveSpeed) {
+      window.Player.moveSpeed = window.Player.originalMoveSpeed;
+    }
+
+    UI.showScreenMessage("⚡ Superficie alcanzada", "#FFFFFF");
+  }, 10000); // 10 segundos
+
+  AudioManager.playSound("special");
+  console.log("🌊 Mundo acuático activado (≤5 vidas)");
+}
+
+function triggerMeteorShower(playerLives) {
+  const meteorCount = Math.min(playerLives - 5, 4); // Máximo 4 meteoritos
+
+  UI.showScreenMessage(`☄️ ¡${meteorCount} METEORITOS! ☄️`, "#FF8800");
+
+  for (let i = 0; i < meteorCount; i++) {
+    setTimeout(() => {
+      if (window.EnemyManager && window.EnemyManager.spawnMeteorEnemy) {
+        window.EnemyManager.spawnMeteorEnemy();
+      }
+    }, i * 800); // Espaciados
+  }
+
+  AudioManager.playSound("special");
+  console.log(`☄️ ${meteorCount} meteoritos spawneados (${playerLives} vidas)`);
 }
 
 /**
@@ -490,23 +599,23 @@ function drawSpecialEffects(ctx) {
 }
 
 /**
- * 🔥 CORREGIDO: Verificar colisiones con mejor manejo de muerte del jugador
+ * 🔥 FUNCIÓN CHECKCOLLISIONS COMPLETA Y CORREGIDA
  */
 function checkCollisions() {
-  // 🔥 VERIFICACIÓN INICIAL: Si el jugador ya está muerto, no verificar más colisiones
+  // Verificación inicial: Si el jugador ya está muerto, no verificar más colisiones
   if (Player.getLives() <= 0) {
     console.log("💀 Jugador ya muerto, saltando verificación de colisiones");
     return;
   }
 
-  // 🔥 Balas vs Enemigos (solo niveles 1-10)
+  // Balas vs Enemigos (solo niveles 1-10)
   if (level <= 10) {
     const enemiesKilledByBullets = BulletManager.checkEnemyCollisions(
       EnemyManager.enemies
     );
   }
 
-  // 🔥 Jugador vs Enemigos (solo niveles 1-10)
+  // Jugador vs Enemigos (solo niveles 1-10)
   if (level <= 10) {
     if (Player.checkEnemyCollisions(EnemyManager.enemies)) {
       // El jugador fue golpeado
@@ -517,133 +626,9 @@ function checkCollisions() {
       if (Player.getLives() <= 0) {
         console.log("💀 Jugador murió por colisión con enemigo");
         gameOver();
-        return; // ⬅️ IMPORTANTE: Salir inmediatamente
+        return; // Salir inmediatamente
       }
     }
-  }
-
-  /**
-   * 🔥 NUEVO: Sistema de fases basado en vidas del jugador
-   */
-  function checkLifeBasedEvents() {
-    const playerLives = Player.getLives();
-
-    // Verificar si ya hay algún evento activo
-    if (window.slowMotionActive || window.frenzyModeActive) {
-      return; // No activar eventos si ya hay uno activo
-    }
-
-    // Lluvia de power-ups - ÚLTIMO RECURSO (1 vida)
-    if (playerLives === 1 && Math.random() < 0.01) {
-      // 1% por frame
-      triggerPowerUpRain();
-      return;
-    }
-
-    // Modo frenesí - EMERGENCIA (2 vidas o menos)
-    if (playerLives <= 2 && Math.random() < 0.005) {
-      // 0.5% por frame
-      triggerFrenzyMode();
-      return;
-    }
-
-    // Tiempo lento/mundo acuático - AYUDA MEDIA (5 vidas o menos)
-    if (playerLives <= 5 && Math.random() < 0.003) {
-      // 0.3% por frame
-      triggerSlowMotion();
-      return;
-    }
-
-    // Meteoritos - DESAFÍO CON MUCHA VIDA (7+ vidas)
-    if (playerLives >= 7 && Math.random() < 0.002) {
-      // 0.2% por frame
-      triggerMeteorShower(playerLives);
-      return;
-    }
-  }
-
-  function triggerPowerUpRain() {
-    UI.showScreenMessage("🌟 ¡LLUVIA DE EMERGENCIA! 🌟", "#FFD700");
-
-    for (let i = 0; i < 4; i++) {
-      // 4 power-ups de emergencia
-      setTimeout(() => {
-        PowerUpManager.forceSpawnPowerUp();
-      }, i * 400);
-    }
-
-    AudioManager.playSound("special");
-    console.log("🌟 Lluvia de emergencia activada (1 vida)");
-  }
-
-  function triggerFrenzyMode() {
-    if (window.frenzyModeActive) return;
-
-    UI.showScreenMessage("⚡ ¡MODO FRENESÍ DE EMERGENCIA! ⚡", "#FF00FF");
-    window.frenzyModeActive = true;
-
-    BulletManager.stopAutoShoot();
-
-    const frenzyInterval = setInterval(() => {
-      BulletManager.shootBullet();
-    }, 35); // Muy rápido en emergencia
-
-    setTimeout(() => {
-      clearInterval(frenzyInterval);
-      BulletManager.startAutoShoot();
-      window.frenzyModeActive = false;
-      UI.showScreenMessage("Frenesí de emergencia terminado", "#FFFFFF");
-    }, 15000); // 15 segundos
-
-    AudioManager.playSound("special");
-    console.log("⚡ Modo frenesí de emergencia activado (≤2 vidas)");
-  }
-
-  function triggerSlowMotion() {
-    if (window.slowMotionActive) return;
-
-    UI.showScreenMessage("🌊 ¡MUNDO ACUÁTICO! 🌊", "#0080FF");
-    window.slowMotionActive = true;
-    window.slowMotionFactor = 0.1; // Muy lento
-
-    // 🔥 NUEVO: Ralentizar también al jugador
-    if (window.Player) {
-      window.Player.originalMoveSpeed = window.Player.moveSpeed;
-      window.Player.moveSpeed = 0.2; // Jugador también más lento
-    }
-
-    setTimeout(() => {
-      window.slowMotionActive = false;
-      window.slowMotionFactor = 1.0;
-
-      if (window.Player && window.Player.originalMoveSpeed) {
-        window.Player.moveSpeed = window.Player.originalMoveSpeed;
-      }
-
-      UI.showScreenMessage("⚡ Superficie alcanzada", "#FFFFFF");
-    }, 10000); // 10 segundos
-
-    AudioManager.playSound("special");
-    console.log("🌊 Mundo acuático activado (≤5 vidas)");
-  }
-
-  function triggerMeteorShower(playerLives) {
-    const meteorCount = Math.min(playerLives - 5, 4); // Máximo 4 meteoritos
-
-    UI.showScreenMessage(`☄️ ¡${meteorCount} METEORITOS! ☄️`, "#FF8800");
-
-    for (let i = 0; i < meteorCount; i++) {
-      setTimeout(() => {
-        if (window.EnemyManager && window.EnemyManager.spawnMeteorEnemy) {
-          window.EnemyManager.spawnMeteorEnemy();
-        }
-      }, i * 800); // Espaciados
-    }
-
-    AudioManager.playSound("special");
-    console.log(
-      `☄️ ${meteorCount} meteoritos spawneados (${playerLives} vidas)`
-    );
   }
 
   // Jugador vs Power-ups (siempre)
@@ -654,7 +639,7 @@ function checkCollisions() {
     Player.checkHeartCollisions(PowerUpManager.hearts);
   }
 
-  // 🔥 Boss colisiones (SOLO nivel 11)
+  // Boss colisiones (SOLO nivel 11)
   if (level === 11 && BossManager.isActive()) {
     console.log("🔥 Verificando colisiones del boss en nivel 11");
 
@@ -670,11 +655,11 @@ function checkCollisions() {
       if (Player.getLives() <= 0) {
         console.log("💀 Jugador murió por colisión física con boss");
         gameOver();
-        return; // ⬅️ IMPORTANTE: Salir inmediatamente
+        return;
       }
     }
 
-    // 🔥 Jugador vs Esbirros del Boss (enemigos invocados en nivel 11)
+    // Jugador vs Esbirros del Boss (enemigos invocados en nivel 11)
     if (EnemyManager.enemies.length > 0) {
       if (Player.checkEnemyCollisions(EnemyManager.enemies)) {
         console.log(
@@ -688,11 +673,11 @@ function checkCollisions() {
         }
       }
 
-      // 🔥 Balas vs Esbirros del Boss
+      // Balas vs Esbirros del Boss
       BulletManager.checkEnemyCollisions(EnemyManager.enemies);
     }
 
-    // 🔥 NUEVO: Jugador vs Minas del Boss
+    // Jugador vs Minas del Boss
     if (BossManager.getMines && BossManager.getMines().length > 0) {
       const mines = BossManager.getMines();
 
@@ -716,9 +701,8 @@ function checkCollisions() {
             Math.pow(playerCenterY - mineCenterY, 2)
         );
 
-        // Si el jugador está muy cerca de la mina (no necesariamente en el radio completo)
+        // Si el jugador está muy cerca de la mina
         if (distance < mine.width) {
-          // Radio de colisión directo con la mina
           console.log("💥 Jugador tocó una mina directamente");
 
           // Hacer explotar la mina inmediatamente
@@ -739,7 +723,7 @@ function checkCollisions() {
       }
     }
 
-    // 🔥 VERIFICACIÓN MEJORADA: Balas Touhou vs Jugador
+    // Balas Touhou vs Jugador
     if (BossManager.bulletPatterns && BossManager.bulletPatterns.length > 0) {
       const playerPos = Player.getPosition();
       const playerSize = Player.getSize();
@@ -759,7 +743,7 @@ function checkCollisions() {
           // Eliminar la bala ANTES de aplicar daño
           BossManager.bulletPatterns.splice(i, 1);
 
-          // 🔥 APLICAR DAÑO DIRECTAMENTE Y VERIFICAR RESULTADO INMEDIATO
+          // Aplicar daño directamente y verificar resultado inmediato
           const previousLives = Player.getLives();
           Player.takeDamage();
           const currentLives = Player.getLives();
@@ -768,7 +752,7 @@ function checkCollisions() {
             `💔 Vida antes: ${previousLives}, después: ${currentLives}`
           );
 
-          // 🔥 VERIFICACIÓN INMEDIATA Y EXPLÍCITA
+          // Verificación inmediata y explícita
           if (currentLives <= 0) {
             console.log(
               "💀 Jugador murió por bala Touhou - activando game over AHORA"
@@ -784,7 +768,7 @@ function checkCollisions() {
     }
   }
 
-  // 🔥 VERIFICACIÓN FINAL: Double-check de muerte (solo si no se ejecutó antes)
+  // Verificación final: Double-check de muerte
   if (Player.getLives() <= 0 && !gameEnded) {
     console.log("💀 Verificación final detectó muerte del jugador");
     gameOver();

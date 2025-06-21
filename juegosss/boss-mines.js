@@ -114,49 +114,52 @@ const BossMines = {
     const playerPos = Player.getPosition();
     const canvas = window.getCanvas();
 
-    // Posiciones cercanas pero NO encima del jugador
+    // 🔥 NUEVO: Posiciones MÁS LEJANAS y con más opciones de escape
     const huntingPositions = [
-      { x: playerPos.x + 200, y: playerPos.y + 100 }, // Derecha-abajo
-      { x: playerPos.x - 200, y: playerPos.y + 100 }, // Izquierda-abajo
-      { x: playerPos.x + 100, y: playerPos.y - 200 }, // Derecha-arriba
-      { x: playerPos.x - 100, y: playerPos.y - 200 }, // Izquierda-arriba
-      { x: playerPos.x + 250, y: playerPos.y }, // Derecha
-      { x: playerPos.x - 250, y: playerPos.y }, // Izquierda
-      { x: playerPos.x, y: playerPos.y + 250 }, // Abajo
-      { x: playerPos.x, y: playerPos.y - 250 }, // Arriba
-      { x: playerPos.x + 180, y: playerPos.y + 180 }, // Diagonal
-      { x: playerPos.x - 180, y: playerPos.y - 180 }, // Diagonal opuesta
+      { x: playerPos.x + 300, y: playerPos.y + 150 }, // Más lejos derecha-abajo
+      { x: playerPos.x - 300, y: playerPos.y + 150 }, // Más lejos izquierda-abajo
+      { x: playerPos.x + 150, y: playerPos.y - 300 }, // Más lejos derecha-arriba
+      { x: playerPos.x - 150, y: playerPos.y - 300 }, // Más lejos izquierda-arriba
+      { x: playerPos.x + 350, y: playerPos.y }, // Mucho más lejos derecha
+      { x: playerPos.x - 350, y: playerPos.y }, // Mucho más lejos izquierda
+      { x: playerPos.x, y: playerPos.y + 350 }, // Mucho más lejos abajo
+      { x: playerPos.x, y: playerPos.y - 350 }, // Mucho más lejos arriba
+      { x: playerPos.x + 250, y: playerPos.y + 250 }, // Diagonal lejana
+      { x: playerPos.x - 250, y: playerPos.y - 250 }, // Diagonal lejana opuesta
+      { x: playerPos.x + 250, y: playerPos.y - 250 }, // Otra diagonal lejana
+      { x: playerPos.x - 250, y: playerPos.y + 250 }, // Otra diagonal lejana
     ];
 
     const validPositions = huntingPositions.filter(
       (pos) =>
-        pos.x >= 120 &&
-        pos.x <= canvas.width - 120 &&
-        pos.y >= 120 &&
-        pos.y <= canvas.height - 120
+        pos.x >= 150 && // Más margen desde bordes
+        pos.x <= canvas.width - 150 &&
+        pos.y >= 150 &&
+        pos.y <= canvas.height - 150
     );
 
     if (validPositions.length > 0 && this.bossManager.boss) {
       const targetPos =
         validPositions[Math.floor(Math.random() * validPositions.length)];
 
-      // Teletransportar boss cerca de la posición objetivo (no exactamente)
+      // 🔥 NUEVO: Boss aparece MÁS LEJOS de la posición objetivo
       const bossX =
         targetPos.x -
         this.bossManager.boss.width / 2 +
-        (Math.random() - 0.5) * 100;
+        (Math.random() - 0.5) * 150; // Más variación (era 100)
       const bossY =
         targetPos.y -
         this.bossManager.boss.height / 2 +
-        (Math.random() - 0.5) * 100;
+        (Math.random() - 0.5) * 150; // Más variación (era 100)
 
+      // Asegurar que el boss no aparezca demasiado cerca de los bordes
       this.bossManager.boss.x = Math.max(
-        50,
-        Math.min(canvas.width - this.bossManager.boss.width - 50, bossX)
+        80, // Más margen
+        Math.min(canvas.width - this.bossManager.boss.width - 80, bossX)
       );
       this.bossManager.boss.y = Math.max(
-        50,
-        Math.min(canvas.height - this.bossManager.boss.height - 50, bossY)
+        80, // Más margen
+        Math.min(canvas.height - this.bossManager.boss.height - 80, bossY)
       );
 
       // Efecto visual
@@ -169,19 +172,44 @@ const BossMines = {
         );
       }
 
-      // Crear mina con posición validada
-      const minePos = this.getValidMinePosition(
-        targetPos.x - 20,
-        targetPos.y - 20
-      );
-      const randomTimer = 300 + Math.random() * 120; // 5-7 segundos
+      // 🔥 NUEVO: Crear mina MÁS LEJOS del jugador para dar tiempo de escape
+      const mineDistanceFromPlayer = 180; // Distancia mínima de la mina al jugador
+
+      // Calcular posición de mina que esté lejos del jugador
+      let mineX, mineY;
+      let attempts = 0;
+
+      do {
+        mineX = targetPos.x - 20 + (Math.random() - 0.5) * 100;
+        mineY = targetPos.y - 20 + (Math.random() - 0.5) * 100;
+
+        const distanceToPlayer = Math.sqrt(
+          Math.pow(mineX - playerPos.x, 2) + Math.pow(mineY - playerPos.y, 2)
+        );
+
+        if (distanceToPlayer >= mineDistanceFromPlayer) {
+          break; // Posición válida encontrada
+        }
+
+        attempts++;
+      } while (attempts < 10);
+
+      // Si no encontramos posición válida, usar una posición fija lejos del jugador
+      if (attempts >= 10) {
+        const angle = Math.random() * Math.PI * 2;
+        mineX = playerPos.x + Math.cos(angle) * mineDistanceFromPlayer;
+        mineY = playerPos.y + Math.sin(angle) * mineDistanceFromPlayer;
+      }
+
+      const minePos = this.getValidMinePosition(mineX, mineY);
+      const randomTimer = 360 + Math.random() * 120; // 6-8 segundos (era 5-7)
       const mine = this.createMine(minePos.x, minePos.y, randomTimer);
       mine.armed = true;
       mine.type = "teleport";
       this.mines.push(mine);
 
       console.log(
-        `💣 Boss teletransportado cerca de (${Math.round(
+        `💣 Boss teletransportado MÁS LEJOS cerca de (${Math.round(
           targetPos.x
         )}, ${Math.round(targetPos.y)}) - Mina: ${Math.round(
           randomTimer / 60
@@ -193,46 +221,58 @@ const BossMines = {
   spawnStaticMineField() {
     const canvas = window.getCanvas();
     const playerPos = Player.getPosition();
-    const mineCount = 3 + Math.floor(Math.random() * 2);
+    const mineCount = 2 + Math.floor(Math.random() * 2); // 2-3 minas (era 3-4)
 
     for (let i = 0; i < mineCount; i++) {
       let x, y;
+      const minDistanceFromPlayer = 200; // Distancia mínima del jugador
 
       if (i === 0) {
-        // Bloquear ruta hacia esquina superior izquierda
-        x = playerPos.x - 200 - Math.random() * 80;
-        y = playerPos.y - 200 - Math.random() * 80;
+        // Bloquear ruta hacia esquina superior izquierda - MÁS LEJOS
+        x = playerPos.x - 250 - Math.random() * 100; // Era 200
+        y = playerPos.y - 250 - Math.random() * 100; // Era 200
       } else if (i === 1) {
-        // Bloquear ruta hacia esquina superior derecha
-        x = playerPos.x + 200 + Math.random() * 80;
-        y = playerPos.y - 200 - Math.random() * 80;
+        // Bloquear ruta hacia esquina superior derecha - MÁS LEJOS
+        x = playerPos.x + 250 + Math.random() * 100; // Era 200
+        y = playerPos.y - 250 - Math.random() * 100; // Era 200
       } else if (i === 2) {
-        // Bloquear escape hacia abajo
-        x = playerPos.x + (Math.random() - 0.5) * 150;
-        y = playerPos.y + 250 + Math.random() * 80;
-      } else {
-        // Mina extra: posición aleatoria
-        x = playerPos.x + (Math.random() - 0.5) * 400;
-        y = playerPos.y + (Math.random() - 0.5) * 400;
+        // Bloquear escape hacia abajo - MÁS LEJOS
+        x = playerPos.x + (Math.random() - 0.5) * 200; // Era 150
+        y = playerPos.y + 300 + Math.random() * 100; // Era 250
       }
 
-      // Mantener dentro de pantalla
-      x = Math.max(80, Math.min(canvas.width - 80, x));
-      y = Math.max(80, Math.min(canvas.height - 80, y));
+      // Mantener dentro de pantalla con más margen
+      x = Math.max(120, Math.min(canvas.width - 120, x)); // Era 80
+      y = Math.max(120, Math.min(canvas.height - 120, y)); // Era 80
 
-      // Validar posición para evitar superposición
+      // 🔥 NUEVO: Verificar que no esté muy cerca del jugador
+      const distanceToPlayer = Math.sqrt(
+        Math.pow(x - playerPos.x, 2) + Math.pow(y - playerPos.y, 2)
+      );
+
+      if (distanceToPlayer < minDistanceFromPlayer) {
+        // Mover la mina más lejos en dirección opuesta al jugador
+        const angle = Math.atan2(y - playerPos.y, x - playerPos.x);
+        x = playerPos.x + Math.cos(angle) * minDistanceFromPlayer;
+        y = playerPos.y + Math.sin(angle) * minDistanceFromPlayer;
+
+        // Reajustar dentro de pantalla
+        x = Math.max(120, Math.min(canvas.width - 120, x));
+        y = Math.max(120, Math.min(canvas.height - 120, y));
+      }
+
       const validPos = this.getValidMinePosition(x, y);
 
-      // Crear mina estática
+      // Crear mina estática con más tiempo
       const staticMine = this.createMine(validPos.x, validPos.y, null);
       staticMine.isStatic = true;
       staticMine.armed = true;
       staticMine.type = "static";
-      staticMine.dangerRadius = this.mineConfig.staticDangerRadius; // Radio más pequeño
+      staticMine.dangerRadius = this.mineConfig.staticDangerRadius;
       this.mines.push(staticMine);
     }
 
-    console.log(`💣 Campo de ${mineCount} minas estáticas spawneado`);
+    console.log(`💣 Campo de ${mineCount} minas estáticas spawneado MÁS LEJOS`);
   },
 
   // Función para evitar minas superpuestas
