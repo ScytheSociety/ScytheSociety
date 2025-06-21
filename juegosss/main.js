@@ -15,6 +15,7 @@ let score = 0;
 let gameEnded = false;
 let gamePaused = false;
 let pausedByVisibility = false;
+let gameWasPausedBeforeHiding = false; // Nueva variable
 
 // Contador total de TODOS los enemigos eliminados (para Excel)
 let totalEnemiesKilled = 0;
@@ -182,73 +183,106 @@ function setupEventListeners() {
 }
 
 /**
- * 🔥 NUEVO: Sistema de pausa por Alt+Tab
+ * 🔥 SISTEMA DE PAUSA ROBUSTO - NO SE REACTIVA SOLO
  */
 function setupGamePauseSystem() {
-  // Función para pausar completamente el juego
-  const pauseGame = () => {
-    if (gameEnded || gamePaused) return;
+  // Función para pausar DEFINITIVAMENTE
+  const forceGamePause = () => {
+    if (gameEnded) return;
 
-    console.log("⏸️ Juego pausado por cambio de ventana");
+    console.log("⏸️ JUEGO FORZADAMENTE PAUSADO - Alt+Tab detectado");
+
+    // Guardar estado anterior
+    gameWasPausedBeforeHiding = gamePaused;
     gamePaused = true;
     pausedByVisibility = true;
 
-    // Pausar música
-    if (AudioManager.isBackgroundMusicPlaying()) {
-      AudioManager.stopBackgroundMusic();
-    }
-
-    // Pausar todos los intervalos del juego
+    // DETENER TODO COMPLETAMENTE
     if (gameInterval) {
       clearInterval(gameInterval);
       gameInterval = null;
+      console.log("⏸️ Game loop DETENIDO");
     }
 
-    // Pausar auto-disparo
+    // DETENER auto-disparo
     BulletManager.stopAutoShoot();
+    console.log("⏸️ Auto-disparo DETENIDO");
 
-    // Mostrar mensaje de pausa
-    UI.showScreenMessage("⏸️ JUEGO PAUSADO", "#FFFF00");
-  };
-
-  // Función para reanudar el juego
-  const resumeGame = () => {
-    if (gameEnded || !gamePaused) return;
-
-    console.log("▶️ Reanudando juego");
-    gamePaused = false;
-    pausedByVisibility = false;
-
-    // Reanudar música
-    AudioManager.startBackgroundMusic();
-
-    // Reanudar intervalos del juego
-    if (!gameInterval) {
-      gameInterval = setInterval(gameLoop, 1000 / 60);
+    // PARAR música y sonidos COMPLETAMENTE
+    if (AudioManager.isBackgroundMusicPlaying()) {
+      AudioManager.stopBackgroundMusic();
+      console.log("⏸️ Música DETENIDA");
     }
 
-    // Reanudar auto-disparo
-    BulletManager.startAutoShoot();
-
-    // Mensaje de reanudación
-    UI.showScreenMessage("▶️ JUEGO REANUDADO", "#00FF00");
+    // Mensaje de pausa FIJO
+    UI.showScreenMessage("⏸️ JUEGO PAUSADO (Alt+Tab)", "#FFFF00");
   };
 
-  // Event listeners para pausa/reanudación
+  // Función para reanudar SOLO cuando volvemos
+  const resumeGameManually = () => {
+    if (gameEnded || !pausedByVisibility) return;
+
+    // Esperar un poco para asegurar que realmente volvimos
+    setTimeout(() => {
+      if (document.hidden) {
+        console.log("⏸️ Falsa alarma - seguimos ocultos");
+        return; // Aún estamos ocultos, no reanudar
+      }
+
+      console.log("▶️ REANUDANDO JUEGO - Usuario regresó");
+
+      gamePaused = gameWasPausedBeforeHiding; // Restaurar estado original
+      pausedByVisibility = false;
+
+      // REANUDAR game loop
+      if (!gameInterval && !gameEnded) {
+        gameInterval = setInterval(gameLoop, 1000 / 60);
+        console.log("▶️ Game loop REANUDADO");
+      }
+
+      // REANUDAR auto-disparo
+      if (!gameEnded) {
+        BulletManager.startAutoShoot();
+        console.log("▶️ Auto-disparo REANUDADO");
+      }
+
+      // REANUDAR música
+      if (!gameEnded) {
+        AudioManager.startBackgroundMusic();
+        console.log("▶️ Música REANUDADA");
+      }
+
+      // Mensaje de reanudación
+      UI.showScreenMessage("▶️ JUEGO REANUDADO", "#00FF00");
+    }, 500); // Esperar 500ms para confirmar que realmente volvimos
+  };
+
+  // Event listeners MÁS ESPECÍFICOS
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
-      pauseGame();
+      console.log("👁️ Pestaña OCULTA - pausando");
+      forceGamePause();
     } else {
-      setTimeout(resumeGame, 100); // Pequeño delay para estabilidad
+      console.log("👁️ Pestaña VISIBLE - intentando reanudar");
+      resumeGameManually();
     }
   });
 
-  window.addEventListener("blur", pauseGame);
-  window.addEventListener("focus", () => {
-    setTimeout(resumeGame, 100);
+  // Backup con blur/focus (menos confiable pero útil)
+  window.addEventListener("blur", () => {
+    console.log("🔍 Ventana perdió FOCO - pausando");
+    forceGamePause();
   });
 
-  console.log("⏸️ Sistema de pausa configurado");
+  window.addEventListener("focus", () => {
+    console.log("🔍 Ventana ganó FOCO - intentando reanudar");
+    // Solo reanudar si no estamos ocultos
+    if (!document.hidden) {
+      resumeGameManually();
+    }
+  });
+
+  console.log("⏸️ Sistema de pausa ROBUSTO configurado");
 }
 
 /**
@@ -320,44 +354,40 @@ function startGameLoop() {
 }
 
 /**
- * REEMPLAZA SOLO LA FUNCIÓN gameLoop() en main.js
- * Bucle principal del juego - IDÉNTICO PARA PC Y MÓVIL
+ * Bucle principal del juego - CON PAUSA ESTRICTA
  */
 function gameLoop() {
-  if (gameEnded || gamePaused) return; // 🔥 AGREGAR gamePaused
+  // 🔥 VERIFICACIÓN ESTRICTA - Si está pausado, NO HACER NADA
+  if (gameEnded || gamePaused || pausedByVisibility || document.hidden) {
+    return; // Salir inmediatamente si hay cualquier condición de pausa
+  }
 
   try {
-    // 🔥 ELIMINADO: Toda la detección de móvil que ralentizaba
-
     gameTime++;
 
-    // 🔥 IDÉNTICO: Actualizar sistema de combos siempre igual
     if (gameTime % 3 === 0) {
       ComboSystem.update();
     }
 
-    // 🔥 NUEVO: Verificar eventos basados en vida cada 60 frames (1 segundo)
+    // Verificar eventos basados en vida cada 60 frames
     if (gameTime % 60 === 0) {
       checkLifeBasedEvents();
     }
 
     // Limpiar canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // 🔥 IDÉNTICO: Dibujar fondo igual para todos
     drawBackground();
 
-    // 🔥 Aplicar efectos de tiempo lento si está activo
+    // Aplicar efectos de tiempo lento si está activo
     const originalSlowFactor = window.slowMotionFactor;
     if (slowMotionActive) {
       window.slowMotionFactor = slowMotionFactor;
     }
 
-    // 🔥 IDÉNTICO: Actualizar sistemas de juego sin diferencias
+    // Actualizar sistemas de juego
     Player.update();
     BulletManager.update();
 
-    // 🔥 ACTUALIZAR enemigos normales SOLO si NO es nivel 11, O si es nivel 11 para esbirros
     if (level < 11) {
       EnemyManager.update();
     } else if (level === 11) {
@@ -366,10 +396,8 @@ function gameLoop() {
       }
     }
 
-    // 🔥 IDÉNTICO: Power-ups igual para todos
     PowerUpManager.update();
 
-    // 🔥 SOLO verificar boss si es nivel 11
     if (level === 11) {
       BossManager.update();
     }
@@ -382,41 +410,35 @@ function gameLoop() {
     // Verificar colisiones
     checkCollisions();
 
-    // 🔥 VERIFICAR MUERTE DEL JUGADOR
+    // Verificar muerte del jugador
     if (Player.getLives() <= 0 && !gameEnded) {
       console.log("💀 Detectada muerte del jugador en game loop");
       gameOver();
       return;
     }
 
-    // 🔥 Verificar nivel completo SOLO para niveles 1-10
+    // Verificar nivel completo
     if (level <= 10 && EnemyManager.isLevelComplete()) {
       nextLevel();
     }
 
-    // 🔥 IDÉNTICO: Dibujar elementos igual para todos
+    // Dibujar elementos
     Player.draw(ctx);
     BulletManager.draw(ctx);
 
-    // 🔥 Dibujar enemigos normales SOLO si NO es nivel 11, O si hay esbirros
     if (level < 11) {
       EnemyManager.draw(ctx);
     } else if (level === 11 && EnemyManager.enemies.length > 0) {
       EnemyManager.draw(ctx);
     }
 
-    // 🔥 IDÉNTICO: Power-ups igual para todos
     PowerUpManager.draw(ctx);
 
-    // 🔥 SOLO dibujar boss si es nivel 11
     if (level === 11) {
       BossManager.draw(ctx);
     }
 
-    // 🔥 IDÉNTICO: Efectos especiales igual para todos
     drawSpecialEffects(ctx);
-
-    // 🔥 IDÉNTICO: Actualizar UI igual para todos
     UI.update();
   } catch (error) {
     console.error("❌ Error en game loop:", error);
