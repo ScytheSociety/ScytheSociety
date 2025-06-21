@@ -24,6 +24,8 @@ const BossPhases = {
 
   // Control de fases aleatorias
   isRandomPhase: false,
+  // Control de timeouts
+  summoningTimeouts: [],
 
   // ======================================================
   // INICIALIZACIÓN
@@ -47,8 +49,81 @@ const BossPhases = {
 
     if (this.phaseActive) {
       this.phaseTimer++;
+      this.updatePhaseTimerDisplay(); // Mostrar timer en pantalla
       this.checkPhaseCompletion();
     }
+  },
+
+  // ======================================================
+  // SISTEMA DE TIMER VISUAL
+  // ======================================================
+
+  updatePhaseTimerDisplay() {
+    const maxDuration = this.PHASE_DURATIONS[this.currentPhase];
+
+    if (maxDuration) {
+      const timeLeft = Math.max(0, maxDuration - this.phaseTimer);
+      const secondsLeft = Math.ceil(timeLeft / 60); // 60fps
+
+      this.showPhaseTimer(
+        this.currentPhase,
+        secondsLeft,
+        this.phaseTimer,
+        maxDuration
+      );
+    } else {
+      // Para fases sin duración fija (como REDLINE, YANKENPO)
+      const secondsElapsed = Math.floor(this.phaseTimer / 60);
+      this.showPhaseTimer(this.currentPhase, null, secondsElapsed, null);
+    }
+  },
+
+  showPhaseTimer(phase, secondsLeft, elapsed, maxDuration) {
+    // Eliminar timer anterior si existe
+    const existingTimer = document.getElementById("boss-phase-timer");
+    if (existingTimer) {
+      existingTimer.remove();
+    }
+
+    const timerDiv = document.createElement("div");
+    timerDiv.id = "boss-phase-timer";
+    timerDiv.style.cssText = `
+    position: fixed;
+    top: 45px;
+    left: 20px;
+    z-index: 2000;
+    background: rgba(0, 0, 0, 0.8);
+    color: #FF0000;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 2px solid #FF0000;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+    min-width: 200px;
+  `;
+
+    let content = "";
+    if (secondsLeft !== null) {
+      // Fase con duración fija
+      const progress = ((elapsed / maxDuration) * 100).toFixed(1);
+      content = `
+      <div style="color: #FFD700;">FASE: ${phase}</div>
+      <div style="color: #FFFFFF;">Tiempo restante: ${secondsLeft}s</div>
+      <div style="color: #00FF00;">Progreso: ${progress}%</div>
+    `;
+    } else {
+      // Fase sin duración fija
+      content = `
+      <div style="color: #FFD700;">FASE: ${phase}</div>
+      <div style="color: #FFFFFF;">Tiempo: ${elapsed}s</div>
+      <div style="color: #FFFF00;">En progreso...</div>
+    `;
+    }
+
+    timerDiv.innerHTML = content;
+    document.body.appendChild(timerDiv);
   },
 
   // ======================================================
@@ -103,20 +178,34 @@ const BossPhases = {
     }
   },
 
-  // Nueva función para manejar la secuencia de invocación
+  // ======================================================
+  // SECUENCIA DE INVOCACIÓN CORREGIDA
+  // ======================================================
+
   startSummoningSequence() {
     console.log("⚔️ === INICIANDO SECUENCIA DE INVOCACIÓN (60s) ===");
 
+    // Limpiar cualquier timeout previo
+    if (this.summoningTimeouts) {
+      this.summoningTimeouts.forEach((timeout) => clearTimeout(timeout));
+    }
+    this.summoningTimeouts = [];
+
     // Invocar enemigos cada 7 segundos durante 60 segundos
     const summonTimes = [2000, 9000, 16000, 23000, 30000, 37000, 44000, 51000];
-    const enemyCounts = [5, 6, 7, 8, 6, 7, 8, 10]; // Escalada de dificultad
+    const enemyCounts = [4, 5, 5, 6, 5, 6, 6, 7]; // Cantidades más moderadas
 
     summonTimes.forEach((time, index) => {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         if (this.currentPhase === "SUMMONING" && this.phaseActive) {
           this.summonEnemies(enemyCounts[index]);
+          console.log(
+            `⚔️ Oleada ${index + 1}/8 invocada: ${enemyCounts[index]} enemigos`
+          );
         }
       }, time);
+
+      this.summoningTimeouts.push(timeout);
     });
 
     if (this.bossManager.ui) {
@@ -126,13 +215,29 @@ const BossPhases = {
       );
     }
 
-    console.log("⚔️ Secuencia de invocación programada");
+    console.log("⚔️ Secuencia de invocación programada correctamente");
   },
+
+  // ======================================================
+  // FINALIZACIÓN MEJORADA DE FASE
+  // ======================================================
 
   endCurrentPhase() {
     console.log(
       `✅ Terminando fase: ${this.currentPhase} - VOLVIENDO A HUNTING`
     );
+
+    // Limpiar timeouts de invocación
+    if (this.summoningTimeouts) {
+      this.summoningTimeouts.forEach((timeout) => clearTimeout(timeout));
+      this.summoningTimeouts = [];
+    }
+
+    // Eliminar timer visual
+    const timerElement = document.getElementById("boss-phase-timer");
+    if (timerElement) {
+      timerElement.remove();
+    }
 
     this.phaseActive = false;
     this.currentPhase = "HUNTING";
@@ -527,6 +632,7 @@ const BossPhases = {
   // ======================================================
 
   reset() {
+    this.cleanup();
     this.currentPhase = "HUNTING";
     this.phaseActive = false;
     this.phaseTimer = 0;
@@ -561,6 +667,30 @@ const BossPhases = {
       isRandomPhase: this.isRandomPhase,
       progress: this.getPhaseProgress(),
     };
+  },
+
+  // ======================================================
+  // CLEANUP MEJORADO
+  // ======================================================
+
+  cleanup() {
+    console.log("🧹 Limpiando sistema de fases");
+
+    // Limpiar timeouts
+    if (this.summoningTimeouts) {
+      this.summoningTimeouts.forEach((timeout) => clearTimeout(timeout));
+      this.summoningTimeouts = [];
+    }
+
+    // Eliminar timer visual
+    const timerElement = document.getElementById("boss-phase-timer");
+    if (timerElement) {
+      timerElement.remove();
+    }
+
+    this.phaseActive = false;
+    this.currentPhase = "HUNTING";
+    this.phaseTimer = 0;
   },
 };
 

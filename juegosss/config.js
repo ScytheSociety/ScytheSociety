@@ -22,12 +22,12 @@ const GameConfig = {
   bulletImage: null,
   bossImage: null,
 
-  // Dimensiones dinámicas
-  PLAYER_SIZE: 80,
-  BULLET_WIDTH: 20,
-  BULLET_HEIGHT: 40,
-  ENEMY_MIN_SIZE: 30,
-  ENEMY_MAX_SIZE: 60,
+  // Dimensiones dinámicas - TAMAÑOS REDUCIDOS
+  PLAYER_SIZE: 80, // Sin cambios
+  BULLET_WIDTH: 20, // Sin cambios
+  BULLET_HEIGHT: 40, // Sin cambios
+  ENEMY_MIN_SIZE: 20, // Era 30, ahora 20 (33% más pequeño)
+  ENEMY_MAX_SIZE: 40, // Era 60, ahora 40 (33% más pequeño)
 
   // ======================================================
   // CONFIGURACIÓN DE NIVELES - 10 NIVELES BALANCEADOS

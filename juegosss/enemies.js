@@ -71,21 +71,21 @@ const EnemyManager = {
     const canvas = window.getCanvas();
     const level = window.getLevel();
 
-    // 🔥 TAMAÑOS IDÉNTICOS - Sin diferencias por dispositivo
-    const baseMinSize = 40; // Tamaño fijo
-    const baseMaxSize = 80; // Tamaño fijo
+    // 🔥 TAMAÑOS MÁS PEQUEÑOS - Reducidos significativamente
+    const baseMinSize = 25; // Era 40, ahora 25px (37% más pequeño)
+    const baseMaxSize = 45; // Era 80, ahora 45px (44% más pequeño)
 
-    // Crecimiento progresivo idéntico
-    const sizeBonus = level * 8; // Bonus fijo por nivel
+    // Crecimiento progresivo más controlado por nivel
+    const sizeBonus = level * 3; // Era 8, ahora 3px por nivel (62% menos)
 
-    const minSize = Math.max(50, baseMinSize + sizeBonus);
-    const maxSize = Math.max(80, baseMaxSize + sizeBonus);
+    const minSize = Math.max(30, baseMinSize + sizeBonus); // Mínimo 30px
+    const maxSize = Math.max(50, baseMaxSize + sizeBonus); // Máximo inicial 50px
 
     const enemySize = minSize + Math.random() * (maxSize - minSize);
 
     const x = Math.random() * (canvas.width - enemySize);
 
-    // Velocidad idéntica
+    // Velocidad balanceada (sin cambios)
     const levelSpeedFactor = 1 + level * 0.15;
     const baseSpeed = canvas.height * 0.004 * levelSpeedFactor;
 
@@ -109,9 +109,9 @@ const EnemyManager = {
       spawnTime: window.getGameTime(),
       type: "normal",
 
-      // 🔥 INICIALIZACIÓN GARANTIZADA: Sistema de escalado dinámico
+      // Sistema de escalado dinámico
       dynamicScaling: {
-        enabled: Math.random() < 0.4, // 40% de enemigos tendrán escalado
+        enabled: Math.random() < 0.4,
         baseSize: enemySize,
         currentScale: 1.0,
         scaleDirection: 1,
@@ -124,7 +124,7 @@ const EnemyManager = {
 
     this.enemies.push(enemy);
 
-    // Spawn extra idéntico para todos
+    // Spawn extra con enemigos más pequeños también
     if (level > 3 && Math.random() < level * 0.04 && this.enemies.length < 25) {
       const extraEnemies = Math.min(2, Math.floor(level / 4));
 
@@ -145,9 +145,8 @@ const EnemyManager = {
     const canvas = window.getCanvas();
     const level = window.getLevel();
 
-    const simpleEnemySize =
-      GameConfig.ENEMY_MIN_SIZE +
-      Math.random() * (GameConfig.ENEMY_MAX_SIZE - GameConfig.ENEMY_MIN_SIZE);
+    // 🔥 TAMAÑOS PEQUEÑOS para enemigos simples también
+    const simpleEnemySize = 20 + Math.random() * 25; // Era 30-60, ahora 20-45
     const simpleX = Math.random() * (canvas.width - simpleEnemySize);
     const simpleSpeed = canvas.height * 0.006 * (1 + level * 0.1);
 
@@ -166,7 +165,7 @@ const EnemyManager = {
       spawnTime: window.getGameTime(),
       type: "extra",
 
-      // 🔥 INICIALIZACIÓN GARANTIZADA: Sistema de escalado dinámico para enemigos simples
+      // Sistema de escalado dinámico
       dynamicScaling: {
         enabled: Math.random() < 0.3,
         baseSize: simpleEnemySize,

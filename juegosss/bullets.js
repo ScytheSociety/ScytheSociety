@@ -83,7 +83,7 @@ const BulletManager = {
     // 🔥 RAPID FIRE MÁS RÁPIDO
     const hasRapidFire = activePowerUps.some((p) => p.id === 3);
     if (hasRapidFire) {
-      cooldownTime = 20; // Era 30, ahora 20 (66% más rápido)
+      cooldownTime = 15; // Era 30, ahora 20 (66% más rápido)
     }
 
     if (currentTime - this.lastShootTime > cooldownTime) {
@@ -112,8 +112,8 @@ const BulletManager = {
             // No hacer nada con las balas, el escudo se maneja en player.js
             break;
 
-          case 1: // Disparo Amplio
-            bulletCount = Math.max(bulletCount, 7); // Mínimo 7 balas
+          case 1: // Disparo Amplio Escalable
+            bulletCount = Math.max(bulletCount, 5 + level); // Crece con nivel
             break;
 
           case 2: // Explosivo
