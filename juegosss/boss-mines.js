@@ -15,17 +15,17 @@ const BossMines = {
   teleportInterval: null,
   staticMineInterval: null,
 
-  // Configuración de minas
+  // Al inicio del archivo, reemplazar mineConfig:
   mineConfig: {
-    size: 40,
-    dangerRadius: 120,
-    staticDangerRadius: 80, // Radio más pequeño para minas estáticas
+    size: GameConfig.isMobile ? 35 : 40, // Más pequeñas en móvil
+    dangerRadius: GameConfig.isMobile ? 100 : 120, // Radio menor en móvil
+    staticDangerRadius: GameConfig.isMobile ? 70 : 80,
     armingTime: 60,
-    explosionTime: 300, // 5 segundos
+    explosionTime: 300,
     warningTime: 120,
     blinkSpeed: 10,
-    chainReactionRadius: 150,
-    minDistanceBetweenMines: 60, // Distancia mínima entre minas
+    chainReactionRadius: GameConfig.isMobile ? 130 : 150,
+    minDistanceBetweenMines: GameConfig.isMobile ? 80 : 60,
   },
 
   // ======================================================
@@ -114,68 +114,72 @@ const BossMines = {
     const playerPos = Player.getPosition();
     const canvas = window.getCanvas();
 
-    // 🔥 NUEVO: Posiciones MÁS LEJANAS y con más opciones de escape
+    // Distancias adaptadas por dispositivo
+    const baseDistance = GameConfig.isMobile ? 400 : 300; // Más lejos en móvil
+    const extraDistance = GameConfig.isMobile ? 200 : 150;
+
     const huntingPositions = [
-      { x: playerPos.x + 300, y: playerPos.y + 150 }, // Más lejos derecha-abajo
-      { x: playerPos.x - 300, y: playerPos.y + 150 }, // Más lejos izquierda-abajo
-      { x: playerPos.x + 150, y: playerPos.y - 300 }, // Más lejos derecha-arriba
-      { x: playerPos.x - 150, y: playerPos.y - 300 }, // Más lejos izquierda-arriba
-      { x: playerPos.x + 350, y: playerPos.y }, // Mucho más lejos derecha
-      { x: playerPos.x - 350, y: playerPos.y }, // Mucho más lejos izquierda
-      { x: playerPos.x, y: playerPos.y + 350 }, // Mucho más lejos abajo
-      { x: playerPos.x, y: playerPos.y - 350 }, // Mucho más lejos arriba
-      { x: playerPos.x + 250, y: playerPos.y + 250 }, // Diagonal lejana
-      { x: playerPos.x - 250, y: playerPos.y - 250 }, // Diagonal lejana opuesta
-      { x: playerPos.x + 250, y: playerPos.y - 250 }, // Otra diagonal lejana
-      { x: playerPos.x - 250, y: playerPos.y + 250 }, // Otra diagonal lejana
+      { x: playerPos.x + baseDistance, y: playerPos.y + extraDistance },
+      { x: playerPos.x - baseDistance, y: playerPos.y + extraDistance },
+      { x: playerPos.x + extraDistance, y: playerPos.y - baseDistance },
+      { x: playerPos.x - extraDistance, y: playerPos.y - baseDistance },
+      { x: playerPos.x + (baseDistance + 50), y: playerPos.y },
+      { x: playerPos.x - (baseDistance + 50), y: playerPos.y },
+      { x: playerPos.x, y: playerPos.y + (baseDistance + 50) },
+      { x: playerPos.x, y: playerPos.y - (baseDistance + 50) },
     ];
 
+    // Márgenes más grandes en móvil
+    const margin = GameConfig.isMobile ? 200 : 150;
     const validPositions = huntingPositions.filter(
       (pos) =>
-        pos.x >= 150 && // Más margen desde bordes
-        pos.x <= canvas.width - 150 &&
-        pos.y >= 150 &&
-        pos.y <= canvas.height - 150
+        pos.x >= margin &&
+        pos.x <= canvas.width - margin &&
+        pos.y >= margin &&
+        pos.y <= canvas.height - margin
     );
 
     if (validPositions.length > 0 && this.bossManager.boss) {
       const targetPos =
         validPositions[Math.floor(Math.random() * validPositions.length)];
 
-      // 🔥 NUEVO: Boss aparece MÁS LEJOS de la posición objetivo
+      // Boss aparece AÚN más lejos en móvil
+      const bossVariation = GameConfig.isMobile ? 200 : 150;
       const bossX =
         targetPos.x -
         this.bossManager.boss.width / 2 +
-        (Math.random() - 0.5) * 150; // Más variación (era 100)
+        (Math.random() - 0.5) * bossVariation;
       const bossY =
         targetPos.y -
         this.bossManager.boss.height / 2 +
-        (Math.random() - 0.5) * 150; // Más variación (era 100)
+        (Math.random() - 0.5) * bossVariation;
 
-      // Asegurar que el boss no aparezca demasiado cerca de los bordes
+      const bossMargin = GameConfig.isMobile ? 120 : 80;
       this.bossManager.boss.x = Math.max(
-        80, // Más margen
-        Math.min(canvas.width - this.bossManager.boss.width - 80, bossX)
+        bossMargin,
+        Math.min(canvas.width - this.bossManager.boss.width - bossMargin, bossX)
       );
       this.bossManager.boss.y = Math.max(
-        80, // Más margen
-        Math.min(canvas.height - this.bossManager.boss.height - 80, bossY)
+        bossMargin,
+        Math.min(
+          canvas.height - this.bossManager.boss.height - bossMargin,
+          bossY
+        )
       );
 
-      // Efecto visual
+      // Crear efecto visual
       if (this.bossManager.ui) {
         this.bossManager.ui.createParticleEffect(
           this.bossManager.boss.x + this.bossManager.boss.width / 2,
           this.bossManager.boss.y + this.bossManager.boss.height / 2,
           "#FF8800",
-          40
+          GameConfig.isMobile ? 15 : 40
         );
       }
 
-      // 🔥 NUEVO: Crear mina MÁS LEJOS del jugador para dar tiempo de escape
-      const mineDistanceFromPlayer = 180; // Distancia mínima de la mina al jugador
+      // Mina más lejos del jugador en móvil
+      const mineDistanceFromPlayer = GameConfig.isMobile ? 250 : 180;
 
-      // Calcular posición de mina que esté lejos del jugador
       let mineX, mineY;
       let attempts = 0;
 
@@ -188,13 +192,11 @@ const BossMines = {
         );
 
         if (distanceToPlayer >= mineDistanceFromPlayer) {
-          break; // Posición válida encontrada
+          break;
         }
-
         attempts++;
       } while (attempts < 10);
 
-      // Si no encontramos posición válida, usar una posición fija lejos del jugador
       if (attempts >= 10) {
         const angle = Math.random() * Math.PI * 2;
         mineX = playerPos.x + Math.cos(angle) * mineDistanceFromPlayer;
@@ -202,18 +204,16 @@ const BossMines = {
       }
 
       const minePos = this.getValidMinePosition(mineX, mineY);
-      const randomTimer = 360 + Math.random() * 120; // 6-8 segundos (era 5-7)
+      const randomTimer = 420 + Math.random() * 120; // Más tiempo para reaccionar
       const mine = this.createMine(minePos.x, minePos.y, randomTimer);
       mine.armed = true;
       mine.type = "teleport";
       this.mines.push(mine);
 
       console.log(
-        `💣 Boss teletransportado MÁS LEJOS cerca de (${Math.round(
-          targetPos.x
-        )}, ${Math.round(targetPos.y)}) - Mina: ${Math.round(
-          randomTimer / 60
-        )}s`
+        `💣 Boss teletransportado LEJOS (${
+          GameConfig.isMobile ? "MÓVIL" : "PC"
+        })`
       );
     }
   },

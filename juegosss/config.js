@@ -105,38 +105,38 @@ const GameConfig = {
   // ======================================================
 
   POWERUP_CONFIG: {
-    spawnChance: 0.002, // Reducido de 0.0018
-    heartSpawnChance: 0.006, // Reducido de 0.01
+    spawnChance: 0.002,
+    heartSpawnChance: 0.006,
 
     types: {
       SHIELD: {
         id: 0,
         name: "Escudo Protector",
         color: "#00FF00",
-        duration: 300, // 5 segundos (era 180)
+        duration: 480, // Era 300 (5s), ahora 480 (8s)
         description: "Inmunidad total al daño",
       },
       WIDE_SHOT: {
         id: 1,
         name: "Disparo Amplio",
         color: "#00FFFF",
-        duration: 360, // 6 segundos (era 240)
+        duration: 600, // Era 360 (6s), ahora 600 (10s)
         description: "Dispara 5 balas en abanico",
       },
       EXPLOSIVE: {
         id: 2,
         name: "Balas Explosivas",
         color: "#FF8800",
-        duration: 300, // 5 segundos (era 180)
-        explosionRadius: 150, // REDUCIDO: era 200, ahora 150
+        duration: 480, // Era 300 (5s), ahora 480 (8s)
+        explosionRadius: 150,
         description: "Las balas explotan al impactar",
       },
       RAPID_FIRE: {
         id: 3,
         name: "Disparo Súper Rápido",
         color: "#FF00FF",
-        duration: 420, // 7 segundos (era 300)
-        shootDelay: 25, // Era 30
+        duration: 660, // Era 420 (7s), ahora 660 (11s)
+        shootDelay: 25,
         description: "Disparo ultra-rápido",
       },
     },

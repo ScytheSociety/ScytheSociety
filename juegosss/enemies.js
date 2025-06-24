@@ -71,21 +71,33 @@ const EnemyManager = {
     const canvas = window.getCanvas();
     const level = window.getLevel();
 
-    // 🔥 TAMAÑOS MÁS PEQUEÑOS - Reducidos significativamente
-    const baseMinSize = 25; // Era 40, ahora 25px (37% más pequeño)
-    const baseMaxSize = 45; // Era 80, ahora 45px (44% más pequeño)
+    // Tamaños diferentes para PC y móvil
+    let baseMinSize, baseMaxSize;
 
-    // Crecimiento progresivo más controlado por nivel
-    const sizeBonus = level * 3; // Era 8, ahora 3px por nivel (62% menos)
+    if (GameConfig.isMobile) {
+      // Mantener tamaño actual en móvil
+      baseMinSize = 25;
+      baseMaxSize = 45;
+    } else {
+      // Más grandes en PC
+      baseMinSize = 35; // Era 25, ahora 35
+      baseMaxSize = 65; // Era 45, ahora 65
+    }
 
-    const minSize = Math.max(30, baseMinSize + sizeBonus); // Mínimo 30px
-    const maxSize = Math.max(50, baseMaxSize + sizeBonus); // Máximo inicial 50px
+    const sizeBonus = level * (GameConfig.isMobile ? 2 : 4);
+    const minSize = Math.max(
+      GameConfig.isMobile ? 30 : 40,
+      baseMinSize + sizeBonus
+    );
+    const maxSize = Math.max(
+      GameConfig.isMobile ? 50 : 70,
+      baseMaxSize + sizeBonus
+    );
 
     const enemySize = minSize + Math.random() * (maxSize - minSize);
-
     const x = Math.random() * (canvas.width - enemySize);
 
-    // Velocidad balanceada (sin cambios)
+    // Resto del código igual...
     const levelSpeedFactor = 1 + level * 0.15;
     const baseSpeed = canvas.height * 0.004 * levelSpeedFactor;
 
@@ -109,7 +121,6 @@ const EnemyManager = {
       spawnTime: window.getGameTime(),
       type: "normal",
 
-      // Sistema de escalado dinámico
       dynamicScaling: {
         enabled: Math.random() < 0.4,
         baseSize: enemySize,
@@ -124,10 +135,9 @@ const EnemyManager = {
 
     this.enemies.push(enemy);
 
-    // Spawn extra con enemigos más pequeños también
+    // Resto del spawn extra igual...
     if (level > 3 && Math.random() < level * 0.04 && this.enemies.length < 25) {
       const extraEnemies = Math.min(2, Math.floor(level / 4));
-
       for (let i = 0; i < extraEnemies; i++) {
         setTimeout(() => {
           if (!window.isGameEnded() && this.enemies.length < 30) {

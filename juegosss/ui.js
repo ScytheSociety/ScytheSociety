@@ -60,122 +60,83 @@ const UI = {
    * Sistema de mensajes en la parte superior - MEJORADO Y MÁS ABAJO
    */
   showScreenMessage(message, color = "#FFFFFF") {
-    // Filtrar mensajes repetitivos
+    // Filtrar mensajes spam y reducir en móvil
     const spamMessages = [
       "expirando",
       "terminado",
       "renovado",
-      "Poder especial cargado",
       "PODER LISTO",
       "Combo:",
-      "Balas Penetrantes renovado",
-      "Balas Explosivas renovado",
-      "Disparo Amplio renovado",
-      "Disparo Rápido renovado",
+      "Balas Penetrantes",
+      "Balas Explosivas",
+      "Disparo Amplio",
+      "Disparo Rápido",
     ];
 
     if (spamMessages.some((spam) => message.includes(spam))) {
       return;
     }
 
+    // En móvil, solo mostrar mensajes importantes
+    if (GameConfig.isMobile) {
+      const importantMessages = [
+        "BOSS",
+        "NIVEL",
+        "VICTORIA",
+        "GAME OVER",
+        "VULNERABLE",
+        "FASE",
+      ];
+      if (!importantMessages.some((important) => message.includes(important))) {
+        return;
+      }
+    }
+
     const messageId = this.messageIdCounter++;
-    const positions = [{ y: 15 }, { y: 22 }]; // 🔥 MÁS ABAJO: era 8 y 16
 
-    // Limpiar mensajes antiguos
-    this.messagePositions = this.messagePositions.filter((pos) => pos.active);
-
-    // Si hay 2 mensajes, eliminar el más viejo
-    if (this.messagePositions.length >= 2) {
-      const oldestMessage = document.querySelector(
-        `[data-message-id="${this.messagePositions[0].id}"]`
-      );
-      if (oldestMessage) {
-        oldestMessage.remove();
-      }
-      this.messagePositions.shift();
+    // Limpiar mensajes anteriores más agresivamente
+    const existingMessages = document.querySelectorAll("[data-message-id]");
+    if (existingMessages.length >= (GameConfig.isMobile ? 1 : 2)) {
+      existingMessages[0].remove();
     }
 
-    // Mover mensaje existente hacia abajo
-    if (this.messagePositions.length === 1) {
-      const existingMessage = document.querySelector(
-        `[data-message-id="${this.messagePositions[0].id}"]`
-      );
-      if (existingMessage) {
-        existingMessage.style.top = "22%"; // 🔥 MÁS ABAJO
-      }
-      this.messagePositions[0].y = 22;
-    }
-
-    // Agregar nuevo mensaje arriba
-    const position = {
-      id: messageId,
-      y: 15, // 🔥 MÁS ABAJO
-      active: true,
-      timeCreated: Date.now(),
-    };
-    this.messagePositions.unshift(position);
-
-    // Crear elemento de mensaje con más vida
     const messageElement = document.createElement("div");
     messageElement.textContent = message;
     messageElement.setAttribute("data-message-id", messageId);
 
-    // 🔥 ESTILOS SIN FONDO NI MARCO - SOLO TEXTO PURO
     messageElement.style.cssText = `
     position: fixed;
     top: 15%;
     left: 50%;
     transform: translateX(-50%);
     color: ${color};
-    font-size: 16px;
+    font-size: ${GameConfig.isMobile ? "14px" : "16px"};
     font-weight: bold;
     font-family: var(--gothic-font), cursive;
     text-shadow: 
       -2px -2px 0 #000,
       2px -2px 0 #000,
       -2px 2px 0 #000,
-      2px 2px 0 #000,
-      0 0 10px ${color},
-      0 0 20px ${color},
-      0 0 30px rgba(0, 0, 0, 0.8);
+      2px 2px 0 #000;
     z-index: 1500;
-    background: transparent;
-    padding: 0;
-    border: none;
-    box-shadow: none;
-    backdrop-filter: none;
-    border-radius: 0;
     max-width: 80vw;
     text-align: center;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    animation: epicMessageAppear 0.5s ease-out;
+    animation: ${
+      GameConfig.isMobile ? "fadeIn" : "epicMessageAppear"
+    } 0.3s ease-out;
   `;
 
     document.body.appendChild(messageElement);
 
-    // Eliminar después de 3.5 segundos (más tiempo para leer)
-    setTimeout(() => {
-      if (messageElement.parentNode) {
-        messageElement.style.opacity = "0";
-        messageElement.style.transform =
-          "translateX(-50%) translateY(-15px) scale(0.9)";
-
-        setTimeout(() => {
-          if (messageElement.parentNode) {
-            document.body.removeChild(messageElement);
-          }
-        }, 400);
-      }
-
-      // Limpiar de la lista
-      const posIndex = this.messagePositions.findIndex(
-        (p) => p.id === messageId
-      );
-      if (posIndex !== -1) {
-        this.messagePositions.splice(posIndex, 1);
-      }
-    }, 3500); // 🔥 MÁS TIEMPO: era 3000, ahora 3500
+    // Eliminar más rápido en móvil
+    setTimeout(
+      () => {
+        if (messageElement.parentNode) {
+          messageElement.remove();
+        }
+      },
+      GameConfig.isMobile ? 2000 : 3500
+    );
   },
 
   // ======================================================
@@ -462,26 +423,31 @@ const UI = {
    * Crea efecto de partículas - SIN PARTÍCULAS EN MÓVIL
    */
   createParticleEffect(x, y, color, particleCount) {
-    // 🔥 NUEVO: No mostrar partículas en móvil para evitar lag
-    if (GameConfig.isMobile) {
-      return; // Salir inmediatamente en móvil
+    // Reducir partículas drasticamente para evitar lag
+    const maxParticles = GameConfig.isMobile ? 5 : Math.min(particleCount, 15);
+
+    // Salir si es móvil y hay muchas partículas ya
+    if (
+      GameConfig.isMobile &&
+      document.querySelectorAll("[data-particle]").length > 3
+    ) {
+      return;
     }
 
     const particles = [];
 
-    // Solo ejecutar en PC/Desktop
-    for (let i = 0; i < particleCount; i++) {
+    for (let i = 0; i < maxParticles; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 1 + Math.random() * 3;
+      const speed = 1 + Math.random() * 2; // Reducido
 
       particles.push({
         x: x,
         y: y,
-        size: 2 + Math.random() * 3,
+        size: GameConfig.isMobile ? 1 + Math.random() : 2 + Math.random() * 2,
         speedX: Math.cos(angle) * speed,
         speedY: Math.sin(angle) * speed,
-        life: 30 + Math.random() * 20,
-        maxLife: 50,
+        life: GameConfig.isMobile ? 15 : 25, // Vida más corta
+        maxLife: GameConfig.isMobile ? 15 : 25,
       });
     }
 
@@ -491,6 +457,14 @@ const UI = {
       const canvas = window.getCanvas();
       const ctx = window.getContext();
       if (!ctx) return;
+
+      // Usar requestAnimationFrame con throttling en móvil
+      const now = Date.now();
+      if (GameConfig.isMobile && now - (this.lastParticleUpdate || 0) < 33) {
+        requestAnimationFrame(animateParticles);
+        return;
+      }
+      this.lastParticleUpdate = now;
 
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
