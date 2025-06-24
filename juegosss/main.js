@@ -204,6 +204,66 @@ function setupEventListeners() {
   }
 }
 
+/**
+ * 🔥 NUEVO: Atajo de emergencia para reparar auto-disparo
+ */
+function setupEmergencyKeybinds() {
+  window.addEventListener("keydown", (e) => {
+    // F5 o R = Reparar auto-disparo
+    if (e.key === "F5" || e.key === "r" || e.key === "R") {
+      if (isCurrentlyPlaying() && !gameEnded) {
+        console.log("🚨 ATAJO DE EMERGENCIA: Reparando auto-disparo");
+
+        if (typeof BulletManager !== "undefined") {
+          BulletManager.forceRestartAutoShoot();
+
+          if (typeof UI !== "undefined" && UI.showScreenMessage) {
+            UI.showScreenMessage("🔧 Auto-disparo reparado", "#00FF00");
+          }
+        }
+
+        e.preventDefault();
+      }
+    }
+
+    // F6 = Mostrar estado de diagnóstico
+    if (e.key === "F6") {
+      if (typeof BulletManager !== "undefined") {
+        const status = BulletManager.getAutoShootStatus();
+        console.log("🔍 DIAGNÓSTICO AUTO-DISPARO:", status);
+
+        if (typeof UI !== "undefined" && UI.showScreenMessage) {
+          const statusText = status.active ? "✅ Funcionando" : "❌ Detenido";
+          UI.showScreenMessage(
+            `🔍 Auto-disparo: ${statusText}`,
+            status.active ? "#00FF00" : "#FF0000"
+          );
+        }
+      }
+    }
+  });
+
+  console.log(
+    "🔧 Atajos de emergencia configurados: F5/R = Reparar disparo, F6 = Diagnóstico"
+  );
+}
+
+// Llamar en setupEventListeners():
+function setupEventListeners() {
+  window.addEventListener("resize", setupCanvas);
+  window.addEventListener("contextmenu", (e) => e.preventDefault());
+  window.addEventListener("beforeunload", cleanupGame);
+
+  // Botones del menú
+  const emojiButton = document.getElementById("emoji-button");
+  if (emojiButton && typeof UI !== "undefined" && UI.openEmojiPicker) {
+    emojiButton.addEventListener("click", UI.openEmojiPicker);
+  }
+
+  // 🔥 NUEVO: Configurar atajos de emergencia
+  setupEmergencyKeybinds();
+}
+
 // Función auxiliar para detectar si estamos en background/foreground
 function isAppInForeground() {
   if (document.hidden !== undefined) {
@@ -281,7 +341,9 @@ function setupGamePauseSystem() {
     console.log("⏸️ Estados guardados:", { wasPlayingMusic, wasAutoShooting });
   };
 
-  // 🔥 FUNCIÓN DE REANUDACIÓN FORZADA PARA MÓVIL
+  /**
+   * 🔥 FUNCIÓN DE REANUDACIÓN FORZADA CORREGIDA - GARANTIZA AUTO-DISPARO
+   */
   const forceResumeGame = (reason = "desconocido") => {
     if (gameEnded) return;
 
@@ -301,15 +363,32 @@ function setupGamePauseSystem() {
     pausedByVisibility = false;
     lastActivityTime = Date.now();
 
-    // REANUDAR auto-disparo FORZADAMENTE
-    if (wasAutoShooting && !gameEnded && typeof BulletManager !== "undefined") {
-      // Doble verificación para asegurar reanudación
+    // 🔥 VERIFICACIÓN Y REANUDACIÓN GARANTIZADA DEL AUTO-DISPARO
+    if (typeof BulletManager !== "undefined") {
+      // SIEMPRE detener primero para evitar múltiples intervalos
+      BulletManager.stopAutoShoot();
+
+      // Verificar que estamos realmente jugando antes de reanudar
       setTimeout(() => {
-        if (!gameEnded && !gamePaused && BulletManager.startAutoShoot) {
+        if (!gameEnded && !gamePaused && isCurrentlyPlaying()) {
+          console.log("🔫 FORZANDO reanudación del auto-disparo");
           BulletManager.startAutoShoot();
-          console.log("▶️ Auto-disparo FORZADO");
+
+          // 🔥 VERIFICACIÓN ADICIONAL después de 1 segundo
+          setTimeout(() => {
+            if (!gameEnded && !gamePaused && isCurrentlyPlaying()) {
+              if (!BulletManager.autoShootInterval) {
+                console.log(
+                  "🔫 EMERGENCIA: Re-iniciando auto-disparo que falló"
+                );
+                BulletManager.startAutoShoot();
+              } else {
+                console.log("✅ Auto-disparo funcionando correctamente");
+              }
+            }
+          }, 1000);
         }
-      }, 100);
+      }, 200);
     }
 
     // REANUDAR música FORZADAMENTE
@@ -319,7 +398,7 @@ function setupGamePauseSystem() {
           AudioManager.startBackgroundMusic();
           console.log("▶️ Música FORZADA");
         }
-      }, 200);
+      }, 300);
     }
 
     // Mostrar mensaje de reanudación
@@ -337,7 +416,43 @@ function setupGamePauseSystem() {
     pauseTimeStart = 0;
   };
 
-  // 🔥 EVENTOS DE VISIBILIDAD MEJORADOS PARA MÓVIL
+  // 🔥 NUEVA FUNCIÓN: Verificar y reparar auto-disparo periodicamente
+  const checkAndRepairAutoShoot = () => {
+    if (gameEnded || gamePaused || pausedByVisibility) return;
+
+    // Solo verificar si estamos jugando activamente
+    if (isCurrentlyPlaying() && typeof BulletManager !== "undefined") {
+      // Si no hay auto-disparo pero deberíamos tenerlo, repararlo
+      if (!BulletManager.autoShootInterval) {
+        console.log("🚨 DETECTADO: Auto-disparo perdido - reparando...");
+        BulletManager.startAutoShoot();
+
+        if (typeof UI !== "undefined" && UI.showScreenMessage) {
+          UI.showScreenMessage("🔫 Auto-disparo reparado", "#FFFF00");
+        }
+      }
+    }
+  };
+
+  // 🔥 INICIAR VERIFICACIÓN PERIÓDICA (cada 3 segundos)
+  setInterval(checkAndRepairAutoShoot, 3000);
+
+  // 🔥 VERIFICACIÓN ADICIONAL cuando la ventana gana foco
+  window.addEventListener("focus", () => {
+    console.log("🔍 Ventana ganó foco");
+
+    // Verificación inmediata
+    setTimeout(() => forceResumeGame("ganancia de foco"), 150);
+
+    // Verificación adicional del auto-disparo después de 2 segundos
+    setTimeout(() => {
+      if (isCurrentlyPlaying() && !gameEnded && !gamePaused) {
+        checkAndRepairAutoShoot();
+      }
+    }, 2000);
+  });
+
+  // 🔥 VERIFICACIÓN cuando se hace visible la pestaña
   document.addEventListener("visibilitychange", () => {
     console.log(
       `👁️ Visibilidad cambió: ${document.hidden ? "OCULTO" : "VISIBLE"}`
@@ -346,21 +461,19 @@ function setupGamePauseSystem() {
     if (document.hidden) {
       forceGamePause("pestaña oculta");
     } else {
-      // En móvil, forzar reanudación inmediata
-      if (GameConfig.isMobile) {
-        setTimeout(() => {
-          if (!document.hidden) {
-            forceResumeGame("pestaña visible - móvil");
-          }
-        }, 100);
-      } else {
-        // En PC, verificación normal
-        setTimeout(() => {
-          if (!document.hidden) {
-            forceResumeGame("pestaña visible - PC");
-          }
-        }, 300);
-      }
+      // Múltiples intentos de reanudación
+      setTimeout(() => {
+        if (!document.hidden) {
+          forceResumeGame("pestaña visible");
+        }
+      }, 100);
+
+      // Verificación adicional del auto-disparo
+      setTimeout(() => {
+        if (!document.hidden && isCurrentlyPlaying()) {
+          checkAndRepairAutoShoot();
+        }
+      }, 1500);
     }
   });
 
@@ -817,6 +930,17 @@ function checkCollisions() {
     }
   }
 
+  // 🔥 CORREGIDO: Balas vs Enemigos EN NIVEL BOSS (esbirros)
+  if (
+    level === 11 &&
+    typeof BulletManager !== "undefined" &&
+    typeof EnemyManager !== "undefined" &&
+    EnemyManager.enemies &&
+    EnemyManager.enemies.length > 0
+  ) {
+    BulletManager.checkEnemyCollisions(EnemyManager.enemies);
+  }
+
   // Jugador vs Enemigos (niveles 1-10)
   if (
     level <= 10 &&
@@ -833,19 +957,33 @@ function checkCollisions() {
     }
   }
 
-  // Jugador vs Power-ups
+  // 🔥 CORREGIDO: Jugador vs Enemigos EN NIVEL BOSS (esbirros)
+  if (
+    level === 11 &&
+    typeof Player !== "undefined" &&
+    typeof EnemyManager !== "undefined" &&
+    EnemyManager.enemies &&
+    EnemyManager.enemies.length > 0
+  ) {
+    if (Player.checkEnemyCollisions && EnemyManager.enemies) {
+      if (Player.checkEnemyCollisions(EnemyManager.enemies)) {
+        if (Player.getLives() <= 0) {
+          gameOver();
+          return;
+        }
+      }
+    }
+  }
+
+  // Jugador vs Power-ups (TODOS LOS NIVELES)
   if (typeof Player !== "undefined" && typeof PowerUpManager !== "undefined") {
     if (Player.checkPowerUpCollisions && PowerUpManager.powerUps) {
       Player.checkPowerUpCollisions(PowerUpManager.powerUps);
     }
   }
 
-  // Jugador vs Hearts (excepto nivel 11)
-  if (
-    level < 11 &&
-    typeof Player !== "undefined" &&
-    typeof PowerUpManager !== "undefined"
-  ) {
+  // 🔥 CORREGIDO: Jugador vs Hearts (INCLUIR NIVEL 11)
+  if (typeof Player !== "undefined" && typeof PowerUpManager !== "undefined") {
     if (Player.checkHeartCollisions && PowerUpManager.hearts) {
       Player.checkHeartCollisions(PowerUpManager.hearts);
     }
@@ -875,8 +1013,6 @@ function checkCollisions() {
         }
       }
     }
-
-    // Otras colisiones del boss...
   }
 }
 
@@ -892,16 +1028,17 @@ function checkLifeBasedEvents() {
     return;
   }
 
-  // Lluvia de power-ups (1 vida)
-  if (playerLives === 1 && Math.random() < 0.01) {
+  // 🔥 AUMENTADO: Probabilidades más altas para eventos
+  // Lluvia de power-ups (1 vida) - era 0.01, ahora 0.015
+  if (playerLives === 1 && Math.random() < 0.015) {
     triggerPowerUpRain();
   }
-  // Modo frenesí (2 vidas o menos)
-  else if (playerLives <= 2 && Math.random() < 0.005) {
+  // Modo frenesí (2 vidas o menos) - era 0.005, ahora 0.012
+  else if (playerLives <= 2 && Math.random() < 0.012) {
     triggerFrenzyMode();
   }
-  // Tiempo lento (5 vidas o menos)
-  else if (playerLives <= 5 && Math.random() < 0.003) {
+  // Tiempo lento (5 vidas o menos) - era 0.003, ahora 0.008
+  else if (playerLives <= 5 && Math.random() < 0.008) {
     triggerSlowMotion();
   }
 }

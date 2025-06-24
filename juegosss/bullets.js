@@ -29,10 +29,57 @@ const BulletManager = {
   // ======================================================
 
   /**
-   * Inicia el disparo automático - MÁS RÁPIDO
+   * 🔥 NUEVO: Verifica si el auto-disparo está funcionando correctamente
+   */
+  isAutoShootActive() {
+    return this.autoShootInterval !== null;
+  },
+
+  /**
+   * 🔥 NUEVO: Fuerza el reinicio del auto-disparo con verificación
+   */
+  forceRestartAutoShoot() {
+    console.log("🔫 FORZANDO reinicio completo del auto-disparo");
+
+    // Detener cualquier intervalo existente
+    this.stopAutoShoot();
+
+    // Esperar un frame y luego reiniciar
+    setTimeout(() => {
+      if (!window.isGameEnded() && window.isCurrentlyPlaying()) {
+        this.startAutoShoot();
+
+        // Verificar que funcionó
+        setTimeout(() => {
+          if (!this.autoShootInterval) {
+            console.error("🚨 ERROR: Auto-disparo falló al reiniciar");
+            // Intentar una vez más
+            this.startAutoShoot();
+          } else {
+            console.log("✅ Auto-disparo reiniciado exitosamente");
+          }
+        }, 500);
+      }
+    }, 100);
+  },
+
+  /**
+   * Inicia el disparo automático - VERSION MEJORADA CON VERIFICACIÓN
    */
   startAutoShoot() {
+    // SIEMPRE detener primero para evitar múltiples intervalos
     this.stopAutoShoot();
+
+    // Verificar que estamos en condiciones de disparar
+    if (window.isGameEnded && window.isGameEnded()) {
+      console.log("🔫 No iniciar auto-disparo: juego terminado");
+      return;
+    }
+
+    if (!window.isCurrentlyPlaying || !window.isCurrentlyPlaying()) {
+      console.log("🔫 No iniciar auto-disparo: no estamos jugando");
+      return;
+    }
 
     const level = window.getLevel();
 
@@ -46,44 +93,67 @@ const BulletManager = {
     );
 
     this.autoShootInterval = setInterval(() => {
-      this.shootBullet();
+      // Verificación adicional antes de cada disparo
+      if (!window.isGameEnded() && window.isCurrentlyPlaying()) {
+        this.shootBullet();
+      } else {
+        console.log("🔫 Deteniendo auto-disparo: condiciones no válidas");
+        this.stopAutoShoot();
+      }
     }, shootDelay);
 
-    console.log(`🔫 Auto-disparo ÉPICO: ${shootDelay}ms`);
+    console.log(
+      `🔫 Auto-disparo ÉPICO iniciado: ${shootDelay}ms (Intervalo: ${this.autoShootInterval})`
+    );
   },
 
   /**
-   * Detiene el disparo automático
+   * Detiene el disparo automático - VERSION MEJORADA
    */
   stopAutoShoot() {
     if (this.autoShootInterval) {
       clearInterval(this.autoShootInterval);
       this.autoShootInterval = null;
+      console.log("🔫 Auto-disparo detenido correctamente");
     }
+  },
+
+  /**
+   * 🔥 NUEVO: Función de diagnóstico
+   */
+  getAutoShootStatus() {
+    return {
+      active: this.autoShootInterval !== null,
+      intervalId: this.autoShootInterval,
+      gameEnded: window.isGameEnded ? window.isGameEnded() : "unknown",
+      currentlyPlaying: window.isCurrentlyPlaying
+        ? window.isCurrentlyPlaying()
+        : "unknown",
+      level: window.getLevel ? window.getLevel() : "unknown",
+    };
   },
 
   // ======================================================
   // CREACIÓN DE BALAS - MÁXIMO 3 BALAS
   // ======================================================
 
-  /**
-   * Dispara una bala normal - CON SISTEMA ACUMULABLE Y DISPARO DUAL
-   */
   shootBullet() {
     const currentTime = Date.now();
     const level = window.getLevel();
     const canvas = window.getCanvas();
 
-    // Cooldown más rápido
+    // Cooldown del disparo normal
     let cooldownTime = Math.max(60, 150 - level * 10);
 
     // 🔥 OBTENER POWER-UPS ACTIVOS (sistema acumulable)
     const activePowerUps = Player.getActivePowerUps();
 
-    // 🔥 RAPID FIRE MÁS RÁPIDO
+    // 🔥 RAPID FIRE GARANTIZADO MÁS RÁPIDO - DINÁMICO
     const hasRapidFire = activePowerUps.some((p) => p.id === 3);
     if (hasRapidFire) {
-      cooldownTime = 15; // Era 30, ahora 20 (66% más rápido)
+      // 🔥 NUEVO: Siempre 60% más rápido que el disparo normal actual
+      cooldownTime = Math.floor(cooldownTime * 0.4); // 60% más rápido
+      cooldownTime = Math.max(15, cooldownTime); // Mínimo absoluto 15ms
     }
 
     if (currentTime - this.lastShootTime > cooldownTime) {
@@ -109,11 +179,10 @@ const BulletManager = {
       for (const powerUp of activePowerUps) {
         switch (powerUp.id) {
           case 0: // Escudo (ya no hay balas penetrantes)
-            // No hacer nada con las balas, el escudo se maneja en player.js
             break;
 
           case 1: // Disparo Amplio Escalable
-            bulletCount = Math.max(bulletCount, 5 + level); // Crece con nivel
+            bulletCount = Math.max(bulletCount, 5 + level);
             break;
 
           case 2: // Explosivo
@@ -130,7 +199,6 @@ const BulletManager = {
 
       // 🔥 POSICIONAMIENTO DUAL MEJORADO
       if (bulletCount === 2 && level >= 5) {
-        // Dos balas simétricas a los lados del jugador
         const spacing = playerSize.width * 0.3;
 
         for (let i = 0; i < 2; i++) {
@@ -145,12 +213,9 @@ const BulletManager = {
             y: playerPos.y - GameConfig.BULLET_HEIGHT,
             width: GameConfig.BULLET_WIDTH,
             height: GameConfig.BULLET_HEIGHT,
-            velocityX: 0, // Sin ángulo para las balas duales
+            velocityX: 0,
             velocityY: -bulletSpeed,
-
-            // Propiedades especiales acumulables
             ...bulletConfig,
-
             fromSpecialPower: false,
             level: level,
           };
@@ -172,10 +237,7 @@ const BulletManager = {
             height: GameConfig.BULLET_HEIGHT,
             velocityX: Math.sin(angle) * bulletSpeed,
             velocityY: -Math.cos(angle) * bulletSpeed,
-
-            // Propiedades especiales acumulables
             ...bulletConfig,
-
             fromSpecialPower: false,
             level: level,
           };

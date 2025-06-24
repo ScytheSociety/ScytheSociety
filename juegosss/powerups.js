@@ -43,12 +43,13 @@ const PowerUpManager = {
    */
   trySpawnHeart() {
     if (this.hearts.length >= 2) return; // Máximo 2 corazones
-    if (window.getLevel() >= 11) return; // No en boss level
+    // 🔥 CORREGIDO: Permitir corazones en nivel boss también
+    // if (window.getLevel() >= 11) return; // ❌ LÍNEA ELIMINADA
 
     const playerLives = Player.getLives();
     let heartChance = 0;
 
-    // 🔥 NUEVO: Sistema inteligente basado en vidas
+    // 🔥 Sistema inteligente basado en vidas
     if (playerLives <= 1) {
       heartChance = 0.004; // MUY probable con 1 vida
     } else if (playerLives <= 2) {
