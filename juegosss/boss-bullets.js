@@ -403,15 +403,13 @@ const BossBullets = {
         return;
       }
 
-      // 🔥 MÁS SEPARACIÓN: Reducir balas por frame
-      for (let i = 0; i < 1; i++) {
-        // CAMBIADO: de 2 a 1 bala por frame
-        const bulletAngle = angle + (i * Math.PI * 2) / 1; // Ajustar división
-        this.createTouhouBullet(bulletAngle, config.speed, config.color);
-      }
+      // 🔥 MÁS SEPARACIÓN: Solo 1 bala por frame con más espacio angular
+      const bulletAngle = angle;
+      this.createTouhouBullet(bulletAngle, config.speed, config.color);
 
-      angle += config.rotationSpeed * 1.2; // 🔥 Rotar un poco más rápido para compensar
-    }, config.bulletInterval + 10); // 🔥 +10ms más lento entre disparos
+      // 🔥 MAYOR INCREMENTO ANGULAR para más separación
+      angle += config.rotationSpeed * 2.0; // DOBLE rotación para más espacio
+    }, config.bulletInterval + 30); // 🔥 +30ms más lento entre disparos
 
     this.activeIntervals.push(spiralInterval);
   },
@@ -437,15 +435,18 @@ const BossBullets = {
     const canvas = window.getCanvas();
     const playerPos = Player.getPosition();
 
-    // Crear espacio para esquivar cerca del jugador
-    const safeZoneStart =
-      Math.floor((playerPos.x / canvas.width) * config.bulletCount) - 2;
-    const safeZoneEnd = safeZoneStart + (config.gapSize + 1); // +1 para más espacio
+    // 🔥 MENOS BALAS para más espacios
+    const bulletCount = Math.max(6, config.bulletCount - 4); // Reducir cantidad
 
-    for (let i = 0; i < config.bulletCount; i++) {
+    // Crear espacio MÁS GRANDE para esquivar cerca del jugador
+    const safeZoneStart =
+      Math.floor((playerPos.x / canvas.width) * bulletCount) - 2;
+    const safeZoneEnd = safeZoneStart + (config.gapSize + 3); // +3 para MÁS espacio
+
+    for (let i = 0; i < bulletCount; i++) {
       if (i >= safeZoneStart && i <= safeZoneEnd) continue;
 
-      const x = (canvas.width / config.bulletCount) * i;
+      const x = (canvas.width / bulletCount) * i;
       const bullet = this.createBulletObject(
         x,
         -20,
@@ -457,7 +458,7 @@ const BossBullets = {
       this.bulletPatterns.push(bullet);
     }
 
-    console.log("🧱 Muro de balas creado con zona segura");
+    console.log("🧱 Muro de balas creado con MAYOR zona segura");
   },
 
   createCrossPattern() {
@@ -469,32 +470,27 @@ const BossBullets = {
         return;
       }
 
-      // Disparar en 4 direcciones principales con más separación
+      // 🔥 MÁS SEPARACIÓN: Solo disparar en 2 direcciones por vez
       const directions = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
+      const selectedDirections = directions.slice(0, 2); // Solo 2 direcciones
 
-      directions.forEach((angle, index) => {
-        // 🔥 DELAY ESCALONADO para más separación
+      selectedDirections.forEach((angle, index) => {
         setTimeout(() => {
           this.createTouhouBullet(angle, config.speed, config.color);
-        }, index * 50); // 50ms entre cada dirección
+        }, index * 100); // 100ms entre cada dirección
       });
 
-      // Reducir frecuencia de diagonales
-      if (Math.random() < 0.2) {
-        // CAMBIADO: de 0.3 a 0.2 (menos frecuente)
-        const diagonals = [
-          Math.PI / 4,
-          (3 * Math.PI) / 4,
-          (5 * Math.PI) / 4,
-          (7 * Math.PI) / 4,
-        ];
+      // Reducir aún más la frecuencia de diagonales
+      if (Math.random() < 0.1) {
+        // CAMBIADO: de 0.2 a 0.1 (mucho menos frecuente)
+        const diagonals = [Math.PI / 4, (3 * Math.PI) / 4];
         diagonals.forEach((angle, index) => {
           setTimeout(() => {
             this.createTouhouBullet(angle, config.speed * 0.8, "#E74C3C");
-          }, (index + 4) * 50); // Después de las direcciones principales
+          }, (index + 2) * 100);
         });
       }
-    }, config.bulletInterval + 20); // 🔥 +20ms más lento
+    }, config.bulletInterval + 50); // 🔥 +50ms más lento
 
     this.activeIntervals.push(crossInterval);
   },

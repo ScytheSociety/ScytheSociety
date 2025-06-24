@@ -22,8 +22,9 @@ const BossMines = {
     const mobileScale = GameConfig.isMobile ? 0.7 : 1.0;
 
     return {
-      size: Math.max(25, 40 * screenScale * mobileScale),
-      dangerRadius: Math.max(80, 120 * screenScale * mobileScale),
+      // 🔥 TAMAÑO NORMAL para minas temporales
+      size: Math.max(25, 40 * screenScale * mobileScale), // Volver al tamaño original
+      dangerRadius: Math.max(80, 120 * screenScale * mobileScale), // Volver al original
       staticDangerRadius: Math.max(60, 80 * screenScale * mobileScale),
       armingTime: 60,
       explosionTime: 300,
@@ -75,6 +76,11 @@ const BossMines = {
       mine.armed = true;
     }
 
+    // 🔥 COLISIÓN SOLO PARA MINAS ESTÁTICAS
+    if (mine.armed && mine.isStatic) {
+      this.checkStaticMinePlayerCollision(mine);
+    }
+
     // Fase de advertencia
     if (mine.timer <= this.mineConfig.warningTime) {
       mine.warningPhase = true;
@@ -83,6 +89,42 @@ const BossMines = {
     // Parpadeo rápido al final
     if (mine.timer <= 60) {
       mine.blinkSpeed = 5;
+    }
+  },
+
+  checkStaticMinePlayerCollision(mine) {
+    const player = Player;
+    const playerPos = player.getPosition();
+    const playerSize = player.getSize();
+
+    const playerCenterX = playerPos.x + playerSize.width / 2;
+    const playerCenterY = playerPos.y + playerSize.height / 2;
+    const mineCenterX = mine.x + mine.width / 2;
+    const mineCenterY = mine.y + mine.height / 2;
+
+    const distance = Math.sqrt(
+      Math.pow(playerCenterX - mineCenterX, 2) +
+        Math.pow(playerCenterY - mineCenterY, 2)
+    );
+
+    // 🔥 COLISIÓN DIRECTA SOLO CON MINAS ESTÁTICAS
+    if (distance < mine.width / 2 + playerSize.width / 2) {
+      console.log("💥 Jugador pisó mina ESTÁTICA");
+
+      player.takeDamage();
+
+      if (this.bossManager.ui) {
+        this.bossManager.ui.showScreenMessage(
+          "💥 ¡PISASTE MINA ESTÁTICA!",
+          "#FFFF00"
+        );
+      }
+
+      // Explotar inmediatamente y causar reacción en cadena
+      const mineIndex = this.mines.indexOf(mine);
+      if (mineIndex !== -1) {
+        this.explodeMine(mineIndex);
+      }
     }
   },
 
@@ -120,8 +162,11 @@ const BossMines = {
     const playerPos = Player.getPosition();
     const canvas = window.getCanvas();
 
-    // Distancias adaptadas por dispositivo
-    const baseDistance = GameConfig.isMobile ? 400 : 300; // Más lejos en móvil
+    // 🔥 NUEVO: Spawnar minas por TODO EL MAPA (no solo cerca del jugador)
+    this.spawnRandomMapMines();
+
+    // Boss sigue apareciendo cerca del jugador pero más lejos
+    const baseDistance = GameConfig.isMobile ? 400 : 300;
     const extraDistance = GameConfig.isMobile ? 200 : 150;
 
     const huntingPositions = [
@@ -135,7 +180,6 @@ const BossMines = {
       { x: playerPos.x, y: playerPos.y - (baseDistance + 50) },
     ];
 
-    // Márgenes más grandes en móvil
     const margin = GameConfig.isMobile ? 200 : 150;
     const validPositions = huntingPositions.filter(
       (pos) =>
@@ -149,7 +193,6 @@ const BossMines = {
       const targetPos =
         validPositions[Math.floor(Math.random() * validPositions.length)];
 
-      // Boss aparece AÚN más lejos en móvil
       const bossVariation = GameConfig.isMobile ? 200 : 150;
       const bossX =
         targetPos.x -
@@ -173,7 +216,6 @@ const BossMines = {
         )
       );
 
-      // Crear efecto visual
       if (this.bossManager.ui) {
         this.bossManager.ui.createParticleEffect(
           this.bossManager.boss.x + this.bossManager.boss.width / 2,
@@ -183,102 +225,117 @@ const BossMines = {
         );
       }
 
-      // Mina más lejos del jugador en móvil
-      const mineDistanceFromPlayer = GameConfig.isMobile ? 250 : 180;
-
-      let mineX, mineY;
-      let attempts = 0;
-
-      do {
-        mineX = targetPos.x - 20 + (Math.random() - 0.5) * 100;
-        mineY = targetPos.y - 20 + (Math.random() - 0.5) * 100;
-
-        const distanceToPlayer = Math.sqrt(
-          Math.pow(mineX - playerPos.x, 2) + Math.pow(mineY - playerPos.y, 2)
-        );
-
-        if (distanceToPlayer >= mineDistanceFromPlayer) {
-          break;
-        }
-        attempts++;
-      } while (attempts < 10);
-
-      if (attempts >= 10) {
-        const angle = Math.random() * Math.PI * 2;
-        mineX = playerPos.x + Math.cos(angle) * mineDistanceFromPlayer;
-        mineY = playerPos.y + Math.sin(angle) * mineDistanceFromPlayer;
-      }
-
-      const minePos = this.getValidMinePosition(mineX, mineY);
-      const randomTimer = 420 + Math.random() * 120; // Más tiempo para reaccionar
-      const mine = this.createMine(minePos.x, minePos.y, randomTimer);
-      mine.armed = true;
-      mine.type = "teleport";
-      this.mines.push(mine);
+      // 🔥 MINA ESPECÍFICA DONDE ESTÁ EL JUGADOR AHORA
+      this.spawnTargetedMine(playerPos);
 
       console.log(
-        `💣 Boss teletransportado LEJOS (${
+        `💣 Boss teletransportado + minas globales spawneadas (${
           GameConfig.isMobile ? "MÓVIL" : "PC"
         })`
       );
     }
   },
 
+  spawnRandomMapMines() {
+    const canvas = window.getCanvas();
+    const mineCount = 2 + Math.floor(Math.random() * 2); // 2-3 minas
+
+    for (let i = 0; i < mineCount; i++) {
+      // 🔥 POSICIONES COMPLETAMENTE ALEATORIAS EN TODO EL MAPA
+      const x = 120 + Math.random() * (canvas.width - 240);
+      const y = 120 + Math.random() * (canvas.height - 240);
+
+      const validPos = this.getValidMinePosition(x, y);
+      const randomTimer = 420 + Math.random() * 120;
+
+      const mine = this.createMine(validPos.x, validPos.y, randomTimer);
+      mine.armed = true;
+      mine.type = "global";
+      this.mines.push(mine);
+    }
+
+    console.log(`💣 ${mineCount} minas globales spawneadas aleatoriamente`);
+  },
+
+  spawnTargetedMine(playerPos) {
+    // Mina específica donde está el jugador (pero no muy cerca)
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 180 + Math.random() * 120; // Entre 180-300px del jugador
+
+    const x = playerPos.x + Math.cos(angle) * distance;
+    const y = playerPos.y + Math.sin(angle) * distance;
+
+    const canvas = window.getCanvas();
+    const clampedX = Math.max(80, Math.min(canvas.width - 80, x));
+    const clampedY = Math.max(80, Math.min(canvas.height - 80, y));
+
+    const validPos = this.getValidMinePosition(clampedX, clampedY);
+    const randomTimer = 360 + Math.random() * 120;
+
+    const mine = this.createMine(validPos.x, validPos.y, randomTimer);
+    mine.armed = true;
+    mine.type = "targeted";
+    this.mines.push(mine);
+
+    console.log(`💣 Mina dirigida spawneada cerca del jugador`);
+  },
+
   spawnStaticMineField() {
     const canvas = window.getCanvas();
     const playerPos = Player.getPosition();
-    const mineCount = 2 + Math.floor(Math.random() * 2); // 2-3 minas (era 3-4)
+    const mineCount = 2 + Math.floor(Math.random() * 2); // 2-3 minas
 
     for (let i = 0; i < mineCount; i++) {
       let x, y;
-      const minDistanceFromPlayer = 200; // Distancia mínima del jugador
+      const minDistanceFromPlayer = 200;
 
       if (i === 0) {
-        // Bloquear ruta hacia esquina superior izquierda - MÁS LEJOS
-        x = playerPos.x - 250 - Math.random() * 100; // Era 200
-        y = playerPos.y - 250 - Math.random() * 100; // Era 200
+        x = playerPos.x - 250 - Math.random() * 100;
+        y = playerPos.y - 250 - Math.random() * 100;
       } else if (i === 1) {
-        // Bloquear ruta hacia esquina superior derecha - MÁS LEJOS
-        x = playerPos.x + 250 + Math.random() * 100; // Era 200
-        y = playerPos.y - 250 - Math.random() * 100; // Era 200
+        x = playerPos.x + 250 + Math.random() * 100;
+        y = playerPos.y - 250 - Math.random() * 100;
       } else if (i === 2) {
-        // Bloquear escape hacia abajo - MÁS LEJOS
-        x = playerPos.x + (Math.random() - 0.5) * 200; // Era 150
-        y = playerPos.y + 300 + Math.random() * 100; // Era 250
+        x = playerPos.x + (Math.random() - 0.5) * 200;
+        y = playerPos.y + 300 + Math.random() * 100;
       }
 
-      // Mantener dentro de pantalla con más margen
-      x = Math.max(120, Math.min(canvas.width - 120, x)); // Era 80
-      y = Math.max(120, Math.min(canvas.height - 120, y)); // Era 80
+      x = Math.max(120, Math.min(canvas.width - 120, x));
+      y = Math.max(120, Math.min(canvas.height - 120, y));
 
-      // 🔥 NUEVO: Verificar que no esté muy cerca del jugador
       const distanceToPlayer = Math.sqrt(
         Math.pow(x - playerPos.x, 2) + Math.pow(y - playerPos.y, 2)
       );
 
       if (distanceToPlayer < minDistanceFromPlayer) {
-        // Mover la mina más lejos en dirección opuesta al jugador
         const angle = Math.atan2(y - playerPos.y, x - playerPos.x);
         x = playerPos.x + Math.cos(angle) * minDistanceFromPlayer;
         y = playerPos.y + Math.sin(angle) * minDistanceFromPlayer;
 
-        // Reajustar dentro de pantalla
         x = Math.max(120, Math.min(canvas.width - 120, x));
         y = Math.max(120, Math.min(canvas.height - 120, y));
       }
 
       const validPos = this.getValidMinePosition(x, y);
 
-      // Crear mina estática con más tiempo
+      // 🔥 CREAR MINA ESTÁTICA MÁS PEQUEÑA
       const staticMine = this.createMine(validPos.x, validPos.y, null);
       staticMine.isStatic = true;
       staticMine.armed = true;
       staticMine.type = "static";
+
+      // 🔥 HACER MÁS PEQUEÑAS SOLO LAS ESTÁTICAS
+      const staticSizeReduction = 0.7; // 30% más pequeñas
+      staticMine.width = this.mineConfig.size * staticSizeReduction;
+      staticMine.height = this.mineConfig.size * staticSizeReduction;
       staticMine.dangerRadius = this.mineConfig.staticDangerRadius;
+
       this.mines.push(staticMine);
     }
 
-    console.log(`💣 Campo de ${mineCount} minas estáticas spawneado MÁS LEJOS`);
+    console.log(
+      `💣 Campo de ${mineCount} minas estáticas MÁS PEQUEÑAS spawneado`
+    );
   },
 
   // Función para evitar minas superpuestas
@@ -317,16 +374,18 @@ const BossMines = {
   },
 
   createMine(x, y, customTimer = null) {
+    const baseSize = this.mineConfig.size;
+
     return {
       x: x,
       y: y,
-      width: this.mineConfig.size,
-      height: this.mineConfig.size,
+      width: baseSize, // Tamaño normal por defecto
+      height: baseSize,
       timer: customTimer || this.mineConfig.explosionTime,
       armed: false,
       blinkTimer: 0,
       blinkSpeed: this.mineConfig.blinkSpeed,
-      dangerRadius: this.mineConfig.dangerRadius, // Se ajustará para estáticas
+      dangerRadius: this.mineConfig.dangerRadius,
       showDangerZone: true,
       warningPhase: false,
       pulseIntensity: 0,
@@ -344,14 +403,30 @@ const BossMines = {
     if (index < 0 || index >= this.mines.length) return;
 
     const mine = this.mines[index];
-    console.log(`💥 Mina ${mine.type} explotando en (${mine.x}, ${mine.y})`);
+    console.log(
+      `💥 Mina ${mine.type} (${
+        mine.isStatic ? "ESTÁTICA" : "TEMPORAL"
+      }) explotando en (${mine.x}, ${mine.y})`
+    );
 
     this.createExplosionEffects(mine);
     this.checkPlayerDamage(mine);
-    this.triggerChainReaction(mine, index);
 
-    // Eliminar mina original
+    // 🔥 GUARDAR DATOS ANTES DE ELIMINAR para reacción en cadena
+    const mineData = {
+      x: mine.x,
+      y: mine.y,
+      width: mine.width,
+      height: mine.height,
+      type: mine.type,
+      isStatic: mine.isStatic,
+    };
+
+    // Eliminar mina original PRIMERO
     this.mines.splice(index, 1);
+
+    // Luego activar reacción en cadena
+    this.triggerChainReaction(mineData, -1); // -1 porque ya eliminamos la mina
 
     if (window.AudioManager) {
       AudioManager.playSound("explosion");
@@ -376,20 +451,38 @@ const BossMines = {
         Math.pow(explodedX - mineX, 2) + Math.pow(explodedY - mineY, 2)
       );
 
+      // 🔥 REACCIÓN EN CADENA: Cualquier mina armada (temporal O estática)
       if (distance <= chainRadius && mine.armed) {
-        minesToExplode.push(i);
+        minesToExplode.push({
+          index: i,
+          type: mine.type,
+          isStatic: mine.isStatic,
+        });
       }
     }
 
     if (minesToExplode.length > 0) {
       console.log(`🔥 Explosión en cadena: ${minesToExplode.length} minas`);
+      console.log(`🔥 Tipos: ${minesToExplode.map((m) => m.type).join(", ")}`);
 
-      minesToExplode.forEach((mineIndex, delay) => {
+      // 🔥 EXPLOTAR EN SECUENCIA con delay
+      minesToExplode.forEach((mineData, delay) => {
         setTimeout(() => {
-          if (mineIndex < this.mines.length && this.mines[mineIndex]) {
-            this.explodeMine(mineIndex);
+          // Verificar que la mina aún existe (no fue explotada por otra cadena)
+          if (
+            mineData.index < this.mines.length &&
+            this.mines[mineData.index]
+          ) {
+            const currentMine = this.mines[mineData.index];
+            // Verificar que es la misma mina (por posición)
+            if (
+              currentMine.x === this.mines[mineData.index].x &&
+              currentMine.y === this.mines[mineData.index].y
+            ) {
+              this.explodeMine(mineData.index);
+            }
           }
-        }, delay * 150);
+        }, delay * 150); // 150ms entre cada explosión
       });
     }
   },
@@ -428,29 +521,36 @@ const BossMines = {
 
     const centerX = mine.x + mine.width / 2;
     const centerY = mine.y + mine.height / 2;
-    const waveCount = mine.type === "static" ? 7 : 5;
 
-    for (let i = 0; i < waveCount; i++) {
-      setTimeout(() => {
-        const color =
-          mine.type === "static"
-            ? "#FFFF00"
-            : i % 2 === 0
-            ? "#FF8800"
-            : "#FF0000";
-        this.bossManager.ui.createParticleEffect(centerX, centerY, color, 35);
-      }, i * 100);
-    }
+    // 🔥 EFECTOS DIFERENTES SEGÚN TIPO
+    if (mine.isStatic) {
+      // Minas estáticas: Explosión amarilla más intensa
+      const waveCount = 8;
+      for (let i = 0; i < waveCount; i++) {
+        setTimeout(() => {
+          const color = i % 2 === 0 ? "#FFFF00" : "#FFA500";
+          this.bossManager.ui.createParticleEffect(centerX, centerY, color, 40);
+        }, i * 80);
+      }
 
-    if (mine.type === "static") {
+      // Efecto final blanco brillante
       setTimeout(() => {
         this.bossManager.ui.createParticleEffect(
           centerX,
           centerY,
           "#FFFFFF",
-          60
+          70
         );
-      }, 300);
+      }, 400);
+    } else {
+      // Minas temporales: Explosión roja/naranja
+      const waveCount = 5;
+      for (let i = 0; i < waveCount; i++) {
+        setTimeout(() => {
+          const color = i % 2 === 0 ? "#FF8800" : "#FF0000";
+          this.bossManager.ui.createParticleEffect(centerX, centerY, color, 35);
+        }, i * 100);
+      }
     }
   },
 
