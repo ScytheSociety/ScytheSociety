@@ -955,22 +955,34 @@ function triggerFrenzyMode() {
 }
 
 function triggerSlowMotion() {
-  if (slowMotionActive) return;
-
   if (typeof UI !== "undefined" && UI.showScreenMessage) {
-    UI.showScreenMessage("🌊 ¡MUNDO ACUÁTICO! 🌊", "#0080FF");
+    UI.showScreenMessage("🌊 ¡MUNDO SUBACUÁTICO DE EMERGENCIA! 🌊", "#0080FF");
   }
 
   slowMotionActive = true;
-  slowMotionFactor = 0.1;
+  slowMotionFactor = 0.15; // 🔥 Mismo factor que en combo.js
+
+  // 🔥 RALENTIZAR jugador pero menos que los enemigos
+  if (typeof Player !== "undefined") {
+    Player.originalMoveSpeed = Player.moveSpeed;
+    Player.moveSpeed = 0.25; // Jugador menos afectado
+    console.log("🏊 Jugador nadando de emergencia");
+  }
 
   setTimeout(() => {
     slowMotionActive = false;
     slowMotionFactor = 1.0;
-    if (typeof UI !== "undefined" && UI.showScreenMessage) {
-      UI.showScreenMessage("⚡ Superficie alcanzada", "#FFFFFF");
+
+    // Restaurar velocidad del jugador
+    if (typeof Player !== "undefined" && Player.originalMoveSpeed) {
+      Player.moveSpeed = Player.originalMoveSpeed;
+      console.log("🏃 Emergencia terminada - jugador en superficie");
     }
-  }, 10000);
+
+    if (typeof UI !== "undefined" && UI.showScreenMessage) {
+      UI.showScreenMessage("⚡ Emergencia resuelta", "#FFFFFF");
+    }
+  }, 10000); // 10 segundos también aquí
 }
 
 /**

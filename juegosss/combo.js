@@ -472,7 +472,7 @@ const ComboSystem = {
   },
 
   /**
-   * 🌊 Tiempo lento épico - CORREGIDO PARA RALENTIZAR JUGADOR
+   * 🌊 Tiempo lento épico MÁS DRAMÁTICO - ENEMIGOS SÚPER LENTOS
    */
   triggerSlowMotion() {
     // Verificar si ya hay otro evento activo
@@ -481,19 +481,20 @@ const ComboSystem = {
       return;
     }
 
-    UI.showScreenMessage("🌊 ¡TIEMPO SUBMARINO! 🌊", "#0080FF");
-    console.log("🌊 Activando tiempo lento submarino por 8 segundos");
+    UI.showScreenMessage("🌊 ¡MUNDO SUBACUÁTICO! 🌊", "#0080FF");
+    console.log("🌊 Activando mundo subacuático ÉPICO por 10 segundos");
 
     window.slowMotionActive = true;
-    window.slowMotionFactor = 0.08;
+    window.slowMotionFactor = 0.15; // 🔥 MÁS LENTO: era 0.08, ahora 0.15 (pero enemigos van a 0.075 efectivo)
 
-    // 🔥 NUEVO: Ralentizar también al jugador durante tiempo lento
+    // 🔥 RALENTIZAR también al jugador pero menos que antes
     if (window.Player) {
       window.Player.originalMoveSpeed = window.Player.moveSpeed; // Guardar velocidad original
-      window.Player.moveSpeed = 0.15; // 85% más lento
-      console.log("🐌 Jugador también ralentizado durante tiempo submarino");
+      window.Player.moveSpeed = 0.25; // 🔥 MENOS LENTO para el jugador: era 0.15, ahora 0.25
+      console.log("🏊 Jugador nadando en mundo subacuático (75% más lento)");
     }
 
+    // 🔥 DURACIÓN MÁS LARGA: 10 segundos para disfrutar el efecto
     setTimeout(() => {
       window.slowMotionActive = false;
       window.slowMotionFactor = 1.0;
@@ -501,14 +502,14 @@ const ComboSystem = {
       // 🔥 RESTAURAR velocidad del jugador
       if (window.Player && window.Player.originalMoveSpeed) {
         window.Player.moveSpeed = window.Player.originalMoveSpeed;
-        console.log("🏃 Velocidad del jugador restaurada");
+        console.log("🏃 Jugador salió del agua - velocidad normal restaurada");
       }
 
-      UI.showScreenMessage("⚡ Superficie alcanzada", "#FFFFFF");
+      UI.showScreenMessage("⚡ ¡SUPERFICIE ALCANZADA!", "#FFFFFF");
       console.log(
-        "🌊 Tiempo submarino terminado - velocidad normal restaurada"
+        "🌊 Mundo subacuático terminado - todo vuelve a velocidad normal"
       );
-    }, 8000);
+    }, 10000); // 🔥 10 segundos de duración
 
     AudioManager.playSound("special");
   },

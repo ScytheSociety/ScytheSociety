@@ -293,7 +293,7 @@ const EnemyManager = {
   },
 
   /**
-   * Actualiza el movimiento de todos los enemigos - IDÉNTICO PARA TODOS
+   * Actualiza el movimiento de todos los enemigos - CON TIEMPO LENTO MEJORADO
    */
   updateEnemyMovement() {
     const canvas = window.getCanvas();
@@ -301,16 +301,37 @@ const EnemyManager = {
     const wallBounceFactorY = 1.1;
     const enemyBounceFactorBase = 1.15;
 
-    // 🔥 FACTOR DE TIEMPO LENTO - IGUAL PARA TODOS
-    const slowFactor = window.slowMotionActive ? window.slowMotionFactor : 1.0;
+    // 🔥 FACTOR DE TIEMPO LENTO MEJORADO - MÁS LENTO PARA ENEMIGOS
+    let slowFactor = 1.0;
+    let extraSlowZone = false;
+
+    if (window.slowMotionActive) {
+      slowFactor = window.slowMotionFactor * 0.5; // 🔥 ENEMIGOS AÚN MÁS LENTOS (50% del factor base)
+      console.log("🌊 Mundo subacuático - enemigos súper lentos:", slowFactor);
+    }
+
     const bounceSlowFactor = slowFactor;
 
     for (let i = 0; i < this.enemies.length; i++) {
       const enemy = this.enemies[i];
 
-      // 🔥 Movimiento IDÉNTICO - sin diferencias por dispositivo
-      enemy.x += enemy.velocityX * enemy.speedFactor * slowFactor;
-      enemy.y += enemy.velocityY * enemy.speedFactor * slowFactor;
+      // 🔥 NUEVO: Detectar si está en la zona de mensajes (10%-25% desde arriba)
+      const messageZoneStart = canvas.height * 0.1; // 10% desde arriba
+      const messageZoneEnd = canvas.height * 0.25; // 25% desde arriba
+
+      const isInMessageZone =
+        enemy.y >= messageZoneStart && enemy.y <= messageZoneEnd;
+
+      // 🔥 FACTOR EXTRA LENTO en zona de mensajes durante tiempo lento
+      let finalSlowFactor = slowFactor;
+      if (window.slowMotionActive && isInMessageZone) {
+        finalSlowFactor = slowFactor * 0.2; // 🔥 SÚPER LENTO en zona de mensajes (20% del ya lento)
+        extraSlowZone = true;
+      }
+
+      // 🔥 Movimiento CON factor de lentitud aplicado
+      enemy.x += enemy.velocityX * enemy.speedFactor * finalSlowFactor;
+      enemy.y += enemy.velocityY * enemy.speedFactor * finalSlowFactor;
 
       // Actualizar escalado dinámico
       this.updateDynamicScaling(enemy);
@@ -319,7 +340,7 @@ const EnemyManager = {
       const bounceMultiplierX = enemy.isMeteor ? 1.0 : wallBounceFactorX;
       const bounceMultiplierY = enemy.isMeteor ? 1.2 : wallBounceFactorY;
 
-      // Rebotes en paredes laterales
+      // Rebotes en paredes laterales (también afectados por lentitud)
       if (enemy.x <= 0) {
         enemy.velocityX =
           Math.abs(enemy.velocityX) * bounceMultiplierX * bounceSlowFactor;
@@ -334,7 +355,7 @@ const EnemyManager = {
         enemy.bounceCount++;
       }
 
-      // Rebote en techo
+      // Rebote en techo (también más lento)
       if (enemy.y <= 0) {
         enemy.velocityY =
           Math.abs(enemy.velocityY) * bounceMultiplierY * bounceSlowFactor;
@@ -342,7 +363,7 @@ const EnemyManager = {
         enemy.bounceCount++;
       }
 
-      // Rebote en suelo - SIEMPRE hacia arriba
+      // Rebote en suelo - SIEMPRE hacia arriba (también más lento)
       if (enemy.y + enemy.height >= canvas.height) {
         enemy.velocityY =
           -Math.abs(enemy.velocityY) * bounceMultiplierY * bounceSlowFactor;
@@ -351,14 +372,25 @@ const EnemyManager = {
         enemy.bounceCount++;
       }
 
-      // Aumento de agresividad después de rebotes
+      // Aumento de agresividad después de rebotes (menos frecuente en tiempo lento)
       if (enemy.bounceCount >= enemy.maxBounces) {
-        enemy.speedFactor = Math.min(enemy.speedFactor * 1.2, 2.0);
+        const aggressionMultiplier = window.slowMotionActive ? 1.05 : 1.2; // Menos agresivo en tiempo lento
+        enemy.speedFactor = Math.min(
+          enemy.speedFactor * aggressionMultiplier,
+          2.0
+        );
         enemy.bounceCount = 0;
       }
 
-      // Cambio de dirección más frecuente para meteoritos
-      const directionChangeChance = enemy.isMeteor ? 0.002 : 0.001;
+      // Cambio de dirección más frecuente para meteoritos (menos en tiempo lento)
+      const directionChangeChance = enemy.isMeteor
+        ? window.slowMotionActive
+          ? 0.0005
+          : 0.002
+        : window.slowMotionActive
+        ? 0.0002
+        : 0.001;
+
       if (Math.random() < directionChangeChance) {
         const angle = Math.random() * ((2 * Math.PI) / 3) - Math.PI / 3;
         const speed = Math.sqrt(
@@ -368,7 +400,7 @@ const EnemyManager = {
         enemy.velocityY = Math.abs(Math.cos(angle) * speed);
       }
 
-      // Colisiones entre enemigos (sin cambios)
+      // Colisiones entre enemigos (también más lentas)
       for (let j = i + 1; j < this.enemies.length; j++) {
         const otherEnemy = this.enemies[j];
 
@@ -383,9 +415,15 @@ const EnemyManager = {
             const nx = dx / dist;
             const ny = dy / dist;
 
-            const enemyBounceFactor = enemyBounceFactorBase * enemy.speedFactor;
+            // Colisiones también afectadas por tiempo lento
+            const collisionSlowFactor = window.slowMotionActive ? 0.7 : 1.0;
+
+            const enemyBounceFactor =
+              enemyBounceFactorBase * enemy.speedFactor * collisionSlowFactor;
             const otherEnemyBounceFactor =
-              enemyBounceFactorBase * otherEnemy.speedFactor;
+              enemyBounceFactorBase *
+              otherEnemy.speedFactor *
+              collisionSlowFactor;
 
             const p1 = enemy.velocityX * nx + enemy.velocityY * ny;
             const p2 = otherEnemy.velocityX * nx + otherEnemy.velocityY * ny;
@@ -400,9 +438,13 @@ const EnemyManager = {
             otherEnemy.velocityY =
               (otherEnemy.velocityY + ny * (p1 - p2)) * otherEnemyBounceFactor;
 
-            enemy.speedFactor = Math.min(enemy.speedFactor * 1.08, 2.0);
+            const speedFactorIncrease = window.slowMotionActive ? 1.03 : 1.08;
+            enemy.speedFactor = Math.min(
+              enemy.speedFactor * speedFactorIncrease,
+              2.0
+            );
             otherEnemy.speedFactor = Math.min(
-              otherEnemy.speedFactor * 1.08,
+              otherEnemy.speedFactor * speedFactorIncrease,
               2.0
             );
 
@@ -417,8 +459,13 @@ const EnemyManager = {
         }
       }
 
-      // 🔥 LÍMITE DE VELOCIDAD IDÉNTICO - MISMA VELOCIDAD MÁXIMA PARA TODOS
-      const maxSpeed = canvas.height * 0.025 * (1 + window.getLevel() * 0.15);
+      // 🔥 LÍMITE DE VELOCIDAD AJUSTADO por tiempo lento
+      const baseMaxSpeed =
+        canvas.height * 0.025 * (1 + window.getLevel() * 0.15);
+      const maxSpeed = window.slowMotionActive
+        ? baseMaxSpeed * 0.3
+        : baseMaxSpeed; // 30% de velocidad máxima en tiempo lento
+
       const currentSpeed = Math.sqrt(
         enemy.velocityX * enemy.velocityX + enemy.velocityY * enemy.velocityY
       );
@@ -427,6 +474,13 @@ const EnemyManager = {
         enemy.velocityX *= ratio;
         enemy.velocityY *= ratio;
       }
+    }
+
+    // 🔥 MOSTRAR DEBUG INFO ocasionalmente
+    if (window.slowMotionActive && window.getGameTime() % 60 === 0) {
+      console.log(
+        `🌊 Mundo subacuático activo - Factor: ${slowFactor}, Zona extra lenta: ${extraSlowZone}`
+      );
     }
   },
 
