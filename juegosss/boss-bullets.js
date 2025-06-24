@@ -237,21 +237,19 @@ const BossBullets = {
 
   startShieldSpawning() {
     let shieldCount = 0;
-    const maxShields = 12; // Reducido: 12 escudos en 120 segundos (cada 10s)
+    const maxShields = 12;
 
     const spawnShield = () => {
       if (!this.patternActive || shieldCount >= maxShields) return;
 
-      // Solo spawnar si hay pocos power-ups en pantalla
-      if (window.PowerUpManager && window.PowerUpManager.powerUps.length < 3) {
-        this.spawnProtectiveShield();
-        shieldCount++;
-        console.log(
-          `🛡️ Escudo ${shieldCount}/${maxShields} spawneado en fase Touhou`
-        );
-      }
+      // 🔥 CORREGIDO: Spawnar escudo SIEMPRE cada 10 segundos
+      this.spawnProtectiveShield();
+      shieldCount++;
+      console.log(
+        `🛡️ Escudo ${shieldCount}/${maxShields} spawneado (automático cada 10s)`
+      );
 
-      // 🔥 CAMBIADO: Cada 10 segundos (era 4 segundos)
+      // Programar siguiente escudo en 10 segundos
       setTimeout(spawnShield, 10000);
     };
 
@@ -327,17 +325,17 @@ const BossBullets = {
     this.patternActive = false;
     this.cleanup();
 
+    // 🔥 BOSS SE QUEDA EN EL CENTRO hasta ser vulnerable
+    if (this.bossManager.movement) {
+      this.bossManager.movement.stopMovementAndCenter(); // MANTENER en centro
+    }
+
     // Si es fase aleatoria, no hacer vulnerable automáticamente
     if (this.bossManager.phases && this.bossManager.phases.isRandomPhase) {
       console.log(
         "🌟 Fase aleatoria completada - delegando al sistema de fases"
       );
       return;
-    }
-
-    // Centrar boss y mensaje final
-    if (this.bossManager.movement) {
-      this.bossManager.movement.teleportToCenter();
     }
 
     if (this.bossManager.comments) {
@@ -350,16 +348,17 @@ const BossBullets = {
       this.bossManager.ui.showScreenMessage("⚔️ ¡BOSS VULNERABLE!", "#00FF00");
     }
 
-    // Boss vuelve a ser vulnerable
+    // Boss vulnerable PERO QUIETO en centro
     this.bossManager.isImmune = false;
     this.bossManager.immunityTimer = 0;
 
-    // Reanudar movimiento normal
+    // 🔥 NO REANUDAR MOVIMIENTO HASTA DESPUÉS DE 3 SEGUNDOS
     setTimeout(() => {
       if (this.bossManager.movement) {
         this.bossManager.movement.enableFluidHunting();
+        console.log("🏃 Boss ahora puede moverse después de ser vulnerable");
       }
-    }, 2000);
+    }, 3000); // 3 segundos quieto siendo vulnerable
   },
 
   executePattern(patternType) {

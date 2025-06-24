@@ -301,80 +301,59 @@ const EnemyManager = {
     const wallBounceFactorY = 1.1;
     const enemyBounceFactorBase = 1.15;
 
-    // 🔥 FACTOR DE TIEMPO LENTO MEJORADO - MÁS LENTO PARA ENEMIGOS
-    let slowFactor = 1.0;
-    let extraSlowZone = false;
-
+    // 🔥 TIEMPO LENTO FORZADO PARA TODOS
+    let globalSlowFactor = 1.0;
     if (window.slowMotionActive) {
-      slowFactor = window.slowMotionFactor * 0.5; // 🔥 ENEMIGOS AÚN MÁS LENTOS (50% del factor base)
-      console.log("🌊 Mundo subacuático - enemigos súper lentos:", slowFactor);
+      globalSlowFactor = 0.05; // 5% de velocidad OBLIGATORIO
+      console.log("🌊 MUNDO SUBACUÁTICO ACTIVO - TODO al 5% de velocidad");
     }
-
-    const bounceSlowFactor = slowFactor;
 
     for (let i = 0; i < this.enemies.length; i++) {
       const enemy = this.enemies[i];
 
-      // 🔥 NUEVO: Detectar si está en la zona de mensajes (10%-25% desde arriba)
-      const messageZoneStart = canvas.height * 0.1; // 10% desde arriba
-      const messageZoneEnd = canvas.height * 0.25; // 25% desde arriba
+      // 🔥 APLICAR LENTITUD GLOBAL A TODO MOVIMIENTO
+      enemy.x += enemy.velocityX * enemy.speedFactor * globalSlowFactor;
+      enemy.y += enemy.velocityY * enemy.speedFactor * globalSlowFactor;
 
-      const isInMessageZone =
-        enemy.y >= messageZoneStart && enemy.y <= messageZoneEnd;
+      // 🔥 TODOS LOS REBOTES también lentos
+      const bounceSlowFactor = globalSlowFactor;
 
-      // 🔥 FACTOR EXTRA LENTO en zona de mensajes durante tiempo lento
-      let finalSlowFactor = slowFactor;
-      if (window.slowMotionActive && isInMessageZone) {
-        finalSlowFactor = slowFactor * 0.2; // 🔥 SÚPER LENTO en zona de mensajes (20% del ya lento)
-        extraSlowZone = true;
-      }
-
-      // 🔥 Movimiento CON factor de lentitud aplicado
-      enemy.x += enemy.velocityX * enemy.speedFactor * finalSlowFactor;
-      enemy.y += enemy.velocityY * enemy.speedFactor * finalSlowFactor;
-
-      // Actualizar escalado dinámico
+      // Resto del código igual pero CON globalSlowFactor aplicado...
       this.updateDynamicScaling(enemy);
 
-      // Rebotes más agresivos para meteoritos
-      const bounceMultiplierX = enemy.isMeteor ? 1.0 : wallBounceFactorX;
-      const bounceMultiplierY = enemy.isMeteor ? 1.2 : wallBounceFactorY;
-
-      // Rebotes en paredes laterales (también afectados por lentitud)
       if (enemy.x <= 0) {
         enemy.velocityX =
-          Math.abs(enemy.velocityX) * bounceMultiplierX * bounceSlowFactor;
+          Math.abs(enemy.velocityX) * wallBounceFactorX * bounceSlowFactor;
         enemy.x = 0;
         enemy.velocityY *= 0.9 + Math.random() * 0.2;
         enemy.bounceCount++;
       } else if (enemy.x + enemy.width >= canvas.width) {
         enemy.velocityX =
-          -Math.abs(enemy.velocityX) * bounceMultiplierX * bounceSlowFactor;
+          -Math.abs(enemy.velocityX) * wallBounceFactorX * bounceSlowFactor;
         enemy.x = canvas.width - enemy.width;
         enemy.velocityY *= 0.9 + Math.random() * 0.2;
         enemy.bounceCount++;
       }
 
-      // Rebote en techo (también más lento)
       if (enemy.y <= 0) {
         enemy.velocityY =
-          Math.abs(enemy.velocityY) * bounceMultiplierY * bounceSlowFactor;
+          Math.abs(enemy.velocityY) * wallBounceFactorY * bounceSlowFactor;
         enemy.y = 0;
         enemy.bounceCount++;
       }
 
-      // Rebote en suelo - SIEMPRE hacia arriba (también más lento)
       if (enemy.y + enemy.height >= canvas.height) {
         enemy.velocityY =
-          -Math.abs(enemy.velocityY) * bounceMultiplierY * bounceSlowFactor;
+          -Math.abs(enemy.velocityY) * wallBounceFactorY * bounceSlowFactor;
         enemy.y = canvas.height - enemy.height;
-        enemy.velocityX += (Math.random() - 0.5) * (canvas.width * 0.004);
+        enemy.velocityX +=
+          (Math.random() - 0.5) * (canvas.width * 0.004) * globalSlowFactor;
         enemy.bounceCount++;
       }
 
-      // Aumento de agresividad después de rebotes (menos frecuente en tiempo lento)
+      // 🔥 AGRESIVIDAD también lenta
       if (enemy.bounceCount >= enemy.maxBounces) {
-        const aggressionMultiplier = window.slowMotionActive ? 1.05 : 1.2; // Menos agresivo en tiempo lento
+        const aggressionMultiplier = window.slowMotionActive ? 1.01 : 1.2;
         enemy.speedFactor = Math.min(
           enemy.speedFactor * aggressionMultiplier,
           2.0
@@ -382,15 +361,9 @@ const EnemyManager = {
         enemy.bounceCount = 0;
       }
 
-      // Cambio de dirección más frecuente para meteoritos (menos en tiempo lento)
-      const directionChangeChance = enemy.isMeteor
-        ? window.slowMotionActive
-          ? 0.0005
-          : 0.002
-        : window.slowMotionActive
-        ? 0.0002
-        : 0.001;
-
+      // 🔥 CAMBIO DE DIRECCIÓN también lento
+      const directionChangeChance =
+        (enemy.isMeteor ? 0.002 : 0.001) * globalSlowFactor;
       if (Math.random() < directionChangeChance) {
         const angle = Math.random() * ((2 * Math.PI) / 3) - Math.PI / 3;
         const speed = Math.sqrt(
@@ -400,10 +373,9 @@ const EnemyManager = {
         enemy.velocityY = Math.abs(Math.cos(angle) * speed);
       }
 
-      // Colisiones entre enemigos (también más lentas)
+      // Colisiones entre enemigos (resto igual pero con globalSlowFactor aplicado)
       for (let j = i + 1; j < this.enemies.length; j++) {
         const otherEnemy = this.enemies[j];
-
         if (this.checkCollision(enemy, otherEnemy)) {
           const dx =
             otherEnemy.x + otherEnemy.width / 2 - (enemy.x + enemy.width / 2);
@@ -415,15 +387,10 @@ const EnemyManager = {
             const nx = dx / dist;
             const ny = dy / dist;
 
-            // Colisiones también afectadas por tiempo lento
-            const collisionSlowFactor = window.slowMotionActive ? 0.7 : 1.0;
-
             const enemyBounceFactor =
-              enemyBounceFactorBase * enemy.speedFactor * collisionSlowFactor;
+              enemyBounceFactorBase * enemy.speedFactor * globalSlowFactor;
             const otherEnemyBounceFactor =
-              enemyBounceFactorBase *
-              otherEnemy.speedFactor *
-              collisionSlowFactor;
+              enemyBounceFactorBase * otherEnemy.speedFactor * globalSlowFactor;
 
             const p1 = enemy.velocityX * nx + enemy.velocityY * ny;
             const p2 = otherEnemy.velocityX * nx + otherEnemy.velocityY * ny;
@@ -438,7 +405,7 @@ const EnemyManager = {
             otherEnemy.velocityY =
               (otherEnemy.velocityY + ny * (p1 - p2)) * otherEnemyBounceFactor;
 
-            const speedFactorIncrease = window.slowMotionActive ? 1.03 : 1.08;
+            const speedFactorIncrease = window.slowMotionActive ? 1.01 : 1.08;
             enemy.speedFactor = Math.min(
               enemy.speedFactor * speedFactorIncrease,
               2.0
@@ -459,12 +426,10 @@ const EnemyManager = {
         }
       }
 
-      // 🔥 LÍMITE DE VELOCIDAD AJUSTADO por tiempo lento
+      // 🔥 LÍMITE DE VELOCIDAD también aplicado
       const baseMaxSpeed =
         canvas.height * 0.025 * (1 + window.getLevel() * 0.15);
-      const maxSpeed = window.slowMotionActive
-        ? baseMaxSpeed * 0.3
-        : baseMaxSpeed; // 30% de velocidad máxima en tiempo lento
+      const maxSpeed = baseMaxSpeed * globalSlowFactor;
 
       const currentSpeed = Math.sqrt(
         enemy.velocityX * enemy.velocityX + enemy.velocityY * enemy.velocityY
@@ -476,10 +441,12 @@ const EnemyManager = {
       }
     }
 
-    // 🔥 MOSTRAR DEBUG INFO ocasionalmente
+    // Debug cada 60 frames
     if (window.slowMotionActive && window.getGameTime() % 60 === 0) {
       console.log(
-        `🌊 Mundo subacuático activo - Factor: ${slowFactor}, Zona extra lenta: ${extraSlowZone}`
+        `🌊 VERIFICADO: ${this.enemies.length} enemigos moviéndose al ${
+          globalSlowFactor * 100
+        }%`
       );
     }
   },

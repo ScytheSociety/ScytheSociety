@@ -144,57 +144,45 @@ const BulletManager = {
   shootBullet() {
     const currentTime = Date.now();
     const level = window.getLevel();
-    const canvas = window.getCanvas();
 
-    // 🔥 CORREGIDO: Sistema de velocidad rebalanceado
+    // === SISTEMA CORRECTO ===
     let baseCooldownTime;
-
-    // === VELOCIDAD BASE POR NIVEL ===
-    if (level <= 4) {
-      // Niveles 1-4: Velocidad progresiva normal
-      baseCooldownTime = Math.max(80, 200 - level * 25); // 175, 150, 125, 100
+    if (level <= 5) {
+      baseCooldownTime = 160; // MISMO TIEMPO para niveles 1-5
     } else {
-      // Nivel 5+: Velocidad mejorada (más rápida que niveles anteriores)
-      baseCooldownTime = Math.max(60, 90 - (level - 5) * 3); // 90, 87, 84, 81...
+      baseCooldownTime = 120; // MÁS RÁPIDO para niveles 6-10 (FIJO también)
     }
 
-    // === APLICAR MODIFICADORES ACUMULATIVOS ===
     let finalCooldownTime = baseCooldownTime;
 
-    // 🔥 OBTENER POWER-UPS ACTIVOS
+    // === PODER DISPARO RÁPIDO: SUMA velocidad ===
     const activePowerUps = Player.getActivePowerUps();
-
-    // 🔥 RAPID FIRE: Resta 30ms a la velocidad actual
     const hasRapidFire = activePowerUps.some((p) => p.id === 3);
     if (hasRapidFire) {
-      finalCooldownTime = Math.max(25, finalCooldownTime - 30); // Resta 30ms
+      finalCooldownTime = Math.max(25, finalCooldownTime - 50); // SUMA 50ms de velocidad
       console.log(
-        `⚡ Rapid Fire: ${baseCooldownTime}ms → ${finalCooldownTime}ms (-30ms)`
+        `⚡ Rapid Fire: ${baseCooldownTime}ms → ${finalCooldownTime}ms (-50ms)`
       );
     }
 
-    // 🔥 FRENESÍ: Resta 40ms ADICIONALES a la velocidad actual
+    // === FRENESÍ: SUMA AÚN MÁS velocidad ===
     if (window.frenzyModeActive) {
-      finalCooldownTime = Math.max(15, finalCooldownTime - 40); // Resta 40ms adicionales
+      finalCooldownTime = Math.max(15, finalCooldownTime - 60); // SUMA 60ms adicionales
       console.log(
-        `🔥 Frenesí: ${
-          finalCooldownTime + 40
-        }ms → ${finalCooldownTime}ms (-40ms)`
+        `🔥 Frenesí: velocidad final ${finalCooldownTime}ms (-60ms adicionales)`
       );
     }
 
-    // Usar finalCooldownTime en lugar de cooldownTime
+    // Resto del código igual...
     if (currentTime - this.lastShootTime > finalCooldownTime) {
-      // 🔥 Velocidad de bala
+      const canvas = window.getCanvas();
       const bulletSpeed = canvas.height * (0.018 + level * 0.003);
 
-      // 🔥 DISPARO DUAL DESDE NIVEL 5
       let bulletCount = 1;
       if (level >= 5) {
         bulletCount = 2;
       }
 
-      // Configurar efectos de power-ups
       let bulletConfig = {
         penetrating: false,
         explosive: false,
@@ -203,30 +191,26 @@ const BulletManager = {
         lifeTime: 0,
       };
 
-      // 🔥 SISTEMA ACUMULABLE
       for (const powerUp of activePowerUps) {
         switch (powerUp.id) {
-          case 0: // Escudo
+          case 0:
             break;
-          case 1: // Disparo Amplio
+          case 1:
             bulletCount = Math.max(bulletCount, 5 + level);
             break;
-          case 2: // Explosivo
+          case 2:
             bulletConfig.explosive = true;
             break;
         }
       }
 
-      // Crear balas
       const playerPos = Player.getPosition();
       const playerSize = Player.getSize();
 
       if (bulletCount === 2 && level >= 5) {
         const spacing = playerSize.width * 0.3;
-
         for (let i = 0; i < 2; i++) {
           const offsetX = i === 0 ? -spacing : spacing;
-
           const bullet = {
             x:
               playerPos.x +
@@ -242,16 +226,13 @@ const BulletManager = {
             fromSpecialPower: false,
             level: level,
           };
-
           this.bullets.push(bullet);
         }
       } else {
         const spreadAngle = bulletCount > 2 ? Math.PI / 4 : Math.PI / 12;
-
         for (let i = 0; i < bulletCount; i++) {
           const offset = i - Math.floor(bulletCount / 2);
           const angle = offset * spreadAngle;
-
           const bullet = {
             x: playerPos.x + playerSize.width / 2 - GameConfig.BULLET_WIDTH / 2,
             y: playerPos.y - GameConfig.BULLET_HEIGHT,
@@ -263,13 +244,11 @@ const BulletManager = {
             fromSpecialPower: false,
             level: level,
           };
-
           this.bullets.push(bullet);
         }
       }
 
       this.lastShootTime = currentTime;
-
       if (!window.isGameEnded()) {
         AudioManager.playSound("shoot");
       }
