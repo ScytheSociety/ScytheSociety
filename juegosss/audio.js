@@ -24,11 +24,42 @@ const AudioManager = {
     console.log("🔊 Sistema de audio inicializado");
   },
 
-  /**
-   * 🔥 NUEVO: Configura control de visibilidad para pausar audio - CORREGIDO
-   */
+  // ======================================================================
+  // En audio.js, modificar setupVisibilityControl() para usar las nuevas funciones:
+  // ======================================================================
+
   setupVisibilityControl() {
-    console.log("🔊 Control de visibilidad deshabilitado");
+    console.log("🔊 Configurando control de visibilidad para pausar audio");
+
+    // Variable para rastrear si el audio fue pausado por visibilidad
+    this.allAudioPaused = false;
+
+    // Pausar cuando se oculta la pestaña/ventana
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        console.log("👁️ Pestaña oculta - pausando TODO el audio");
+        this.pauseAllAudio();
+      } else {
+        console.log("👁️ Pestaña visible - reanudando audio");
+        setTimeout(() => {
+          this.resumeAllAudio();
+        }, 100);
+      }
+    });
+
+    // Pausar cuando pierde el foco la ventana
+    window.addEventListener("blur", () => {
+      console.log("🔍 Ventana perdió foco - pausando TODO el audio");
+      this.pauseAllAudio();
+    });
+
+    // Reanudar cuando gana el foco
+    window.addEventListener("focus", () => {
+      console.log("🔍 Ventana ganó foco - reanudando audio");
+      setTimeout(() => {
+        this.resumeAllAudio();
+      }, 100);
+    });
   },
 
   /**
@@ -284,6 +315,57 @@ const AudioManager = {
       this.sounds.background.audio.volume =
         this.sounds.background.baseVolume * this.masterVolume;
     }
+  },
+
+  /**
+   * 🔥 NUEVO: Pausa TODA la música y efectos cuando se oculta la ventana
+   */
+  pauseAllAudio() {
+    console.log("🔇 Pausando TODA la música y efectos");
+
+    // Detener música de fondo COMPLETAMENTE
+    if (this.sounds.background && this.sounds.background.audio) {
+      this.sounds.background.audio.pause();
+      this.backgroundMusicPlaying = false;
+      console.log("🎵 Música de fondo PAUSADA");
+    }
+
+    // Detener TODOS los sonidos activos
+    for (const [key, sound] of Object.entries(this.sounds)) {
+      if (sound.audio && !sound.audio.paused) {
+        sound.audio.pause();
+        sound.audio.currentTime = 0; // Resetear también
+        console.log(`🔊 Sonido ${key} DETENIDO`);
+      }
+    }
+
+    this.allAudioPaused = true;
+  },
+
+  /**
+   * 🔥 NUEVO: Reanuda la música cuando vuelve el foco
+   */
+  resumeAllAudio() {
+    if (!this.allAudioPaused) return;
+
+    console.log("🔊 Reanudando música de fondo");
+
+    // Solo reanudar música de fondo, no efectos
+    if (this.sounds.background && this.sounds.background.audio) {
+      const playPromise = this.sounds.background.audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            this.backgroundMusicPlaying = true;
+            console.log("🎵 Música de fondo REANUDADA");
+          })
+          .catch((error) => {
+            console.warn("⚠️ Error reanudando música:", error);
+          });
+      }
+    }
+
+    this.allAudioPaused = false;
   },
 
   // ======================================================

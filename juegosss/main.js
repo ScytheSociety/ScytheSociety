@@ -31,7 +31,7 @@ let isSaving = false;
 
 // URL de Google Sheets
 const WEBAPP_URL =
-  "https://script.google.com/macros/s/AKfycbyISC1HgWsjGaNoCubjC8xEtABygGw9m24NLnz2ZwyM4pdeQBhuIF-cHRTQtQeYDWpTOA/exec";
+  "https://script.google.com/macros/s/AKfycbwHXwNETa7EHrEGJv1YTXjB12yt3BD9xKQPUiG8wNm9PaNJd6hL8nsxRmLVe16LnXQv1g/exec";
 
 // Variable global para música
 window.currentMusicTrack = "Elegía - Azkal";
@@ -1476,7 +1476,7 @@ function incrementTotalEnemiesKilled() {
 /**
  * Guardar puntuación
  */
-async function saveScore() {
+async function saveScore(giftCode = "") {
   console.log("🚀 Guardando puntuación...");
 
   try {
@@ -1501,15 +1501,20 @@ async function saveScore() {
     console.log("- enemiesKilled:", enemiesKilled);
     console.log("- score:", score);
     console.log("- maxCombo:", maxCombo);
+    console.log("- giftCode:", giftCode); // 🎁 NUEVO
 
     // Validar datos
     if (!playerName || !playerAvatar) {
       throw new Error("Datos del jugador incompletos");
     }
 
+    // Validar código de regalo si se proporciona
+    if (giftCode && !isValidGiftCode(giftCode)) {
+      throw new Error("Código de regalo inválido");
+    }
+
     // Determinar estado del juego
     let gameStatus = "Derrota";
-
     if (
       level >= 11 &&
       typeof BossManager !== "undefined" &&
@@ -1522,7 +1527,7 @@ async function saveScore() {
       }
     }
 
-    // Crear parámetros
+    // Crear parámetros CON gift code
     const params = new URLSearchParams();
     params.append("action", "save");
     params.append("date", new Date().toISOString());
@@ -1533,6 +1538,7 @@ async function saveScore() {
     params.append("time", Math.floor(gameTime / 60));
     params.append("score", score);
     params.append("maxCombo", maxCombo);
+    params.append("gift", giftCode); // 🎁 NUEVO
     params.append("status", gameStatus);
 
     const urlWithParams = `${WEBAPP_URL}?${params.toString()}`;
@@ -1546,13 +1552,16 @@ async function saveScore() {
     });
 
     clearTimeout(timeoutId);
-
     const result = await response.json();
     console.log("📥 Respuesta del servidor:", result);
 
     if (result.success) {
       console.log("✅ Guardado exitoso");
-      alert("¡Puntuación guardada con éxito! 🎉");
+      alert(
+        `¡Puntuación guardada con éxito! 🎉${
+          giftCode ? "\n🎁 Código de regalo incluido!" : ""
+        }`
+      );
       return true;
     } else {
       throw new Error(result.message || "Error del servidor");
@@ -1568,6 +1577,13 @@ async function saveScore() {
 
     return false;
   }
+}
+
+// 🎁 NUEVA función para validar código de regalo
+function isValidGiftCode(code) {
+  // Solo números, entre 10 y 30 caracteres
+  const regex = /^[0-9]{10,30}$/;
+  return regex.test(code);
 }
 
 /**
@@ -1717,6 +1733,7 @@ async function viewRanking() {
               <th style="padding: 12px 8px; border: 1px solid rgba(255, 0, 0, 0.3); text-align: center; background: linear-gradient(135deg, #8B0000 0%, #A0522D 100%); color: #FFFFFF; text-transform: uppercase; font-weight: bold; font-size: 0.8em;">Combo</th>
               <th style="padding: 12px 8px; border: 1px solid rgba(255, 0, 0, 0.3); text-align: center; background: linear-gradient(135deg, #8B0000 0%, #A0522D 100%); color: #FFFFFF; text-transform: uppercase; font-weight: bold; font-size: 0.8em;">Enemigos</th>
               <th style="padding: 12px 8px; border: 1px solid rgba(255, 0, 0, 0.3); text-align: center; background: linear-gradient(135deg, #8B0000 0%, #A0522D 100%); color: #FFFFFF; text-transform: uppercase; font-weight: bold; font-size: 0.8em;">Tiempo</th>
+              <th style="padding: 12px 8px; border: 1px solid rgba(255, 0, 0, 0.3); text-align: center; background: linear-gradient(135deg, #8B0000 0%, #A0522D 100%); color: #FFFFFF; text-transform: uppercase; font-weight: bold; font-size: 0.8em;">Regalo</th>
               <th style="padding: 12px 8px; border: 1px solid rgba(255, 0, 0, 0.3); text-align: center; background: linear-gradient(135deg, #8B0000 0%, #A0522D 100%); color: #FFFFFF; text-transform: uppercase; font-weight: bold; font-size: 0.8em;">Estado</th>
             </tr>
           </thead>
@@ -1773,6 +1790,9 @@ async function viewRanking() {
                 <td style="padding: 12px 8px; border: 1px solid rgba(255, 0, 0, 0.3); text-align: center; color: #FFFFFF;">${
                   player.time
                 }s</td>
+                <td style="padding: 12px 8px; border: 1px solid rgba(255, 0, 0, 0.3); text-align: center; color: #FFD700; font-family: monospace; font-size: 0.7em;">${
+                  player.gift || "-"
+                }</td>
                 <td style="padding: 12px 8px; border: 1px solid rgba(255, 0, 0, 0.3); text-align: center; color: #FFFFFF;">${
                   player.status === "Victoria" ? "🏆" : "💀"
                 }</td>

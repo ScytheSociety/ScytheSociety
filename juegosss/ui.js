@@ -56,8 +56,10 @@ const UI = {
   // SISTEMA DE MENSAJES EN PANTALLA - MEJORADO
   // ======================================================
 
+  // En ui.js, reemplazar la función showScreenMessage por esta versión corregida:
+
   /**
-   * Sistema de mensajes en la parte superior - MEJORADO Y MÁS ABAJO
+   * Sistema de mensajes en pantalla - MÁXIMO 2 MENSAJES, NUEVOS ARRIBA
    */
   showScreenMessage(message, color = "#FFFFFF") {
     // Filtrar mensajes spam y reducir en móvil
@@ -94,12 +96,40 @@ const UI = {
 
     const messageId = this.messageIdCounter++;
 
-    // Limpiar mensajes anteriores más agresivamente
+    // 🔥 NUEVO SISTEMA: Máximo 2 mensajes, mover hacia abajo
     const existingMessages = document.querySelectorAll("[data-message-id]");
-    if (existingMessages.length >= (GameConfig.isMobile ? 1 : 2)) {
-      existingMessages[0].remove();
+
+    // Si ya hay 2 mensajes, eliminar el más viejo (el de abajo)
+    if (existingMessages.length >= 2) {
+      // Buscar el mensaje más abajo y eliminarlo
+      let lowestMessage = null;
+      let lowestTop = -1;
+
+      existingMessages.forEach((msg) => {
+        const top = parseInt(msg.style.top) || 0;
+        if (top > lowestTop) {
+          lowestTop = top;
+          lowestMessage = msg;
+        }
+      });
+
+      if (lowestMessage) {
+        lowestMessage.remove();
+      }
     }
 
+    // Mover todos los mensajes existentes hacia abajo (20% más abajo)
+    existingMessages.forEach((msg) => {
+      if (msg.parentNode) {
+        // Verificar que aún existe
+        const currentTop = parseInt(msg.style.top.replace("%", "")) || 15;
+        const newTop = currentTop + 8; // Mover 8% hacia abajo
+        msg.style.top = `${newTop}%`;
+        msg.style.transition = "top 0.3s ease"; // Transición suave
+      }
+    });
+
+    // Crear el nuevo mensaje ARRIBA (15%)
     const messageElement = document.createElement("div");
     messageElement.textContent = message;
     messageElement.setAttribute("data-message-id", messageId);
@@ -124,19 +154,27 @@ const UI = {
     animation: ${
       GameConfig.isMobile ? "fadeIn" : "epicMessageAppear"
     } 0.3s ease-out;
+    transition: top 0.3s ease;
   `;
 
     document.body.appendChild(messageElement);
 
-    // Eliminar más rápido en móvil
-    setTimeout(
-      () => {
-        if (messageElement.parentNode) {
-          messageElement.remove();
-        }
-      },
-      GameConfig.isMobile ? 2000 : 3500
-    );
+    // Eliminar después de 3.5 segundos
+    setTimeout(() => {
+      if (messageElement.parentNode) {
+        // Animación de salida
+        messageElement.style.opacity = "0";
+        messageElement.style.transform = "translateX(-50%) translateY(-20px)";
+
+        setTimeout(() => {
+          if (messageElement.parentNode) {
+            messageElement.remove();
+          }
+        }, 300);
+      }
+    }, 3500);
+
+    console.log(`📢 Mensaje mostrado: "${message}" (ID: ${messageId})`);
   },
 
   // ======================================================
@@ -631,6 +669,10 @@ const UI = {
     const gameOverScreen = document.getElementById("game-over");
 
     if (gameOverScreen) {
+      // Variable para rastrear si ya se guardó
+      let alreadySaved = false;
+      let giftCode = "";
+
       gameOverScreen.innerHTML = `
       <div style="
         background: transparent;
@@ -646,7 +688,7 @@ const UI = {
         align-items: center;
         gap: 25px;
       ">
-        <!-- Título terrorífico/hermoso -->
+        <!-- Título -->
         <h1 style="
           font-size: 4em;
           margin: 0;
@@ -669,30 +711,110 @@ const UI = {
           ${isVictory ? "VICTORIA" : "GAME OVER"}
         </h1>
 
-        <!-- 🔥 SOLO COMBO MÁXIMO CON TRAZO NEGRO -->
+        <!-- Combo máximo -->
         ${
           maxCombo > 0
-            ? `<div style="
-                color: #FF6B00;
-                font-size: 1.8em;
-                font-family: var(--professional-font);
-                font-weight: bold;
-                text-shadow: 
-                  -2px -2px 0 #000,
-                  2px -2px 0 #000,
-                  -2px 2px 0 #000,
-                  2px 2px 0 #000,
-                  0 0 10px #FF6B00;
-                text-align: center;
-                line-height: 1.6;
-                margin: 20px 0;
-              ">
-                ⚡ Combo Máximo: ${maxCombo} ⚡
-              </div>`
+            ? `
+          <div style="
+            color: #FF6B00;
+            font-size: 1.8em;
+            font-family: var(--professional-font);
+            font-weight: bold;
+            text-shadow: 
+              -2px -2px 0 #000,
+              2px -2px 0 #000,
+              -2px 2px 0 #000,
+              2px 2px 0 #000,
+              0 0 10px #FF6B00;
+            text-align: center;
+            line-height: 1.6;
+            margin: 20px 0;
+          ">
+            ⚡ Combo Máximo: ${maxCombo} ⚡
+          </div>
+        `
             : ""
         }
 
-        <!-- Botones horizontales pequeños sin marcos -->
+        <!-- 🎁 BOTÓN DE REGALO ESPECIAL (solo si ganó) -->
+        ${
+          isVictory
+            ? `
+          <div id="gift-section" style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+          ">
+            <button 
+              id="gift-button" 
+              onclick="showGiftInput()"
+              style="
+                background: linear-gradient(135deg, #FFD700, #FFA500);
+                color: #000;
+                border: 2px solid #FFD700;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-size: 14px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s ease;
+              "
+              onmouseover="this.style.transform='scale(1.05)'"
+              onmouseout="this.style.transform='scale(1)'"
+            >
+              🎁 Código Especial
+            </button>
+            
+            <div id="gift-input-area" style="display: none; flex-direction: column; align-items: center; gap: 8px;">
+              <input 
+                type="text" 
+                id="gift-code-input" 
+                placeholder="Código (10-30 números)"
+                maxlength="30"
+                style="
+                  padding: 8px 12px;
+                  border: 2px solid #FFD700;
+                  border-radius: 6px;
+                  background: rgba(0,0,0,0.8);
+                  color: #FFD700;
+                  text-align: center;
+                  font-family: monospace;
+                  font-size: 14px;
+                  width: 200px;
+                "
+              />
+              <div style="display: flex; gap: 8px;">
+                <button onclick="confirmGiftCode()" style="
+                  background: #00FF00;
+                  color: #000;
+                  border: none;
+                  padding: 4px 12px;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  cursor: pointer;
+                ">✓ OK</button>
+                <button onclick="cancelGiftCode()" style="
+                  background: #FF0000;
+                  color: #FFF;
+                  border: none;
+                  padding: 4px 12px;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  cursor: pointer;
+                ">✗ Cancelar</button>
+              </div>
+              <div style="font-size: 10px; color: #AAA; text-align: center;">
+                Solo números • Entre 10 y 30 dígitos
+              </div>
+            </div>
+          </div>
+        `
+            : ""
+        }
+
+        <!-- Botones principales -->
         <div style="
           display: flex;
           gap: 15px;
@@ -709,7 +831,8 @@ const UI = {
           </button>
 
           <button 
-            onclick="saveAndViewRanking()" 
+            id="save-ranking-btn"
+            onclick="saveAndViewRankingWithGift()" 
             class="small-game-button"
             title="Guardar Ranking"
           >
@@ -726,6 +849,95 @@ const UI = {
         </div>
       </div>
     `;
+
+      // 🎁 FUNCIONES PARA EL SISTEMA DE REGALO
+      window.showGiftInput = () => {
+        document.getElementById("gift-input-area").style.display = "flex";
+        document.getElementById("gift-button").style.display = "none";
+      };
+
+      window.cancelGiftCode = () => {
+        document.getElementById("gift-input-area").style.display = "none";
+        document.getElementById("gift-button").style.display = "block";
+        document.getElementById("gift-code-input").value = "";
+      };
+
+      window.confirmGiftCode = () => {
+        const input = document.getElementById("gift-code-input");
+        const code = input.value.trim();
+
+        if (!window.isValidGiftCode(code)) {
+          alert(
+            "❌ Código inválido!\n\n• Solo números (0-9)\n• Entre 10 y 30 dígitos\n• Ejemplo válido: 302285499710701571"
+          );
+          return;
+        }
+
+        giftCode = code;
+
+        // Ocultar sección de regalo y mostrar confirmación
+        document.getElementById("gift-section").innerHTML = `
+        <div style="
+          background: rgba(0,255,0,0.2);
+          border: 1px solid #00FF00;
+          border-radius: 8px;
+          padding: 8px 16px;
+          color: #00FF00;
+          font-size: 12px;
+          text-align: center;
+        ">
+          🎁 Código: ${code} ✓
+        </div>
+      `;
+
+        console.log("🎁 Código de regalo configurado:", code);
+      };
+
+      window.saveAndViewRankingWithGift = async () => {
+        if (alreadySaved) {
+          alert("⚠️ La puntuación ya fue guardada.");
+          viewRanking();
+          document.getElementById("game-over").style.display = "none";
+          return;
+        }
+
+        const saveButton = document.getElementById("save-ranking-btn");
+        if (saveButton) {
+          saveButton.disabled = true;
+          saveButton.textContent = "⏳";
+        }
+
+        try {
+          // Usar la función saveScore con el código de regalo
+          const saveResult = await window.saveScore(giftCode);
+
+          if (saveResult) {
+            alreadySaved = true;
+            if (saveButton) {
+              saveButton.textContent = "✅";
+              saveButton.onclick = () => {
+                viewRanking();
+                document.getElementById("game-over").style.display = "none";
+              };
+            }
+          }
+
+          viewRanking();
+          document.getElementById("game-over").style.display = "none";
+
+          if (typeof UI !== "undefined" && UI.removeMusicTicker) {
+            UI.removeMusicTicker();
+          }
+        } catch (error) {
+          console.error("Error al guardar:", error);
+          alert("❌ Error al guardar. Inténtalo de nuevo.");
+
+          if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = "💾";
+          }
+        }
+      };
 
       gameOverScreen.style.display = "block";
     }
