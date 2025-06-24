@@ -69,9 +69,9 @@ const BossRedLine = {
       this.bossManager.movement.stopMovementAndCenter();
     }
 
-    // Ralentizar jugador
+    // 🔴 RALENTIZAR JUGADOR CONSIDERABLEMENTE
     this.originalPlayerSpeed = Player.moveSpeed;
-    Player.moveSpeed = this.playerSlowFactor;
+    Player.moveSpeed = 0.15; // MUY LENTO para que sea desafiante
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
@@ -370,9 +370,9 @@ const BossRedLine = {
       return;
     }
 
-    // 🔥 ESCALA RESPONSIVA PARA FORMAS
     const screenScale = Math.min(canvas.width, canvas.height) / 800;
     const mobileScale = GameConfig.isMobile ? 0.8 : 1.0;
+    const scale = screenScale * mobileScale;
 
     const shapes = [
       "zigzag",
@@ -382,17 +382,17 @@ const BossRedLine = {
       "spiral",
       "wave",
       "lightning",
+      "hell",
+      "bouncing",
     ];
-    const shape = shapes[Math.floor(Math.random() * shapes.length)];
 
-    console.log(
-      `🔴 Generando forma geométrica responsiva: ${shape} (escala: ${
-        screenScale * mobileScale
-      })`
-    );
+    // 30% probabilidad de HELL
+    const shape =
+      Math.random() < 0.3
+        ? "hell"
+        : shapes[Math.floor(Math.random() * (shapes.length - 2))]; // Excluir hell y bouncing del random normal
 
-    // Pasar escala a las funciones de generación
-    const scale = screenScale * mobileScale;
+    console.log(`🔴 Generando forma: ${shape} (escala: ${scale})`);
 
     switch (shape) {
       case "zigzag":
@@ -416,6 +416,12 @@ const BossRedLine = {
       case "lightning":
         this.generateLightningPattern(canvas, scale);
         break;
+      case "hell":
+        this.generateHellPattern(canvas, scale);
+        break;
+      case "bouncing":
+        this.generateBouncingPattern(canvas, scale);
+        break;
     }
 
     if (this.redLinePath.length === 0) {
@@ -424,7 +430,7 @@ const BossRedLine = {
     }
 
     console.log(
-      `🔴 Forma ${shape} generada con ${this.redLinePath.length} puntos responsivos`
+      `🔴 Forma ${shape} generada con ${this.redLinePath.length} puntos`
     );
   },
 
@@ -552,6 +558,91 @@ const BossRedLine = {
         x: baseX + perpX * deviation,
         y: baseY + perpY * deviation,
       });
+    }
+
+    this.createSmoothPath(points);
+  },
+
+  generateTrianglePattern(canvas, scale = 1.0) {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const size = Math.min(canvas.width, canvas.height) * 0.35 * scale;
+
+    const points = [
+      { x: centerX, y: centerY - size }, // Arriba
+      { x: centerX + size * 0.866, y: centerY + size * 0.5 }, // Abajo derecha
+      { x: centerX - size * 0.866, y: centerY + size * 0.5 }, // Abajo izquierda
+      { x: centerX, y: centerY - size }, // Volver al inicio
+    ];
+
+    this.createSmoothPath(points);
+  },
+
+  generateHellPattern(canvas, scale = 1.0) {
+    console.log("🔥 Generando patrón HELL responsivo");
+
+    const startX = canvas.width * 0.1;
+    const startY = canvas.height * 0.3;
+    const letterWidth = canvas.width * 0.18 * scale;
+    const letterHeight = canvas.height * 0.4 * scale;
+
+    const points = [];
+
+    // H
+    points.push({ x: startX, y: startY });
+    points.push({ x: startX, y: startY + letterHeight });
+    points.push({ x: startX, y: startY + letterHeight / 2 });
+    points.push({ x: startX + letterWidth / 2, y: startY + letterHeight / 2 });
+    points.push({ x: startX + letterWidth / 2, y: startY });
+    points.push({ x: startX + letterWidth / 2, y: startY + letterHeight });
+
+    // E
+    const eX = startX + letterWidth * 1.2;
+    points.push({ x: eX, y: startY });
+    points.push({ x: eX + letterWidth, y: startY });
+    points.push({ x: eX, y: startY });
+    points.push({ x: eX, y: startY + letterHeight / 2 });
+    points.push({ x: eX + letterWidth * 0.7, y: startY + letterHeight / 2 });
+    points.push({ x: eX, y: startY + letterHeight / 2 });
+    points.push({ x: eX, y: startY + letterHeight });
+    points.push({ x: eX + letterWidth, y: startY + letterHeight });
+
+    // L
+    const l1X = startX + letterWidth * 2.4;
+    points.push({ x: l1X, y: startY });
+    points.push({ x: l1X, y: startY + letterHeight });
+    points.push({ x: l1X + letterWidth, y: startY + letterHeight });
+
+    // L
+    const l2X = startX + letterWidth * 3.6;
+    points.push({ x: l2X, y: startY });
+    points.push({ x: l2X, y: startY + letterHeight });
+    points.push({ x: l2X + letterWidth, y: startY + letterHeight });
+
+    this.createSmoothPath(points);
+    console.log(`🔥 HELL generado con ${this.redLinePath.length} puntos`);
+  },
+
+  generateBouncingPattern(canvas, scale = 1.0) {
+    const points = [];
+    const startX = canvas.width * 0.1;
+    const startY = canvas.height * 0.5;
+    const segments = 8;
+
+    for (let i = 0; i <= segments; i++) {
+      const x = startX + ((canvas.width * 0.8) / segments) * i;
+      let y = startY;
+
+      // Crear rebotes aleatorios
+      if (i > 0 && i < segments) {
+        const bounce = (Math.random() - 0.5) * canvas.height * 0.4 * scale;
+        y += bounce;
+
+        // Mantener dentro de límites
+        y = Math.max(canvas.height * 0.1, Math.min(canvas.height * 0.9, y));
+      }
+
+      points.push({ x, y });
     }
 
     this.createSmoothPath(points);

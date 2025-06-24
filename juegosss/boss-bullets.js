@@ -171,14 +171,15 @@ const BossBullets = {
       return;
     }
 
-    console.log("🌟 === INICIANDO FASE TOUHOU (120 SEGUNDOS) ===");
+    console.log("🌟 === INICIANDO FASE TOUHOU (90 SEGUNDOS) ===");
 
     this.patternActive = true;
     this.currentPatternIndex = 0;
 
-    // Centrar boss
+    // Centrar boss y MANTENERLO QUIETO
     if (this.bossManager.movement) {
       this.bossManager.movement.teleportToCenter();
+      this.bossManager.movement.stopMovementAndCenter();
     }
 
     if (this.bossManager.ui) {
@@ -188,25 +189,21 @@ const BossBullets = {
       );
     }
 
-    // Secuencia de patrones cada 20 segundos
-    this.executePatternSequence();
+    // SOLO 3 patrones cada 30 segundos
+    this.executeSimplePatternSequence();
 
-    // Escudos cada 4 segundos
-    this.startShieldSpawning();
-
-    // Terminar después de 120 segundos
+    // Terminar después de 90 segundos
     setTimeout(() => {
       this.endBulletPhase();
-    }, 120000);
+    }, 90000);
   },
 
-  executePatternSequence() {
+  executeSimplePatternSequence() {
     if (!this.patternActive) return;
 
+    const simplePatterns = ["spiral", "walls", "cross"]; // SOLO 3 patrones
     const currentPattern =
-      this.patternSequence[
-        this.currentPatternIndex % this.patternSequence.length
-      ];
+      simplePatterns[this.currentPatternIndex % simplePatterns.length];
 
     console.log(
       `🌟 Ejecutando patrón ${this.currentPatternIndex + 1}: ${currentPattern}`
@@ -217,21 +214,19 @@ const BossBullets = {
       const messages = {
         spiral: "¡Danza espiral de la muerte!",
         walls: "¡Muros de destrucción!",
-        burst: "¡Explosión celestial!",
-        rain: "¡Lluvia dirigida del infierno!",
-        laser: "¡Láser aniquilador!",
+        cross: "¡Cruz giratoria del infierno!",
       };
       this.bossManager.comments.sayComment(messages[currentPattern]);
     }
 
     this.executePattern(currentPattern);
 
-    // Programar siguiente patrón
+    // Programar siguiente patrón cada 30 segundos
     this.currentPatternIndex++;
-    if (this.currentPatternIndex < 6) {
+    if (this.currentPatternIndex < 3) {
       setTimeout(() => {
-        this.executePatternSequence();
-      }, 20000);
+        this.executeSimplePatternSequence();
+      }, 30000);
     }
   },
 
@@ -320,45 +315,35 @@ const BossBullets = {
   },
 
   endBulletPhase() {
-    console.log("🌟 Terminando fase Touhou (120s completados)");
+    console.log("🌟 Terminando fase Touhou (90s completados)");
 
     this.patternActive = false;
     this.cleanup();
 
-    // 🔥 BOSS SE QUEDA EN EL CENTRO hasta ser vulnerable
+    // BOSS SE QUEDA QUIETO hasta ser vulnerable
     if (this.bossManager.movement) {
-      this.bossManager.movement.stopMovementAndCenter(); // MANTENER en centro
-    }
-
-    // Si es fase aleatoria, no hacer vulnerable automáticamente
-    if (this.bossManager.phases && this.bossManager.phases.isRandomPhase) {
-      console.log(
-        "🌟 Fase aleatoria completada - delegando al sistema de fases"
-      );
-      return;
+      this.bossManager.movement.stopMovementAndCenter();
     }
 
     if (this.bossManager.comments) {
-      this.bossManager.comments.sayComment(
-        "¡Balas celestiales completadas! ¡Siguen siendo débiles!"
-      );
+      this.bossManager.comments.sayComment("¡Fase Touhou completada!");
     }
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage("⚔️ ¡BOSS VULNERABLE!", "#00FF00");
     }
 
-    // Boss vulnerable PERO QUIETO en centro
+    // Boss vulnerable PERO QUIETO
     this.bossManager.isImmune = false;
     this.bossManager.immunityTimer = 0;
 
-    // 🔥 NO REANUDAR MOVIMIENTO HASTA DESPUÉS DE 3 SEGUNDOS
+    // MOVIMIENTO SOLO DESPUÉS DE 5 SEGUNDOS
     setTimeout(() => {
       if (this.bossManager.movement) {
         this.bossManager.movement.enableFluidHunting();
         console.log("🏃 Boss ahora puede moverse después de ser vulnerable");
       }
-    }, 3000); // 3 segundos quieto siendo vulnerable
+    }, 5000);
   },
 
   executePattern(patternType) {
