@@ -718,27 +718,106 @@ const BossMines = {
   },
 
   // ======================================================
-  // CLEANUP Y GESTIÓN
+  // CLEANUP Y GESTIÓN UNIFICADO (REEMPLAZA LA SECCIÓN ANTERIOR)
   // ======================================================
 
+  // Variable para prevenir limpieza múltiple
+  isCleaningUp: false,
+
+  // FUNCIÓN PRINCIPAL DE LIMPIEZA (UNIFICADA)
+  performCleanup(reason = "manual", preventDuplicates = true) {
+    // Prevenir limpieza múltiple simultánea
+    if (preventDuplicates && this.isCleaningUp) {
+      console.log(`💣 Limpieza ya en progreso, ignorando: ${reason}`);
+      return false;
+    }
+
+    this.isCleaningUp = true;
+    console.log(`💣 === INICIANDO LIMPIEZA: ${reason.toUpperCase()} ===`);
+
+    try {
+      // 1. Limpiar intervalos PRIMERO
+      this.clearAllIntervals();
+
+      // 2. Limpiar minas
+      this.clearAllMines();
+
+      // 3. Resetear estados
+      this.resetMineStates();
+
+      console.log(`💣 ✅ Limpieza ${reason} completada exitosamente`);
+      return true;
+    } catch (error) {
+      console.error(`💣 ❌ Error durante limpieza ${reason}:`, error);
+      return false;
+    } finally {
+      // Siempre liberar el lock de limpieza
+      setTimeout(() => {
+        this.isCleaningUp = false;
+      }, 100);
+    }
+  },
+
+  clearAllIntervals() {
+    const intervals = ["teleportInterval", "staticMineInterval"];
+    let clearedCount = 0;
+
+    intervals.forEach((intervalName) => {
+      if (this[intervalName]) {
+        clearInterval(this[intervalName]);
+        this[intervalName] = null;
+        clearedCount++;
+        console.log(`💣 🔄 Intervalo ${intervalName} limpiado`);
+      }
+    });
+
+    if (clearedCount > 0) {
+      console.log(`💣 📊 Total intervalos limpiados: ${clearedCount}`);
+    }
+  },
+
+  clearAllMines() {
+    const mineCount = this.mines ? this.mines.length : 0;
+
+    if (mineCount > 0) {
+      // Registrar tipos de minas antes de limpiar (para debug)
+      const mineTypes = {};
+      this.mines.forEach((mine) => {
+        const type = mine.type || "unknown";
+        mineTypes[type] = (mineTypes[type] || 0) + 1;
+      });
+
+      console.log(`💣 🧹 Limpiando ${mineCount} minas:`, mineTypes);
+    }
+
+    this.mines = [];
+    console.log(`💣 ✨ Array de minas vaciado`);
+  },
+
+  resetMineStates() {
+    this.miningPhase = false;
+    this.sequenceActive = false;
+    console.log(`💣 🔄 Estados de minado reseteados`);
+  },
+
+  // FUNCIONES PÚBLICAS (REEMPLAZAN LAS ANTERIORES)
   endMineSequence() {
     console.log("💣 Secuencia de minas terminada (90s completados)");
 
-    this.miningPhase = false;
-    this.sequenceActive = false;
-
-    if (this.teleportInterval) {
-      clearInterval(this.teleportInterval);
-      this.teleportInterval = null;
+    // Usar limpieza unificada
+    const success = this.performCleanup("sequence_end");
+    if (!success) {
+      console.warn("💣 ⚠️ Falló la limpieza al final de secuencia");
+      return;
     }
 
-    if (this.staticMineInterval) {
-      clearInterval(this.staticMineInterval);
-      this.staticMineInterval = null;
-    }
+    // Lógica específica del final de secuencia
+    this.handleSequenceEndLogic();
+  },
 
+  handleSequenceEndLogic() {
     // Si es fase aleatoria, no hacer vulnerable
-    if (this.bossManager.phases && this.bossManager.phases.isRandomPhase) {
+    if (this.bossManager?.phases?.isRandomPhase) {
       console.log(
         "💣 Fase aleatoria completada - delegando al sistema de fases"
       );
@@ -746,40 +825,72 @@ const BossMines = {
     }
 
     // Boss vulnerable y vuelve a hunting
-    this.bossManager.isImmune = false;
-    this.bossManager.immunityTimer = 0;
+    if (this.bossManager) {
+      this.bossManager.isImmune = false;
+      this.bossManager.immunityTimer = 0;
 
-    if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage("⚔️ ¡BOSS VULNERABLE!", "#00FF00");
-    }
-
-    setTimeout(() => {
-      if (this.bossManager.movement) {
-        this.bossManager.movement.enableFluidHunting();
+      if (this.bossManager.ui) {
+        this.bossManager.ui.showScreenMessage(
+          "⚔️ ¡BOSS VULNERABLE!",
+          "#00FF00"
+        );
       }
-    }, 1000);
+
+      // Reactivar hunting después de un delay
+      setTimeout(() => {
+        if (this.bossManager.movement) {
+          this.bossManager.movement.enableFluidHunting();
+        }
+      }, 1000);
+    }
+  },
+
+  forceCleanupMines() {
+    console.log("💣 FORZANDO limpieza total de sistema de minas");
+    const success = this.performCleanup("force", false);
+    if (success) {
+      console.log("💣 Sistema de minas completamente limpiado");
+    }
+    return success;
   },
 
   cleanup() {
     console.log("🧹 Limpiando sistema de minas");
-    this.mines = [];
-    this.miningPhase = false;
-    this.sequenceActive = false;
-
-    if (this.teleportInterval) {
-      clearInterval(this.teleportInterval);
-      this.teleportInterval = null;
-    }
-
-    if (this.staticMineInterval) {
-      clearInterval(this.staticMineInterval);
-      this.staticMineInterval = null;
-    }
+    return this.performCleanup("standard");
   },
 
   reset() {
-    this.cleanup();
     console.log("🔄 Sistema de minas reseteado");
+    return this.performCleanup("reset");
+  },
+
+  // ======================================================
+  // FUNCIONES DE DIAGNÓSTICO
+  // ======================================================
+
+  getCleanupStatus() {
+    return {
+      isCleaningUp: this.isCleaningUp,
+      mineCount: this.mines ? this.mines.length : 0,
+      miningPhase: this.miningPhase,
+      sequenceActive: this.sequenceActive,
+      hasIntervals: {
+        teleport: !!this.teleportInterval,
+        static: !!this.staticMineInterval,
+      },
+    };
+  },
+
+  isSystemClean() {
+    const status = this.getCleanupStatus();
+    return (
+      !status.isCleaningUp &&
+      status.mineCount === 0 &&
+      !status.miningPhase &&
+      !status.sequenceActive &&
+      !status.hasIntervals.teleport &&
+      !status.hasIntervals.static
+    );
   },
 
   // ======================================================

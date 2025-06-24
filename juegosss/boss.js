@@ -354,6 +354,13 @@ const BossManager = {
   },
 
   startBulletsPhase() {
+    console.log("🌟 INICIANDO FASE: Balas Touhou");
+
+    // 🔥 NUEVO: Limpiar completamente el sistema de minas antes
+    if (this.mines && this.mines.forceCleanupMines) {
+      this.mines.forceCleanupMines();
+    }
+
     this.makeImmune(7200); // 120 segundos
 
     if (this.movement) {
@@ -370,46 +377,6 @@ const BossManager = {
       this.phases.phaseActive = true;
       this.phases.phaseTimer = 0;
       this.phases.changePhase("BULLETS");
-    }
-  },
-
-  startRedLinePhase() {
-    this.makeImmune(99999);
-
-    if (this.movement) {
-      this.movement.stopMovementAndCenter();
-    }
-
-    if (this.comments) {
-      this.comments.sayComment("¡Sigue mi rastro mortal!");
-    }
-
-    // MARCAR FASE ANTES DE CAMBIAR
-    if (this.phases) {
-      this.phases.currentPhase = "REDLINE";
-      this.phases.phaseActive = true;
-      this.phases.phaseTimer = 0;
-      this.phases.changePhase("REDLINE");
-    }
-  },
-
-  startYanKenPoPhase() {
-    this.makeImmune(99999);
-
-    if (this.movement) {
-      this.movement.stopMovementAndCenter();
-    }
-
-    if (this.comments) {
-      this.comments.sayComment("¡Última oportunidad, mortal!");
-    }
-
-    // MARCAR FASE ANTES DE CAMBIAR
-    if (this.phases) {
-      this.phases.currentPhase = "YANKENPO";
-      this.phases.phaseActive = true;
-      this.phases.phaseTimer = 0;
-      this.phases.changePhase("YANKENPO");
     }
   },
 

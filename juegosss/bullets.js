@@ -83,14 +83,18 @@ const BulletManager = {
 
     const level = window.getLevel();
 
-    // 🔥 MÁS RÁPIDO: Disparo base más veloz
-    const baseDelay = 150; // Era 200ms, ahora 150ms
-    const reductionPerLevel = 12; // Era 15ms, ahora 12ms
-    const minDelay = 60; // Era 80ms, ahora 60ms
-    const shootDelay = Math.max(
-      minDelay,
-      baseDelay - level * reductionPerLevel
-    );
+    // 🔥 CORREGIDO: Velocidad de auto-disparo rebalanceada
+    let baseDelay;
+
+    if (level <= 4) {
+      // Niveles 1-4: Auto-disparo progresivo
+      baseDelay = 180 - level * 20; // 160, 140, 120, 100
+    } else {
+      // Nivel 5+: Auto-disparo más controlado
+      baseDelay = 140 - (level - 4) * 8; // 132, 124, 116...
+    }
+
+    const shootDelay = Math.max(60, baseDelay);
 
     this.autoShootInterval = setInterval(() => {
       // Verificación adicional antes de cada disparo
@@ -142,28 +146,36 @@ const BulletManager = {
     const level = window.getLevel();
     const canvas = window.getCanvas();
 
-    // Cooldown del disparo normal
-    let cooldownTime = Math.max(60, 150 - level * 10);
+    // 🔥 CORREGIDO: Sistema de velocidad rebalanceado
+    let cooldownTime;
 
-    // 🔥 OBTENER POWER-UPS ACTIVOS (sistema acumulable)
+    // Velocidades base más equilibradas
+    if (level <= 4) {
+      // Niveles 1-4: Velocidad progresiva normal
+      cooldownTime = Math.max(80, 180 - level * 20); // 180, 160, 140, 120
+    } else {
+      // Nivel 5+: Velocidad más controlada para dar sentido al rapid fire
+      cooldownTime = Math.max(70, 140 - (level - 4) * 8); // 132, 124, 116, 108...
+    }
+
+    // 🔥 OBTENER POWER-UPS ACTIVOS
     const activePowerUps = Player.getActivePowerUps();
 
-    // 🔥 RAPID FIRE GARANTIZADO MÁS RÁPIDO - DINÁMICO
+    // 🔥 RAPID FIRE AHORA SÍ ES NOTABLEMENTE MÁS RÁPIDO
     const hasRapidFire = activePowerUps.some((p) => p.id === 3);
     if (hasRapidFire) {
-      // 🔥 NUEVO: Siempre 60% más rápido que el disparo normal actual
-      cooldownTime = Math.floor(cooldownTime * 0.4); // 60% más rápido
-      cooldownTime = Math.max(15, cooldownTime); // Mínimo absoluto 15ms
+      // 🔥 NUEVO: Velocidad fija súper rápida, independiente del nivel
+      cooldownTime = 25; // Súper rápido fijo
     }
 
     if (currentTime - this.lastShootTime > cooldownTime) {
-      // 🔥 Velocidad de bala más rápida
+      // 🔥 Velocidad de bala
       const bulletSpeed = canvas.height * (0.018 + level * 0.003);
 
       // 🔥 DISPARO DUAL DESDE NIVEL 5
       let bulletCount = 1;
       if (level >= 5) {
-        bulletCount = 2; // Siempre 2 balas desde nivel 5
+        bulletCount = 2;
       }
 
       // Configurar efectos de power-ups
@@ -175,21 +187,17 @@ const BulletManager = {
         lifeTime: 0,
       };
 
-      // 🔥 SISTEMA ACUMULABLE - aplicar todos los efectos
+      // 🔥 SISTEMA ACUMULABLE
       for (const powerUp of activePowerUps) {
         switch (powerUp.id) {
-          case 0: // Escudo (ya no hay balas penetrantes)
+          case 0: // Escudo
             break;
-
-          case 1: // Disparo Amplio Escalable
+          case 1: // Disparo Amplio
             bulletCount = Math.max(bulletCount, 5 + level);
             break;
-
           case 2: // Explosivo
             bulletConfig.explosive = true;
             break;
-
-          // case 3 (Rapid Fire) ya se maneja arriba
         }
       }
 
@@ -197,7 +205,6 @@ const BulletManager = {
       const playerPos = Player.getPosition();
       const playerSize = Player.getSize();
 
-      // 🔥 POSICIONAMIENTO DUAL MEJORADO
       if (bulletCount === 2 && level >= 5) {
         const spacing = playerSize.width * 0.3;
 
@@ -223,7 +230,6 @@ const BulletManager = {
           this.bullets.push(bullet);
         }
       } else {
-        // Sistema original para otros casos
         const spreadAngle = bulletCount > 2 ? Math.PI / 4 : Math.PI / 12;
 
         for (let i = 0; i < bulletCount; i++) {
