@@ -135,7 +135,7 @@ const GameConfig = {
         id: 3,
         name: "Disparo Súper Rápido",
         color: "#FF00FF",
-        duration: 660, // Era 420 (7s), ahora 660 (11s)
+        duration: 600, // Era 360 (6s), ahora 600 (10s)
         shootDelay: 25,
         description: "Disparo ultra-rápido",
       },

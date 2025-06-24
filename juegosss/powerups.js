@@ -38,39 +38,54 @@ const PowerUpManager = {
   // SISTEMA DE CORAZONES - ÉPICO Y BALANCEADO
   // ======================================================
 
-  /**
-   * Intenta crear un corazón - SISTEMA INTELIGENTE POR VIDAS
-   */
+  // Agregar esta verificación al inicio de trySpawnHeart():
   trySpawnHeart() {
-    if (this.hearts.length >= 2) return; // Máximo 2 corazones
-    // 🔥 CORREGIDO: Permitir corazones en nivel boss también
-    // if (window.getLevel() >= 11) return; // ❌ LÍNEA ELIMINADA
+    if (this.hearts.length >= 2) return;
+
+    // 🔥 NUEVO: Reducir probabilidad en fase Touhou
+    let probabilityReduction = 1.0;
+    if (
+      window.getLevel() === 11 &&
+      window.BossManager &&
+      window.BossManager.bullets &&
+      window.BossManager.bullets.isPatternActive()
+    ) {
+      probabilityReduction = 0.3; // 70% menos probabilidad en fase Touhou
+      console.log("🛡️ Fase Touhou activa - probabilidad de corazones reducida");
+    }
 
     const playerLives = Player.getLives();
     let heartChance = 0;
 
-    // 🔥 Sistema inteligente basado en vidas
+    // Sistema inteligente basado en vidas (igual que antes)
     if (playerLives <= 1) {
-      heartChance = 0.004; // MUY probable con 1 vida
+      heartChance = 0.004;
     } else if (playerLives <= 2) {
-      heartChance = 0.003; // Muy probable con 2 vidas
+      heartChance = 0.003;
     } else if (playerLives <= 3) {
-      heartChance = 0.002; // Probable con 3 vidas
+      heartChance = 0.002;
     } else if (playerLives <= 4) {
-      heartChance = 0.001; // Menos probable con 4 vidas
+      heartChance = 0.001;
     } else if (playerLives <= 5) {
-      heartChance = 0.0005; // Poco probable con 5 vidas
+      heartChance = 0.0005;
     } else if (playerLives <= 6) {
-      heartChance = 0.0003; // Muy poco probable con 6 vidas
+      heartChance = 0.0003;
     } else if (playerLives <= 7) {
-      heartChance = 0.0001; // Casi imposible con 7 vidas
+      heartChance = 0.0001;
     } else if (playerLives >= 8) {
-      heartChance = 0; // IMPOSIBLE con 8+ vidas
+      heartChance = 0;
     }
+
+    // 🔥 APLICAR REDUCCIÓN DE FASE TOUHOU
+    heartChance *= probabilityReduction;
 
     if (Math.random() < heartChance) {
       this.spawnHeart();
-      console.log(`❤️ Corazón spawneado (Vidas: ${playerLives})`);
+      console.log(
+        `❤️ Corazón spawneado (Vidas: ${playerLives}, Fase Touhou: ${
+          probabilityReduction < 1
+        })`
+      );
     }
   },
 

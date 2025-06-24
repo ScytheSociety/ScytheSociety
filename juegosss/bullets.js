@@ -147,28 +147,44 @@ const BulletManager = {
     const canvas = window.getCanvas();
 
     // 🔥 CORREGIDO: Sistema de velocidad rebalanceado
-    let cooldownTime;
+    let baseCooldownTime;
 
-    // Velocidades base más equilibradas
+    // === VELOCIDAD BASE POR NIVEL ===
     if (level <= 4) {
       // Niveles 1-4: Velocidad progresiva normal
-      cooldownTime = Math.max(80, 180 - level * 20); // 180, 160, 140, 120
+      baseCooldownTime = Math.max(80, 200 - level * 25); // 175, 150, 125, 100
     } else {
-      // Nivel 5+: Velocidad más controlada para dar sentido al rapid fire
-      cooldownTime = Math.max(70, 140 - (level - 4) * 8); // 132, 124, 116, 108...
+      // Nivel 5+: Velocidad mejorada (más rápida que niveles anteriores)
+      baseCooldownTime = Math.max(60, 90 - (level - 5) * 3); // 90, 87, 84, 81...
     }
+
+    // === APLICAR MODIFICADORES ACUMULATIVOS ===
+    let finalCooldownTime = baseCooldownTime;
 
     // 🔥 OBTENER POWER-UPS ACTIVOS
     const activePowerUps = Player.getActivePowerUps();
 
-    // 🔥 RAPID FIRE AHORA SÍ ES NOTABLEMENTE MÁS RÁPIDO
+    // 🔥 RAPID FIRE: Resta 30ms a la velocidad actual
     const hasRapidFire = activePowerUps.some((p) => p.id === 3);
     if (hasRapidFire) {
-      // 🔥 NUEVO: Velocidad fija súper rápida, independiente del nivel
-      cooldownTime = 25; // Súper rápido fijo
+      finalCooldownTime = Math.max(25, finalCooldownTime - 30); // Resta 30ms
+      console.log(
+        `⚡ Rapid Fire: ${baseCooldownTime}ms → ${finalCooldownTime}ms (-30ms)`
+      );
     }
 
-    if (currentTime - this.lastShootTime > cooldownTime) {
+    // 🔥 FRENESÍ: Resta 40ms ADICIONALES a la velocidad actual
+    if (window.frenzyModeActive) {
+      finalCooldownTime = Math.max(15, finalCooldownTime - 40); // Resta 40ms adicionales
+      console.log(
+        `🔥 Frenesí: ${
+          finalCooldownTime + 40
+        }ms → ${finalCooldownTime}ms (-40ms)`
+      );
+    }
+
+    // Usar finalCooldownTime en lugar de cooldownTime
+    if (currentTime - this.lastShootTime > finalCooldownTime) {
       // 🔥 Velocidad de bala
       const bulletSpeed = canvas.height * (0.018 + level * 0.003);
 

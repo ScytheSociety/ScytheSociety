@@ -209,8 +209,8 @@ function setupEventListeners() {
  */
 function setupEmergencyKeybinds() {
   window.addEventListener("keydown", (e) => {
-    // F5 o R = Reparar auto-disparo
-    if (e.key === "F5" || e.key === "r" || e.key === "R") {
+    // Solo R para reparar auto-disparo (remover F5)
+    if (e.key === "r" || e.key === "R") {
       if (isCurrentlyPlaying() && !gameEnded) {
         console.log("🚨 ATAJO DE EMERGENCIA: Reparando auto-disparo");
 
@@ -244,7 +244,7 @@ function setupEmergencyKeybinds() {
   });
 
   console.log(
-    "🔧 Atajos de emergencia configurados: F5/R = Reparar disparo, F6 = Diagnóstico"
+    "🔧 Atajos de emergencia configurados: R = Reparar disparo, F6 = Diagnóstico"
   );
 }
 
@@ -791,6 +791,7 @@ function gameLoop() {
     // Verificar eventos basados en vida
     if (gameTime % 60 === 0) {
       checkLifeBasedEvents();
+      checkPerformanceOverload();
     }
 
     // Limpiar canvas
@@ -1043,6 +1044,94 @@ function checkLifeBasedEvents() {
   }
 }
 
+// NUEVA FUNCIÓN - Agregar después de checkLifeBasedEvents()
+function checkPerformanceOverload() {
+  if (slowMotionActive || frenzyModeActive) return;
+
+  const canvas = window.getCanvas();
+  let totalObjects = 0;
+  let shouldActivate = false;
+
+  // Contar enemigos
+  if (typeof EnemyManager !== "undefined" && EnemyManager.enemies) {
+    totalObjects += EnemyManager.enemies.length;
+  }
+
+  // Contar balas del boss (fase Touhou)
+  if (typeof BossManager !== "undefined" && BossManager.bullets) {
+    const bossBullets = BossManager.bullets.getBulletCount();
+    totalObjects += bossBullets;
+
+    // Si hay muchas balas Touhou, activar inmediatamente
+    if (bossBullets > 15) {
+      shouldActivate = true;
+      console.log(
+        `🌊 Activando mundo subacuático: ${bossBullets} balas Touhou`
+      );
+    }
+  }
+
+  // Contar minas del boss
+  if (typeof BossManager !== "undefined" && BossManager.mines) {
+    const mineCount = BossManager.mines.getMineCount();
+    totalObjects += mineCount;
+
+    // Si hay muchas minas, activar
+    if (mineCount > 3) {
+      shouldActivate = true;
+      console.log(`🌊 Activando mundo subacuático: ${mineCount} minas activas`);
+    }
+  }
+
+  // Umbral general de objetos
+  if (totalObjects > 20) {
+    shouldActivate = true;
+    console.log(
+      `🌊 Activando mundo subacuático: ${totalObjects} objetos en pantalla`
+    );
+  }
+
+  // Activar si se cumple cualquier condición
+  if (shouldActivate && Math.random() < 0.008) {
+    // 0.8% de probabilidad por frame
+    triggerQuicksilverMode();
+  }
+}
+
+// NUEVA FUNCIÓN - Agregar después de triggerSlowMotion()
+function triggerQuicksilverMode() {
+  if (typeof UI !== "undefined" && UI.showScreenMessage) {
+    UI.showScreenMessage("🌊 ¡MODO GLUGLUGLU ACTIVADO! ⚡", "#00FFFF");
+  }
+
+  slowMotionActive = true;
+  slowMotionFactor = 0.05; // 🔥 SÚPER LENTO: 5% de velocidad normal
+
+  // 🔥 JUGADOR MENOS AFECTADO (Quicksilver)
+  if (typeof Player !== "undefined") {
+    Player.originalMoveSpeed = Player.moveSpeed;
+    Player.moveSpeed = 0.6; // Jugador solo 40% más lento
+    console.log("⚡ Modo Quicksilver: Jugador casi normal, mundo súper lento");
+  }
+
+  console.log("🌊 Modo Quicksilver: TODO se mueve al 5% de velocidad");
+
+  setTimeout(() => {
+    slowMotionActive = false;
+    slowMotionFactor = 1.0;
+
+    // Restaurar velocidad del jugador
+    if (typeof Player !== "undefined" && Player.originalMoveSpeed) {
+      Player.moveSpeed = Player.originalMoveSpeed;
+      console.log("⚡ Quicksilver terminado - velocidades normales");
+    }
+
+    if (typeof UI !== "undefined" && UI.showScreenMessage) {
+      UI.showScreenMessage("⚡ Modo normal restaurado", "#FFFFFF");
+    }
+  }, 8000); // 8 segundos de duración
+}
+
 function triggerPowerUpRain() {
   if (typeof UI !== "undefined" && UI.showScreenMessage) {
     UI.showScreenMessage("🌟 ¡LLUVIA DE EMERGENCIA! 🌟", "#FFD700");
@@ -1073,22 +1162,19 @@ function triggerFrenzyMode() {
 
   frenzyModeActive = true;
 
-  if (typeof BulletManager !== "undefined") {
-    if (BulletManager.stopAutoShoot) BulletManager.stopAutoShoot();
+  // 🔥 NUEVO: Solo activar el flag, el disparo se maneja en shootBullet()
+  console.log(
+    "🔥 Frenesí activado - velocidad de disparo aumentada (-40ms adicionales)"
+  );
 
-    const frenzyInterval = setInterval(() => {
-      if (BulletManager.shootBullet) BulletManager.shootBullet();
-    }, 35);
-
-    setTimeout(() => {
-      clearInterval(frenzyInterval);
-      if (BulletManager.startAutoShoot) BulletManager.startAutoShoot();
-      frenzyModeActive = false;
-      if (typeof UI !== "undefined" && UI.showScreenMessage) {
-        UI.showScreenMessage("Frenesí terminado", "#FFFFFF");
-      }
-    }, 15000);
-  }
+  // 🔥 NO cambiar el intervalo, solo el flag por 15 segundos
+  setTimeout(() => {
+    frenzyModeActive = false;
+    if (typeof UI !== "undefined" && UI.showScreenMessage) {
+      UI.showScreenMessage("Frenesí terminado", "#FFFFFF");
+    }
+    console.log("🔥 Frenesí terminado - velocidad normal restaurada");
+  }, 15000);
 }
 
 function triggerSlowMotion() {

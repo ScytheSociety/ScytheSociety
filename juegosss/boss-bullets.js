@@ -237,34 +237,88 @@ const BossBullets = {
 
   startShieldSpawning() {
     let shieldCount = 0;
-    const maxShields = 30;
+    const maxShields = 12; // Reducido: 12 escudos en 120 segundos (cada 10s)
 
     const spawnShield = () => {
       if (!this.patternActive || shieldCount >= maxShields) return;
 
-      if (window.PowerUpManager && window.PowerUpManager.powerUps.length < 2) {
+      // Solo spawnar si hay pocos power-ups en pantalla
+      if (window.PowerUpManager && window.PowerUpManager.powerUps.length < 3) {
         this.spawnProtectiveShield();
         shieldCount++;
+        console.log(
+          `🛡️ Escudo ${shieldCount}/${maxShields} spawneado en fase Touhou`
+        );
       }
 
-      setTimeout(spawnShield, 4000);
+      // 🔥 CAMBIADO: Cada 10 segundos (era 4 segundos)
+      setTimeout(spawnShield, 10000);
     };
 
-    setTimeout(spawnShield, 2000);
+    // Primer escudo después de 5 segundos
+    setTimeout(spawnShield, 5000);
   },
 
   spawnProtectiveShield() {
-    // Implementar spawning de escudos protectores
-    if (window.PowerUpManager) {
-      const canvas = window.getCanvas();
-      const shield = {
-        x: Math.random() * (canvas.width - 40) + 20,
-        y: Math.random() * (canvas.height - 40) + 20,
-        type: "shield",
-        // Propiedades del escudo
-      };
-      window.PowerUpManager.powerUps.push(shield);
-    }
+    if (!window.PowerUpManager) return;
+
+    const canvas = window.getCanvas();
+
+    // 🔥 POSICIONAMIENTO INTELIGENTE - Evitar que aparezcan muy cerca
+    let x, y;
+    let attempts = 0;
+    const minDistance = 150; // Distancia mínima entre escudos
+
+    do {
+      // Posición aleatoria con margen
+      x = 80 + Math.random() * (canvas.width - 160);
+      y = 80 + Math.random() * (canvas.height - 160);
+
+      // Verificar distancia con escudos existentes
+      let tooClose = false;
+      for (const powerUp of window.PowerUpManager.powerUps) {
+        if (powerUp.type && powerUp.type.id === 0) {
+          // Si es escudo
+          const distance = Math.sqrt(
+            Math.pow(x - powerUp.x, 2) + Math.pow(y - powerUp.y, 2)
+          );
+          if (distance < minDistance) {
+            tooClose = true;
+            break;
+          }
+        }
+      }
+
+      if (!tooClose) break;
+      attempts++;
+    } while (attempts < 20); // Máximo 20 intentos
+
+    // 🔥 CREAR ESCUDO ESTÁTICO USANDO EL SISTEMA CORRECTO
+    const shieldSize = GameConfig.PLAYER_SIZE * 0.8;
+
+    const shield = {
+      x: x,
+      y: y,
+      width: shieldSize,
+      height: shieldSize,
+      velocityX: 0, // 🔥 ESTÁTICO: Sin movimiento
+      velocityY: 0, // 🔥 ESTÁTICO: Sin movimiento
+
+      // 🔥 USAR EL TIPO CORRECTO DE ESCUDO
+      type: GameConfig.POWERUP_CONFIG.types.SHIELD, // Tipo escudo del config
+
+      // Efectos visuales
+      pulseTimer: 0,
+      glowIntensity: 0.8,
+      spawnTime: window.getGameTime(),
+      isStatic: true, // Marcador para identificar que es estático
+    };
+
+    window.PowerUpManager.powerUps.push(shield);
+
+    console.log(
+      `🛡️ Escudo estático spawneado en (${Math.round(x)}, ${Math.round(y)})`
+    );
   },
 
   endBulletPhase() {
@@ -339,20 +393,21 @@ const BossBullets = {
     const config = this.patternConfigs.spiral;
     let angle = 0;
 
-    const spiralInterval = setInterval(() => {
+    spiralInterval = setInterval(() => {
       if (!this.patternActive) {
         clearInterval(spiralInterval);
         return;
       }
 
-      // Crear balas en espiral
-      for (let i = 0; i < config.bulletsPerFrame; i++) {
-        const bulletAngle = angle + (i * Math.PI * 2) / config.bulletsPerFrame;
+      // 🔥 MÁS SEPARACIÓN: Reducir balas por frame
+      for (let i = 0; i < 1; i++) {
+        // CAMBIADO: de 2 a 1 bala por frame
+        const bulletAngle = angle + (i * Math.PI * 2) / 1; // Ajustar división
         this.createTouhouBullet(bulletAngle, config.speed, config.color);
       }
 
-      angle += config.rotationSpeed;
-    }, config.bulletInterval);
+      angle += config.rotationSpeed * 1.2; // 🔥 Rotar un poco más rápido para compensar
+    }, config.bulletInterval + 10); // 🔥 +10ms más lento entre disparos
 
     this.activeIntervals.push(spiralInterval);
   },
@@ -381,7 +436,7 @@ const BossBullets = {
     // Crear espacio para esquivar cerca del jugador
     const safeZoneStart =
       Math.floor((playerPos.x / canvas.width) * config.bulletCount) - 2;
-    const safeZoneEnd = safeZoneStart + config.gapSize;
+    const safeZoneEnd = safeZoneStart + (config.gapSize + 1); // +1 para más espacio
 
     for (let i = 0; i < config.bulletCount; i++) {
       if (i >= safeZoneStart && i <= safeZoneEnd) continue;
@@ -410,26 +465,32 @@ const BossBullets = {
         return;
       }
 
-      // Disparar en 4 direcciones principales
+      // Disparar en 4 direcciones principales con más separación
       const directions = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
 
-      directions.forEach((angle) => {
-        this.createTouhouBullet(angle, config.speed, config.color);
+      directions.forEach((angle, index) => {
+        // 🔥 DELAY ESCALONADO para más separación
+        setTimeout(() => {
+          this.createTouhouBullet(angle, config.speed, config.color);
+        }, index * 50); // 50ms entre cada dirección
       });
 
-      // Direcciones diagonales ocasionalmente
-      if (Math.random() < 0.3) {
+      // Reducir frecuencia de diagonales
+      if (Math.random() < 0.2) {
+        // CAMBIADO: de 0.3 a 0.2 (menos frecuente)
         const diagonals = [
           Math.PI / 4,
           (3 * Math.PI) / 4,
           (5 * Math.PI) / 4,
           (7 * Math.PI) / 4,
         ];
-        diagonals.forEach((angle) => {
-          this.createTouhouBullet(angle, config.speed * 0.8, "#E74C3C");
+        diagonals.forEach((angle, index) => {
+          setTimeout(() => {
+            this.createTouhouBullet(angle, config.speed * 0.8, "#E74C3C");
+          }, (index + 4) * 50); // Después de las direcciones principales
         });
       }
-    }, config.bulletInterval);
+    }, config.bulletInterval + 20); // 🔥 +20ms más lento
 
     this.activeIntervals.push(crossInterval);
   },
