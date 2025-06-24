@@ -139,10 +139,12 @@ const BossMovement = {
     if (distance > 50) {
       let speed = this.movement.speed;
 
-      // 🌊 APLICAR SLOWMOTION GLOBAL
+      // 🔥 APLICAR SLOWMOTION AL BOSS
       if (window.slowMotionActive && window.slowMotionFactor) {
-        speed *= window.slowMotionFactor; // Reducir velocidad considerablemente
-        console.log(`🌊 Boss nadando lentamente: velocidad ${speed}`);
+        speed *= window.slowMotionFactor;
+        console.log(
+          `🌊 Boss nadando lentamente: velocidad ${speed.toFixed(4)}`
+        );
       }
 
       const dirX = dx / distance;

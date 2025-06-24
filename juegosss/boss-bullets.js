@@ -102,9 +102,15 @@ const BossBullets = {
     for (let i = this.bulletPatterns.length - 1; i >= 0; i--) {
       const bullet = this.bulletPatterns[i];
 
-      // Mover bala
-      bullet.x += bullet.velocityX;
-      bullet.y += bullet.velocityY;
+      // 🔥 APLICAR SLOWMOTION A BALAS TOUHOU
+      let speedMultiplier = 1.0;
+      if (window.slowMotionActive && window.slowMotionFactor) {
+        speedMultiplier = window.slowMotionFactor;
+      }
+
+      // Mover bala CON factor de lentitud
+      bullet.x += bullet.velocityX * speedMultiplier;
+      bullet.y += bullet.velocityY * speedMultiplier;
       bullet.life--;
 
       // Efecto de brillo
@@ -192,6 +198,9 @@ const BossBullets = {
     // SOLO 3 patrones cada 30 segundos
     this.executeSimplePatternSequence();
 
+    // 🛡️ INICIAR SPAWN DE ESCUDOS (esto faltaba)
+    this.startShieldSpawning();
+
     // Terminar después de 90 segundos
     setTimeout(() => {
       this.endBulletPhase();
@@ -253,7 +262,17 @@ const BossBullets = {
   },
 
   spawnProtectiveShield() {
-    if (!window.PowerUpManager) return;
+    console.log("🛡️ Intentando spawnar escudo protector...");
+
+    if (!window.PowerUpManager) {
+      console.error("❌ PowerUpManager no disponible");
+      return;
+    }
+
+    if (!GameConfig.POWERUP_CONFIG || !GameConfig.POWERUP_CONFIG.types) {
+      console.error("❌ POWERUP_CONFIG no disponible");
+      return;
+    }
 
     const canvas = window.getCanvas();
 
@@ -312,6 +331,7 @@ const BossBullets = {
     console.log(
       `🛡️ Escudo estático spawneado en (${Math.round(x)}, ${Math.round(y)})`
     );
+    console.log("🛡️ Total power-ups:", window.PowerUpManager.powerUps.length);
   },
 
   endBulletPhase() {

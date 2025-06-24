@@ -196,9 +196,15 @@ const Player = {
    * Actualiza la posición del jugador
    */
   updatePosition() {
-    // Aplicar factor de velocidad
-    const deltaX = (this.mouseX - this.width / 2 - this.x) * this.moveSpeed;
-    const deltaY = (this.mouseY - this.height / 2 - this.y) * this.moveSpeed;
+    // 🔥 APLICAR SLOWMOTION AL JUGADOR
+    let effectiveMoveSpeed = this.moveSpeed;
+    if (window.slowMotionActive && window.slowMotionFactor) {
+      effectiveMoveSpeed *= window.slowMotionFactor;
+    }
+
+    const deltaX = (this.mouseX - this.width / 2 - this.x) * effectiveMoveSpeed;
+    const deltaY =
+      (this.mouseY - this.height / 2 - this.y) * effectiveMoveSpeed;
 
     this.x += deltaX * 0.15; // Suavizado
     this.y += deltaY * 0.15;

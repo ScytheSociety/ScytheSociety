@@ -1105,20 +1105,26 @@ function triggerQuicksilverMode() {
   }
 
   slowMotionActive = true;
-  slowMotionFactor = 0.05; // 🔥 SÚPER LENTO: 5% de velocidad normal
+  slowMotionFactor = 0.02; // 🔥 CAMBIADO: 2% de velocidad (SÚPER SÚPER LENTO)
 
   // 🔥 JUGADOR MENOS AFECTADO (Quicksilver)
   if (typeof Player !== "undefined") {
     Player.originalMoveSpeed = Player.moveSpeed;
-    Player.moveSpeed = 0.6; // Jugador solo 40% más lento
-    console.log("⚡ Modo Quicksilver: Jugador casi normal, mundo súper lento");
+    Player.moveSpeed = 0.1; // 🔥 CAMBIADO: Jugador al 10% (antes era 60%)
+    console.log("⚡ Modo Quicksilver: Jugador súper lento, mundo ultra lento");
   }
 
-  console.log("🌊 Modo Quicksilver: TODO se mueve al 5% de velocidad");
+  // 🔥 ACTUALIZAR VARIABLES GLOBALES
+  window.slowMotionActive = true;
+  window.slowMotionFactor = 0.02;
+
+  console.log("🌊 Modo Quicksilver: TODO se mueve al 2% de velocidad");
 
   setTimeout(() => {
     slowMotionActive = false;
     slowMotionFactor = 1.0;
+    window.slowMotionActive = false;
+    window.slowMotionFactor = 1.0;
 
     // Restaurar velocidad del jugador
     if (typeof Player !== "undefined" && Player.originalMoveSpeed) {
@@ -1129,7 +1135,7 @@ function triggerQuicksilverMode() {
     if (typeof UI !== "undefined" && UI.showScreenMessage) {
       UI.showScreenMessage("⚡ Modo normal restaurado", "#FFFFFF");
     }
-  }, 8000); // 8 segundos de duración
+  }, 8000);
 }
 
 function triggerPowerUpRain() {
@@ -1183,18 +1189,24 @@ function triggerSlowMotion() {
   }
 
   slowMotionActive = true;
-  slowMotionFactor = 0.15; // 🔥 Mismo factor que en combo.js
+  slowMotionFactor = 0.05; // 🔥 CAMBIADO: 5% de velocidad (súper lento)
 
   // 🔥 RALENTIZAR jugador pero menos que los enemigos
   if (typeof Player !== "undefined") {
     Player.originalMoveSpeed = Player.moveSpeed;
-    Player.moveSpeed = 0.25; // Jugador menos afectado
-    console.log("🏊 Jugador nadando de emergencia");
+    Player.moveSpeed = 0.15; // 🔥 CAMBIADO: Jugador al 15% (antes era 25%)
+    console.log("🏊 Jugador nadando súper lento");
   }
+
+  // 🔥 ACTUALIZAR VARIABLES GLOBALES
+  window.slowMotionActive = true;
+  window.slowMotionFactor = 0.05;
 
   setTimeout(() => {
     slowMotionActive = false;
     slowMotionFactor = 1.0;
+    window.slowMotionActive = false;
+    window.slowMotionFactor = 1.0;
 
     // Restaurar velocidad del jugador
     if (typeof Player !== "undefined" && Player.originalMoveSpeed) {
@@ -1205,7 +1217,7 @@ function triggerSlowMotion() {
     if (typeof UI !== "undefined" && UI.showScreenMessage) {
       UI.showScreenMessage("⚡ Emergencia resuelta", "#FFFFFF");
     }
-  }, 10000); // 10 segundos también aquí
+  }, 10000);
 }
 
 /**
