@@ -224,6 +224,28 @@ const GameConfig = {
     },
   },
 
+  // Agregar después de BOSS_CONFIG:
+  COMBO_CONFIG: {
+    timeLimit: 2000, // 2 segundos para mantener combo
+    thresholds: [
+      { combo: 0, multiplier: 1.0, text: "", color: "#FFFFFF" },
+      { combo: 5, multiplier: 1.2, text: "COMBO x5!", color: "#FFFF00" },
+      { combo: 10, multiplier: 1.5, text: "COMBO x10! 🔥", color: "#FF8800" },
+      { combo: 15, multiplier: 1.8, text: "COMBO x15! ⚡", color: "#FF4400" },
+      { combo: 20, multiplier: 2.0, text: "COMBO x20! 💥", color: "#FF0000" },
+      { combo: 30, multiplier: 2.5, text: "MEGA COMBO! 🌟", color: "#FF00FF" },
+      { combo: 40, multiplier: 3.0, text: "ULTRA COMBO! 🚀", color: "#00FFFF" },
+      { combo: 50, multiplier: 4.0, text: "LEGENDARY! 👑", color: "#FFD700" },
+    ],
+  },
+
+  YANKENPO_CONFIG: {
+    roundsToWin: 3,
+    selectionTimeLimit: 180, // 3 segundos
+    countdownDuration: 3,
+    resultDisplayTime: 2000,
+  },
+
   // ======================================================
   // EFECTOS VISUALES Y SONIDO
   // ======================================================
@@ -257,8 +279,16 @@ const GameConfig = {
       );
     this.isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
+    // Detectar también tablets como móviles para el sistema de pausa
+    const isTablet = /(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(
+      navigator.userAgent
+    );
+    if (isTablet) {
+      this.isMobile = true;
+    }
+
     console.log(
-      `📱 Dispositivo: ${this.isMobile ? "Móvil" : "Desktop"}, Touch: ${
+      `📱 Dispositivo: ${this.isMobile ? "Móvil/Tablet" : "Desktop"}, Touch: ${
         this.isTouch
       }`
     );
@@ -269,14 +299,29 @@ const GameConfig = {
    */
   updateSizes(canvas) {
     const baseSize = Math.min(canvas.width, canvas.height) / 20;
+    const mobileScale = this.isMobile ? 0.8 : 1.0;
 
-    this.PLAYER_SIZE = Math.max(40, Math.min(baseSize, 80));
-    this.BULLET_WIDTH = this.PLAYER_SIZE * 0.25;
+    // 🔥 TAMAÑOS RESPONSIVOS
+    this.PLAYER_SIZE = Math.max(
+      40,
+      Math.min(baseSize * mobileScale, this.isMobile ? 60 : 80)
+    );
+    this.BULLET_WIDTH = Math.max(12, this.PLAYER_SIZE * 0.25);
     this.BULLET_HEIGHT = this.BULLET_WIDTH * 2;
-    this.ENEMY_MIN_SIZE = Math.max(25, Math.min(baseSize * 0.8, 50));
-    this.ENEMY_MAX_SIZE = Math.max(40, Math.min(baseSize * 1.2, 80));
 
-    console.log(`📐 Tamaños actualizados - Jugador: ${this.PLAYER_SIZE}px`);
+    // Enemigos responsivos
+    this.ENEMY_MIN_SIZE = Math.max(
+      20,
+      Math.min(baseSize * 0.6 * mobileScale, this.isMobile ? 35 : 50)
+    );
+    this.ENEMY_MAX_SIZE = Math.max(
+      35,
+      Math.min(baseSize * 1.0 * mobileScale, this.isMobile ? 55 : 80)
+    );
+
+    console.log(
+      `📐 Tamaños responsivos - Jugador: ${this.PLAYER_SIZE}px, Escala móvil: ${mobileScale}`
+    );
   },
 
   /**

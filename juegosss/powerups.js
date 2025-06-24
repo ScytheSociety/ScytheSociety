@@ -186,36 +186,51 @@ const PowerUpManager = {
   spawnPowerUp() {
     const canvas = window.getCanvas();
 
-    // 🔥 Power-ups CON DURACIÓN BALANCEADA
+    // 🔥 USAR VALORES DE CONFIG.JS (no duplicar)
     const types = [
-      { id: 0, name: "Escudo Protector", color: "#00FF00", duration: 180 }, // 3 segundos
-      { id: 1, name: "Disparo Amplio", color: "#00FFFF", duration: 240 }, // 4 segundos
-      { id: 2, name: "Balas Explosivas", color: "#FF8800", duration: 180 }, // 3 segundos
-      { id: 3, name: "Disparo Rápido", color: "#FF00FF", duration: 300 }, // 5 segundos
+      GameConfig.POWERUP_CONFIG.types.SHIELD,
+      GameConfig.POWERUP_CONFIG.types.WIDE_SHOT,
+      GameConfig.POWERUP_CONFIG.types.EXPLOSIVE,
+      GameConfig.POWERUP_CONFIG.types.RAPID_FIRE,
     ];
 
     const selectedType = types[Math.floor(Math.random() * types.length)];
 
-    // Tamaño y posición
-    const size = GameConfig.PLAYER_SIZE * 0.7;
+    // 🔥 TAMAÑO RESPONSIVO
+    const screenScale = Math.min(canvas.width, canvas.height) / 800;
+    const mobileScale = GameConfig.isMobile ? 0.8 : 1.0;
+    const size = Math.max(
+      30,
+      GameConfig.PLAYER_SIZE * 0.7 * screenScale * mobileScale
+    );
+
     const x = size + Math.random() * (canvas.width - size * 2);
     const y = -size;
+
+    // 🔥 VELOCIDAD RESPONSIVA
+    const speedScale = GameConfig.isMobile ? 0.8 : 1.0;
 
     const powerUp = {
       x: x,
       y: y,
       width: size,
       height: size,
-      velocityY: canvas.height * 0.0025, // Más lento para ser más fácil
-      velocityX: (Math.random() - 0.5) * 0.0015 * canvas.height, // Menos errático
+      velocityY: canvas.height * 0.0025 * speedScale,
+      velocityX: (Math.random() - 0.5) * 0.0015 * canvas.height * speedScale,
 
-      type: selectedType,
+      type: selectedType, // Usando el objeto completo de config.js
       pulseTimer: 0,
       glowIntensity: 0,
       spawnTime: window.getGameTime(),
     };
 
     this.powerUps.push(powerUp);
+
+    console.log(
+      `⚡ Power-up spawneado: ${selectedType.name} (${
+        selectedType.duration
+      } frames = ${selectedType.duration / 60}s)`
+    );
   },
 
   /**

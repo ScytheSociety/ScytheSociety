@@ -22,7 +22,7 @@ const BulletManager = {
   enemiesForSpecialPower: 0,
   specialPowerReady: false,
   specialPowerActive: false,
-  ENEMIES_FOR_SPECIAL: 15, // 🔥 REDUCIDO para más acción
+  ENEMIES_FOR_SPECIAL: GameConfig.PLAYER_CONFIG.specialPower.enemiesRequired,
 
   // ======================================================
   // INICIALIZACIÓN Y CONTROL
@@ -206,8 +206,8 @@ const BulletManager = {
     const playerSize = Player.getSize();
     const canvas = window.getCanvas();
 
-    const bulletCount = 18; // Más balas
-    const bulletSpeed = canvas.height * 0.014; // Más rápidas
+    const bulletCount = GameConfig.PLAYER_CONFIG.specialPower.bulletCount;
+    const bulletSpeed = canvas.height * 0.014; // Mantener o mover a config
 
     // Crear balas en círculo - SIN PROPIEDAD EXPLOSIVA
     for (let i = 0; i < bulletCount; i++) {

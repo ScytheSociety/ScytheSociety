@@ -14,12 +14,18 @@ const BossBullets = {
   currentPatternIndex: 0,
   patternSequence: ["spiral", "walls", "burst", "rain", "laser"],
 
-  // Configuración de balas
-  bulletConfig: {
-    size: 12,
-    life: 500,
-    baseSpeed: 0.003,
-    glowIntensity: 0.5,
+  // Configuración responsiva de balas
+  get bulletConfig() {
+    const canvas = window.getCanvas();
+    const screenScale = Math.min(canvas.width, canvas.height) / 800;
+    const mobileScale = GameConfig.isMobile ? 0.8 : 1.0;
+
+    return {
+      size: Math.max(8, 12 * screenScale * mobileScale),
+      life: 500,
+      baseSpeed: 0.003 * (GameConfig.isMobile ? 0.8 : 1.0),
+      glowIntensity: 0.5,
+    };
   },
 
   // Configuración específica por patrón

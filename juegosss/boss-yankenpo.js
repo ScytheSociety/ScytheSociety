@@ -15,12 +15,7 @@ const BossYanKenPo = {
   gameState: "inactive", // inactive, countdown, selection, result, completed
 
   // Configuración del juego
-  gameConfig: {
-    roundsToWin: 3,
-    selectionTimeLimit: 180, // 3 segundos a 60fps
-    countdownDuration: 3,
-    resultDisplayTime: 2000,
-  },
+  gameConfig: GameConfig.YANKENPO_CONFIG,
 
   // Estado del juego
   roundsWon: 0,

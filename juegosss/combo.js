@@ -22,7 +22,7 @@ const ComboSystem = {
   currentCombo: 0, // Combo actual del jugador
   maxCombo: 0, // Combo máximo alcanzado en esta partida
   lastKillTime: 0, // Timestamp del último enemigo eliminado
-  comboTimeLimit: 2000, // Tiempo límite en ms para mantener combo (2 segundos)
+  comboTimeLimit: GameConfig.COMBO_CONFIG.timeLimit,
   comboDisplay: null, // Elemento HTML del display del combo
 
   // ======================================================
@@ -34,16 +34,7 @@ const ComboSystem = {
   // - color: color del mensaje y efectos visuales
   // ======================================================
 
-  comboThresholds: [
-    { combo: 0, multiplier: 1.0, text: "", color: "#FFFFFF" },
-    { combo: 5, multiplier: 1.2, text: "COMBO x5!", color: "#FFFF00" },
-    { combo: 10, multiplier: 1.5, text: "COMBO x10! 🔥", color: "#FF8800" },
-    { combo: 15, multiplier: 1.8, text: "COMBO x15! ⚡", color: "#FF4400" },
-    { combo: 20, multiplier: 2.0, text: "COMBO x20! 💥", color: "#FF0000" },
-    { combo: 30, multiplier: 2.5, text: "MEGA COMBO! 🌟", color: "#FF00FF" },
-    { combo: 40, multiplier: 3.0, text: "ULTRA COMBO! 🚀", color: "#00FFFF" },
-    { combo: 50, multiplier: 4.0, text: "LEGENDARY! 👑", color: "#FFD700" },
-  ],
+  comboThresholds: GameConfig.COMBO_CONFIG.thresholds,
 
   // ======================================================
   // 🚀 INICIALIZACIÓN

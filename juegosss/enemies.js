@@ -71,38 +71,41 @@ const EnemyManager = {
     const canvas = window.getCanvas();
     const level = window.getLevel();
 
-    // Tamaños diferentes para PC y móvil
+    // 🔥 TAMAÑOS RESPONSIVOS BASADOS EN PANTALLA
+    const screenScale = Math.min(canvas.width, canvas.height) / 800; // Escala base 800px
+    const mobileScale = GameConfig.isMobile ? 0.7 : 1.0; // 30% más pequeño en móvil
+
+    // En lugar de valores fijos, usar:
     let baseMinSize, baseMaxSize;
 
     if (GameConfig.isMobile) {
-      // Mantener tamaño actual en móvil
-      baseMinSize = 25;
-      baseMaxSize = 45;
+      baseMinSize = GameConfig.ENEMY_MIN_SIZE * 0.8;
+      baseMaxSize = GameConfig.ENEMY_MAX_SIZE * 0.8;
     } else {
-      // Más grandes en PC
-      baseMinSize = 35; // Era 25, ahora 35
-      baseMaxSize = 65; // Era 45, ahora 65
+      baseMinSize = GameConfig.ENEMY_MIN_SIZE;
+      baseMaxSize = GameConfig.ENEMY_MAX_SIZE;
     }
 
-    const sizeBonus = level * (GameConfig.isMobile ? 2 : 4);
+    const sizeBonus = level * (GameConfig.isMobile ? 1.5 : 3) * screenScale;
     const minSize = Math.max(
-      GameConfig.isMobile ? 30 : 40,
+      GameConfig.isMobile ? 25 : 35,
       baseMinSize + sizeBonus
     );
     const maxSize = Math.max(
-      GameConfig.isMobile ? 50 : 70,
+      GameConfig.isMobile ? 40 : 60,
       baseMaxSize + sizeBonus
     );
 
     const enemySize = minSize + Math.random() * (maxSize - minSize);
     const x = Math.random() * (canvas.width - enemySize);
 
-    // Resto del código igual...
+    // Velocidad responsiva
     const levelSpeedFactor = 1 + level * 0.15;
     const baseSpeed = canvas.height * 0.004 * levelSpeedFactor;
+    const speedScale = GameConfig.isMobile ? 0.8 : 1.0; // Más lento en móvil
 
     const angle = (Math.random() * Math.PI) / 2 - Math.PI / 4;
-    const speed = baseSpeed * (0.7 + Math.random() * 0.6);
+    const speed = baseSpeed * (0.7 + Math.random() * 0.6) * speedScale;
     const velocityX = Math.sin(angle) * speed;
     const velocityY = Math.abs(Math.cos(angle) * speed);
 
@@ -135,12 +138,17 @@ const EnemyManager = {
 
     this.enemies.push(enemy);
 
-    // Resto del spawn extra igual...
-    if (level > 3 && Math.random() < level * 0.04 && this.enemies.length < 25) {
+    // Spawn extra con límites responsivos
+    const maxEnemies = GameConfig.isMobile ? 15 : 25;
+    if (
+      level > 3 &&
+      Math.random() < level * 0.04 &&
+      this.enemies.length < maxEnemies
+    ) {
       const extraEnemies = Math.min(2, Math.floor(level / 4));
       for (let i = 0; i < extraEnemies; i++) {
         setTimeout(() => {
-          if (!window.isGameEnded() && this.enemies.length < 30) {
+          if (!window.isGameEnded() && this.enemies.length < maxEnemies + 5) {
             this.spawnSimpleEnemy();
           }
         }, i * 400);

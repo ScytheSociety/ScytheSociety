@@ -64,20 +64,32 @@ const BossManager = {
     const canvas = window.getCanvas();
     const config = GameConfig.BOSS_CONFIG;
 
+    // 🔥 TAMAÑO RESPONSIVO DEL BOSS
+    const screenScale = Math.min(canvas.width, canvas.height) / 800;
+    const mobileScale = GameConfig.isMobile ? 0.8 : 1.0;
+    const bossSize = Math.max(
+      80,
+      config.size * 1.5 * screenScale * mobileScale
+    );
+
     this.boss = {
-      x: canvas.width / 2 - (config.size * 1.5) / 2,
-      y: canvas.height / 2 - (config.size * 1.5) / 2,
-      width: config.size * 1.5,
-      height: config.size * 1.5,
+      x: canvas.width / 2 - bossSize / 2,
+      y: canvas.height / 2 - bossSize / 2,
+      width: bossSize,
+      height: bossSize,
       velocityX: 0,
       velocityY: 0,
       color: "#8B0000",
       glowIntensity: 0,
-      moveSpeed: config.speed * 1.5,
+      moveSpeed: config.speed * 1.5 * (GameConfig.isMobile ? 0.8 : 1.0),
       aggressionLevel: 1.0,
     };
 
-    console.log("👹 Entidad boss creada");
+    console.log(
+      `👹 Boss creado responsivo: ${bossSize}px (${
+        GameConfig.isMobile ? "MÓVIL" : "PC"
+      })`
+    );
   },
 
   initializeSystems() {

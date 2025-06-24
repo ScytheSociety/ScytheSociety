@@ -15,11 +15,10 @@ const BossPhases = {
   phaseActive: false,
   phaseTimer: 0,
 
-  // Duraciones exactas en frames (60fps)
   PHASE_DURATIONS: {
-    SUMMONING: 3600, // 60 segundos
-    MINES: 5400, // 90 segundos
-    BULLETS: 7200, // 120 segundos
+    SUMMONING: GameConfig.BOSS_PHASE_CONFIG.SUMMONING_DURATION || 3600,
+    MINES: GameConfig.BOSS_PHASE_CONFIG.MINES_DURATION || 5400,
+    BULLETS: GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION || 7200,
   },
 
   // Control de fases aleatorias

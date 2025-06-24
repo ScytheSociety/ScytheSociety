@@ -204,21 +204,38 @@ function setupEventListeners() {
   }
 }
 
+// Función auxiliar para detectar si estamos en background/foreground
+function isAppInForeground() {
+  if (document.hidden !== undefined) {
+    return !document.hidden;
+  }
+
+  if (document.webkitHidden !== undefined) {
+    return !document.webkitHidden;
+  }
+
+  if (document.mozHidden !== undefined) {
+    return !document.mozHidden;
+  }
+
+  return true; // Asumir foreground si no podemos detectar
+}
+
 /**
  * 🔥 SISTEMA DE PAUSA MEJORADO - FUNCIONA CON ALT+TAB
  */
 function setupGamePauseSystem() {
-  console.log("⏸️ Configurando sistema de pausa MEJORADO (ALT+TAB compatible)");
+  console.log("⏸️ Configurando sistema de pausa MÓVIL MEJORADO");
 
-  // Variables de control más específicas
   let wasPlayingMusic = false;
   let wasAutoShooting = false;
   let pauseTimeStart = 0;
   let lastActivityTime = Date.now();
   let activityCheckInterval;
   let recoveryCheckInterval;
+  let forceResumeTimeout;
 
-  // 🔥 FUNCIÓN DE PAUSA INMEDIATA Y FORZADA
+  // 🔥 FUNCIÓN DE PAUSA MEJORADA PARA MÓVIL
   const forceGamePause = (reason = "desconocido") => {
     if (gameEnded) return;
 
@@ -231,24 +248,19 @@ function setupGamePauseSystem() {
       AudioManager.isBackgroundMusicPlaying();
 
     wasAutoShooting =
-      (typeof BulletManager !== "undefined" &&
-        BulletManager.isAutoShooting &&
-        BulletManager.isAutoShooting()) ||
-      (typeof BulletManager !== "undefined" &&
-        BulletManager.autoShootInterval !== null);
+      typeof BulletManager !== "undefined" &&
+      BulletManager.autoShootInterval !== null;
 
-    // Marcar tiempo de pausa
     pauseTimeStart = Date.now();
     gameWasPausedBeforeHiding = gamePaused;
     gamePaused = true;
     pausedByVisibility = true;
 
-    // DETENER auto-disparo INMEDIATAMENTE
+    // DETENER todo inmediatamente
     if (typeof BulletManager !== "undefined" && BulletManager.stopAutoShoot) {
       BulletManager.stopAutoShoot();
     }
 
-    // PARAR música INMEDIATAMENTE
     if (
       wasPlayingMusic &&
       typeof AudioManager !== "undefined" &&
@@ -257,7 +269,7 @@ function setupGamePauseSystem() {
       AudioManager.stopBackgroundMusic();
     }
 
-    // 🔥 MOSTRAR MENSAJE DE PAUSA SOLO SI ESTAMOS JUGANDO
+    // Mostrar mensaje solo si estamos jugando
     if (
       isCurrentlyPlaying() &&
       typeof UI !== "undefined" &&
@@ -269,44 +281,48 @@ function setupGamePauseSystem() {
     console.log("⏸️ Estados guardados:", { wasPlayingMusic, wasAutoShooting });
   };
 
-  // 🔥 FUNCIÓN DE REANUDACIÓN MEJORADA
-  const resumeGame = (reason = "desconocido") => {
-    if (gameEnded || !pausedByVisibility) return;
+  // 🔥 FUNCIÓN DE REANUDACIÓN FORZADA PARA MÓVIL
+  const forceResumeGame = (reason = "desconocido") => {
+    if (gameEnded) return;
 
-    console.log(`▶️ REANUDANDO JUEGO - Razón: ${reason}`);
+    console.log(`▶️ FORZANDO REANUDACIÓN - Razón: ${reason}`);
 
-    // Calcular tiempo pausado
+    // Limpiar timeout de fuerza si existe
+    if (forceResumeTimeout) {
+      clearTimeout(forceResumeTimeout);
+      forceResumeTimeout = null;
+    }
+
     const pauseDuration = Date.now() - pauseTimeStart;
     console.log(`⏱️ Tiempo pausado: ${pauseDuration}ms`);
 
-    // Restaurar estado de pausa anterior
-    gamePaused = gameWasPausedBeforeHiding;
+    // FORZAR reanudación completa
+    gamePaused = false;
     pausedByVisibility = false;
     lastActivityTime = Date.now();
 
-    // REANUDAR auto-disparo si estaba activo
-    if (
-      wasAutoShooting &&
-      !gameEnded &&
-      typeof BulletManager !== "undefined" &&
-      BulletManager.startAutoShoot
-    ) {
-      BulletManager.startAutoShoot();
-      console.log("▶️ Auto-disparo REANUDADO");
+    // REANUDAR auto-disparo FORZADAMENTE
+    if (wasAutoShooting && !gameEnded && typeof BulletManager !== "undefined") {
+      // Doble verificación para asegurar reanudación
+      setTimeout(() => {
+        if (!gameEnded && !gamePaused && BulletManager.startAutoShoot) {
+          BulletManager.startAutoShoot();
+          console.log("▶️ Auto-disparo FORZADO");
+        }
+      }, 100);
     }
 
-    // REANUDAR música si estaba sonando
-    if (
-      wasPlayingMusic &&
-      !gameEnded &&
-      typeof AudioManager !== "undefined" &&
-      AudioManager.startBackgroundMusic
-    ) {
-      AudioManager.startBackgroundMusic();
-      console.log("▶️ Música REANUDADA");
+    // REANUDAR música FORZADAMENTE
+    if (wasPlayingMusic && !gameEnded && typeof AudioManager !== "undefined") {
+      setTimeout(() => {
+        if (!gameEnded && !gamePaused && AudioManager.startBackgroundMusic) {
+          AudioManager.startBackgroundMusic();
+          console.log("▶️ Música FORZADA");
+        }
+      }, 200);
     }
 
-    // 🔥 MOSTRAR MENSAJE DE REANUDACIÓN SOLO SI ESTAMOS JUGANDO
+    // Mostrar mensaje de reanudación
     if (
       isCurrentlyPlaying() &&
       typeof UI !== "undefined" &&
@@ -315,130 +331,187 @@ function setupGamePauseSystem() {
       UI.showScreenMessage("▶️ JUEGO REANUDADO", "#00FF00");
     }
 
-    // Reset de variables
+    // Reset variables
     wasPlayingMusic = false;
     wasAutoShooting = false;
     pauseTimeStart = 0;
   };
 
-  // 🔥 MÚLTIPLES DETECTORES DE PÉRDIDA DE FOCO
-
-  // 1. Detector de visibilidad (pestañas del navegador)
+  // 🔥 EVENTOS DE VISIBILIDAD MEJORADOS PARA MÓVIL
   document.addEventListener("visibilitychange", () => {
+    console.log(
+      `👁️ Visibilidad cambió: ${document.hidden ? "OCULTO" : "VISIBLE"}`
+    );
+
     if (document.hidden) {
-      console.log("👁️ Pestaña OCULTA (cambio de pestaña)");
-      forceGamePause("cambio de pestaña");
+      forceGamePause("pestaña oculta");
     } else {
-      console.log("👁️ Pestaña VISIBLE (regreso a pestaña)");
-      // Delay corto para confirmar
-      setTimeout(() => {
-        if (!document.hidden) {
-          resumeGame("regreso a pestaña");
-        }
-      }, 100);
+      // En móvil, forzar reanudación inmediata
+      if (GameConfig.isMobile) {
+        setTimeout(() => {
+          if (!document.hidden) {
+            forceResumeGame("pestaña visible - móvil");
+          }
+        }, 100);
+      } else {
+        // En PC, verificación normal
+        setTimeout(() => {
+          if (!document.hidden) {
+            forceResumeGame("pestaña visible - PC");
+          }
+        }, 300);
+      }
     }
   });
 
-  // 2. Detector de foco de ventana (ALT+TAB y clics fuera)
+  // 🔥 EVENTOS DE FOCO MEJORADOS
   window.addEventListener("blur", () => {
-    console.log("🔍 Ventana perdió FOCO (ALT+TAB o clic fuera)");
+    console.log("🔍 Ventana perdió foco");
     forceGamePause("pérdida de foco");
   });
 
   window.addEventListener("focus", () => {
-    console.log("🔍 Ventana ganó FOCO (regreso con ALT+TAB o clic)");
-    // Delay para confirmar estabilidad
-    setTimeout(() => {
-      // Verificar que realmente tenemos foco Y la pestaña es visible
-      if (!document.hidden && (!document.hasFocus || document.hasFocus())) {
-        resumeGame("ganancia de foco");
-      }
-    }, 150);
-  });
+    console.log("🔍 Ventana ganó foco");
 
-  // 3. Detector de foco del documento
-  document.addEventListener("focusin", () => {
-    lastActivityTime = Date.now();
-    if (pausedByVisibility && !document.hidden) {
-      console.log("📋 Documento ganó foco");
+    // Múltiples intentos de reanudación para móvil
+    if (GameConfig.isMobile) {
+      // Intento inmediato
+      setTimeout(() => forceResumeGame("foco inmediato"), 50);
+      // Intento de respaldo
+      setTimeout(() => forceResumeGame("foco respaldo"), 500);
+      // Intento final
+      setTimeout(() => forceResumeGame("foco final"), 1000);
+    } else {
       setTimeout(() => {
         if (!document.hidden) {
-          resumeGame("foco en documento");
+          forceResumeGame("ganancia de foco");
         }
-      }, 100);
+      }, 150);
     }
   });
 
-  document.addEventListener("focusout", () => {
-    console.log("📋 Documento perdió foco");
-    setTimeout(() => {
-      // Solo pausar si realmente no tenemos foco
-      if (document.hasFocus && !document.hasFocus()) {
-        forceGamePause("pérdida de foco de documento");
-      }
-    }, 100);
-  });
+  // 🔥 SISTEMA DE RECUPERACIÓN AGRESIVO PARA MÓVIL
+  const startAggressiveRecovery = () => {
+    recoveryCheckInterval = setInterval(
+      () => {
+        if (gameEnded) {
+          clearInterval(recoveryCheckInterval);
+          return;
+        }
 
-  // 4. 🔥 DETECTOR DE ACTIVIDAD CON MOUSE/TECLADO (backup)
-  const resetActivity = () => {
-    lastActivityTime = Date.now();
+        // Si el juego está pausado pero la ventana parece activa
+        if (pausedByVisibility && !document.hidden) {
+          const timePaused = Date.now() - pauseTimeStart;
+
+          // En móvil, recuperación más agresiva
+          if (GameConfig.isMobile && timePaused > 1000) {
+            console.log("🔄 Recuperación agresiva móvil activada");
+            forceResumeGame("recuperación agresiva móvil");
+          } else if (!GameConfig.isMobile && timePaused > 2000) {
+            console.log("🔄 Recuperación automática PC");
+            forceResumeGame("recuperación automática PC");
+          }
+        }
+      },
+      GameConfig.isMobile ? 200 : 500
+    ); // Más frecuente en móvil
   };
 
-  // Escuchar actividad del usuario
-  ["mousedown", "mousemove", "keydown", "scroll", "touchstart"].forEach(
-    (event) => {
-      document.addEventListener(event, resetActivity, true);
+  // 🔥 DETECTOR DE ACTIVIDAD TÁCTIL PARA MÓVIL
+  const mobileActivityEvents = ["touchstart", "touchmove", "touchend", "click"];
+  const desktopActivityEvents = ["mousedown", "mousemove", "keydown", "scroll"];
+
+  const activityEvents = GameConfig.isMobile
+    ? mobileActivityEvents
+    : desktopActivityEvents;
+
+  const resetActivity = () => {
+    lastActivityTime = Date.now();
+
+    // Si detectamos actividad y el juego está pausado, forzar reanudación
+    if (pausedByVisibility && !document.hidden) {
+      console.log("🎯 Actividad detectada - forzando reanudación");
+      forceResumeGame("actividad del usuario");
     }
-  );
+  };
 
-  // Verificar inactividad cada segundo
-  activityCheckInterval = setInterval(() => {
-    if (gameEnded) {
-      clearInterval(activityCheckInterval);
-      return;
+  activityEvents.forEach((event) => {
+    document.addEventListener(event, resetActivity, true);
+  });
+
+  // 🔥 TIMEOUT DE FUERZA PARA CASOS EXTREMOS EN MÓVIL
+  const setupForceTimeout = () => {
+    if (GameConfig.isMobile && pausedByVisibility) {
+      forceResumeTimeout = setTimeout(() => {
+        console.log("⚠️ TIMEOUT DE FUERZA - Reanudando juego");
+        forceResumeGame("timeout de fuerza");
+      }, 3000); // 3 segundos máximo pausado en móvil
     }
+  };
 
-    const timeSinceActivity = Date.now() - lastActivityTime;
+  // Iniciar sistemas
+  startAggressiveRecovery();
 
-    // Si no hay actividad por más de 3 segundos Y el juego no está pausado
-    if (timeSinceActivity > 3000 && !pausedByVisibility) {
-      // Verificar si realmente perdimos el foco
-      if (document.hidden || (document.hasFocus && !document.hasFocus())) {
-        console.log("⏱️ Inactividad detectada - pausando");
-        forceGamePause("inactividad prolongada");
-      }
-    }
-  }, 1000);
-
-  // 5. 🔥 SISTEMA DE RECUPERACIÓN AUTOMÁTICA
-  const startRecoverySystem = () => {
-    recoveryCheckInterval = setInterval(() => {
+  // Verificar inactividad con diferentes tiempos para móvil/PC
+  activityCheckInterval = setInterval(
+    () => {
       if (gameEnded) {
-        clearInterval(recoveryCheckInterval);
+        clearInterval(activityCheckInterval);
         return;
       }
 
-      // Si el juego está pausado por visibilidad pero la ventana está activa
-      if (
-        pausedByVisibility &&
-        !document.hidden &&
-        (!document.hasFocus || document.hasFocus())
-      ) {
-        console.log("🔄 Sistema de recuperación: detectando ventana activa");
-        resumeGame("recuperación automática");
+      const timeSinceActivity = Date.now() - lastActivityTime;
+      const inactivityLimit = GameConfig.isMobile ? 2000 : 3000;
+
+      if (timeSinceActivity > inactivityLimit && !pausedByVisibility) {
+        if (document.hidden || (document.hasFocus && !document.hasFocus())) {
+          console.log("⏱️ Inactividad detectada - pausando");
+          forceGamePause("inactividad prolongada");
+
+          // En móvil, setup timeout de fuerza
+          if (GameConfig.isMobile) {
+            setupForceTimeout();
+          }
+        }
       }
-    }, 500);
-  };
+    },
+    GameConfig.isMobile ? 500 : 1000
+  );
 
-  startRecoverySystem();
+  // 🔥 EVENTO ESPECIAL PARA MÓVIL: pageshow/pagehide
+  if (GameConfig.isMobile) {
+    window.addEventListener("pageshow", (event) => {
+      console.log("📱 Página mostrada en móvil");
+      if (event.persisted) {
+        // Página restaurada desde cache
+        setTimeout(() => forceResumeGame("pageshow cache"), 100);
+      }
+    });
 
-  // 6. Limpiar intervals al cerrar
+    window.addEventListener("pagehide", () => {
+      console.log("📱 Página oculta en móvil");
+      forceGamePause("pagehide móvil");
+    });
+
+    // Evento de cambio de orientación
+    window.addEventListener("orientationchange", () => {
+      console.log("📱 Orientación cambiada");
+      setTimeout(() => {
+        if (!document.hidden) {
+          forceResumeGame("orientación cambiada");
+        }
+      }, 500);
+    });
+  }
+
+  // Limpiar intervals al cerrar
   window.addEventListener("beforeunload", () => {
     if (activityCheckInterval) clearInterval(activityCheckInterval);
     if (recoveryCheckInterval) clearInterval(recoveryCheckInterval);
+    if (forceResumeTimeout) clearTimeout(forceResumeTimeout);
   });
 
-  console.log("✅ Sistema de pausa MEJORADO configurado (multiple detectores)");
+  console.log("✅ Sistema de pausa MÓVIL MEJORADO configurado");
 }
 
 /**

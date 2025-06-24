@@ -370,6 +370,10 @@ const BossRedLine = {
       return;
     }
 
+    // 🔥 ESCALA RESPONSIVA PARA FORMAS
+    const screenScale = Math.min(canvas.width, canvas.height) / 800;
+    const mobileScale = GameConfig.isMobile ? 0.8 : 1.0;
+
     const shapes = [
       "zigzag",
       "star",
@@ -381,39 +385,46 @@ const BossRedLine = {
     ];
     const shape = shapes[Math.floor(Math.random() * shapes.length)];
 
-    console.log(`🔴 Generando forma geométrica: ${shape}`);
+    console.log(
+      `🔴 Generando forma geométrica responsiva: ${shape} (escala: ${
+        screenScale * mobileScale
+      })`
+    );
+
+    // Pasar escala a las funciones de generación
+    const scale = screenScale * mobileScale;
 
     switch (shape) {
       case "zigzag":
-        this.generateZigzagPattern(canvas);
+        this.generateZigzagPattern(canvas, scale);
         break;
       case "star":
-        this.generateStarPattern(canvas);
+        this.generateStarPattern(canvas, scale);
         break;
       case "triangle":
-        this.generateTrianglePattern(canvas);
+        this.generateTrianglePattern(canvas, scale);
         break;
       case "diamond":
-        this.generateDiamondPattern(canvas);
+        this.generateDiamondPattern(canvas, scale);
         break;
       case "spiral":
-        this.generateSpiralPattern(canvas);
+        this.generateSpiralPattern(canvas, scale);
         break;
       case "wave":
-        this.generateWavePattern(canvas);
+        this.generateWavePattern(canvas, scale);
         break;
       case "lightning":
-        this.generateLightningPattern(canvas);
+        this.generateLightningPattern(canvas, scale);
         break;
     }
 
     if (this.redLinePath.length === 0) {
       console.error("🔴 Error: No se generaron puntos para la línea");
-      this.generateFallbackLine(canvas);
+      this.generateFallbackLine(canvas, scale);
     }
 
     console.log(
-      `🔴 Forma ${shape} generada con ${this.redLinePath.length} puntos`
+      `🔴 Forma ${shape} generada con ${this.redLinePath.length} puntos responsivos`
     );
   },
 
@@ -434,34 +445,19 @@ const BossRedLine = {
     this.createSmoothPath(points);
   },
 
-  generateStarPattern(canvas) {
+  generateStarPattern(canvas, scale = 1.0) {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const outerRadius = Math.min(canvas.width, canvas.height) * 0.3;
+
+    // 🔥 RADIO RESPONSIVO
+    const baseRadius = Math.min(canvas.width, canvas.height) * 0.25 * scale;
+    const outerRadius = Math.max(60, baseRadius);
     const innerRadius = outerRadius * 0.5;
     const points = [];
 
     for (let i = 0; i < 10; i++) {
       const angle = (i * Math.PI) / 5;
       const radius = i % 2 === 0 ? outerRadius : innerRadius;
-      points.push({
-        x: centerX + Math.cos(angle) * radius,
-        y: centerY + Math.sin(angle) * radius,
-      });
-    }
-
-    points.push(points[0]);
-    this.createSmoothPath(points);
-  },
-
-  generateTrianglePattern(canvas) {
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = Math.min(canvas.width, canvas.height) * 0.35;
-
-    const points = [];
-    for (let i = 0; i < 3; i++) {
-      const angle = (i * 2 * Math.PI) / 3 - Math.PI / 2;
       points.push({
         x: centerX + Math.cos(angle) * radius,
         y: centerY + Math.sin(angle) * radius,

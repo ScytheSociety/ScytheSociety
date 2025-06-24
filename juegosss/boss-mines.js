@@ -15,17 +15,23 @@ const BossMines = {
   teleportInterval: null,
   staticMineInterval: null,
 
-  // Al inicio del archivo, reemplazar mineConfig:
-  mineConfig: {
-    size: GameConfig.isMobile ? 35 : 40, // Más pequeñas en móvil
-    dangerRadius: GameConfig.isMobile ? 100 : 120, // Radio menor en móvil
-    staticDangerRadius: GameConfig.isMobile ? 70 : 80,
-    armingTime: 60,
-    explosionTime: 300,
-    warningTime: 120,
-    blinkSpeed: 10,
-    chainReactionRadius: GameConfig.isMobile ? 130 : 150,
-    minDistanceBetweenMines: GameConfig.isMobile ? 80 : 60,
+  // Configuración responsiva de minas
+  get mineConfig() {
+    const canvas = window.getCanvas();
+    const screenScale = Math.min(canvas.width, canvas.height) / 800;
+    const mobileScale = GameConfig.isMobile ? 0.7 : 1.0;
+
+    return {
+      size: Math.max(25, 40 * screenScale * mobileScale),
+      dangerRadius: Math.max(80, 120 * screenScale * mobileScale),
+      staticDangerRadius: Math.max(60, 80 * screenScale * mobileScale),
+      armingTime: 60,
+      explosionTime: 300,
+      warningTime: 120,
+      blinkSpeed: 10,
+      chainReactionRadius: Math.max(100, 150 * screenScale * mobileScale),
+      minDistanceBetweenMines: Math.max(40, 60 * screenScale * mobileScale),
+    };
   },
 
   // ======================================================
