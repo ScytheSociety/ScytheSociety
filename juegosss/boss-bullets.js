@@ -429,7 +429,7 @@ const BossBullets = {
 
   createSpiralPattern() {
     const config = this.patternConfigs.spiral;
-    let angle = 0;
+    let angle = Math.random() * Math.PI * 2; // 🔥 NUEVO: Ángulo inicial aleatorio
 
     spiralInterval = setInterval(() => {
       if (!this.patternActive) {

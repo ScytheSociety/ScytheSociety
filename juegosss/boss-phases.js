@@ -306,11 +306,29 @@ const BossPhases = {
     this.bossManager.isImmune = false;
     this.bossManager.immunityTimer = 0;
 
-    // 🔥 ACTIVAR HUNTING FLUIDO DESPUÉS DE 2 SEGUNDOS
+    // 🔥 NUEVO: NO ACTIVAR HUNTING SI RED LINE ESTÁ ACTIVO
+    if (this.bossManager.redline && this.bossManager.redline.phaseActive) {
+      console.log("🚫 NO se reactiva HUNTING - Red Line en curso");
+      if (this.bossManager.ui) {
+        this.bossManager.ui.showScreenMessage(
+          `✅ ${previousPhase} COMPLETADO - Red Line continúa`,
+          "#FFFF00"
+        );
+      }
+      return;
+    }
+
+    // 🔥 ACTIVAR HUNTING FLUIDO DESPUÉS DE 2 SEGUNDOS (solo si NO hay Red Line)
     setTimeout(() => {
       if (this.bossManager.movement && this.currentPhase === "HUNTING") {
-        this.bossManager.movement.enableFluidHunting();
-        console.log("🏃 Boss ahora en modo HUNTING fluido");
+        // Verificar de nuevo que Red Line no esté activo
+        if (
+          !this.bossManager.redline ||
+          !this.bossManager.redline.phaseActive
+        ) {
+          this.bossManager.movement.enableFluidHunting();
+          console.log("🏃 Boss ahora en modo HUNTING fluido");
+        }
       }
     }, 2000);
 

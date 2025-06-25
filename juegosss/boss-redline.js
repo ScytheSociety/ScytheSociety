@@ -76,6 +76,14 @@ const BossRedLine = {
 
     this.bossManager.makeImmune(9999);
 
+    // 🔥 NUEVO: RALENTIZAR AL JUGADOR INMEDIATAMENTE
+    if (window.Player && Player.setSpeedModifier) {
+      Player.setSpeedModifier(this.playerSlowFactor);
+      console.log(
+        `🐌 Jugador ralentizado a ${this.playerSlowFactor}x durante Red Line`
+      );
+    }
+
     // 🔥 BOSS DEBE ESTAR QUIETO Y NO SEGUIR AL JUGADOR
     if (this.bossManager.movement) {
       this.bossManager.movement.stopMovementAndCenter();
@@ -110,7 +118,7 @@ const BossRedLine = {
     this.redLineIndex = 0;
     this.gridLines = []; // Limpiar cuadrícula
 
-    // Restaurar velocidad del jugador
+    // 🔥 RESTAURAR VELOCIDAD DEL JUGADOR INMEDIATAMENTE
     if (window.Player && Player.restoreNormalSpeed) {
       Player.restoreNormalSpeed();
       console.log("🏃 Velocidad del jugador restaurada a normal");
