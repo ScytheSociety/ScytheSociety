@@ -11,7 +11,10 @@ const Player = {
   // Información básica
   name: "",
   avatar: "",
-  moveSpeed: 1.0, // Factor de velocidad normal
+
+  // 🔥 SISTEMA DE VELOCIDAD UNIFICADO
+  moveSpeed: 1.0, // Velocidad base normal (mantener nombre original)
+  speedModifier: 1.0, // Modificador temporal (para Red Line, etc.)
 
   // Posición y dimensiones
   x: 0,
@@ -45,6 +48,10 @@ const Player = {
     this.avatar = avatar;
     this.lives = 7;
 
+    // Resetear velocidades
+    this.moveSpeed = 1.0;
+    this.speedModifier = 1.0;
+
     // Posición inicial en el centro
     const canvas = window.getCanvas();
     this.width = GameConfig.PLAYER_SIZE;
@@ -58,10 +65,8 @@ const Player = {
     this.invulnerabilityTime = 0;
     this.visible = true;
     this.damaged = false;
-    this.activePowerUp = null;
-    this.powerUpTimeLeft = 0;
-    this.rapidFireActive = false;
-    this.rapidFireTimeLeft = 0;
+    this.activePowerUps = [];
+    this.powerUpVisualEffects = [];
 
     console.log(`👤 Jugador ÉPICO inicializado: ${name} ${avatar}`);
   },
@@ -196,17 +201,17 @@ const Player = {
    * Actualiza la posición del jugador
    */
   updatePosition() {
-    // 🔥 APLICAR SLOWMOTION AL JUGADOR
-    let effectiveMoveSpeed = this.moveSpeed;
+    // 🔥 VELOCIDAD FINAL = moveSpeed * speedModifier * slowMotion
+    let effectiveSpeed = this.moveSpeed * this.speedModifier;
+
     if (window.slowMotionActive && window.slowMotionFactor) {
-      effectiveMoveSpeed *= window.slowMotionFactor;
+      effectiveSpeed *= window.slowMotionFactor;
     }
 
-    const deltaX = (this.mouseX - this.width / 2 - this.x) * effectiveMoveSpeed;
-    const deltaY =
-      (this.mouseY - this.height / 2 - this.y) * effectiveMoveSpeed;
+    const deltaX = (this.mouseX - this.width / 2 - this.x) * effectiveSpeed;
+    const deltaY = (this.mouseY - this.height / 2 - this.y) * effectiveSpeed;
 
-    this.x += deltaX * 0.15; // Suavizado
+    this.x += deltaX * 0.15;
     this.y += deltaY * 0.15;
 
     // Mantener dentro de los límites del canvas
@@ -744,6 +749,51 @@ const Player = {
   },
 
   // ======================================================
+  // SISTEMA DE VELOCIDAD MODIFICABLE
+  // ======================================================
+
+  setSpeedModifier(modifier) {
+    this.speedModifier = modifier;
+    console.log(
+      `🏃 Velocidad del jugador modificada: ${modifier}x (${
+        this.moveSpeed * modifier
+      } total)`
+    );
+  },
+
+  getSpeedModifier() {
+    return this.speedModifier;
+  },
+
+  restoreNormalSpeed() {
+    this.speedModifier = 1.0;
+    console.log("🏃 Velocidad del jugador restaurada a normal");
+  },
+
+  // Verificar colisión con líneas de cuadrícula
+  checkGridLineCollision(lines) {
+    const playerCenterX = this.x + this.width / 2;
+    const playerCenterY = this.y + this.height / 2;
+    const hitRadius = this.width / 3; // Área de colisión
+
+    for (const line of lines) {
+      let distance = 0;
+
+      if (line.type === "vertical") {
+        distance = Math.abs(playerCenterX - line.x);
+      } else if (line.type === "horizontal") {
+        distance = Math.abs(playerCenterY - line.y);
+      }
+
+      if (distance < hitRadius) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
+  // ======================================================
   // GETTERS Y SETTERS
   // ======================================================
 
@@ -780,11 +830,13 @@ const Player = {
     this.name = "";
     this.avatar = "";
     this.lives = 7;
+    this.moveSpeed = 1.0;
+    this.speedModifier = 1.0;
     this.invulnerabilityTime = 0;
     this.visible = true;
     this.damaged = false;
-    this.activePowerUps = []; // ⬅️ AGREGA esta línea
-    this.powerUpVisualEffects = []; // ⬅️ AGREGA esta línea
+    this.activePowerUps = [];
+    this.powerUpVisualEffects = [];
 
     console.log("🔄 Jugador ÉPICO reseteado");
   },

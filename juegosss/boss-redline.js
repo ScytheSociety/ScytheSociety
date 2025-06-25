@@ -1,6 +1,6 @@
 /**
  * Hell Shooter - Boss Red Line System Optimizado
- * Sistema modular de la fase del hilo rojo
+ * Sistema modular de la fase del hilo rojo CON CUADRÍCULA ANIMADA
  */
 
 const BossRedLine = {
@@ -28,6 +28,11 @@ const BossRedLine = {
   cycleCount: 0,
   maxCycles: 10,
 
+  // 🔥 NUEVO: Sistema de cuadrícula animada
+  gridLines: [],
+  lastGridTime: 0,
+  gridInterval: 8000, // 8 segundos entre cuadrículas
+
   // Configuración
   lineConfig: {
     previewDuration: 2000,
@@ -48,7 +53,11 @@ const BossRedLine = {
     this.redLinePath = [];
     this.redLineIndex = 0;
     this.cycleCount = 0;
-    this.originalPlayerSpeed = Player.moveSpeed;
+    this.gridLines = [];
+    this.lastGridTime = 0;
+    this.originalPlayerSpeed = Player.getSpeedModifier
+      ? Player.getSpeedModifier()
+      : 1.0;
     console.log("🔴 Sistema de hilo rojo del boss inicializado");
   },
 
@@ -57,11 +66,13 @@ const BossRedLine = {
   // ======================================================
 
   startPhase() {
-    console.log("🔴 === INICIANDO FASE DEL HILO ROJO (10 RONDAS) ===");
+    console.log("🔴 === INICIANDO FASE DEL HILO ROJO (10 DIBUJOS) ===");
 
     this.phaseActive = true;
     this.cycleCount = 0;
-    this.maxCycles = 10; // FORZAR 10 rondas
+    this.maxCycles = 10;
+    this.gridLines = [];
+    this.lastGridTime = Date.now();
 
     this.bossManager.makeImmune(9999);
 
@@ -69,13 +80,20 @@ const BossRedLine = {
       this.bossManager.movement.stopMovementAndCenter();
     }
 
-    // 🔴 RALENTIZAR JUGADOR EXTREMADAMENTE
-    this.originalPlayerSpeed = Player.moveSpeed;
-    Player.moveSpeed = 0.03; // SÚPER LENTO (antes era 0.15)
+    // 🔥 MOVIMIENTO ULTRA LENTO DEL JUGADOR
+    if (window.Player && Player.setSpeedModifier) {
+      this.originalPlayerSpeed = Player.getSpeedModifier();
+      Player.setSpeedModifier(0.05); // 95% más lento
+      console.log(
+        "🐌 Jugador ahora se mueve ULTRA LENTO (5% velocidad normal)"
+      );
+    } else {
+      console.warn("⚠️ Sistema de velocidad del jugador no disponible");
+    }
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        "🔴 FASE DEL HILO ROJO (10 RONDAS) 🔴",
+        "🔴 FASE DEL HILO ROJO (10 DIBUJOS) 🔴",
         "#FF0000"
       );
     }
@@ -97,28 +115,27 @@ const BossRedLine = {
     this.showingPreview = false;
     this.redLinePath = [];
     this.redLineIndex = 0;
-    // NO resetear cycleCount aquí para mantener el valor
+    this.gridLines = []; // Limpiar cuadrícula
 
     // Restaurar velocidad del jugador
-    if (window.Player && Player.moveSpeed !== undefined) {
-      Player.moveSpeed = this.originalPlayerSpeed;
+    if (window.Player && Player.restoreNormalSpeed) {
+      Player.restoreNormalSpeed();
       console.log("🏃 Velocidad del jugador restaurada a normal");
+    } else if (window.Player && Player.setSpeedModifier) {
+      Player.setSpeedModifier(this.originalPlayerSpeed);
+      console.log("🏃 Velocidad del jugador restaurada manualmente");
     }
 
-    // 🔥 NUEVA LÓGICA: Solo hacer vulnerable si NO va a Yan Ken Po
-    if (this.cycleCount < this.maxCycles) {
-      // Red Line incompleto - volver a hunting
-      if (this.bossManager && this.bossManager.boss) {
+    // Solo hacer vulnerable si completó los 10 ciclos
+    if (this.cycleCount >= this.maxCycles) {
+      console.log("🔴 Red Line COMPLETADO (10/10) - transición a Yan Ken Po");
+      // Mantener inmune para Yan Ken Po
+    } else {
+      console.log("🔴 Red Line incompleto - boss vulnerable");
+      if (this.bossManager) {
         this.bossManager.isImmune = false;
         this.bossManager.immunityTimer = 0;
-        console.log("🔴 Boss hecho vulnerable - Red Line incompleto");
       }
-    } else {
-      // Red Line completado - mantener inmune para Yan Ken Po
-      console.log(
-        "🔴 Red Line COMPLETADO - manteniendo boss inmune para Yan Ken Po"
-      );
-      // NO cambiar inmunidad aquí
     }
   },
 
@@ -137,8 +154,91 @@ const BossRedLine = {
       return;
     }
 
+    // 🔥 NUEVO: Actualizar sistema de cuadrícula
+    this.updateGridSystem();
+
     if (this.redLineMoving) {
       this.updateBossMovement();
+    }
+  },
+
+  // ======================================================
+  // SISTEMA DE CUADRÍCULA ANIMADA
+  // ======================================================
+
+  updateGridSystem() {
+    if (!this.phaseActive) return;
+
+    const currentTime = Date.now();
+
+    // Generar nueva cuadrícula cada 8 segundos
+    if (currentTime - this.lastGridTime >= this.gridInterval) {
+      this.generateAnimatedGrid();
+      this.lastGridTime = currentTime;
+    }
+
+    // Actualizar líneas existentes
+    this.updateGridLines();
+  },
+
+  generateAnimatedGrid() {
+    const canvas = window.getCanvas();
+    const spacing = 80;
+
+    console.log("🔴 Generando cuadrícula animada");
+
+    // Líneas verticales (de arriba hacia abajo)
+    for (let x = spacing; x < canvas.width; x += spacing) {
+      this.gridLines.push({
+        type: "vertical",
+        x: x,
+        y: 0,
+        targetY: canvas.height,
+        speed: 2,
+        active: true,
+      });
+    }
+
+    // Líneas horizontales (de izquierda a derecha)
+    for (let y = spacing; y < canvas.height; y += spacing) {
+      this.gridLines.push({
+        type: "horizontal",
+        x: 0,
+        y: y,
+        targetX: canvas.width,
+        speed: 2,
+        active: true,
+      });
+    }
+  },
+
+  updateGridLines() {
+    if (!window.Player) return;
+
+    // Verificar colisión ANTES de mover líneas
+    if (
+      Player.checkGridLineCollision &&
+      Player.checkGridLineCollision(this.gridLines)
+    ) {
+      console.log("💥 Jugador golpeado por línea de cuadrícula");
+      Player.takeDamage();
+    }
+
+    // Actualizar posición de líneas
+    for (let i = this.gridLines.length - 1; i >= 0; i--) {
+      const line = this.gridLines[i];
+
+      if (line.type === "vertical") {
+        line.y += line.speed;
+        if (line.y >= line.targetY) {
+          this.gridLines.splice(i, 1);
+        }
+      } else if (line.type === "horizontal") {
+        line.x += line.speed;
+        if (line.x >= line.targetX) {
+          this.gridLines.splice(i, 1);
+        }
+      }
     }
   },
 
@@ -208,12 +308,14 @@ const BossRedLine = {
 
   startRedLineCycle() {
     console.log(
-      `🔄 Iniciando ronda ${this.cycleCount + 1}/${this.maxCycles} de hilo rojo`
+      `🔄 Iniciando dibujo ${this.cycleCount + 1}/${
+        this.maxCycles
+      } de hilo rojo`
     );
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        `🔴 RONDA ${this.cycleCount + 1}/10`,
+        `🔴 DIBUJO ${this.cycleCount + 1}/10`,
         "#FFFF00"
       );
     }
@@ -225,7 +327,7 @@ const BossRedLine = {
     }
 
     this.adjustDifficultyForRound(this.cycleCount + 1);
-    this.generateComplexGeometricLine();
+    this.generateWallBouncingPattern(); // 🔥 NUEVA FUNCIÓN
 
     if (this.redLinePath.length === 0) {
       console.error("🔴 Error: No se pudo generar línea roja");
@@ -236,22 +338,18 @@ const BossRedLine = {
     this.showLinePreview();
   },
 
-  // REEMPLAZAR adjustDifficultyForRound()
   adjustDifficultyForRound(roundNumber) {
-    // 🔥 VELOCIDAD AJUSTADA PARA PATRONES GIGANTES
     if (roundNumber <= 3) {
-      this.redLineSpeed = 1.5; // MÁS LENTO para patrones complejos
+      this.redLineSpeed = 1.5;
     } else if (roundNumber <= 6) {
       this.redLineSpeed = 2.0;
     } else if (roundNumber <= 8) {
       this.redLineSpeed = 2.5;
     } else {
-      this.redLineSpeed = 3.0; // Máximo para últimas rondas
+      this.redLineSpeed = 3.0;
     }
 
-    console.log(
-      `🔴 Ronda ${roundNumber}/10: Velocidad ${this.redLineSpeed} (patrones gigantes)`
-    );
+    console.log(`🔴 Dibujo ${roundNumber}/10: Velocidad ${this.redLineSpeed}`);
   },
 
   showLinePreview() {
@@ -341,37 +439,26 @@ const BossRedLine = {
     const healthPercentage =
       this.bossManager.currentHealth / this.bossManager.maxHealth;
 
-    console.log(`🔴 Ronda ${this.cycleCount}/${this.maxCycles} completada`);
+    console.log(`🔴 Dibujo ${this.cycleCount}/${this.maxCycles} completado`);
 
-    // Verificar si debe ir a fase final por vida baja
-    if (healthPercentage <= 0.03) {
-      console.log("🎮 Vida muy baja - iniciando Yan Ken Po");
-      this.endPhase();
-      if (
-        this.bossManager.phases &&
-        this.bossManager.phases.forceStartYanKenPo
-      ) {
-        this.bossManager.phases.forceStartYanKenPo();
-      }
-      return;
-    }
-
-    // 🔥 VERIFICAR SI COMPLETÓ LAS 10 RONDAS
+    // 🔥 SI COMPLETÓ LOS 10 DIBUJOS → VOLVER A HUNTING (NO YAN KEN PO)
     if (this.cycleCount >= this.maxCycles) {
-      console.log("🔄 *** 10 RONDAS DE RED LINE COMPLETADAS ***");
-      console.log("🎮 FORZANDO transición directa a Yan Ken Po");
+      console.log("🔄 *** 10 DIBUJOS DE RED LINE COMPLETADOS ***");
+      console.log("🏃 REGRESANDO A HUNTING - Yan Ken Po solo al 3%");
 
       this.endPhase();
 
-      // USAR LA NUEVA FUNCIÓN FORZADA
+      // 🔥 VOLVER A HUNTING, NO A YAN KEN PO
       setTimeout(() => {
-        if (
-          this.bossManager.phases &&
-          this.bossManager.phases.forceStartYanKenPo
-        ) {
-          this.bossManager.phases.forceStartYanKenPo();
-        } else {
-          console.error("❌ No se pudo forzar Yan Ken Po");
+        if (this.bossManager.movement) {
+          this.bossManager.movement.enableFluidHunting();
+        }
+
+        if (this.bossManager.ui) {
+          this.bossManager.ui.showScreenMessage(
+            "🏃 BOSS CAZANDO - Yan Ken Po al 3%",
+            "#00FF00"
+          );
         }
       }, 500);
       return;
@@ -379,7 +466,7 @@ const BossRedLine = {
 
     // Continuar con otro ciclo de Red Line
     console.log(
-      `🔄 Continuando ronda ${this.cycleCount + 1}/${this.maxCycles}`
+      `🔄 Continuando dibujo ${this.cycleCount + 1}/${this.maxCycles}`
     );
     this.bossManager.makeImmune(9999);
 
@@ -389,415 +476,159 @@ const BossRedLine = {
   },
 
   // ======================================================
-  // GENERACIÓN DE FORMAS GEOMÉTRICAS
+  // GENERACIÓN DE FORMAS QUE CHOCAN CON PAREDES
   // ======================================================
 
-  generateComplexGeometricLine() {
+  generateWallBouncingPattern() {
     const canvas = window.getCanvas();
-
-    if (!canvas) {
-      console.error("🔴 Error: Canvas no existe para generar línea");
-      return;
-    }
-
-    const screenScale = Math.min(canvas.width, canvas.height) / 800;
-    const mobileScale = GameConfig.isMobile ? 0.8 : 1.0;
-    const scale = screenScale * mobileScale;
-
-    const shapes = [
-      "zigzag",
-      "star",
-      "triangle",
-      "diamond",
-      "spiral",
-      "wave",
-      "lightning",
-      "hell",
-      "chaos",
-      "zigzag_wall", // AGREGAR ESTE
+    const patterns = [
+      "zigzag_walls",
+      "star_walls",
+      "hell_walls",
+      "z_walls",
+      "random_walls",
     ];
+    const pattern = patterns[Math.floor(Math.random() * patterns.length)];
 
-    // 40% probabilidad de HELL (más frecuente)
-    const shape =
-      Math.random() < 0.4
-        ? "hell"
-        : shapes[Math.floor(Math.random() * (shapes.length - 1))];
+    console.log(`🔴 Generando patrón que choca con paredes: ${pattern}`);
 
-    console.log(`🔴 Generando forma: ${shape} (escala: ${scale})`);
-
-    switch (shape) {
-      case "zigzag":
-        this.generateZigzagPattern(canvas, scale);
+    switch (pattern) {
+      case "zigzag_walls":
+        this.generateZigzagWalls(canvas);
         break;
-      case "star":
-        this.generateStarPattern(canvas, scale);
+      case "star_walls":
+        this.generateStarWalls(canvas);
         break;
-      case "triangle":
-        this.generateTrianglePattern(canvas, scale);
+      case "hell_walls":
+        this.generateHellWalls(canvas);
         break;
-      case "diamond":
-        this.generateDiamondPattern(canvas, scale);
+      case "z_walls":
+        this.generateZWalls(canvas);
         break;
-      case "spiral":
-        this.generateSpiralPattern(canvas, scale);
+      case "random_walls":
+        this.generateRandomWallPattern(canvas);
         break;
-      case "wave":
-        this.generateWavePattern(canvas, scale);
-        break;
-      case "lightning":
-        this.generateLightningPattern(canvas, scale);
-        break;
-      case "hell":
-        this.generateHellPattern(canvas, scale);
-        break;
-      case "bouncing":
-        this.generateBouncingPattern(canvas, scale);
-        break;
-      case "zigzag_wall":
-        this.generateZigzagWallPattern(canvas, scale);
-        break;
+      default:
+        this.generateZigzagWalls(canvas);
     }
 
     if (this.redLinePath.length === 0) {
       console.error("🔴 Error: No se generaron puntos para la línea");
-      this.generateFallbackLine(canvas, scale);
+      this.generateFallbackLine(canvas);
     }
 
     console.log(
-      `🔴 Forma ${shape} generada con ${this.redLinePath.length} puntos`
+      `🔴 Patrón ${pattern} generado con ${this.redLinePath.length} puntos`
     );
   },
 
-  generateZigzagPattern(canvas) {
-    const points = [];
-    const segments = 6;
-    const width = canvas.width * 0.8;
-    const height = canvas.height * 0.6;
-    const startX = canvas.width * 0.1;
-    const startY = canvas.height * 0.2;
-
-    for (let i = 0; i <= segments; i++) {
-      const x = startX + (width / segments) * i;
-      const y = startY + (i % 2 === 0 ? 0 : height);
-      points.push({ x, y });
-    }
+  generateZigzagWalls(canvas) {
+    const margin = 20;
+    const points = [
+      { x: margin, y: margin }, // Esquina superior izquierda
+      { x: canvas.width - margin, y: margin }, // Esquina superior derecha
+      { x: margin, y: canvas.height - margin }, // Esquina inferior izquierda
+      { x: canvas.width - margin, y: canvas.height - margin }, // Esquina inferior derecha
+    ];
 
     this.createSmoothPath(points);
+    console.log("🔴 Zigzag generado tocando todas las esquinas");
   },
 
-  generateStarPattern(canvas, scale = 1.0) {
-    console.log("🔴 Generando ESTRELLA GIGANTE con rebotes");
-
+  generateStarWalls(canvas) {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-
-    // 🔥 ESTRELLA MÁXIMA QUE TOCA PAREDES
     const margin = 25;
-    const outerRadius = Math.min(canvas.width, canvas.height) * 0.48; // 96% de pantalla
-    const innerRadius = outerRadius * 0.4;
-
-    const points = [];
-
-    // Generar puntos de estrella tocando límites
-    for (let i = 0; i < 10; i++) {
-      const angle = (i * Math.PI) / 5;
-      const radius = i % 2 === 0 ? outerRadius : innerRadius;
-
-      let x = centerX + Math.cos(angle) * radius;
-      let y = centerY + Math.sin(angle) * radius;
-
-      // Forzar puntos externos a tocar paredes
-      if (i % 2 === 0) {
-        if (Math.abs(x - canvas.width) < margin) x = canvas.width - margin;
-        if (Math.abs(x) < margin) x = margin;
-        if (Math.abs(y - canvas.height) < margin) y = canvas.height - margin;
-        if (Math.abs(y) < margin) y = margin;
-      }
-
-      points.push({ x, y });
-    }
-
-    // Cerrar estrella
-    points.push(points[0]);
-
-    // Generar ruta con rebotes
-    let allPoints = [];
-    for (let i = 0; i < points.length - 1; i++) {
-      const segmentPoints = this.calculateWallBounces(
-        points[i].x,
-        points[i].y,
-        points[i + 1].x,
-        points[i + 1].y,
-        canvas
-      );
-      allPoints = allPoints.concat(segmentPoints);
-    }
-
-    this.redLinePath = allPoints;
-    console.log(
-      `🔴 Estrella gigante: ${this.redLinePath.length} puntos totales`
-    );
-  },
-
-  generateDiamondPattern(canvas) {
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const width = Math.min(canvas.width, canvas.height) * 0.4;
-    const height = Math.min(canvas.width, canvas.height) * 0.3;
 
     const points = [
-      { x: centerX, y: centerY - height },
-      { x: centerX + width, y: centerY },
-      { x: centerX, y: centerY + height },
-      { x: centerX - width, y: centerY },
-      { x: centerX, y: centerY - height },
+      { x: centerX, y: margin }, // Punta superior (toca techo)
+      { x: canvas.width - margin, y: canvas.height - margin }, // Esquina inferior derecha
+      { x: margin, y: centerY }, // Punta izquierda (toca pared)
+      { x: canvas.width - margin, y: centerY }, // Punta derecha (toca pared)
+      { x: margin, y: margin }, // Esquina superior izquierda
+      { x: centerX, y: canvas.height - margin }, // Punta inferior (toca suelo)
+      { x: centerX, y: margin }, // Volver al inicio
     ];
 
     this.createSmoothPath(points);
+    console.log("🔴 Estrella generada tocando todas las paredes");
   },
 
-  generateSpiralPattern(canvas) {
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const maxRadius = Math.min(canvas.width, canvas.height) * 0.45; // Era 0.35
-    const turns = 3.5; // Más vueltas
-    const points = [];
-
-    const totalSteps = 120; // Más puntos para suavidad
-    for (let i = 0; i <= totalSteps; i++) {
-      const t = i / totalSteps;
-      const angle = t * Math.PI * 2 * turns;
-      const radius = t * maxRadius;
-
-      points.push({
-        x: centerX + Math.cos(angle) * radius,
-        y: centerY + Math.sin(angle) * radius,
-      });
-    }
-
-    this.createSmoothPath(points);
-  },
-
-  generateWavePattern(canvas) {
-    const points = [];
-    const amplitude = canvas.height * 0.2;
-    const frequency = 3;
-    const centerY = canvas.height / 2;
-
-    const steps = 100;
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const x = canvas.width * 0.1 + t * canvas.width * 0.8;
-      const y = centerY + Math.sin(t * Math.PI * 2 * frequency) * amplitude;
-
-      points.push({ x, y });
-    }
-
-    this.createSmoothPath(points);
-  },
-
-  generateLightningPattern(canvas) {
-    const points = [];
-    const startX = canvas.width * 0.2;
-    const startY = canvas.height * 0.2;
-    const endX = canvas.width * 0.8;
-    const endY = canvas.height * 0.8;
-
-    points.push({ x: startX, y: startY });
-
-    const segments = 8;
-    for (let i = 1; i <= segments; i++) {
-      const t = i / segments;
-      const baseX = startX + (endX - startX) * t;
-      const baseY = startY + (endY - startY) * t;
-
-      const deviation = (Math.random() - 0.5) * 100;
-      const perpX =
-        -(endY - startY) /
-        Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
-      const perpY =
-        (endX - startX) /
-        Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
-
-      points.push({
-        x: baseX + perpX * deviation,
-        y: baseY + perpY * deviation,
-      });
-    }
-
-    this.createSmoothPath(points);
-  },
-
-  generateTrianglePattern(canvas, scale = 1.0) {
-    console.log("🔴 Generando TRIÁNGULO GIGANTE con rebotes");
-
-    // 🔥 TRIÁNGULO QUE TOCA TODAS LAS PAREDES
+  generateHellWalls(canvas) {
     const margin = 30;
-    const points = [
-      { x: canvas.width / 2, y: margin }, // PUNTA SUPERIOR tocando techo
-      { x: canvas.width - margin, y: canvas.height - margin }, // ESQUINA INFERIOR DERECHA
-      { x: margin, y: canvas.height - margin }, // ESQUINA INFERIOR IZQUIERDA
-    ];
-
-    // Generar ruta con rebotes para cada segmento
-    let allPoints = [];
-
-    for (let i = 0; i < points.length; i++) {
-      const start = points[i];
-      const end = points[(i + 1) % points.length]; // Circular
-
-      const segmentPoints = this.calculateWallBounces(
-        start.x,
-        start.y,
-        end.x,
-        end.y,
-        canvas
-      );
-      allPoints = allPoints.concat(segmentPoints);
-    }
-
-    this.redLinePath = allPoints;
-    console.log(
-      `🔴 Triángulo gigante: ${this.redLinePath.length} puntos totales`
-    );
-  },
-
-  generateHellPattern(canvas, scale = 1.0) {
-    console.log("🔴 Generando HELL GIGANTE con rebotes en toda la pantalla");
-
-    // 🔥 HELL QUE OCUPA 95% DE LA PANTALLA
-    const margin = canvas.width * 0.025; // 2.5% de margen
-    const startX = margin;
-    const startY = canvas.height * 0.1; // 10% desde arriba
-    const totalWidth = canvas.width - margin * 2; // 95% del ancho
-    const letterHeight = canvas.height * 0.8; // 80% de altura
-    const letterWidth = totalWidth / 4.2; // Espacio para 4 letras
+    const letterWidth = (canvas.width - margin * 2) / 4;
+    const letterHeight = canvas.height - margin * 2;
+    const startY = margin;
 
     const points = [];
 
-    // H - GIGANTE tocando paredes
-    const hX = startX;
+    // H - tocando paredes
+    const hX = margin;
     points.push({ x: hX, y: startY });
     points.push({ x: hX, y: startY + letterHeight });
     points.push({ x: hX, y: startY + letterHeight / 2 });
-    points.push({ x: hX + letterWidth * 0.85, y: startY + letterHeight / 2 });
-    points.push({ x: hX + letterWidth * 0.85, y: startY });
-    points.push({ x: hX + letterWidth * 0.85, y: startY + letterHeight });
+    points.push({ x: hX + letterWidth, y: startY + letterHeight / 2 });
+    points.push({ x: hX + letterWidth, y: startY });
+    points.push({ x: hX + letterWidth, y: startY + letterHeight });
 
-    // E - GIGANTE
-    const eX = startX + letterWidth * 1.05;
+    // E
+    const eX = margin + letterWidth * 1.2;
     points.push({ x: eX, y: startY });
-    points.push({ x: eX + letterWidth * 0.9, y: startY });
+    points.push({ x: eX + letterWidth, y: startY });
     points.push({ x: eX, y: startY });
     points.push({ x: eX, y: startY + letterHeight / 2 });
     points.push({ x: eX + letterWidth * 0.7, y: startY + letterHeight / 2 });
     points.push({ x: eX, y: startY + letterHeight / 2 });
     points.push({ x: eX, y: startY + letterHeight });
-    points.push({ x: eX + letterWidth * 0.9, y: startY + letterHeight });
+    points.push({ x: eX + letterWidth, y: startY + letterHeight });
 
-    // L1 - GIGANTE
-    const l1X = startX + letterWidth * 2.1;
+    // L1
+    const l1X = margin + letterWidth * 2.4;
     points.push({ x: l1X, y: startY });
     points.push({ x: l1X, y: startY + letterHeight });
-    points.push({ x: l1X + letterWidth * 0.8, y: startY + letterHeight });
+    points.push({ x: l1X + letterWidth, y: startY + letterHeight });
 
-    // L2 - GIGANTE
-    const l2X = startX + letterWidth * 3.15;
+    // L2
+    const l2X = margin + letterWidth * 3.6;
     points.push({ x: l2X, y: startY });
     points.push({ x: l2X, y: startY + letterHeight });
-    points.push({ x: l2X + letterWidth * 0.8, y: startY + letterHeight });
+    points.push({ x: canvas.width - margin, y: startY + letterHeight }); // Toca pared derecha
 
-    // Generar ruta con rebotes entre cada punto
-    let allPoints = [];
-    for (let i = 0; i < points.length - 1; i++) {
-      const segmentPoints = this.calculateWallBounces(
-        points[i].x,
-        points[i].y,
-        points[i + 1].x,
-        points[i + 1].y,
-        canvas
-      );
-      allPoints = allPoints.concat(segmentPoints);
-    }
-
-    this.redLinePath = allPoints;
-    console.log(
-      `🔴 HELL GIGANTE: ${this.redLinePath.length} puntos con rebotes`
-    );
+    this.createSmoothPath(points);
+    console.log("🔴 HELL generado ocupando toda la pantalla");
   },
 
-  // NUEVA FUNCIÓN - AGREGAR después de generateHellPattern()
-  generateZigzagWallPattern(canvas, scale = 1.0) {
-    console.log("🔴 Generando ZIGZAG GIGANTE tocando todas las paredes");
-
-    const margin = 30;
-
-    // Z GIGANTE: esquina superior izquierda → superior derecha → inferior izquierda → inferior derecha
+  generateZWalls(canvas) {
+    const margin = 25;
     const points = [
       { x: margin, y: margin }, // Esquina superior izquierda
       { x: canvas.width - margin, y: margin }, // Esquina superior derecha
-      { x: margin, y: canvas.height - margin }, // Esquina inferior izquierda (diagonal)
+      { x: margin, y: canvas.height - margin }, // Diagonal a inferior izquierda
       { x: canvas.width - margin, y: canvas.height - margin }, // Esquina inferior derecha
     ];
 
-    // Generar ruta con rebotes para cada segmento
-    let allPoints = [];
-
-    for (let i = 0; i < points.length - 1; i++) {
-      const segmentPoints = this.calculateWallBounces(
-        points[i].x,
-        points[i].y,
-        points[i + 1].x,
-        points[i + 1].y,
-        canvas
-      );
-      allPoints = allPoints.concat(segmentPoints);
-    }
-
-    this.redLinePath = allPoints;
-    console.log(
-      `🔴 Zigzag gigante: ${this.redLinePath.length} puntos con rebotes`
-    );
+    this.createSmoothPath(points);
+    console.log("🔴 Z generado tocando esquinas");
   },
 
-  generateBouncingPattern(canvas, scale = 1.0) {
+  generateRandomWallPattern(canvas) {
+    const margin = 30;
     const points = [];
-    const startX = canvas.width * 0.1;
-    const startY = canvas.height * 0.5;
-    const segments = 8;
+    const corners = [
+      { x: margin, y: margin },
+      { x: canvas.width - margin, y: margin },
+      { x: canvas.width - margin, y: canvas.height - margin },
+      { x: margin, y: canvas.height - margin },
+    ];
 
-    for (let i = 0; i <= segments; i++) {
-      const x = startX + ((canvas.width * 0.8) / segments) * i;
-      let y = startY;
-
-      // Crear rebotes aleatorios
-      if (i > 0 && i < segments) {
-        const bounce = (Math.random() - 0.5) * canvas.height * 0.4 * scale;
-        y += bounce;
-
-        // Mantener dentro de límites
-        y = Math.max(canvas.height * 0.1, Math.min(canvas.height * 0.9, y));
-      }
-
-      points.push({ x, y });
-    }
+    // Línea aleatoria que siempre toca al menos 2 esquinas
+    const shuffledCorners = corners.sort(() => Math.random() - 0.5);
+    points.push(shuffledCorners[0]);
+    points.push(shuffledCorners[1]);
+    points.push(shuffledCorners[2]);
 
     this.createSmoothPath(points);
-  },
-
-  generateChaosPattern(canvas, scale = 1.0) {
-    console.log("🌪️ Generando patrón CAOS total");
-
-    const points = [];
-    const segments = 15; // Muchos segmentos
-
-    for (let i = 0; i <= segments; i++) {
-      const x = Math.random() * canvas.width;
-      const y = Math.random() * canvas.height;
-      points.push({ x, y });
-    }
-
-    this.createSmoothPath(points);
+    console.log("🔴 Patrón aleatorio generado tocando esquinas");
   },
 
   createSmoothPath(points) {
@@ -841,85 +672,51 @@ const BossRedLine = {
     );
   },
 
-  // NUEVA FUNCIÓN - AGREGAR después de generateFallbackLine()
-  calculateWallBounces(startX, startY, endX, endY, canvas) {
-    console.log(
-      `🔴 Calculando rebotes de (${startX}, ${startY}) a (${endX}, ${endY})`
-    );
-
-    const points = [];
-    const margin = 20; // Margen de las paredes
-
-    let currentX = startX;
-    let currentY = startY;
-    let velocityX = (endX - startX) * 0.01; // Velocidad inicial
-    let velocityY = (endY - startY) * 0.01;
-
-    // Normalizar velocidades para movimiento consistente
-    const magnitude = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-    velocityX = (velocityX / magnitude) * 8; // Velocidad base
-    velocityY = (velocityY / magnitude) * 8;
-
-    const maxIterations = 2000; // Prevenir bucles infinitos
-    let iterations = 0;
-
-    while (iterations < maxIterations) {
-      points.push({ x: currentX, y: currentY });
-
-      // Calcular siguiente posición
-      const nextX = currentX + velocityX;
-      const nextY = currentY + velocityY;
-
-      // Verificar colisiones con paredes y REBOTAR
-      if (nextX <= margin || nextX >= canvas.width - margin) {
-        velocityX = -velocityX * 0.95; // Rebote horizontal con leve reducción
-        console.log(`🔴 Rebote horizontal en X=${nextX}`);
-      }
-
-      if (nextY <= margin || nextY >= canvas.height - margin) {
-        velocityY = -velocityY * 0.95; // Rebote vertical con leve reducción
-        console.log(`🔴 Rebote vertical en Y=${nextY}`);
-      }
-
-      // Mantener dentro de límites estrictos
-      currentX = Math.max(margin, Math.min(canvas.width - margin, nextX));
-      currentY = Math.max(margin, Math.min(canvas.height - margin, nextY));
-
-      // Condición de terminación: cerca del punto final O suficientes rebotes
-      const distanceToEnd = Math.sqrt(
-        Math.pow(currentX - endX, 2) + Math.pow(currentY - endY, 2)
-      );
-
-      if (distanceToEnd < 50 || iterations > 800) {
-        // Agregar punto final
-        points.push({ x: endX, y: endY });
-        break;
-      }
-
-      iterations++;
-    }
-
-    console.log(
-      `🔴 Calculados ${points.length} puntos con ${iterations} iteraciones`
-    );
-    return points;
-  },
-
   // ======================================================
   // RENDERIZADO
   // ======================================================
 
   draw(ctx) {
-    if (this.redLinePath.length === 0) return;
+    if (this.redLinePath.length === 0 && this.gridLines.length === 0) return;
 
     ctx.save();
 
+    // Dibujar líneas de cuadrícula
+    this.drawGridLines(ctx);
+
+    // Dibujar líneas rojas del boss
     if (this.showingPreview) {
       this.drawPreviewLine(ctx);
     }
 
     if (this.redLineMoving && this.redLineIndex > 0) {
       this.drawBossTrail(ctx);
+    }
+
+    ctx.restore();
+  },
+
+  drawGridLines(ctx) {
+    if (this.gridLines.length === 0) return;
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255, 0, 0, 0.9)";
+    ctx.lineWidth = 3;
+    ctx.shadowColor = "#FF0000";
+    ctx.shadowBlur = 8;
+
+    for (const line of this.gridLines) {
+      ctx.beginPath();
+
+      if (line.type === "vertical") {
+        ctx.moveTo(line.x, 0);
+        ctx.lineTo(line.x, line.y);
+      } else if (line.type === "horizontal") {
+        ctx.moveTo(0, line.y);
+        ctx.lineTo(line.x, line.y);
+      }
+
+      ctx.stroke();
     }
 
     ctx.restore();
@@ -993,9 +790,13 @@ const BossRedLine = {
     this.redLinePath = [];
     this.redLineIndex = 0;
     this.cycleCount = 0;
+    this.gridLines = [];
 
-    if (Player.moveSpeed !== this.originalPlayerSpeed) {
-      Player.moveSpeed = this.originalPlayerSpeed;
+    // Restaurar velocidad del jugador
+    if (window.Player && Player.restoreNormalSpeed) {
+      Player.restoreNormalSpeed();
+    } else if (window.Player && Player.setSpeedModifier) {
+      Player.setSpeedModifier(this.originalPlayerSpeed);
     }
   },
 
@@ -1034,4 +835,4 @@ const BossRedLine = {
 
 window.BossRedLine = BossRedLine;
 
-console.log("🔴 boss-redline.js optimizado cargado");
+console.log("🔴 boss-redline.js optimizado CON CUADRÍCULA cargado");

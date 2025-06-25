@@ -249,26 +249,29 @@ const BossYanKenPo = {
     console.log("🏆 ¡Jugador ganó el Yan Ken Po!");
 
     this.gameState = "completed";
-    this.bossDefeats++; // 🔥 CONTAR VICTORIA
+    this.bossDefeats++; // Contar victoria
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        `🏆 ¡GANASTE! (${this.bossDefeats}/${this.maxDefeats})`,
+        `🏆 ¡GANASTE! (${this.bossDefeats}/3)`,
         "#00FF00"
       );
     }
 
-    if (this.bossManager.comments) {
-      this.bossManager.comments.sayComment("¡Imposible! ¡Has ganado!");
-    }
+    // 🔥 BOSS PIERDE 1% DE VIDA POR YAN KEN PO PERDIDO
+    const damage = Math.ceil(this.bossManager.maxHealth * 0.01); // 1% exacto
+    this.bossManager.currentHealth = Math.max(
+      0,
+      this.bossManager.currentHealth - damage
+    );
 
-    // 🔥 DAÑAR AL BOSS CON FUNCIÓN ESPECIAL
-    const damage = Math.ceil(this.bossManager.maxHealth * 0.01); // 1% de vida
-    this.bossManager.takeDamageFromYanKenPo(damage);
+    console.log(
+      `💀 Boss pierde 1% vida. Vida restante: ${this.bossManager.currentHealth}/${this.bossManager.maxHealth}`
+    );
 
-    // 🔥 VERIFICAR SI BOSS MUERE (3 DERROTAS)
-    if (this.bossDefeats >= this.maxDefeats) {
-      console.log("💀 Boss derrotado completamente - 3 Yan Ken Po perdidos");
+    // 🔥 VERIFICAR SI MUERE (3 YAN KEN PO PERDIDOS = 3% vida perdida)
+    if (this.bossManager.currentHealth <= 0) {
+      console.log("💀 BOSS DERROTADO - Perdió 3 Yan Ken Po");
 
       if (this.bossManager.ui) {
         this.bossManager.ui.showScreenMessage(
@@ -284,10 +287,10 @@ const BossYanKenPo = {
       return;
     }
 
-    // 🔥 BOSS SIGUE VIVO - SIGUIENTE YAN KEN PO
+    // 🔥 BOSS SIGUE VIVO - NUEVO YAN KEN PO
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        `🎮 Siguiente Yan Ken Po en 3s... (${this.bossDefeats}/${this.maxDefeats})`,
+        `🎮 Nuevo Yan Ken Po en 3s... (${this.bossDefeats}/3)`,
         "#FFFF00"
       );
     }
@@ -300,7 +303,7 @@ const BossYanKenPo = {
   // NUEVA FUNCIÓN - AGREGAR después de handleGameWin()
   restartYanKenPo() {
     console.log(
-      `🔄 Reiniciando Yan Ken Po - Derrotas del boss: ${this.bossDefeats}/${this.maxDefeats}`
+      `🔄 Reiniciando Yan Ken Po - Boss derrotas: ${this.bossDefeats}/3`
     );
 
     // Resetear estado del juego pero mantener contador de derrotas
@@ -331,7 +334,7 @@ const BossYanKenPo = {
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        "💀 ¡PERDISTE! Iniciando fase aleatoria...",
+        "💀 ¡EMPATE/PERDISTE! Fase aleatoria...",
         "#FF0000"
       );
     }
@@ -340,9 +343,7 @@ const BossYanKenPo = {
     this.removeGameUI();
 
     setTimeout(() => {
-      this.endPhase();
-
-      // 🔥 ACTIVAR FASE ALEATORIA
+      // 🔥 NO TERMINAR FASE - SOLO ACTIVAR FASE ALEATORIA
       if (this.bossManager.phases) {
         this.bossManager.phases.handleYanKenPoLoss();
       }
@@ -372,122 +373,123 @@ const BossYanKenPo = {
       this.removeGameUI();
     }
 
-    console.log("🎨 Creando UI de Yan Ken Po");
+    console.log("🎨 Creando UI compacta de Yan Ken Po");
 
     const container = document.createElement("div");
     container.id = "yankenpo-container";
     container.style.cssText = `
-      position: fixed;
-      bottom: 20%;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-      background: rgba(0, 0, 0, 0.9);
-      padding: 20px;
-      border-radius: 15px;
-      border: 3px solid #ff0000;
-      box-shadow: 0 0 30px #ff0000;
-      min-width: 300px;
-    `;
+    position: fixed;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.95);
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 2px solid #ff0000;
+    box-shadow: 0 0 20px #ff0000;
+    max-width: 90vw;
+  `;
 
-    // Título
+    // Título compacto
     const title = document.createElement("div");
     title.style.cssText = `
-      color: #ff0000;
-      font-family: 'Creepster', cursive;
-      font-size: clamp(1.2rem, 4vw, 1.8rem);
-      text-shadow: 0 0 10px #ff0000;
-      margin-bottom: 10px;
-      text-align: center;
-      white-space: nowrap;
-    `;
+    color: #ff0000;
+    font-family: 'Creepster', cursive;
+    font-size: clamp(0.9rem, 3vw, 1.2rem);
+    text-shadow: 0 0 8px #ff0000;
+    margin-bottom: 5px;
+    text-align: center;
+  `;
     title.textContent = "✂️ YAN KEN PO ✂️";
     container.appendChild(title);
 
-    // Información del juego
+    // Info y botones en UNA SOLA LÍNEA
+    const gameRow = document.createElement("div");
+    gameRow.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: nowrap;
+  `;
+
+    // Información compacta
     const info = document.createElement("div");
     info.id = "yankenpo-info";
     info.style.cssText = `
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-      font-size: clamp(0.9rem, 3vw, 1.1rem);
-      text-align: center;
-      margin-bottom: 15px;
-      line-height: 1.4;
-    `;
-    container.appendChild(info);
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+    text-align: center;
+    min-width: 120px;
+    line-height: 1.2;
+  `;
+    gameRow.appendChild(info);
 
-    // Contenedor de botones
+    // Botones en línea horizontal
     const buttonsContainer = document.createElement("div");
     buttonsContainer.id = "yankenpo-buttons";
     buttonsContainer.style.cssText = `
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-    `;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  `;
 
-    // Crear botones para cada opción
+    // Crear botones más pequeños
     this.choices.forEach((choice, index) => {
       const button = document.createElement("button");
       button.id = `yankenpo-${choice.key}`;
       button.className = "yankenpo-button";
       button.style.cssText = `
-        width: clamp(70px, 15vw, 90px);
-        height: clamp(70px, 15vw, 90px);
-        font-size: clamp(1.2rem, 6vw, 1.8rem);
-        background: linear-gradient(135deg, #8b0000, #aa0000);
-        border: 2px solid #ff0000;
-        border-radius: 12px;
-        color: #ffffff;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-family: Arial, sans-serif;
-        line-height: 1;
-        position: relative;
-        overflow: hidden;
-      `;
+      width: clamp(45px, 12vw, 60px);
+      height: clamp(45px, 12vw, 60px);
+      font-size: clamp(1rem, 4vw, 1.4rem);
+      background: linear-gradient(135deg, #8b0000, #aa0000);
+      border: 2px solid #ff0000;
+      border-radius: 8px;
+      color: #ffffff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      line-height: 1;
+    `;
 
       button.innerHTML = `
-        <div style="font-size: 1em; margin-bottom: 4px;">${choice.symbol}</div>
-        <div style="font-size: 0.5em; font-weight: bold; opacity: 0.8;">${choice.key.toUpperCase()}</div>
-      `;
+      <div style="font-size: 0.9em;">${choice.symbol}</div>
+      <div style="font-size: 0.4em; opacity: 0.8;">${choice.key.toUpperCase()}</div>
+    `;
 
-      // Efectos hover
       button.addEventListener("mouseenter", () => {
         button.style.transform = "scale(1.05)";
-        button.style.boxShadow = "0 0 15px rgba(255, 0, 0, 0.6)";
-        button.style.background = "linear-gradient(135deg, #aa0000, #cc0000)";
+        button.style.boxShadow = "0 0 10px rgba(255, 0, 0, 0.6)";
       });
 
       button.addEventListener("mouseleave", () => {
         button.style.transform = "scale(1)";
         button.style.boxShadow = "none";
-        button.style.background = "linear-gradient(135deg, #8b0000, #aa0000)";
       });
 
-      // Click handler
       button.addEventListener("click", () => this.selectChoice(index));
-
       buttonsContainer.appendChild(button);
     });
 
-    container.appendChild(buttonsContainer);
+    gameRow.appendChild(buttonsContainer);
+    container.appendChild(gameRow);
     document.body.appendChild(container);
 
     this.uiCreated = true;
     this.updateInfoDisplay();
 
-    console.log("✅ UI de Yan Ken Po creada");
+    console.log("✅ UI compacta de Yan Ken Po creada en UNA LÍNEA");
   },
 
   updateInfoDisplay() {

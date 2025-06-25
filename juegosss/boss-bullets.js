@@ -12,7 +12,7 @@ const BossBullets = {
   bulletPatterns: [],
   patternActive: false,
   currentPatternIndex: 0,
-  patternSequence: ["spiral", "walls", "burst", "rain", "laser"],
+  patternSequence: ["spiral", "cross", "rain"], // Solo 3 tipos
 
   // Configuración responsiva de balas
   get bulletConfig() {
@@ -215,31 +215,31 @@ const BossBullets = {
   executeSimplePatternSequence() {
     if (!this.patternActive) return;
 
-    const simplePatterns = ["spiral", "walls", "cross"]; // SOLO 3 patrones
+    const allowedPatterns = ["spiral", "cross", "rain"]; // SOLO estos 3
     const currentPattern =
-      simplePatterns[this.currentPatternIndex % simplePatterns.length];
+      allowedPatterns[this.currentPatternIndex % allowedPatterns.length];
 
     console.log(
-      `🌟 Ejecutando patrón ${this.currentPatternIndex + 1}: ${currentPattern}`
+      `🌟 Ejecutando patrón PERMITIDO ${
+        this.currentPatternIndex + 1
+      }: ${currentPattern}`
     );
 
-    // Mensaje del boss
+    const messages = {
+      spiral: "¡Danza espiral de la muerte!",
+      cross: "¡Cruz giratoria del infierno!",
+      rain: "¡Lluvia mortal del abismo!",
+    };
+
     if (this.bossManager.comments) {
-      const messages = {
-        spiral: "¡Danza espiral de la muerte!",
-        walls: "¡Muros de destrucción!",
-        cross: "¡Cruz giratoria del infierno!",
-      };
       this.bossManager.comments.sayComment(messages[currentPattern]);
     }
 
     this.executePattern(currentPattern);
 
-    // Programar siguiente patrón cada 30 segundos
-    // 🔥 CALCULAR DURACIÓN DINÁMICA DE PATRONES
     const totalDuration =
       GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION * (1000 / 60);
-    const patternDuration = totalDuration / 3; // Dividir entre 3 patrones
+    const patternDuration = totalDuration / 3;
 
     this.currentPatternIndex++;
     if (this.currentPatternIndex < 3) {
@@ -250,30 +250,35 @@ const BossBullets = {
   },
 
   startShieldSpawning() {
-    // 🔥 SISTEMA DE ESCUDOS DINÁMICO
     const totalDuration =
       GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION * (1000 / 60);
-    const shieldInterval = 10000; // 10 segundos entre escudos
-    const maxShields = Math.floor(totalDuration / shieldInterval) + 2; // Calcular cantidad
-    let shieldCount = 0;
+    const shieldInterval = 10000; // 10 segundos
 
-    console.log(
-      `🛡️ Se spawnearán ${maxShields} escudos durante ${totalDuration / 1000}s`
-    );
+    console.log("🛡️ Iniciando sistema de escudo ÚNICO");
 
-    const spawnShield = () => {
-      if (!this.patternActive || shieldCount >= maxShields) return;
+    const checkAndSpawnShield = () => {
+      if (!this.patternActive) return;
 
-      this.spawnProtectiveShield();
-      shieldCount++;
-      console.log(`🛡️ Escudo ${shieldCount}/${maxShields} spawneado`);
+      // Verificar si ya existe un escudo
+      const existingShields = window.PowerUpManager.powerUps.filter(
+        (p) => p.type && p.type.id === 0
+      );
 
-      // Programar siguiente escudo
-      setTimeout(spawnShield, shieldInterval);
+      if (existingShields.length === 0) {
+        this.spawnProtectiveShield();
+        console.log(
+          "🛡️ Escudo spawneado - el jugador debe recogerlo para que aparezca otro"
+        );
+      } else {
+        console.log("🛡️ Ya existe un escudo, esperando...");
+      }
+
+      // Verificar de nuevo en 2 segundos
+      setTimeout(checkAndSpawnShield, 2000);
     };
 
     // Primer escudo después de 5 segundos
-    setTimeout(spawnShield, 5000);
+    setTimeout(checkAndSpawnShield, 5000);
   },
 
   spawnProtectiveShield() {

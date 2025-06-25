@@ -229,23 +229,43 @@ const BossPhases = {
     }
     this.summoningTimeouts = [];
 
-    // Invocar enemigos cada 7 segundos durante 60 segundos
-    const summonTimes = [2000, 9000, 16000, 23000, 30000, 37000, 44000, 51000];
-    const enemyCounts = [4, 5, 5, 6, 5, 6, 6, 7]; // Cantidades más moderadas
+    // 🔥 OLEADAS CADA 8 SEGUNDOS DURANTE 60 SEGUNDOS
+    const waveInterval = 8000; // 8 segundos entre oleadas
+    const totalDuration = 60000; // 60 segundos total
+    const waveCount = Math.floor(totalDuration / waveInterval); // 7-8 oleadas
 
-    summonTimes.forEach((time, index) => {
+    console.log(
+      `⚔️ Programando ${waveCount} oleadas cada ${
+        waveInterval / 1000
+      }s durante ${totalDuration / 1000}s`
+    );
+
+    for (let wave = 0; wave < waveCount; wave++) {
       const timeout = setTimeout(() => {
         if (this.currentPhase === "SUMMONING" && this.phaseActive) {
-          this.summonEnemies(enemyCounts[index]);
+          // 🔥 CANTIDAD CRECIENTE DE ENEMIGOS POR OLEADA
+          const enemyCount = 3 + Math.floor(wave / 2); // Empieza con 3, sube gradualmente
+          this.summonEnemies(enemyCount);
+
           console.log(
-            `⚔️ Oleada ${index + 1}/8 invocada: ${enemyCounts[index]} enemigos`
+            `⚔️ Oleada ${
+              wave + 1
+            }/${waveCount}: ${enemyCount} enemigos invocados`
           );
+
+          if (this.bossManager.ui) {
+            this.bossManager.ui.showScreenMessage(
+              `👹 OLEADA ${wave + 1}/${waveCount}`,
+              "#FF4400"
+            );
+          }
         }
-      }, time);
+      }, wave * waveInterval);
 
       this.summoningTimeouts.push(timeout);
-    });
+    }
 
+    // 🔥 MENSAJE INICIAL
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
         "⚔️ FASE DE INVOCACIÓN (60s)",
@@ -278,26 +298,30 @@ const BossPhases = {
     }
 
     this.phaseActive = false;
+    const previousPhase = this.currentPhase;
     this.currentPhase = "HUNTING";
     this.phaseTimer = 0;
 
-    // Boss vulnerable inmediatamente
+    // 🔥 BOSS VULNERABLE INMEDIATAMENTE después de fase
     this.bossManager.isImmune = false;
     this.bossManager.immunityTimer = 0;
 
-    // Activar hunting fluido
-    if (this.bossManager.movement) {
-      this.bossManager.movement.enableFluidHunting();
-    }
+    // 🔥 ACTIVAR HUNTING FLUIDO DESPUÉS DE 2 SEGUNDOS
+    setTimeout(() => {
+      if (this.bossManager.movement && this.currentPhase === "HUNTING") {
+        this.bossManager.movement.enableFluidHunting();
+        console.log("🏃 Boss ahora en modo HUNTING fluido");
+      }
+    }, 2000);
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        "🏃 BOSS CAZANDO FLUIDAMENTE",
+        `✅ ${previousPhase} COMPLETADO - Boss vulnerable`,
         "#00FF00"
       );
     }
 
-    console.log("🏃 Boss ahora en modo HUNTING fluido");
+    console.log(`🏃 Transición completa: ${previousPhase} → HUNTING`);
   },
 
   notifyPhaseChange(newPhase) {
@@ -554,15 +578,6 @@ const BossPhases = {
     this.isRandomPhase = false;
     this.randomPhaseActive = false;
 
-    // 🔥 INCREMENTAR CONTADOR DE FASE EJECUTADA
-    const currentPhase = this.currentPhase;
-    if (this.randomPhasesExecuted[currentPhase] !== undefined) {
-      this.randomPhasesExecuted[currentPhase]++;
-      console.log(
-        `📊 Fase ${currentPhase} ejecutada ${this.randomPhasesExecuted[currentPhase]} veces`
-      );
-    }
-
     this.cleanupAllSystems();
 
     // 🔥 BOSS INMUNE Y AL CENTRO para nuevo Yan Ken Po
@@ -578,10 +593,10 @@ const BossPhases = {
       );
     }
 
-    // Volver a Yan Ken Po después de 3 segundos
+    // 🔥 VOLVER A YAN KEN PO (NO TERMINAR FASE YANKENPO)
     setTimeout(() => {
       if (this.bossManager.yankenpo) {
-        this.bossManager.yankenpo.startPhase();
+        this.bossManager.yankenpo.restartYanKenPo();
       }
     }, 3000);
   },
@@ -590,104 +605,158 @@ const BossPhases = {
   // INVOCACIÓN DE ENEMIGOS CORREGIDA
   // ======================================================
 
+  // REEMPLAZAR en boss-phases.js la función summonEnemies() completa:
+
   summonEnemies(count) {
     const canvas = window.getCanvas();
+    const currentLevel = window.getLevel();
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        `👹 ¡${count} ESBIRROS INVOCADOS!`,
+        `👹 ¡${count} ESBIRROS DE TODOS LOS NIVELES!`,
         "#FF4400"
       );
     }
 
+    // 🔥 GENERAR ENEMIGOS DE TODOS LOS NIVELES (1 hasta nivel actual)
+    const enemyLevels = [];
+    for (let level = 1; level <= currentLevel; level++) {
+      enemyLevels.push(level);
+    }
+
+    console.log(`👹 Invocando enemigos de niveles: ${enemyLevels.join(", ")}`);
+
     for (let i = 0; i < count; i++) {
       setTimeout(() => {
-        // Nivel aleatorio de enemigos previamente enfrentados
-        const currentLevel = window.getLevel();
+        // Seleccionar nivel aleatorio de todos los disponibles
         const randomLevel =
-          1 + Math.floor(Math.random() * Math.max(1, currentLevel - 1));
+          enemyLevels[Math.floor(Math.random() * enemyLevels.length)];
 
-        // Tamaño más pequeño para esbirros (más pequeños que el boss)
-        const baseSize = 25 + randomLevel * 3; // Tamaño base más pequeño
-        const sizeVariation = Math.random() * 10; // Menos variación
-        const enemySize = Math.min(50, baseSize + sizeVariation); // Máximo 50px
+        // 🔥 TAMAÑO BASADO EN NIVEL (más grandes = más peligrosos)
+        const baseSize = 25 + randomLevel * 4; // Progresión de tamaño
+        const sizeVariation = Math.random() * 8;
+        const enemySize = Math.min(60, baseSize + sizeVariation);
 
-        // Posiciones de spawn variadas pero alejadas del centro donde está el boss
+        // 🔥 POSICIONES ESTRATÉGICAS (evitar centro donde está el boss)
         const spawnPositions = [
+          // Esquinas
           { x: 50, y: 50 },
           { x: canvas.width - 100, y: 50 },
           { x: 50, y: canvas.height - 100 },
           { x: canvas.width - 100, y: canvas.height - 100 },
+
+          // Bordes superiores
           { x: canvas.width / 4, y: 50 },
           { x: (canvas.width * 3) / 4, y: 50 },
+
+          // Bordes inferiores
+          { x: canvas.width / 4, y: canvas.height - 50 },
+          { x: (canvas.width * 3) / 4, y: canvas.height - 50 },
+
+          // Bordes laterales
+          { x: 50, y: canvas.height / 3 },
+          { x: 50, y: (canvas.height * 2) / 3 },
           { x: canvas.width - 50, y: canvas.height / 3 },
           { x: canvas.width - 50, y: (canvas.height * 2) / 3 },
-          { x: (canvas.width * 3) / 4, y: canvas.height - 50 },
-          { x: canvas.width / 4, y: canvas.height - 50 },
-          { x: 50, y: (canvas.height * 2) / 3 },
-          { x: 50, y: canvas.height / 3 },
         ];
 
         const pos = spawnPositions[i % spawnPositions.length];
 
-        // Crear enemigo usando el sistema completo de EnemyManager
+        // 🔥 CREAR ENEMIGO COMPLETO CON TODAS LAS PROPIEDADES
         const enemy = {
           x: pos.x,
           y: pos.y,
           width: enemySize,
           height: enemySize,
-          velocityX: (Math.random() - 0.5) * 4,
-          velocityY: (Math.random() - 0.5) * 4,
+          velocityX: (Math.random() - 0.5) * (2 + randomLevel * 0.5), // Más rápidos por nivel
+          velocityY: (Math.random() - 0.5) * (2 + randomLevel * 0.5),
           level: randomLevel,
           type: "boss_minion",
           isBossMinion: true,
-          speedFactor: 1.0 + randomLevel * 0.1,
-          aggressionLevel: 1.2,
+
+          // 🔥 ESTADÍSTICAS ESCALADAS POR NIVEL
+          speedFactor: 1.0 + randomLevel * 0.15, // Más rápidos
+          aggressionLevel: 1.0 + randomLevel * 0.2, // Más agresivos
           bounceCount: 0,
-          maxBounces: 3 + randomLevel,
+          maxBounces: 2 + randomLevel, // Más rebotes
           spawnTime: window.getGameTime(),
 
-          // Usar el sistema de imágenes de EnemyManager
+          // 🔥 SALUD ESCALADA (opcional para boss minions)
+          health: Math.max(1, randomLevel - 2), // Niveles altos tienen más vida
+          maxHealth: Math.max(1, randomLevel - 2),
+
+          // 🔥 USAR IMAGEN CORRECTA SEGÚN NIVEL
           image: this.getEnemyImageForLevel(randomLevel),
 
-          // Sistema de escalado dinámico como en EnemyManager
+          // 🔥 ESCALADO DINÁMICO (algunos enemigos)
           dynamicScaling: {
-            enabled: Math.random() < 0.5, // 50% de esbirros con escalado
+            enabled: Math.random() < 0.4, // 40% tienen escalado
             baseSize: enemySize,
             currentScale: 1.0,
             scaleDirection: 1,
-            scaleSpeed: 0.004,
-            minScale: 0.8,
-            maxScale: 1.3,
+            scaleSpeed: 0.003 + randomLevel * 0.001, // Más rápido por nivel
+            minScale: 0.7,
+            maxScale: 1.4 + randomLevel * 0.1, // Más grandes por nivel
             pulseTimer: 0,
           },
+
+          // 🔥 IDENTIFICACIÓN VISUAL POR NIVEL
+          glowColor: this.getGlowColorForLevel(randomLevel),
+          glowIntensity: 0.3 + randomLevel * 0.1,
         };
 
-        // Agregar al sistema de enemigos
+        // 🔥 AGREGAR AL SISTEMA DE ENEMIGOS
         if (window.EnemyManager) {
           EnemyManager.enemies.push(enemy);
+          console.log(
+            `👹 Esbirro nivel ${randomLevel} invocado en (${Math.round(
+              pos.x
+            )}, ${Math.round(pos.y)}) - Salud: ${enemy.health}`
+          );
         }
-
-        console.log(
-          `👹 Esbirro nivel ${randomLevel} invocado en (${pos.x}, ${pos.y}) con imagen`
-        );
-      }, i * 300); // Spawn escalonado cada 300ms
+      }, i * 200); // Spawn escalonado cada 200ms
     }
+
+    console.log(
+      `👹 === SECUENCIA DE INVOCACIÓN INICIADA: ${count} esbirros de niveles ${enemyLevels.join(
+        "-"
+      )} ===`
+    );
   },
 
-  // ======================================================
-  // FUNCIÓN AUXILIAR PARA OBTENER IMÁGENES
-  // ======================================================
+  // 🔥 FUNCIÓN AUXILIAR PARA COLORES POR NIVEL
+  getGlowColorForLevel(level) {
+    const colors = [
+      "#FF6B6B", // Nivel 1 - Rojo claro
+      "#4ECDC4", // Nivel 2 - Turquesa
+      "#45B7D1", // Nivel 3 - Azul
+      "#96CEB4", // Nivel 4 - Verde
+      "#FFEAA7", // Nivel 5 - Amarillo
+      "#DDA0DD", // Nivel 6 - Violeta
+      "#F39C12", // Nivel 7 - Naranja
+      "#E17055", // Nivel 8 - Rojo oscuro
+      "#A29BFE", // Nivel 9 - Púrpura
+      "#FD79A8", // Nivel 10+ - Rosa
+    ];
 
+    return colors[Math.min(level - 1, colors.length - 1)] || "#FF0000";
+  },
+
+  // 🔥 FUNCIÓN AUXILIAR MEJORADA PARA IMÁGENES
   getEnemyImageForLevel(level) {
-    // Usar el mismo sistema que EnemyManager
     if (window.GameConfig && window.GameConfig.enemyImages) {
       const imageIndex = Math.min(
         level - 1,
         window.GameConfig.enemyImages.length - 1
       );
-      return window.GameConfig.enemyImages[imageIndex] || null;
+      const image = window.GameConfig.enemyImages[imageIndex];
+
+      if (image && image.complete) {
+        return image;
+      }
     }
+
+    console.warn(`⚠️ Imagen no disponible para nivel ${level}`);
     return null;
   },
 

@@ -368,6 +368,33 @@ const BossMines = {
       this.mines.push(staticMine);
     }
 
+    // 🔥 AGREGAR AL FINAL - FORZAR MINAS EN LAS 4 ESQUINAS (25% probabilidad)
+    if (Math.random() < 0.25) {
+      const corners = [
+        { x: 80, y: 80 }, // Esquina superior izquierda
+        { x: canvas.width - 120, y: 80 }, // Esquina superior derecha
+        { x: 80, y: canvas.height - 120 }, // Esquina inferior izquierda
+        { x: canvas.width - 120, y: canvas.height - 120 }, // Esquina inferior derecha
+      ];
+
+      const randomCorner = corners[Math.floor(Math.random() * corners.length)];
+
+      const cornerMine = this.createMine(randomCorner.x, randomCorner.y, null);
+      cornerMine.isStatic = true;
+      cornerMine.armed = true;
+      cornerMine.type = "corner_static";
+      cornerMine.width = this.mineConfig.size * 0.7;
+      cornerMine.height = this.mineConfig.size * 0.7;
+      cornerMine.dangerRadius = this.mineConfig.staticDangerRadius;
+
+      this.mines.push(cornerMine);
+      console.log(
+        `💣 Mina en esquina spawneada en (${Math.round(
+          randomCorner.x
+        )}, ${Math.round(randomCorner.y)})`
+      );
+    }
+
     console.log(`💣 Campo de ${mineCount} minas estáticas DIRIGIDAS spawneado`);
   },
 
@@ -484,39 +511,49 @@ const BossMines = {
         Math.pow(explodedX - mineX, 2) + Math.pow(explodedY - mineY, 2)
       );
 
-      // 🔥 REACCIÓN EN CADENA: Cualquier mina armada (temporal O estática)
+      // Verificar si los radios de explosión se superponen
       if (distance <= chainRadius && mine.armed) {
         minesToExplode.push({
           index: i,
           type: mine.type,
           isStatic: mine.isStatic,
+          distance: distance,
         });
+
+        console.log(
+          `💥 Mina en cadena detectada: ${mine.type} a ${distance.toFixed(1)}px`
+        );
       }
     }
 
     if (minesToExplode.length > 0) {
-      console.log(`🔥 Explosión en cadena: ${minesToExplode.length} minas`);
-      console.log(`🔥 Tipos: ${minesToExplode.map((m) => m.type).join(", ")}`);
+      console.log(
+        `🔥 EXPLOSIÓN EN CADENA: ${minesToExplode.length} minas adicionales`
+      );
 
-      // 🔥 EXPLOTAR EN SECUENCIA con delay
-      minesToExplode.forEach((mineData, delay) => {
+      // Ordenar por distancia para explotar de cerca a lejos
+      minesToExplode.sort((a, b) => a.distance - b.distance);
+
+      // Explotar en secuencia con delays
+      minesToExplode.forEach((mineData, delayIndex) => {
         setTimeout(() => {
-          // Verificar que la mina aún existe (no fue explotada por otra cadena)
+          // Verificar que la mina aún existe
           if (
             mineData.index < this.mines.length &&
             this.mines[mineData.index]
           ) {
             const currentMine = this.mines[mineData.index];
-            // Verificar que es la misma mina (por posición)
-            if (
-              currentMine.x === this.mines[mineData.index].x &&
-              currentMine.y === this.mines[mineData.index].y
-            ) {
+            // Verificar por posición que es la misma mina
+            if (Math.abs(currentMine.x - explodedMine.x) < 500) {
+              // Verificación básica
+              console.log(`💥 Explotando mina en cadena ${delayIndex + 1}`);
               this.explodeMine(mineData.index);
             }
           }
-        }, delay * 150); // 150ms entre cada explosión
+        }, delayIndex * 150); // 150ms entre explosiones
       });
+    } else {
+      console.log("🔥 No hay minas en el radio de cadena");
     }
   },
 

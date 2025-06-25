@@ -231,59 +231,55 @@ const BossManager = {
     const currentPhase = this.phases?.getCurrentPhase() || "HUNTING";
     const isPhaseActive = this.phases?.isPhaseActive() || false;
 
-    // 🔥 NUEVA SECUENCIA CORREGIDA
-    // Fase final: Yan Ken Po (3% de vida) - INMUNE HASTA MORIR
+    // 🔥 YAN KEN PO SOLO AL 3% (NO AL 10%)
     if (healthPercentage <= 0.03 && !this.phases.phasesExecuted.YANKENPO) {
-      console.log("🎮 INICIANDO FASE FINAL: Yan Ken Po (3% vida)");
+      console.log("🎮 VIDA 3% - INICIANDO YAN KEN PO");
       this.startYanKenPoPhase();
       return;
     }
 
-    // Fase del hilo rojo (10% de vida)
+    // 🔥 RED LINE AL 10% → LUEGO HUNTING HASTA 3%
     if (
       healthPercentage <= 0.1 &&
       healthPercentage > 0.03 &&
       !this.phases.phasesExecuted.REDLINE
     ) {
-      console.log("🔴 INICIANDO FASE: Hilo Rojo (10% vida)");
+      console.log("🔴 VIDA 10% - INICIANDO RED LINE");
       this.startRedLinePhase();
       return;
     }
 
-    // Fase de balas Touhou (25% de vida)
     if (
       healthPercentage <= 0.25 &&
       healthPercentage > 0.1 &&
       !this.phases.phasesExecuted.BULLETS
     ) {
-      console.log("🌟 INICIANDO FASE: Balas Touhou (25% vida)");
+      console.log("🌟 VIDA 25% - INICIANDO TOUHOU");
       this.startBulletsPhase();
       return;
     }
 
-    // Fase de minas (50% de vida)
     if (
       healthPercentage <= 0.5 &&
       healthPercentage > 0.25 &&
       !this.phases.phasesExecuted.MINES
     ) {
-      console.log("💣 INICIANDO FASE: Minas (50% vida)");
+      console.log("💣 VIDA 50% - INICIANDO MINAS");
       this.startMinesPhase();
       return;
     }
 
-    // Fase de invocación (75% de vida)
     if (
       healthPercentage <= 0.75 &&
       healthPercentage > 0.5 &&
       !this.phases.phasesExecuted.SUMMONING
     ) {
-      console.log("⚔️ INICIANDO FASE: Invocación (75% vida)");
+      console.log("⚔️ VIDA 75% - INICIANDO SUMMONING");
       this.startSummoningPhase();
       return;
     }
 
-    // Modo hunting entre fases
+    // Solo hunting si no hay fase activa
     if (!isPhaseActive && currentPhase !== "HUNTING") {
       this.enterHuntingMode();
     }
