@@ -430,49 +430,26 @@ const BossBullets = {
   createSpiralPattern() {
     const config = this.patternConfigs.spiral;
 
-    // 🔥 PATRÓN COMPLETAMENTE ALEATORIO Y CAÓTICO
-    const spiralCount = 2 + Math.floor(Math.random() * 3); // 2-4 espirales aleatorias
-    console.log(`🌀 Creando ${spiralCount} espirales CAÓTICAS`);
+    // 🔥 UNA SOLA ESPIRAL INTELIGENTE que cubre todas las direcciones
+    let angle = Math.random() * Math.PI * 2; // Empezar en ángulo aleatorio
 
-    for (let spiralIndex = 0; spiralIndex < spiralCount; spiralIndex++) {
-      // 🔥 CADA ESPIRAL CON PROPIEDADES COMPLETAMENTE ALEATORIAS
-      let angle = Math.random() * Math.PI * 2; // Ángulo inicial aleatorio
-      const direction = Math.random() < 0.5 ? 1 : -1; // Dirección aleatoria
-      const speedMultiplier = 0.5 + Math.random() * 1.5; // Velocidad aleatoria (0.5x - 2x)
-      const angularSpeed = config.rotationSpeed * speedMultiplier * direction;
+    spiralInterval = setInterval(() => {
+      if (!this.patternActive) {
+        clearInterval(spiralInterval);
+        return;
+      }
 
-      // 🔥 INTERVALO DE DISPARO ALEATORIO POR ESPIRAL
-      const randomInterval = config.bulletInterval + Math.random() * 100;
+      // 🔥 DISPARAR UNA BALA CADA VEZ (como antes, sin spam)
+      this.createTouhouBullet(angle, config.speed, config.color);
 
-      const spiralInterval = setInterval(() => {
-        if (!this.patternActive) {
-          clearInterval(spiralInterval);
-          return;
-        }
+      // 🔥 INCREMENTO PEQUEÑO para cubrir TODA la circunferencia gradualmente
+      angle += config.rotationSpeed * 1.5; // Ligeramente más rápido para cubrir más área
 
-        // 🔥 DISPARAR RÁFAGAS ALEATORIAS (1-3 balas por vez)
-        const burstSize = 1 + Math.floor(Math.random() * 3);
+      // 🔥 RESETEAR ÁNGULO para evitar overflow
+      if (angle > Math.PI * 2) angle -= Math.PI * 2;
+    }, config.bulletInterval + 50); // Mismo timing que antes
 
-        for (let burst = 0; burst < burstSize; burst++) {
-          // 🔥 ÁNGULO LIGERAMENTE ALEATORIO PARA CADA BALA
-          const bulletAngle = angle + burst * 0.2 + (Math.random() - 0.5) * 0.3;
-          this.createTouhouBullet(bulletAngle, config.speed, config.color);
-        }
-
-        // 🔥 INCREMENTO ANGULAR CON VARIACIÓN ALEATORIA
-        const angleVariation = (Math.random() - 0.5) * 0.5;
-        angle += angularSpeed + angleVariation;
-
-        // 🔥 CAMBIAR DIRECCIÓN OCASIONALMENTE
-        if (Math.random() < 0.1) {
-          // 10% probabilidad
-          direction *= -1;
-          console.log("🔄 Espiral cambió de dirección");
-        }
-      }, randomInterval);
-
-      this.activeIntervals.push(spiralInterval);
-    }
+    this.activeIntervals.push(spiralInterval);
   },
 
   createWallPattern() {
@@ -524,7 +501,6 @@ const BossBullets = {
 
   createCrossPattern() {
     const config = this.patternConfigs.cross;
-    let shotCount = 0;
 
     const crossInterval = setInterval(() => {
       if (!this.patternActive) {
@@ -532,47 +508,44 @@ const BossBullets = {
         return;
       }
 
-      shotCount++;
+      // 🔥 DIRECCIONES FIJAS: arriba, abajo, derecha, izquierda
+      const directions = [
+        0, // Derecha
+        Math.PI / 2, // Abajo
+        Math.PI, // Izquierda
+        Math.PI * 1.5, // Arriba
+      ];
 
-      // 🔥 PATRONES VARIABLES DE BALAS
-      let bulletCount;
-      if (shotCount % 6 === 0)
-        bulletCount = 20; // Cada 6 disparos: MUCHAS balas
-      else if (shotCount % 4 === 0)
-        bulletCount = 5; // Cada 4 disparos: Pocas balas
-      else if (shotCount % 3 === 0)
-        bulletCount = 10; // Cada 3 disparos: Normales
-      else bulletCount = 4 + Math.floor(Math.random() * 8); // Aleatorio 4-12
+      // 🔥 PARA CADA DIRECCIÓN: grupos aleatorios
+      directions.forEach((direction) => {
+        // 🔥 TAMAÑO DE GRUPO ALEATORIO: 4, 5, o 10 balas juntas
+        const groupSizes = [4, 5, 10];
+        const groupSize =
+          groupSizes[Math.floor(Math.random() * groupSizes.length)];
 
-      console.log(`✚ Cruz disparo ${shotCount}: ${bulletCount} balas`);
+        console.log(
+          `✚ Grupo de ${groupSize} balas en dirección ${(
+            (direction * 180) /
+            Math.PI
+          ).toFixed(0)}°`
+        );
 
-      // 🔥 DIRECCIONES ALEATORIAS (no siempre cardinales)
-      const baseDirections = [0, Math.PI / 2, Math.PI, Math.PI * 1.5]; // Cardinales
-      const useRandomDirections = Math.random() < 0.4; // 40% del tiempo direcciones aleatorias
-
-      if (useRandomDirections) {
-        // Direcciones completamente aleatorias
-        for (let i = 0; i < bulletCount; i++) {
-          const randomAngle = Math.random() * Math.PI * 2;
-          this.createTouhouBullet(randomAngle, config.speed, config.color);
+        // 🔥 DISPARAR EL GRUPO CON PEQUEÑA SEPARACIÓN
+        for (let i = 0; i < groupSize; i++) {
+          setTimeout(() => {
+            if (this.patternActive) {
+              // 🔥 MUY PEQUEÑA VARIACIÓN para que vayan juntas pero no exactamente iguales
+              const angleVariation = (i - groupSize / 2) * 0.05; // Muy pequeña dispersión
+              this.createTouhouBullet(
+                direction + angleVariation,
+                config.speed,
+                config.color
+              );
+            }
+          }, i * 50); // 50ms entre cada bala del grupo
         }
-      } else {
-        // Direcciones cardinales con variación
-        baseDirections.forEach((direction) => {
-          const bulletsPerDirection = Math.ceil(bulletCount / 4);
-
-          for (let i = 0; i < bulletsPerDirection; i++) {
-            // 🔥 PEQUEÑA VARIACIÓN EN CADA DIRECCIÓN
-            const angleVariation = (Math.random() - 0.5) * 0.6;
-            this.createTouhouBullet(
-              direction + angleVariation,
-              config.speed,
-              config.color
-            );
-          }
-        });
-      }
-    }, config.bulletInterval + Math.random() * 60); // Intervalo ligeramente aleatorio
+      });
+    }, config.bulletInterval + 80); // Un poco más lento que antes
 
     this.activeIntervals.push(crossInterval);
   },
