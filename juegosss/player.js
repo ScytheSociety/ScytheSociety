@@ -792,30 +792,44 @@ const Player = {
     const playerCenterX = this.x + this.width / 2;
     const playerCenterY = this.y + this.height / 2;
 
-    // 🔥 RADIO DE COLISIÓN COMPLETAMENTE RESPONSIVO
-    const baseRadius = this.width / 3;
+    // 🔥 RADIO DE COLISIÓN MUY REDUCIDO Y RESPONSIVO
+    const baseRadius = this.width / 6; // Era /3, ahora /6 (50% más pequeño)
     let responsiveRadius;
 
     if (GameConfig.isMobile) {
-      // MÓVIL: Radio más pequeño (más fácil) + escala por tamaño de pantalla
+      // MÓVIL: Radio aún más pequeño para ser más permisivo
       const canvas = window.getCanvas();
       const screenScale = Math.min(canvas.width, canvas.height) / 600;
-      responsiveRadius = baseRadius * 0.6 * screenScale; // 60% del normal, escalado
+      responsiveRadius = baseRadius * 0.4 * screenScale; // Era 0.6, ahora 0.4 (33% más pequeño)
     } else {
-      // PC: Radio normal
-      responsiveRadius = baseRadius;
+      // PC: Radio también reducido
+      responsiveRadius = baseRadius * 0.6; // Era 1.0, ahora 0.6 (40% más pequeño)
     }
 
+    // 🔥 NUEVO: Verificar solo si el centro del jugador está MUY cerca de la línea
     for (const line of lines) {
       let distance = 0;
+      let isNearLine = false;
 
       if (line.type === "vertical") {
+        // Verificar distancia horizontal Y que esté en el rango vertical de la línea
         distance = Math.abs(playerCenterX - line.x);
+        isNearLine =
+          playerCenterY >= line.y - 20 && playerCenterY <= line.y + 20;
       } else if (line.type === "horizontal") {
+        // Verificar distancia vertical Y que esté en el rango horizontal de la línea
         distance = Math.abs(playerCenterY - line.y);
+        isNearLine =
+          playerCenterX >= line.x - 20 && playerCenterX <= line.x + 20;
       }
 
-      if (distance < responsiveRadius) {
+      // 🔥 COLISIÓN SOLO SI ESTÁ MUY CERCA Y EN EL RANGO CORRECTO
+      if (distance < responsiveRadius && isNearLine) {
+        console.log(
+          `💥 Colisión precisa: distancia=${distance.toFixed(
+            1
+          )}, radio=${responsiveRadius.toFixed(1)}`
+        );
         return true;
       }
     }

@@ -189,24 +189,24 @@ const BossRedLine = {
   generateAnimatedGrid() {
     const canvas = window.getCanvas();
 
-    // 🔥 ESPACIADO COMPLETAMENTE RESPONSIVO
+    // 🔥 ESPACIADO AUMENTADO PARA MÁS ESPACIO ENTRE LÍNEAS
     let spacing;
 
     if (GameConfig.isMobile) {
       // MÓVIL: Espaciado mayor para facilitar el juego
-      const screenScale = Math.min(canvas.width, canvas.height) / 600; // Base 600px
-      spacing = Math.max(140, 180 * screenScale); // Mínimo 140px, escala desde 180px
+      const screenScale = Math.min(canvas.width, canvas.height) / 600;
+      spacing = Math.max(160, 200 * screenScale); // Era 140/180, ahora 160/200 (más espacio)
     } else {
-      // PC: Espaciado normal
-      const screenScale = Math.min(canvas.width, canvas.height) / 800; // Base 800px
-      spacing = Math.max(100, 120 * screenScale); // Mínimo 100px, escala desde 120px
+      // PC: Espaciado normal pero aumentado
+      const screenScale = Math.min(canvas.width, canvas.height) / 800;
+      spacing = Math.max(120, 140 * screenScale); // Era 100/120, ahora 120/140 (más espacio)
     }
 
-    // 🔥 VELOCIDAD RESPONSIVA
-    const gridSpeed = GameConfig.isMobile ? 1.2 : 2.0; // Más lento en móvil
+    // 🔥 VELOCIDAD LIGERAMENTE REDUCIDA PARA SER MENOS AGRESIVO
+    const gridSpeed = GameConfig.isMobile ? 1.0 : 1.5; // Era 1.2/2.0, ahora 1.0/1.5
 
     console.log(
-      `🔴 Generando cuadrícula RESPONSIVA - Espaciado: ${spacing.toFixed(
+      `🔴 Cuadrícula MENOS AGRESIVA - Espaciado: ${spacing.toFixed(
         1
       )}px, Velocidad: ${gridSpeed} (${GameConfig.isMobile ? "MÓVIL" : "PC"})`
     );

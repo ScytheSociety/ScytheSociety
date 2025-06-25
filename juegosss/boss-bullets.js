@@ -429,24 +429,46 @@ const BossBullets = {
 
   createSpiralPattern() {
     const config = this.patternConfigs.spiral;
-    let angle = Math.random() * Math.PI * 2; // 🔥 NUEVO: Ángulo inicial aleatorio
 
-    spiralInterval = setInterval(() => {
-      if (!this.patternActive) {
-        clearInterval(spiralInterval);
-        return;
-      }
+    // 🔥 NUEVO: Múltiples espirales con direcciones aleatorias
+    const spiralCount = 3; // 3 espirales simultáneas
+    const spiralIntervals = [];
 
-      // 🔥 MÁS SEPARACIÓN: Solo 1 bala cada 2 rotaciones
-      if (Math.floor(angle / (Math.PI * 0.5)) % 2 === 0) {
+    for (let spiralIndex = 0; spiralIndex < spiralCount; spiralIndex++) {
+      // 🔥 CADA ESPIRAL TIENE UN ÁNGULO INICIAL COMPLETAMENTE ALEATORIO
+      let angle = Math.random() * Math.PI * 2;
+
+      // 🔥 DIRECCIÓN ALEATORIA (horario o antihorario)
+      const direction = Math.random() < 0.5 ? 1 : -1;
+
+      // 🔥 VELOCIDAD ANGULAR LIGERAMENTE DIFERENTE PARA CADA ESPIRAL
+      const angularSpeed =
+        config.rotationSpeed * (0.8 + Math.random() * 0.4) * direction;
+
+      const spiralInterval = setInterval(() => {
+        if (!this.patternActive) {
+          clearInterval(spiralInterval);
+          return;
+        }
+
+        // 🔥 DISPARAR UNA BALA POR ESPIRAL
         this.createTouhouBullet(angle, config.speed, config.color);
-      }
 
-      // 🔥 TRIPLE incremento angular para MÁS separación
-      angle += config.rotationSpeed * 3.0;
-    }, config.bulletInterval + 50); // 🔥 +50ms más lento
+        // 🔥 INCREMENTAR ÁNGULO CON VELOCIDAD Y DIRECCIÓN ÚNICA
+        angle += angularSpeed;
 
-    this.activeIntervals.push(spiralInterval);
+        // 🔥 NORMALIZAR ÁNGULO PARA EVITAR OVERFLOW
+        if (angle > Math.PI * 4) angle -= Math.PI * 4;
+        if (angle < -Math.PI * 4) angle += Math.PI * 4;
+      }, config.bulletInterval + 30 + spiralIndex * 20); // Desfase temporal entre espirales
+
+      spiralIntervals.push(spiralInterval);
+      this.activeIntervals.push(spiralInterval);
+    }
+
+    console.log(
+      `🌀 ${spiralCount} espirales creadas con direcciones aleatorias`
+    );
   },
 
   createWallPattern() {
