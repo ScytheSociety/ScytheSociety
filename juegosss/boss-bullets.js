@@ -42,7 +42,7 @@ const BossBullets = {
     cross: {
       bulletInterval: 800, // 🔥 MUCHÍSIMO MÁS LENTO entre grupos
       groupSize: 3, // 🔥 SOLO 3 BALAS por dirección
-      groupDelay: 400, // 🔥 MUCHO ESPACIO entre cada bala (era 40)
+      groupDelay: 800, // 🔥 MUCHO ESPACIO entre cada bala (era 40)
       speed: 0.003,
       color: "#9B59B6",
     },
