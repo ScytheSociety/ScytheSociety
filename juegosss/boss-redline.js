@@ -61,7 +61,7 @@ const BossRedLine = {
 
     this.phaseActive = true;
     this.cycleCount = 0;
-    this.maxCycles = 10;
+    this.maxCycles = 10; // FORZAR 10 rondas
 
     this.bossManager.makeImmune(9999);
 
@@ -69,13 +69,13 @@ const BossRedLine = {
       this.bossManager.movement.stopMovementAndCenter();
     }
 
-    // 🔴 RALENTIZAR JUGADOR CONSIDERABLEMENTE
+    // 🔴 RALENTIZAR JUGADOR EXTREMADAMENTE
     this.originalPlayerSpeed = Player.moveSpeed;
-    Player.moveSpeed = 0.15; // MUY LENTO para que sea desafiante
+    Player.moveSpeed = 0.08; // SÚPER LENTO (antes era 0.15)
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        "🔴 FASE DEL HILO ROJO 🔴",
+        "🔴 FASE DEL HILO ROJO (10 RONDAS) 🔴",
         "#FF0000"
       );
     }
@@ -97,7 +97,7 @@ const BossRedLine = {
     this.showingPreview = false;
     this.redLinePath = [];
     this.redLineIndex = 0;
-    this.cycleCount = 0;
+    // NO resetear cycleCount aquí para mantener el valor
 
     // Restaurar velocidad del jugador
     if (window.Player && Player.moveSpeed !== undefined) {
@@ -105,11 +105,20 @@ const BossRedLine = {
       console.log("🏃 Velocidad del jugador restaurada a normal");
     }
 
-    // Boss vulnerable
-    if (this.bossManager && this.bossManager.boss) {
-      this.bossManager.isImmune = false;
-      this.bossManager.immunityTimer = 0;
-      console.log("🔴 Boss hecho vulnerable al terminar Red Line");
+    // 🔥 NUEVA LÓGICA: Solo hacer vulnerable si NO va a Yan Ken Po
+    if (this.cycleCount < this.maxCycles) {
+      // Red Line incompleto - volver a hunting
+      if (this.bossManager && this.bossManager.boss) {
+        this.bossManager.isImmune = false;
+        this.bossManager.immunityTimer = 0;
+        console.log("🔴 Boss hecho vulnerable - Red Line incompleto");
+      }
+    } else {
+      // Red Line completado - mantener inmune para Yan Ken Po
+      console.log(
+        "🔴 Red Line COMPLETADO - manteniendo boss inmune para Yan Ken Po"
+      );
+      // NO cambiar inmunidad aquí
     }
   },
 
@@ -228,16 +237,19 @@ const BossRedLine = {
   },
 
   adjustDifficultyForRound(roundNumber) {
-    if (roundNumber <= 3) {
+    // 🔴 VELOCIDAD MÁS AGRESIVA
+    if (roundNumber <= 2) {
+      this.redLineSpeed = 2; // Más lento al inicio
+    } else if (roundNumber <= 5) {
       this.redLineSpeed = 3;
-    } else if (roundNumber <= 6) {
+    } else if (roundNumber <= 8) {
       this.redLineSpeed = 4;
     } else {
-      this.redLineSpeed = 5;
+      this.redLineSpeed = 5; // Máximo para las últimas 2 rondas
     }
 
     console.log(
-      `🔴 Ronda ${roundNumber}: Velocidad ajustada a ${this.redLineSpeed}`
+      `🔴 Ronda ${roundNumber}/10: Velocidad ajustada a ${this.redLineSpeed}`
     );
   },
 
@@ -328,29 +340,46 @@ const BossRedLine = {
     const healthPercentage =
       this.bossManager.currentHealth / this.bossManager.maxHealth;
 
-    // Verificar si debe ir a fase final
+    console.log(`🔴 Ronda ${this.cycleCount}/${this.maxCycles} completada`);
+
+    // Verificar si debe ir a fase final por vida baja
     if (healthPercentage <= 0.03) {
       console.log("🎮 Vida muy baja - iniciando Yan Ken Po");
       this.endPhase();
-      if (this.bossManager.phases) {
-        this.bossManager.phases.startFinalPhase();
+      if (
+        this.bossManager.phases &&
+        this.bossManager.phases.forceStartYanKenPo
+      ) {
+        this.bossManager.phases.forceStartYanKenPo();
       }
       return;
     }
 
-    // Verificar si alcanzó el máximo de ciclos
+    // 🔥 VERIFICAR SI COMPLETÓ LAS 10 RONDAS
     if (this.cycleCount >= this.maxCycles) {
-      console.log("🔄 Máximo de ciclos alcanzado - terminando fase");
+      console.log("🔄 *** 10 RONDAS DE RED LINE COMPLETADAS ***");
+      console.log("🎮 FORZANDO transición directa a Yan Ken Po");
+
       this.endPhase();
 
-      if (this.bossManager.movement) {
-        this.bossManager.movement.enableFluidHunting();
-      }
+      // USAR LA NUEVA FUNCIÓN FORZADA
+      setTimeout(() => {
+        if (
+          this.bossManager.phases &&
+          this.bossManager.phases.forceStartYanKenPo
+        ) {
+          this.bossManager.phases.forceStartYanKenPo();
+        } else {
+          console.error("❌ No se pudo forzar Yan Ken Po");
+        }
+      }, 500);
       return;
     }
 
-    // Continuar con otro ciclo
-    console.log("🔄 Continuando con nuevo ciclo de hilo rojo");
+    // Continuar con otro ciclo de Red Line
+    console.log(
+      `🔄 Continuando ronda ${this.cycleCount + 1}/${this.maxCycles}`
+    );
     this.bossManager.makeImmune(9999);
 
     setTimeout(() => {
@@ -383,14 +412,14 @@ const BossRedLine = {
       "wave",
       "lightning",
       "hell",
-      "bouncing",
+      "chaos", // NUEVO patrón
     ];
 
-    // 30% probabilidad de HELL
+    // 40% probabilidad de HELL (más frecuente)
     const shape =
-      Math.random() < 0.3
+      Math.random() < 0.4
         ? "hell"
-        : shapes[Math.floor(Math.random() * (shapes.length - 2))]; // Excluir hell y bouncing del random normal
+        : shapes[Math.floor(Math.random() * (shapes.length - 1))];
 
     console.log(`🔴 Generando forma: ${shape} (escala: ${scale})`);
 
@@ -455,10 +484,10 @@ const BossRedLine = {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
 
-    // 🔥 RADIO RESPONSIVO
-    const baseRadius = Math.min(canvas.width, canvas.height) * 0.25 * scale;
-    const outerRadius = Math.max(60, baseRadius);
-    const innerRadius = outerRadius * 0.5;
+    // 🔥 ESTRELLA GIGANTE
+    const baseRadius = Math.min(canvas.width, canvas.height) * 0.4 * scale; // Era 0.25
+    const outerRadius = Math.max(120, baseRadius); // Era 60
+    const innerRadius = outerRadius * 0.4; // Más pronunciada
     const points = [];
 
     for (let i = 0; i < 10; i++) {
@@ -494,11 +523,11 @@ const BossRedLine = {
   generateSpiralPattern(canvas) {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const maxRadius = Math.min(canvas.width, canvas.height) * 0.35;
-    const turns = 2.5;
+    const maxRadius = Math.min(canvas.width, canvas.height) * 0.45; // Era 0.35
+    const turns = 3.5; // Más vueltas
     const points = [];
 
-    const totalSteps = 80;
+    const totalSteps = 120; // Más puntos para suavidad
     for (let i = 0; i <= totalSteps; i++) {
       const t = i / totalSteps;
       const angle = t * Math.PI * 2 * turns;
@@ -579,48 +608,53 @@ const BossRedLine = {
   },
 
   generateHellPattern(canvas, scale = 1.0) {
-    console.log("🔥 Generando patrón HELL responsivo");
+    console.log("🔥 Generando patrón HELL PANTALLA COMPLETA");
 
-    const startX = canvas.width * 0.1;
-    const startY = canvas.height * 0.3;
-    const letterWidth = canvas.width * 0.18 * scale;
-    const letterHeight = canvas.height * 0.4 * scale;
+    // 🔥 USAR TODA LA PANTALLA
+    const startX = canvas.width * 0.05; // 5% de margen
+    const startY = canvas.height * 0.15; // 15% desde arriba
+    const totalWidth = canvas.width * 0.9; // 90% del ancho
+    const letterHeight = canvas.height * 0.7; // 70% de altura
+    const letterWidth = totalWidth / 4.5; // Dividir entre 4 letras + espacios
 
     const points = [];
 
-    // H
-    points.push({ x: startX, y: startY });
-    points.push({ x: startX, y: startY + letterHeight });
-    points.push({ x: startX, y: startY + letterHeight / 2 });
-    points.push({ x: startX + letterWidth / 2, y: startY + letterHeight / 2 });
-    points.push({ x: startX + letterWidth / 2, y: startY });
-    points.push({ x: startX + letterWidth / 2, y: startY + letterHeight });
+    // H - Letra más grande
+    const hX = startX;
+    points.push({ x: hX, y: startY });
+    points.push({ x: hX, y: startY + letterHeight });
+    points.push({ x: hX, y: startY + letterHeight / 2 });
+    points.push({ x: hX + letterWidth * 0.8, y: startY + letterHeight / 2 });
+    points.push({ x: hX + letterWidth * 0.8, y: startY });
+    points.push({ x: hX + letterWidth * 0.8, y: startY + letterHeight });
 
-    // E
-    const eX = startX + letterWidth * 1.2;
+    // E - Más ancha
+    const eX = startX + letterWidth * 1.1;
     points.push({ x: eX, y: startY });
-    points.push({ x: eX + letterWidth, y: startY });
+    points.push({ x: eX + letterWidth * 0.9, y: startY });
     points.push({ x: eX, y: startY });
     points.push({ x: eX, y: startY + letterHeight / 2 });
     points.push({ x: eX + letterWidth * 0.7, y: startY + letterHeight / 2 });
     points.push({ x: eX, y: startY + letterHeight / 2 });
     points.push({ x: eX, y: startY + letterHeight });
-    points.push({ x: eX + letterWidth, y: startY + letterHeight });
+    points.push({ x: eX + letterWidth * 0.9, y: startY + letterHeight });
 
-    // L
-    const l1X = startX + letterWidth * 2.4;
+    // L1 - Más alta
+    const l1X = startX + letterWidth * 2.2;
     points.push({ x: l1X, y: startY });
     points.push({ x: l1X, y: startY + letterHeight });
-    points.push({ x: l1X + letterWidth, y: startY + letterHeight });
+    points.push({ x: l1X + letterWidth * 0.8, y: startY + letterHeight });
 
-    // L
-    const l2X = startX + letterWidth * 3.6;
+    // L2 - Más alta
+    const l2X = startX + letterWidth * 3.3;
     points.push({ x: l2X, y: startY });
     points.push({ x: l2X, y: startY + letterHeight });
-    points.push({ x: l2X + letterWidth, y: startY + letterHeight });
+    points.push({ x: l2X + letterWidth * 0.8, y: startY + letterHeight });
 
     this.createSmoothPath(points);
-    console.log(`🔥 HELL generado con ${this.redLinePath.length} puntos`);
+    console.log(
+      `🔥 HELL PANTALLA COMPLETA generado con ${this.redLinePath.length} puntos`
+    );
   },
 
   generateBouncingPattern(canvas, scale = 1.0) {
@@ -642,6 +676,21 @@ const BossRedLine = {
         y = Math.max(canvas.height * 0.1, Math.min(canvas.height * 0.9, y));
       }
 
+      points.push({ x, y });
+    }
+
+    this.createSmoothPath(points);
+  },
+
+  generateChaosPattern(canvas, scale = 1.0) {
+    console.log("🌪️ Generando patrón CAOS total");
+
+    const points = [];
+    const segments = 15; // Muchos segmentos
+
+    for (let i = 0; i <= segments; i++) {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
       points.push({ x, y });
     }
 

@@ -403,13 +403,14 @@ const BossBullets = {
         return;
       }
 
-      // 🔥 MÁS SEPARACIÓN: Solo 1 bala por frame con más espacio angular
-      const bulletAngle = angle;
-      this.createTouhouBullet(bulletAngle, config.speed, config.color);
+      // 🔥 MÁS SEPARACIÓN: Solo 1 bala cada 2 rotaciones
+      if (Math.floor(angle / (Math.PI * 0.5)) % 2 === 0) {
+        this.createTouhouBullet(angle, config.speed, config.color);
+      }
 
-      // 🔥 MAYOR INCREMENTO ANGULAR para más separación
-      angle += config.rotationSpeed * 2.0; // DOBLE rotación para más espacio
-    }, config.bulletInterval + 30); // 🔥 +30ms más lento entre disparos
+      // 🔥 TRIPLE incremento angular para MÁS separación
+      angle += config.rotationSpeed * 3.0;
+    }, config.bulletInterval + 50); // 🔥 +50ms más lento
 
     this.activeIntervals.push(spiralInterval);
   },
@@ -435,13 +436,13 @@ const BossBullets = {
     const canvas = window.getCanvas();
     const playerPos = Player.getPosition();
 
-    // 🔥 MENOS BALAS para más espacios
-    const bulletCount = Math.max(6, config.bulletCount - 4); // Reducir cantidad
+    // 🔥 MUCHAS MENOS BALAS para espacios enormes
+    const bulletCount = Math.max(4, config.bulletCount - 8); // Reducir AÚN MÁS
 
-    // Crear espacio MÁS GRANDE para esquivar cerca del jugador
+    // 🔥 ZONA SEGURA GIGANTE para esquivar
     const safeZoneStart =
-      Math.floor((playerPos.x / canvas.width) * bulletCount) - 2;
-    const safeZoneEnd = safeZoneStart + (config.gapSize + 3); // +3 para MÁS espacio
+      Math.floor((playerPos.x / canvas.width) * bulletCount) - 1;
+    const safeZoneEnd = safeZoneStart + (config.gapSize + 4); // +4 para ESPACIO ENORME
 
     for (let i = 0; i < bulletCount; i++) {
       if (i >= safeZoneStart && i <= safeZoneEnd) continue;
@@ -458,7 +459,7 @@ const BossBullets = {
       this.bulletPatterns.push(bullet);
     }
 
-    console.log("🧱 Muro de balas creado con MAYOR zona segura");
+    console.log(`🧱 Muro de SOLO ${bulletCount} balas con ZONA SEGURA GIGANTE`);
   },
 
   createCrossPattern() {
@@ -470,27 +471,16 @@ const BossBullets = {
         return;
       }
 
-      // 🔥 MÁS SEPARACIÓN: Solo disparar en 2 direcciones por vez
+      // 🔥 MENOS BALAS: Solo 1 dirección por vez, alternando
       const directions = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
-      const selectedDirections = directions.slice(0, 2); // Solo 2 direcciones
+      const currentDirection =
+        directions[Math.floor(Date.now() / 1000) % directions.length];
 
-      selectedDirections.forEach((angle, index) => {
-        setTimeout(() => {
-          this.createTouhouBullet(angle, config.speed, config.color);
-        }, index * 100); // 100ms entre cada dirección
-      });
+      this.createTouhouBullet(currentDirection, config.speed, config.color);
 
-      // Reducir aún más la frecuencia de diagonales
-      if (Math.random() < 0.1) {
-        // CAMBIADO: de 0.2 a 0.1 (mucho menos frecuente)
-        const diagonals = [Math.PI / 4, (3 * Math.PI) / 4];
-        diagonals.forEach((angle, index) => {
-          setTimeout(() => {
-            this.createTouhouBullet(angle, config.speed * 0.8, "#E74C3C");
-          }, (index + 2) * 100);
-        });
-      }
-    }, config.bulletInterval + 50); // 🔥 +50ms más lento
+      // 🔥 ELIMINAR diagonales completamente para más espacio
+      // (Sin diagonales = mucho más espacio para moverse)
+    }, config.bulletInterval + 80); // 🔥 +80ms mucho más lento
 
     this.activeIntervals.push(crossInterval);
   },
@@ -539,9 +529,11 @@ const BossBullets = {
         return;
       }
 
-      // Crear ráfaga circular
-      for (let i = 0; i < config.bulletsPerBurst; i++) {
-        const angle = (i * Math.PI * 2) / config.bulletsPerBurst;
+      // 🔥 MENOS BALAS en la ráfaga circular
+      const reducedBulletCount = Math.max(8, config.bulletsPerBurst - 8); // De 16 a 8 balas
+
+      for (let i = 0; i < reducedBulletCount; i++) {
+        const angle = (i * Math.PI * 2) / reducedBulletCount;
         this.createTouhouBullet(angle, config.speed, config.color);
       }
 
@@ -553,7 +545,7 @@ const BossBullets = {
           20
         );
       }
-    }, config.burstInterval);
+    }, config.burstInterval + 40); // 🔥 +40ms más lento entre ráfagas
 
     this.activeIntervals.push(burstInterval);
   },

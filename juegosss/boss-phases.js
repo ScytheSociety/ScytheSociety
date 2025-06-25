@@ -363,6 +363,45 @@ const BossPhases = {
     }, 1000);
   },
 
+  forceStartYanKenPo() {
+    console.log("🎮 FORZANDO inicio de Yan Ken Po desde Red Line");
+
+    // Limpiar cualquier fase activa
+    this.phaseActive = false;
+    this.currentPhase = "YANKENPO";
+    this.phaseTimer = 0;
+
+    // Marcar Red Line como ejecutado
+    this.phasesExecuted["REDLINE"] = true;
+    this.phasesExecuted["YANKENPO"] = true;
+
+    // Limpiar sistemas previos
+    this.cleanupAllSystems();
+
+    // Boss inmune
+    this.bossManager.makeImmune(9999);
+
+    // Centrar boss
+    if (this.bossManager.movement) {
+      this.bossManager.movement.teleportToCenter();
+      this.bossManager.movement.adjustForPhase("YANKENPO");
+    }
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        "🎮 ¡FASE FINAL: YAN KEN PO!",
+        "#FFD700"
+      );
+    }
+
+    // Iniciar Yan Ken Po INMEDIATAMENTE
+    setTimeout(() => {
+      if (this.bossManager.yankenpo) {
+        this.bossManager.yankenpo.startPhase();
+      }
+    }, 500);
+  },
+
   // ======================================================
   // SISTEMA DE FASES ALEATORIAS
   // ======================================================
@@ -621,7 +660,7 @@ const BossPhases = {
     const systems = [
       this.bossManager.mines,
       this.bossManager.bullets,
-      this.bossManager.redline,
+      // NO limpiar redline aquí si viene desde Red Line completo
     ];
 
     systems.forEach((system) => {
@@ -630,8 +669,16 @@ const BossPhases = {
       }
     });
 
+    // Solo limpiar redline si está activo Y no viene de completar 10 rondas
     if (this.bossManager.redline && this.bossManager.redline.isActive()) {
-      this.bossManager.redline.endPhase();
+      const redLineCount = this.bossManager.redline.getCurrentCycle();
+      const redLineMax = this.bossManager.redline.getMaxCycles();
+
+      if (redLineCount < redLineMax) {
+        // Red Line incompleto, limpiarlo
+        this.bossManager.redline.endPhase();
+      }
+      // Si está completo (redLineCount >= redLineMax), NO limpiarlo
     }
   },
 

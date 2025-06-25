@@ -289,43 +289,75 @@ const BossMines = {
       let x, y;
       const minDistanceFromPlayer = 200;
 
+      // 🔥 NUEVO: Detectar ubicación del jugador y spawnar minas estratégicamente
       if (i === 0) {
-        x = playerPos.x - 250 - Math.random() * 100;
-        y = playerPos.y - 250 - Math.random() * 100;
+        // Primera mina: SIEMPRE cerca de donde está el jugador ahora
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 150 + Math.random() * 100; // 150-250px del jugador
+        x = playerPos.x + Math.cos(angle) * distance;
+        y = playerPos.y + Math.sin(angle) * distance;
+        console.log(
+          `💣 Mina estratégica 1 dirigida a jugador en (${Math.round(
+            playerPos.x
+          )}, ${Math.round(playerPos.y)})`
+        );
       } else if (i === 1) {
-        x = playerPos.x + 250 + Math.random() * 100;
-        y = playerPos.y - 250 - Math.random() * 100;
+        // Segunda mina: Bloquear posible escape
+        if (playerPos.y > canvas.height * 0.7) {
+          // Si está abajo, mina arriba para bloquear escape
+          x = playerPos.x + (Math.random() - 0.5) * 200;
+          y = playerPos.y - 200 - Math.random() * 100;
+          console.log(
+            `💣 Jugador ABAJO detectado - mina bloqueando escape ARRIBA`
+          );
+        } else if (playerPos.y < canvas.height * 0.3) {
+          // Si está arriba, mina abajo
+          x = playerPos.x + (Math.random() - 0.5) * 200;
+          y = playerPos.y + 200 + Math.random() * 100;
+          console.log(
+            `💣 Jugador ARRIBA detectado - mina bloqueando escape ABAJO`
+          );
+        } else {
+          // Si está en el centro, mina lateral
+          x = playerPos.x + (Math.random() < 0.5 ? -250 : 250);
+          y = playerPos.y + (Math.random() - 0.5) * 150;
+          console.log(`💣 Jugador CENTRO detectado - mina lateral`);
+        }
       } else if (i === 2) {
-        x = playerPos.x + (Math.random() - 0.5) * 200;
-        y = playerPos.y + 300 + Math.random() * 100;
+        // Tercera mina: Completamente aleatoria para presión general
+        x = 120 + Math.random() * (canvas.width - 240);
+        y = 120 + Math.random() * (canvas.height - 240);
+        console.log(`💣 Mina aleatoria para presión general`);
       }
 
+      // Mantener dentro de pantalla
       x = Math.max(120, Math.min(canvas.width - 120, x));
       y = Math.max(120, Math.min(canvas.height - 120, y));
 
-      const distanceToPlayer = Math.sqrt(
-        Math.pow(x - playerPos.x, 2) + Math.pow(y - playerPos.y, 2)
-      );
+      // Solo verificar distancia mínima para las minas no dirigidas
+      if (i > 0) {
+        const distanceToPlayer = Math.sqrt(
+          Math.pow(x - playerPos.x, 2) + Math.pow(y - playerPos.y, 2)
+        );
 
-      if (distanceToPlayer < minDistanceFromPlayer) {
-        const angle = Math.atan2(y - playerPos.y, x - playerPos.x);
-        x = playerPos.x + Math.cos(angle) * minDistanceFromPlayer;
-        y = playerPos.y + Math.sin(angle) * minDistanceFromPlayer;
+        if (distanceToPlayer < minDistanceFromPlayer) {
+          const angle = Math.atan2(y - playerPos.y, x - playerPos.x);
+          x = playerPos.x + Math.cos(angle) * minDistanceFromPlayer;
+          y = playerPos.y + Math.sin(angle) * minDistanceFromPlayer;
 
-        x = Math.max(120, Math.min(canvas.width - 120, x));
-        y = Math.max(120, Math.min(canvas.height - 120, y));
+          x = Math.max(120, Math.min(canvas.width - 120, x));
+          y = Math.max(120, Math.min(canvas.height - 120, y));
+        }
       }
 
       const validPos = this.getValidMinePosition(x, y);
 
-      // 🔥 CREAR MINA ESTÁTICA MÁS PEQUEÑA
       const staticMine = this.createMine(validPos.x, validPos.y, null);
       staticMine.isStatic = true;
       staticMine.armed = true;
       staticMine.type = "static";
 
-      // 🔥 HACER MÁS PEQUEÑAS SOLO LAS ESTÁTICAS
-      const staticSizeReduction = 0.7; // 30% más pequeñas
+      const staticSizeReduction = 0.7;
       staticMine.width = this.mineConfig.size * staticSizeReduction;
       staticMine.height = this.mineConfig.size * staticSizeReduction;
       staticMine.dangerRadius = this.mineConfig.staticDangerRadius;
@@ -333,9 +365,7 @@ const BossMines = {
       this.mines.push(staticMine);
     }
 
-    console.log(
-      `💣 Campo de ${mineCount} minas estáticas MÁS PEQUEÑAS spawneado`
-    );
+    console.log(`💣 Campo de ${mineCount} minas estáticas DIRIGIDAS spawneado`);
   },
 
   // Función para evitar minas superpuestas
