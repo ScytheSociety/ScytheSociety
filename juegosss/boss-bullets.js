@@ -34,7 +34,7 @@ const BossBullets = {
   // 🔥 CONFIGURACIÓN CORREGIDA - SPIRAL PERFECTO, CRUZ ESPACIADA
   patternConfigs: {
     spiral: {
-      bulletInterval: 140, // 🔥 SOLO un poquito más lento (era 120)
+      bulletInterval: 200, // 🔥 SOLO un poquito más lento (era 120)
       rotationSpeed: 0.08,
       speed: 0.002,
       color: "#FF6B6B",
@@ -42,7 +42,7 @@ const BossBullets = {
     cross: {
       bulletInterval: 800, // 🔥 MUCHÍSIMO MÁS LENTO entre grupos
       groupSize: 3, // 🔥 SOLO 3 BALAS por dirección
-      groupDelay: 200, // 🔥 MUCHO ESPACIO entre cada bala (era 40)
+      groupDelay: 400, // 🔥 MUCHO ESPACIO entre cada bala (era 40)
       speed: 0.003,
       color: "#9B59B6",
     },
