@@ -859,23 +859,19 @@ const BossRedLine = {
   drawBossTrail(ctx) {
     // 🔥 VERIFICACIONES DE SEGURIDAD
     if (!this.redLinePath || this.redLinePath.length === 0) {
-      return; // No hay línea para dibujar
+      return;
     }
 
     if (this.redLineIndex <= 0) {
-      return; // No hay progreso aún
+      return;
     }
 
-    const startIndex = Math.max(
-      0,
-      this.redLineIndex - this.lineConfig.trailLength
-    );
+    // 🔥 USAR SOLO ÍNDICES ENTEROS
+    const currentIndex = Math.floor(this.redLineIndex);
+    const startIndex = Math.max(0, currentIndex - this.lineConfig.trailLength);
 
-    if (
-      startIndex >= this.redLineIndex ||
-      startIndex >= this.redLinePath.length
-    ) {
-      return; // Índices inválidos
+    if (startIndex >= currentIndex || startIndex >= this.redLinePath.length) {
+      return;
     }
 
     ctx.strokeStyle = "rgba(255, 0, 0, 0.8)";
@@ -886,14 +882,14 @@ const BossRedLine = {
     ctx.beginPath();
     let lineStarted = false;
 
+    // 🔥 ITERAR SOLO SOBRE ÍNDICES ENTEROS
     for (
       let i = startIndex;
-      i <= this.redLineIndex && i < this.redLinePath.length;
+      i <= currentIndex && i < this.redLinePath.length;
       i++
     ) {
       const point = this.redLinePath[i];
 
-      // 🔥 VERIFICAR QUE EL PUNTO EXISTE
       if (
         !point ||
         typeof point.x !== "number" ||

@@ -201,12 +201,14 @@ const Player = {
    * Actualiza la posición del jugador
    */
   updatePosition() {
+    // 🔥 VELOCIDAD FINAL = moveSpeed * speedModifier * slowMotion
     let effectiveSpeed = this.moveSpeed * this.speedModifier;
 
     if (window.slowMotionActive && window.slowMotionFactor) {
       effectiveSpeed *= window.slowMotionFactor;
     }
 
+    // 🔥 DEBUG: Mostrar velocidad cuando es lenta
     if (this.speedModifier < 0.1) {
       console.log(
         `🐌 VELOCIDAD ULTRA LENTA: ${effectiveSpeed} (${this.moveSpeed} × ${this.speedModifier})`
@@ -216,12 +218,11 @@ const Player = {
     const deltaX = (this.mouseX - this.width / 2 - this.x) * effectiveSpeed;
     const deltaY = (this.mouseY - this.height / 2 - this.y) * effectiveSpeed;
 
-    // 🔥 FACTOR MÁS PEQUEÑO CUANDO ES LENTO
-    const responsiveness = this.speedModifier < 0.1 ? 0.01 : 0.15; // SÚPER LENTO
+    // 🔥 SIN FACTOR 0.15 - APLICAR DIRECTAMENTE
+    this.x += deltaX;
+    this.y += deltaY;
 
-    this.x += deltaX * responsiveness;
-    this.y += deltaY * responsiveness;
-
+    // Mantener dentro de los límites del canvas
     const canvas = window.getCanvas();
     this.x = Math.max(0, Math.min(canvas.width - this.width, this.x));
     this.y = Math.max(0, Math.min(canvas.height - this.height, this.y));
