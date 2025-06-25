@@ -81,10 +81,9 @@ const BossRedLine = {
     }
 
     // 🔥 MOVIMIENTO ULTRA LENTO DEL JUGADOR
-    // 🔥 MOVIMIENTO ULTRA LENTO DEL JUGADOR
     if (window.Player && Player.setSpeedModifier) {
       this.originalPlayerSpeed = Player.getSpeedModifier();
-      Player.setSpeedModifier(0.05); // 95% más lento
+      Player.setSpeedModifier(0.01); // 🔥 CAMBIAR de 0.05 a 0.01 (1% velocidad)
 
       // 🔥 VERIFICACIÓN INMEDIATA
       console.log(
@@ -198,11 +197,34 @@ const BossRedLine = {
     this.updateGridLines();
   },
 
+  // ======================================================
+  // FUNCIÓN AUXILIAR RESPONSIVA PARA CUADRÍCULA
+  // ======================================================
+
   generateAnimatedGrid() {
     const canvas = window.getCanvas();
-    const spacing = 100; // 🔥 CAMBIAR de 80 a 100 (más espaciado)
 
-    console.log("🔴 Generando cuadrícula animada MÁS ESPACIADA");
+    // 🔥 ESPACIADO COMPLETAMENTE RESPONSIVO
+    let spacing;
+
+    if (GameConfig.isMobile) {
+      // MÓVIL: Espaciado mayor para facilitar el juego
+      const screenScale = Math.min(canvas.width, canvas.height) / 600; // Base 600px
+      spacing = Math.max(140, 180 * screenScale); // Mínimo 140px, escala desde 180px
+    } else {
+      // PC: Espaciado normal
+      const screenScale = Math.min(canvas.width, canvas.height) / 800; // Base 800px
+      spacing = Math.max(100, 120 * screenScale); // Mínimo 100px, escala desde 120px
+    }
+
+    // 🔥 VELOCIDAD RESPONSIVA
+    const gridSpeed = GameConfig.isMobile ? 1.2 : 2.0; // Más lento en móvil
+
+    console.log(
+      `🔴 Generando cuadrícula RESPONSIVA - Espaciado: ${spacing.toFixed(
+        1
+      )}px, Velocidad: ${gridSpeed} (${GameConfig.isMobile ? "MÓVIL" : "PC"})`
+    );
 
     // Líneas verticales (de arriba hacia abajo)
     for (let x = spacing; x < canvas.width; x += spacing) {
@@ -211,7 +233,7 @@ const BossRedLine = {
         x: x,
         y: 0,
         targetY: canvas.height,
-        speed: 2,
+        speed: gridSpeed,
         active: true,
       });
     }
@@ -223,7 +245,7 @@ const BossRedLine = {
         x: 0,
         y: y,
         targetX: canvas.width,
-        speed: 2,
+        speed: gridSpeed,
         active: true,
       });
     }
@@ -275,7 +297,7 @@ const BossRedLine = {
       return;
     }
 
-    // Mover el boss por la línea
+    // 🔥 USAR ÍNDICE ENTERO para evitar decimales
     const currentPoint = this.redLinePath[Math.floor(this.redLineIndex)];
     if (!currentPoint) {
       console.log("🔴 Punto no válido, terminando recorrido");
@@ -540,47 +562,78 @@ const BossRedLine = {
   },
 
   generateZigzagWalls(canvas) {
-    const margin = 20;
+    // 🔥 MÁRGENES RESPONSIVOS
+    const responsiveMargin = GameConfig.isMobile
+      ? Math.max(50, canvas.width * 0.1) // 10% en móvil, mínimo 50px
+      : Math.max(30, canvas.width * 0.05); // 5% en PC, mínimo 30px
+
     const points = [
-      { x: margin, y: margin }, // Esquina superior izquierda
-      { x: canvas.width - margin, y: margin }, // Esquina superior derecha
-      { x: margin, y: canvas.height - margin }, // Esquina inferior izquierda
-      { x: canvas.width - margin, y: canvas.height - margin }, // Esquina inferior derecha
+      { x: responsiveMargin, y: responsiveMargin }, // Esquina superior izquierda
+      { x: canvas.width - responsiveMargin, y: responsiveMargin }, // Esquina superior derecha
+      { x: responsiveMargin, y: canvas.height - responsiveMargin }, // Esquina inferior izquierda
+      {
+        x: canvas.width - responsiveMargin,
+        y: canvas.height - responsiveMargin,
+      }, // Esquina inferior derecha
     ];
 
     this.createSmoothPath(points);
-    console.log("🔴 Zigzag generado tocando todas las esquinas");
+    console.log(
+      `🔴 Zigzag RESPONSIVO generado - Margen: ${responsiveMargin}px (${
+        GameConfig.isMobile ? "MÓVIL" : "PC"
+      })`
+    );
   },
 
   generateStarWalls(canvas) {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const margin = 25;
+
+    // 🔥 MÁRGENES RESPONSIVOS PARA ESTRELLA
+    const responsiveMargin = GameConfig.isMobile
+      ? Math.max(60, canvas.width * 0.12) // 12% en móvil
+      : Math.max(35, canvas.width * 0.06); // 6% en PC
 
     const points = [
-      { x: centerX, y: margin }, // Punta superior (toca techo)
-      { x: canvas.width - margin, y: canvas.height - margin }, // Esquina inferior derecha
-      { x: margin, y: centerY }, // Punta izquierda (toca pared)
-      { x: canvas.width - margin, y: centerY }, // Punta derecha (toca pared)
-      { x: margin, y: margin }, // Esquina superior izquierda
-      { x: centerX, y: canvas.height - margin }, // Punta inferior (toca suelo)
-      { x: centerX, y: margin }, // Volver al inicio
+      { x: centerX, y: responsiveMargin }, // Punta superior (toca techo)
+      {
+        x: canvas.width - responsiveMargin,
+        y: canvas.height - responsiveMargin,
+      }, // Esquina inferior derecha
+      { x: responsiveMargin, y: centerY }, // Punta izquierda (toca pared)
+      { x: canvas.width - responsiveMargin, y: centerY }, // Punta derecha (toca pared)
+      { x: responsiveMargin, y: responsiveMargin }, // Esquina superior izquierda
+      { x: centerX, y: canvas.height - responsiveMargin }, // Punta inferior (toca suelo)
+      { x: centerX, y: responsiveMargin }, // Volver al inicio
     ];
 
     this.createSmoothPath(points);
-    console.log("🔴 Estrella generada tocando todas las paredes");
+    console.log(
+      `🔴 Estrella RESPONSIVA generada - Margen: ${responsiveMargin}px (${
+        GameConfig.isMobile ? "MÓVIL" : "PC"
+      })`
+    );
   },
 
   generateHellWalls(canvas) {
-    const margin = 30;
-    const letterWidth = (canvas.width - margin * 2) / 4;
-    const letterHeight = canvas.height - margin * 2;
-    const startY = margin;
+    // 🔥 MÁRGENES Y DIMENSIONES RESPONSIVOS
+    const responsiveMargin = GameConfig.isMobile
+      ? Math.max(40, canvas.width * 0.08) // 8% en móvil
+      : Math.max(25, canvas.width * 0.04); // 4% en PC
+
+    const letterWidth = (canvas.width - responsiveMargin * 2) / 4;
+    const letterHeight = canvas.height - responsiveMargin * 2;
+    const startY = responsiveMargin;
+
+    // 🔥 AJUSTAR ESPACIO ENTRE LETRAS SEGÚN PANTALLA
+    const letterSpacing = GameConfig.isMobile
+      ? letterWidth * 1.1
+      : letterWidth * 1.2;
 
     const points = [];
 
-    // H - tocando paredes
-    const hX = margin;
+    // H - RESPONSIVO
+    const hX = responsiveMargin;
     points.push({ x: hX, y: startY });
     points.push({ x: hX, y: startY + letterHeight });
     points.push({ x: hX, y: startY + letterHeight / 2 });
@@ -588,8 +641,8 @@ const BossRedLine = {
     points.push({ x: hX + letterWidth, y: startY });
     points.push({ x: hX + letterWidth, y: startY + letterHeight });
 
-    // E
-    const eX = margin + letterWidth * 1.2;
+    // E - RESPONSIVO
+    const eX = responsiveMargin + letterSpacing;
     points.push({ x: eX, y: startY });
     points.push({ x: eX + letterWidth, y: startY });
     points.push({ x: eX, y: startY });
@@ -599,53 +652,91 @@ const BossRedLine = {
     points.push({ x: eX, y: startY + letterHeight });
     points.push({ x: eX + letterWidth, y: startY + letterHeight });
 
-    // L1
-    const l1X = margin + letterWidth * 2.4;
+    // L1 - RESPONSIVO
+    const l1X = responsiveMargin + letterSpacing * 2;
     points.push({ x: l1X, y: startY });
     points.push({ x: l1X, y: startY + letterHeight });
     points.push({ x: l1X + letterWidth, y: startY + letterHeight });
 
-    // L2
-    const l2X = margin + letterWidth * 3.6;
+    // L2 - RESPONSIVO (toca pared derecha)
+    const l2X = responsiveMargin + letterSpacing * 3;
     points.push({ x: l2X, y: startY });
     points.push({ x: l2X, y: startY + letterHeight });
-    points.push({ x: canvas.width - margin, y: startY + letterHeight }); // Toca pared derecha
+    points.push({
+      x: canvas.width - responsiveMargin,
+      y: startY + letterHeight,
+    }); // Toca pared derecha
 
     this.createSmoothPath(points);
-    console.log("🔴 HELL generado ocupando toda la pantalla");
+    console.log(
+      `🔴 HELL RESPONSIVO generado - Margen: ${responsiveMargin}px, Ancho letra: ${letterWidth.toFixed(
+        1
+      )}px (${GameConfig.isMobile ? "MÓVIL" : "PC"})`
+    );
   },
 
   generateZWalls(canvas) {
-    const margin = 25;
+    // 🔥 MÁRGENES RESPONSIVOS PARA Z
+    const responsiveMargin = GameConfig.isMobile
+      ? Math.max(45, canvas.width * 0.09) // 9% en móvil
+      : Math.max(30, canvas.width * 0.05); // 5% en PC
+
     const points = [
-      { x: margin, y: margin }, // Esquina superior izquierda
-      { x: canvas.width - margin, y: margin }, // Esquina superior derecha
-      { x: margin, y: canvas.height - margin }, // Diagonal a inferior izquierda
-      { x: canvas.width - margin, y: canvas.height - margin }, // Esquina inferior derecha
+      { x: responsiveMargin, y: responsiveMargin }, // Esquina superior izquierda
+      { x: canvas.width - responsiveMargin, y: responsiveMargin }, // Esquina superior derecha
+      { x: responsiveMargin, y: canvas.height - responsiveMargin }, // Diagonal a inferior izquierda
+      {
+        x: canvas.width - responsiveMargin,
+        y: canvas.height - responsiveMargin,
+      }, // Esquina inferior derecha
     ];
 
     this.createSmoothPath(points);
-    console.log("🔴 Z generado tocando esquinas");
+    console.log(
+      `🔴 Z RESPONSIVO generado - Margen: ${responsiveMargin}px (${
+        GameConfig.isMobile ? "MÓVIL" : "PC"
+      })`
+    );
   },
 
   generateRandomWallPattern(canvas) {
-    const margin = 30;
+    // 🔥 MÁRGENES RESPONSIVOS PARA PATRÓN ALEATORIO
+    const responsiveMargin = GameConfig.isMobile
+      ? Math.max(55, canvas.width * 0.11) // 11% en móvil
+      : Math.max(35, canvas.width * 0.06); // 6% en PC
+
     const points = [];
     const corners = [
-      { x: margin, y: margin },
-      { x: canvas.width - margin, y: margin },
-      { x: canvas.width - margin, y: canvas.height - margin },
-      { x: margin, y: canvas.height - margin },
+      { x: responsiveMargin, y: responsiveMargin },
+      { x: canvas.width - responsiveMargin, y: responsiveMargin },
+      {
+        x: canvas.width - responsiveMargin,
+        y: canvas.height - responsiveMargin,
+      },
+      { x: responsiveMargin, y: canvas.height - responsiveMargin },
     ];
 
-    // Línea aleatoria que siempre toca al menos 2 esquinas
+    // Línea aleatoria que siempre toca al menos 3 esquinas
     const shuffledCorners = corners.sort(() => Math.random() - 0.5);
     points.push(shuffledCorners[0]);
     points.push(shuffledCorners[1]);
     points.push(shuffledCorners[2]);
 
+    // 🔥 AGREGAR PUNTO MEDIO RESPONSIVO (solo en pantallas grandes)
+    if (!GameConfig.isMobile && Math.random() < 0.5) {
+      const midPoint = {
+        x: canvas.width / 2 + (Math.random() - 0.5) * canvas.width * 0.3,
+        y: canvas.height / 2 + (Math.random() - 0.5) * canvas.height * 0.3,
+      };
+      points.splice(2, 0, midPoint); // Insertar en el medio
+    }
+
     this.createSmoothPath(points);
-    console.log("🔴 Patrón aleatorio generado tocando esquinas");
+    console.log(
+      `🔴 Patrón aleatorio RESPONSIVO generado - Margen: ${responsiveMargin}px, ${
+        points.length
+      } puntos (${GameConfig.isMobile ? "MÓVIL" : "PC"})`
+    );
   },
 
   createSmoothPath(points) {

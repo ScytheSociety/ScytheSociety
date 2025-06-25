@@ -201,14 +201,12 @@ const Player = {
    * Actualiza la posición del jugador
    */
   updatePosition() {
-    // 🔥 VELOCIDAD FINAL = moveSpeed * speedModifier * slowMotion
     let effectiveSpeed = this.moveSpeed * this.speedModifier;
 
     if (window.slowMotionActive && window.slowMotionFactor) {
       effectiveSpeed *= window.slowMotionFactor;
     }
 
-    // 🔥 DEBUG: Mostrar velocidad cuando es lenta
     if (this.speedModifier < 0.1) {
       console.log(
         `🐌 VELOCIDAD ULTRA LENTA: ${effectiveSpeed} (${this.moveSpeed} × ${this.speedModifier})`
@@ -218,13 +216,12 @@ const Player = {
     const deltaX = (this.mouseX - this.width / 2 - this.x) * effectiveSpeed;
     const deltaY = (this.mouseY - this.height / 2 - this.y) * effectiveSpeed;
 
-    // 🔥 FACTOR DINÁMICO: Más lento cuando speedModifier es bajo
-    const responsiveness = this.speedModifier < 0.1 ? 0.02 : 0.15; // MUY LENTO en Red Line
+    // 🔥 FACTOR MÁS PEQUEÑO CUANDO ES LENTO
+    const responsiveness = this.speedModifier < 0.1 ? 0.01 : 0.15; // SÚPER LENTO
 
     this.x += deltaX * responsiveness;
     this.y += deltaY * responsiveness;
 
-    // Mantener dentro de los límites del canvas
     const canvas = window.getCanvas();
     this.x = Math.max(0, Math.min(canvas.width - this.width, this.x));
     this.y = Math.max(0, Math.min(canvas.height - this.height, this.y));
@@ -764,6 +761,11 @@ const Player = {
 
   setSpeedModifier(modifier) {
     this.speedModifier = modifier;
+
+    // 🔥 DEBUG: Mostrar quién está cambiando la velocidad
+    console.log(`🏃 VELOCIDAD CAMBIADA: ${modifier}x`);
+    console.trace(); // Mostrar la pila de llamadas
+
     console.log(
       `🏃 Velocidad del jugador modificada: ${modifier}x (${
         this.moveSpeed * modifier
@@ -780,11 +782,28 @@ const Player = {
     console.log("🏃 Velocidad del jugador restaurada a normal");
   },
 
-  // Verificar colisión con líneas de cuadrícula
+  // ======================================================
+  // FUNCIÓN AUXILIAR RESPONSIVA PARA COLISIONES
+  // ======================================================
+
+  // AGREGAR ESTO AL FINAL DE player.js en checkGridLineCollision():
   checkGridLineCollision(lines) {
     const playerCenterX = this.x + this.width / 2;
     const playerCenterY = this.y + this.height / 2;
-    const hitRadius = this.width / 3; // Área de colisión
+
+    // 🔥 RADIO DE COLISIÓN COMPLETAMENTE RESPONSIVO
+    const baseRadius = this.width / 3;
+    let responsiveRadius;
+
+    if (GameConfig.isMobile) {
+      // MÓVIL: Radio más pequeño (más fácil) + escala por tamaño de pantalla
+      const canvas = window.getCanvas();
+      const screenScale = Math.min(canvas.width, canvas.height) / 600;
+      responsiveRadius = baseRadius * 0.6 * screenScale; // 60% del normal, escalado
+    } else {
+      // PC: Radio normal
+      responsiveRadius = baseRadius;
+    }
 
     for (const line of lines) {
       let distance = 0;
@@ -795,7 +814,7 @@ const Player = {
         distance = Math.abs(playerCenterY - line.y);
       }
 
-      if (distance < hitRadius) {
+      if (distance < responsiveRadius) {
         return true;
       }
     }
