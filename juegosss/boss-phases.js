@@ -936,6 +936,12 @@ const BossPhases = {
   cleanup() {
     console.log("🧹 Limpiando sistema de fases");
 
+    // 🔥 NUEVO: RESETEAR FLAG DE RED LINE FORZADO
+    if (this.bossManager && this.bossManager.redline) {
+      this.bossManager.redline.redLineForceActive = false;
+      console.log("🔴 Flag redLineForceActive RESETEADO");
+    }
+
     // Limpiar timeouts
     if (this.summoningTimeouts) {
       this.summoningTimeouts.forEach((timeout) => clearTimeout(timeout));
@@ -951,6 +957,10 @@ const BossPhases = {
     this.phaseActive = false;
     this.currentPhase = "HUNTING";
     this.phaseTimer = 0;
+
+    // 🔥 NUEVO: RESETEAR FASES ALEATORIAS
+    this.isRandomPhase = false;
+    this.randomPhaseActive = false;
 
     // RESETEAR fases ejecutadas
     this.phasesExecuted = {

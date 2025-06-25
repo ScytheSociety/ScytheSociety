@@ -958,6 +958,10 @@ const BossRedLine = {
     this.cycleCount = 0;
     this.gridLines = [];
 
+    // 🔥 NUEVO: RESETEAR FLAG FORZADO
+    this.redLineForceActive = false;
+    console.log("🔴 redLineForceActive RESETEADO en cleanup");
+
     // Restaurar velocidad del jugador
     if (window.Player && Player.restoreNormalSpeed) {
       Player.restoreNormalSpeed();
@@ -968,7 +972,14 @@ const BossRedLine = {
 
   reset() {
     this.cleanup();
-    console.log("🔄 Sistema de hilo rojo reseteado");
+
+    // 🔥 NUEVO: FORZAR RESET DE TODOS LOS FLAGS
+    this.redLineForceActive = false;
+    this.phaseActive = false;
+    this.redLineMoving = false;
+    this.showingPreview = false;
+
+    console.log("🔄 Sistema de hilo rojo reseteado COMPLETAMENTE");
   },
 
   // ======================================================

@@ -1617,6 +1617,22 @@ function cleanupBossElements() {
       }
     }
 
+    // 🔥 NUEVO: LIMPIAR ESPECÍFICAMENTE RED LINE FLAGS
+    if (typeof BossManager !== "undefined" && BossManager.redline) {
+      BossManager.redline.redLineForceActive = false;
+      BossManager.redline.phaseActive = false;
+      console.log("🔴 Red Line flags FORZADO a false");
+    }
+
+    // 🔥 NUEVO: LIMPIAR FASES ALEATORIAS
+    if (typeof BossManager !== "undefined" && BossManager.phases) {
+      BossManager.phases.isRandomPhase = false;
+      BossManager.phases.randomPhaseActive = false;
+      BossManager.phases.phaseActive = false;
+      BossManager.phases.currentPhase = "HUNTING";
+      console.log("🔄 Phases FORZADO a HUNTING");
+    }
+
     // Limpiar botones Yan Ken Po
     const yankenpoContainer = document.getElementById("yankenpo-container");
     if (yankenpoContainer && yankenpoContainer.parentNode) {
@@ -1676,6 +1692,7 @@ function cleanupBossElements() {
       "boss-comment",
       "level-transition",
       "music-ticker",
+      "boss-phase-timer", // 🔥 NUEVO: Limpiar timer de calavera
     ];
 
     bossElements.forEach((elementId) => {
@@ -1685,7 +1702,7 @@ function cleanupBossElements() {
       }
     });
 
-    console.log("✅ Elementos del boss limpiados");
+    console.log("✅ Elementos del boss limpiados COMPLETAMENTE");
   } catch (error) {
     console.warn("⚠️ Error limpiando elementos del boss:", error);
   }
