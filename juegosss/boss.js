@@ -12,8 +12,8 @@ const BossManager = {
   active: false,
 
   // Estadísticas básicas
-  maxHealth: 500,
-  currentHealth: 500,
+  maxHealth: 100,
+  currentHealth: 100,
 
   // Sistemas modulares
   movement: null,

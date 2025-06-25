@@ -430,20 +430,19 @@ const BossBullets = {
   createSpiralPattern() {
     const config = this.patternConfigs.spiral;
 
-    // 🔥 NUEVO: Múltiples espirales con direcciones aleatorias
-    const spiralCount = 3; // 3 espirales simultáneas
-    const spiralIntervals = [];
+    // 🔥 PATRÓN COMPLETAMENTE ALEATORIO Y CAÓTICO
+    const spiralCount = 2 + Math.floor(Math.random() * 3); // 2-4 espirales aleatorias
+    console.log(`🌀 Creando ${spiralCount} espirales CAÓTICAS`);
 
     for (let spiralIndex = 0; spiralIndex < spiralCount; spiralIndex++) {
-      // 🔥 CADA ESPIRAL TIENE UN ÁNGULO INICIAL COMPLETAMENTE ALEATORIO
-      let angle = Math.random() * Math.PI * 2;
+      // 🔥 CADA ESPIRAL CON PROPIEDADES COMPLETAMENTE ALEATORIAS
+      let angle = Math.random() * Math.PI * 2; // Ángulo inicial aleatorio
+      const direction = Math.random() < 0.5 ? 1 : -1; // Dirección aleatoria
+      const speedMultiplier = 0.5 + Math.random() * 1.5; // Velocidad aleatoria (0.5x - 2x)
+      const angularSpeed = config.rotationSpeed * speedMultiplier * direction;
 
-      // 🔥 DIRECCIÓN ALEATORIA (horario o antihorario)
-      const direction = Math.random() < 0.5 ? 1 : -1;
-
-      // 🔥 VELOCIDAD ANGULAR LIGERAMENTE DIFERENTE PARA CADA ESPIRAL
-      const angularSpeed =
-        config.rotationSpeed * (0.8 + Math.random() * 0.4) * direction;
+      // 🔥 INTERVALO DE DISPARO ALEATORIO POR ESPIRAL
+      const randomInterval = config.bulletInterval + Math.random() * 100;
 
       const spiralInterval = setInterval(() => {
         if (!this.patternActive) {
@@ -451,24 +450,29 @@ const BossBullets = {
           return;
         }
 
-        // 🔥 DISPARAR UNA BALA POR ESPIRAL
-        this.createTouhouBullet(angle, config.speed, config.color);
+        // 🔥 DISPARAR RÁFAGAS ALEATORIAS (1-3 balas por vez)
+        const burstSize = 1 + Math.floor(Math.random() * 3);
 
-        // 🔥 INCREMENTAR ÁNGULO CON VELOCIDAD Y DIRECCIÓN ÚNICA
-        angle += angularSpeed;
+        for (let burst = 0; burst < burstSize; burst++) {
+          // 🔥 ÁNGULO LIGERAMENTE ALEATORIO PARA CADA BALA
+          const bulletAngle = angle + burst * 0.2 + (Math.random() - 0.5) * 0.3;
+          this.createTouhouBullet(bulletAngle, config.speed, config.color);
+        }
 
-        // 🔥 NORMALIZAR ÁNGULO PARA EVITAR OVERFLOW
-        if (angle > Math.PI * 4) angle -= Math.PI * 4;
-        if (angle < -Math.PI * 4) angle += Math.PI * 4;
-      }, config.bulletInterval + 30 + spiralIndex * 20); // Desfase temporal entre espirales
+        // 🔥 INCREMENTO ANGULAR CON VARIACIÓN ALEATORIA
+        const angleVariation = (Math.random() - 0.5) * 0.5;
+        angle += angularSpeed + angleVariation;
 
-      spiralIntervals.push(spiralInterval);
+        // 🔥 CAMBIAR DIRECCIÓN OCASIONALMENTE
+        if (Math.random() < 0.1) {
+          // 10% probabilidad
+          direction *= -1;
+          console.log("🔄 Espiral cambió de dirección");
+        }
+      }, randomInterval);
+
       this.activeIntervals.push(spiralInterval);
     }
-
-    console.log(
-      `🌀 ${spiralCount} espirales creadas con direcciones aleatorias`
-    );
   },
 
   createWallPattern() {
@@ -520,6 +524,7 @@ const BossBullets = {
 
   createCrossPattern() {
     const config = this.patternConfigs.cross;
+    let shotCount = 0;
 
     const crossInterval = setInterval(() => {
       if (!this.patternActive) {
@@ -527,16 +532,47 @@ const BossBullets = {
         return;
       }
 
-      // 🔥 MENOS BALAS: Solo 1 dirección por vez, alternando
-      const directions = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
-      const currentDirection =
-        directions[Math.floor(Date.now() / 1000) % directions.length];
+      shotCount++;
 
-      this.createTouhouBullet(currentDirection, config.speed, config.color);
+      // 🔥 PATRONES VARIABLES DE BALAS
+      let bulletCount;
+      if (shotCount % 6 === 0)
+        bulletCount = 20; // Cada 6 disparos: MUCHAS balas
+      else if (shotCount % 4 === 0)
+        bulletCount = 5; // Cada 4 disparos: Pocas balas
+      else if (shotCount % 3 === 0)
+        bulletCount = 10; // Cada 3 disparos: Normales
+      else bulletCount = 4 + Math.floor(Math.random() * 8); // Aleatorio 4-12
 
-      // 🔥 ELIMINAR diagonales completamente para más espacio
-      // (Sin diagonales = mucho más espacio para moverse)
-    }, config.bulletInterval + 80); // 🔥 +80ms mucho más lento
+      console.log(`✚ Cruz disparo ${shotCount}: ${bulletCount} balas`);
+
+      // 🔥 DIRECCIONES ALEATORIAS (no siempre cardinales)
+      const baseDirections = [0, Math.PI / 2, Math.PI, Math.PI * 1.5]; // Cardinales
+      const useRandomDirections = Math.random() < 0.4; // 40% del tiempo direcciones aleatorias
+
+      if (useRandomDirections) {
+        // Direcciones completamente aleatorias
+        for (let i = 0; i < bulletCount; i++) {
+          const randomAngle = Math.random() * Math.PI * 2;
+          this.createTouhouBullet(randomAngle, config.speed, config.color);
+        }
+      } else {
+        // Direcciones cardinales con variación
+        baseDirections.forEach((direction) => {
+          const bulletsPerDirection = Math.ceil(bulletCount / 4);
+
+          for (let i = 0; i < bulletsPerDirection; i++) {
+            // 🔥 PEQUEÑA VARIACIÓN EN CADA DIRECCIÓN
+            const angleVariation = (Math.random() - 0.5) * 0.6;
+            this.createTouhouBullet(
+              direction + angleVariation,
+              config.speed,
+              config.color
+            );
+          }
+        });
+      }
+    }, config.bulletInterval + Math.random() * 60); // Intervalo ligeramente aleatorio
 
     this.activeIntervals.push(crossInterval);
   },

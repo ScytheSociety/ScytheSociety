@@ -792,43 +792,35 @@ const Player = {
     const playerCenterX = this.x + this.width / 2;
     const playerCenterY = this.y + this.height / 2;
 
-    // 🔥 RADIO DE COLISIÓN MUY REDUCIDO Y RESPONSIVO
-    const baseRadius = this.width / 6; // Era /3, ahora /6 (50% más pequeño)
-    let responsiveRadius;
+    // 🔥 RADIO SÚPER PEQUEÑO - CASI TIENE QUE TOCAR LA LÍNEA
+    const tinyRadius = this.width / 12; // Era /6, ahora /12 (75% más pequeño)
 
-    if (GameConfig.isMobile) {
-      // MÓVIL: Radio aún más pequeño para ser más permisivo
-      const canvas = window.getCanvas();
-      const screenScale = Math.min(canvas.width, canvas.height) / 600;
-      responsiveRadius = baseRadius * 0.4 * screenScale; // Era 0.6, ahora 0.4 (33% más pequeño)
-    } else {
-      // PC: Radio también reducido
-      responsiveRadius = baseRadius * 0.6; // Era 1.0, ahora 0.6 (40% más pequeño)
-    }
+    console.log(`🔍 Verificando colisión - Radio: ${tinyRadius.toFixed(1)}px`);
 
-    // 🔥 NUEVO: Verificar solo si el centro del jugador está MUY cerca de la línea
     for (const line of lines) {
-      let distance = 0;
-      let isNearLine = false;
+      let distance = Infinity;
+      let inLineRange = false;
 
       if (line.type === "vertical") {
-        // Verificar distancia horizontal Y que esté en el rango vertical de la línea
+        // Distancia horizontal a la línea vertical
         distance = Math.abs(playerCenterX - line.x);
-        isNearLine =
-          playerCenterY >= line.y - 20 && playerCenterY <= line.y + 20;
+        // Solo verificar si el jugador está en el rango Y de la línea (con margen)
+        inLineRange =
+          playerCenterY >= line.y - 30 && playerCenterY <= line.y + 30;
       } else if (line.type === "horizontal") {
-        // Verificar distancia vertical Y que esté en el rango horizontal de la línea
+        // Distancia vertical a la línea horizontal
         distance = Math.abs(playerCenterY - line.y);
-        isNearLine =
-          playerCenterX >= line.x - 20 && playerCenterX <= line.x + 20;
+        // Solo verificar si el jugador está en el rango X de la línea (con margen)
+        inLineRange =
+          playerCenterX >= line.x - 30 && playerCenterX <= line.x + 30;
       }
 
-      // 🔥 COLISIÓN SOLO SI ESTÁ MUY CERCA Y EN EL RANGO CORRECTO
-      if (distance < responsiveRadius && isNearLine) {
+      // 🔥 COLISIÓN MUY ESTRICTA: Debe estar MUY cerca Y en el rango correcto
+      if (distance < tinyRadius && inLineRange) {
         console.log(
-          `💥 Colisión precisa: distancia=${distance.toFixed(
+          `💥 COLISIÓN PRECISA: dist=${distance.toFixed(
             1
-          )}, radio=${responsiveRadius.toFixed(1)}`
+          )}, radio=${tinyRadius.toFixed(1)}`
         );
         return true;
       }

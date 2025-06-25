@@ -76,7 +76,7 @@ const BossRedLine = {
 
     this.bossManager.makeImmune(9999);
 
-    // 🔥 NUEVO: RALENTIZAR AL JUGADOR INMEDIATAMENTE
+    // 🔥 RALENTIZAR AL JUGADOR INMEDIATAMENTE
     if (window.Player && Player.setSpeedModifier) {
       Player.setSpeedModifier(this.playerSlowFactor);
       console.log(
@@ -84,12 +84,32 @@ const BossRedLine = {
       );
     }
 
-    // 🔥 BOSS DEBE ESTAR QUIETO Y NO SEGUIR AL JUGADOR
+    // 🔥 FORZAR BOSS COMPLETAMENTE INMÓVIL - MÚLTIPLES BLOQUEOS
     if (this.bossManager.movement) {
       this.bossManager.movement.stopMovementAndCenter();
-      // 🔥 ASEGURAR QUE NO ENTRE EN HUNTING NUNCA
       this.bossManager.movement.enabled = false;
-      console.log("🛡️ Boss COMPLETAMENTE INMÓVIL durante Red Line");
+      this.bossManager.movement.huntingEnabled = false; // NUEVO
+      this.bossManager.movement.canMove = false; // NUEVO
+      console.log("🛡️ Boss FORZADO INMÓVIL - TODOS los movimientos bloqueados");
+    }
+
+    // 🔥 NUEVO: DESACTIVAR COMPLETAMENTE EL SISTEMA DE PHASES DURANTE REDLINE
+    if (this.bossManager.phases) {
+      this.bossManager.phases.redLineForceActive = true; // Flag especial
+      console.log("🔴 Sistema de phases BLOQUEADO durante Red Line");
+    }
+
+    // 🔥 NUEVO: FORZAR POSICIÓN CENTRAL Y BLOQUEARLA
+    const canvas = window.getCanvas();
+    const boss = this.bossManager.boss;
+    if (boss) {
+      boss.x = (canvas.width - boss.width) / 2;
+      boss.y = (canvas.height - boss.height) / 2;
+      boss.velocityX = 0;
+      boss.velocityY = 0;
+      // Bloquear cualquier cambio de posición
+      boss.isLocked = true;
+      console.log("🔒 Boss BLOQUEADO en posición central");
     }
 
     if (this.bossManager.ui) {
@@ -116,9 +136,9 @@ const BossRedLine = {
     this.showingPreview = false;
     this.redLinePath = [];
     this.redLineIndex = 0;
-    this.gridLines = []; // Limpiar cuadrícula
+    this.gridLines = [];
 
-    // 🔥 RESTAURAR VELOCIDAD DEL JUGADOR INMEDIATAMENTE
+    // 🔥 RESTAURAR VELOCIDAD DEL JUGADOR
     if (window.Player && Player.restoreNormalSpeed) {
       Player.restoreNormalSpeed();
       console.log("🏃 Velocidad del jugador restaurada a normal");
@@ -127,15 +147,36 @@ const BossRedLine = {
       console.log("🏃 Velocidad del jugador restaurada manualmente");
     }
 
-    // Solo hacer vulnerable si completó los 10 ciclos
+    // 🔥 NUEVO: REACTIVAR SISTEMA DE PHASES
+    if (this.bossManager.phases) {
+      this.bossManager.phases.redLineForceActive = false;
+      console.log("🔴 Sistema de phases REACTIVADO");
+    }
+
+    // 🔥 NUEVO: DESBLOQUEAR BOSS
+    const boss = this.bossManager.boss;
+    if (boss) {
+      boss.isLocked = false;
+      console.log("🔓 Boss DESBLOQUEADO");
+    }
+
+    // 🔥 REACTIVAR MOVIMIENTO SOLO SI COMPLETÓ 10 CICLOS
     if (this.cycleCount >= this.maxCycles) {
       console.log("🔴 Red Line COMPLETADO (10/10) - transición a Yan Ken Po");
       // Mantener inmune para Yan Ken Po
     } else {
-      console.log("🔴 Red Line incompleto - boss vulnerable");
+      console.log("🔴 Red Line incompleto - boss vulnerable y PUEDE MOVERSE");
       if (this.bossManager) {
         this.bossManager.isImmune = false;
         this.bossManager.immunityTimer = 0;
+      }
+
+      // REACTIVAR MOVIMIENTO
+      if (this.bossManager.movement) {
+        this.bossManager.movement.enabled = true;
+        this.bossManager.movement.huntingEnabled = true;
+        this.bossManager.movement.canMove = true;
+        console.log("🏃 Boss PUEDE MOVERSE de nuevo");
       }
     }
   },

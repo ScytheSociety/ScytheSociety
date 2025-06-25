@@ -68,9 +68,15 @@ const BossPhases = {
   update() {
     if (!this.bossManager.active) return;
 
+    // 🔥 NUEVO: NO HACER NADA SI RED LINE ESTÁ FORZADO
+    if (this.redLineForceActive) {
+      console.log("🔴 Phases update BLOQUEADO - Red Line activo");
+      return;
+    }
+
     if (this.phaseActive) {
       this.phaseTimer++;
-      this.updatePhaseTimerDisplay(); // Mostrar timer en pantalla
+      this.updatePhaseTimerDisplay();
       this.checkPhaseCompletion();
     }
   },
