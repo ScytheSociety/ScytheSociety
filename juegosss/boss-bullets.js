@@ -31,18 +31,18 @@ const BossBullets = {
     };
   },
 
-  // 🔥 CONFIGURACIÓN CORREGIDA - PATRONES FLUIDOS
+  // 🔥 CONFIGURACIÓN CORREGIDA - SPIRAL PERFECTO, CRUZ ESPACIADA
   patternConfigs: {
     spiral: {
-      bulletInterval: 120, // MÁS LENTO para línea fluida
-      rotationSpeed: 0.08, // MÁS LENTO para espiral suave
+      bulletInterval: 140, // 🔥 SOLO un poquito más lento (era 120)
+      rotationSpeed: 0.08,
       speed: 0.002,
       color: "#FF6B6B",
     },
     cross: {
-      bulletInterval: 200, // MÁS LENTO para grupos
-      groupSize: 8, // Balas por grupo
-      groupDelay: 40, // Tiempo entre balas del grupo
+      bulletInterval: 800, // 🔥 MUCHÍSIMO MÁS LENTO entre grupos
+      groupSize: 3, // 🔥 SOLO 3 BALAS por dirección
+      groupDelay: 200, // 🔥 MUCHO ESPACIO entre cada bala (era 40)
       speed: 0.003,
       color: "#9B59B6",
     },
@@ -314,7 +314,7 @@ const BossBullets = {
     }, config.bulletInterval);
 
     this.activeIntervals.push(crossInterval);
-    console.log("✚ CRUZ: Grupos de balas en línea iniciados");
+    console.log("✚ CRUZ: Solo 3 balas MUY ESPACIADAS por dirección");
   },
 
   createRainPattern() {
@@ -426,7 +426,7 @@ const BossBullets = {
   },
 
   // ======================================================
-  // 🔥 FINAL DE FASE CORREGIDO
+  // 🔥 FINAL DE FASE CORREGIDO - BOSS VULNERABLE
   // ======================================================
 
   endBulletPhase() {
@@ -438,12 +438,13 @@ const BossBullets = {
     // 🔥 LIBERAR AL BOSS DE RESTRICCIONES
     if (this.bossManager.boss) {
       this.bossManager.boss.isStationary = false;
+      console.log("🔓 Boss liberado de restricciones");
     }
 
-    // 🔥 BOSS VULNERABLE INMEDIATAMENTE
+    // 🔥 BOSS VULNERABLE INMEDIATAMENTE Y FORZADO
     this.bossManager.isImmune = false;
     this.bossManager.immunityTimer = 0;
-    console.log("⚔️ Boss VULNERABLE después de Touhou");
+    console.log("⚔️ Boss FORZADO vulnerable después de Touhou");
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage("⚔️ ¡BOSS VULNERABLE!", "#00FF00");
@@ -453,15 +454,22 @@ const BossBullets = {
       this.bossManager.comments.sayComment("¡Fase Touhou completada!");
     }
 
-    // 🔥 REACTIVAR HUNTING DESPUÉS DE 2 SEGUNDOS
-    setTimeout(() => {
-      if (this.bossManager.movement) {
-        this.bossManager.movement.enabled = true;
-        this.bossManager.movement.pattern = "hunting";
-        this.bossManager.movement.enableFluidHunting();
-        console.log("🏃 Boss reactivado en modo HUNTING");
-      }
-    }, 2000);
+    // 🔥 MARCAR FASE COMO COMPLETADA en el sistema de fases
+    if (this.bossManager.phases) {
+      this.bossManager.phases.phaseActive = false;
+      this.bossManager.phases.currentPhase = "HUNTING";
+      console.log("🔄 Fase cambiada a HUNTING en sistema de fases");
+    }
+
+    // 🔥 REACTIVAR HUNTING INMEDIATAMENTE (no esperar)
+    if (this.bossManager.movement) {
+      this.bossManager.movement.enabled = true;
+      this.bossManager.movement.pattern = "hunting";
+      this.bossManager.movement.enableFluidHunting();
+      console.log("🏃 Boss reactivado INMEDIATAMENTE en modo HUNTING");
+    }
+
+    console.log("✅ Transición Touhou → HUNTING completada");
   },
 
   // ======================================================
