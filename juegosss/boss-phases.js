@@ -633,9 +633,9 @@ const BossPhases = {
           enemyLevels[Math.floor(Math.random() * enemyLevels.length)];
 
         // 🔥 TAMAÑO BASADO EN NIVEL (más grandes = más peligrosos)
-        const baseSize = 25 + randomLevel * 4; // Progresión de tamaño
-        const sizeVariation = Math.random() * 8;
-        const enemySize = Math.min(60, baseSize + sizeVariation);
+        const baseSize = 20 + randomLevel * 2; // 🔥 MÁS PEQUEÑOS
+        const sizeVariation = Math.random() * 4; // 🔥 MENOS VARIACIÓN
+        const enemySize = Math.min(40, baseSize + sizeVariation); // 🔥 MÁXIMO 40px
 
         // 🔥 POSICIONES ESTRATÉGICAS (evitar centro donde está el boss)
         const spawnPositions = [
@@ -700,9 +700,9 @@ const BossPhases = {
             pulseTimer: 0,
           },
 
-          // 🔥 IDENTIFICACIÓN VISUAL POR NIVEL
-          glowColor: this.getGlowColorForLevel(randomLevel),
-          glowIntensity: 0.3 + randomLevel * 0.1,
+          // ❌ GLOW ELIMINADO - Las siguientes líneas fueron removidas:
+          // glowColor: this.getGlowColorForLevel(randomLevel),
+          // glowIntensity: 0.3 + randomLevel * 0.1,
         };
 
         // 🔥 AGREGAR AL SISTEMA DE ENEMIGOS
@@ -722,24 +722,6 @@ const BossPhases = {
         "-"
       )} ===`
     );
-  },
-
-  // 🔥 FUNCIÓN AUXILIAR PARA COLORES POR NIVEL
-  getGlowColorForLevel(level) {
-    const colors = [
-      "#FF6B6B", // Nivel 1 - Rojo claro
-      "#4ECDC4", // Nivel 2 - Turquesa
-      "#45B7D1", // Nivel 3 - Azul
-      "#96CEB4", // Nivel 4 - Verde
-      "#FFEAA7", // Nivel 5 - Amarillo
-      "#DDA0DD", // Nivel 6 - Violeta
-      "#F39C12", // Nivel 7 - Naranja
-      "#E17055", // Nivel 8 - Rojo oscuro
-      "#A29BFE", // Nivel 9 - Púrpura
-      "#FD79A8", // Nivel 10+ - Rosa
-    ];
-
-    return colors[Math.min(level - 1, colors.length - 1)] || "#FF0000";
   },
 
   // 🔥 FUNCIÓN AUXILIAR MEJORADA PARA IMÁGENES

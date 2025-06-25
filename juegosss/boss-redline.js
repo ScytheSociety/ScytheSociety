@@ -81,14 +81,31 @@ const BossRedLine = {
     }
 
     // 🔥 MOVIMIENTO ULTRA LENTO DEL JUGADOR
+    // 🔥 MOVIMIENTO ULTRA LENTO DEL JUGADOR
     if (window.Player && Player.setSpeedModifier) {
       this.originalPlayerSpeed = Player.getSpeedModifier();
       Player.setSpeedModifier(0.05); // 95% más lento
+
+      // 🔥 VERIFICACIÓN INMEDIATA
       console.log(
         "🐌 Jugador ahora se mueve ULTRA LENTO (5% velocidad normal)"
       );
+      console.log(
+        `🔍 VERIFICACIÓN: speedModifier = ${Player.getSpeedModifier()}`
+      );
+      console.log(`🔍 VERIFICACIÓN: moveSpeed = ${Player.moveSpeed}`);
+
+      // 🔥 TEST: Forzar actualización de posición para ver el log
+      setTimeout(() => {
+        Player.updatePosition();
+      }, 100);
     } else {
-      console.warn("⚠️ Sistema de velocidad del jugador no disponible");
+      console.error("❌ SISTEMA DE VELOCIDAD NO DISPONIBLE");
+      console.log("🔍 Debug: window.Player existe?", !!window.Player);
+      console.log(
+        "🔍 Debug: setSpeedModifier existe?",
+        !!(Player && Player.setSpeedModifier)
+      );
     }
 
     if (this.bossManager.ui) {
@@ -183,9 +200,9 @@ const BossRedLine = {
 
   generateAnimatedGrid() {
     const canvas = window.getCanvas();
-    const spacing = 80;
+    const spacing = 100; // 🔥 CAMBIAR de 80 a 100 (más espaciado)
 
-    console.log("🔴 Generando cuadrícula animada");
+    console.log("🔴 Generando cuadrícula animada MÁS ESPACIADA");
 
     // Líneas verticales (de arriba hacia abajo)
     for (let x = spacing; x < canvas.width; x += spacing) {
@@ -749,12 +766,26 @@ const BossRedLine = {
   },
 
   drawBossTrail(ctx) {
+    // 🔥 VERIFICACIONES DE SEGURIDAD
+    if (!this.redLinePath || this.redLinePath.length === 0) {
+      return; // No hay línea para dibujar
+    }
+
+    if (this.redLineIndex <= 0) {
+      return; // No hay progreso aún
+    }
+
     const startIndex = Math.max(
       0,
       this.redLineIndex - this.lineConfig.trailLength
     );
 
-    if (startIndex >= this.redLineIndex) return;
+    if (
+      startIndex >= this.redLineIndex ||
+      startIndex >= this.redLinePath.length
+    ) {
+      return; // Índices inválidos
+    }
 
     ctx.strokeStyle = "rgba(255, 0, 0, 0.8)";
     ctx.lineWidth = this.lineConfig.lineWidth * 1.5;
@@ -762,19 +793,36 @@ const BossRedLine = {
     ctx.shadowBlur = this.lineConfig.glowBlur * 1.5;
 
     ctx.beginPath();
+    let lineStarted = false;
+
     for (
       let i = startIndex;
       i <= this.redLineIndex && i < this.redLinePath.length;
       i++
     ) {
       const point = this.redLinePath[i];
-      if (i === startIndex) {
+
+      // 🔥 VERIFICAR QUE EL PUNTO EXISTE
+      if (
+        !point ||
+        typeof point.x !== "number" ||
+        typeof point.y !== "number"
+      ) {
+        console.warn(`⚠️ Punto inválido en índice ${i}:`, point);
+        continue;
+      }
+
+      if (!lineStarted) {
         ctx.moveTo(point.x, point.y);
+        lineStarted = true;
       } else {
         ctx.lineTo(point.x, point.y);
       }
     }
-    ctx.stroke();
+
+    if (lineStarted) {
+      ctx.stroke();
+    }
   },
 
   // ======================================================

@@ -208,11 +208,21 @@ const Player = {
       effectiveSpeed *= window.slowMotionFactor;
     }
 
+    // 🔥 DEBUG: Mostrar velocidad cuando es lenta
+    if (this.speedModifier < 0.1) {
+      console.log(
+        `🐌 VELOCIDAD ULTRA LENTA: ${effectiveSpeed} (${this.moveSpeed} × ${this.speedModifier})`
+      );
+    }
+
     const deltaX = (this.mouseX - this.width / 2 - this.x) * effectiveSpeed;
     const deltaY = (this.mouseY - this.height / 2 - this.y) * effectiveSpeed;
 
-    this.x += deltaX * 0.15;
-    this.y += deltaY * 0.15;
+    // 🔥 FACTOR DINÁMICO: Más lento cuando speedModifier es bajo
+    const responsiveness = this.speedModifier < 0.1 ? 0.02 : 0.15; // MUY LENTO en Red Line
+
+    this.x += deltaX * responsiveness;
+    this.y += deltaY * responsiveness;
 
     // Mantener dentro de los límites del canvas
     const canvas = window.getCanvas();

@@ -250,35 +250,49 @@ const BossBullets = {
   },
 
   startShieldSpawning() {
-    const totalDuration =
-      GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION * (1000 / 60);
-    const shieldInterval = 10000; // 10 segundos
+    console.log("🛡️ Iniciando sistema de escudo con delay de 10s");
 
-    console.log("🛡️ Iniciando sistema de escudo ÚNICO");
+    let shieldCount = 0;
+    const maxShields = 10; // Máximo durante la fase
 
-    const checkAndSpawnShield = () => {
-      if (!this.patternActive) return;
+    const spawnNextShield = () => {
+      if (!this.patternActive || shieldCount >= maxShields) return;
 
-      // Verificar si ya existe un escudo
+      // Verificar que NO haya escudos existentes
       const existingShields = window.PowerUpManager.powerUps.filter(
         (p) => p.type && p.type.id === 0
       );
 
       if (existingShields.length === 0) {
         this.spawnProtectiveShield();
+        shieldCount++;
         console.log(
-          "🛡️ Escudo spawneado - el jugador debe recogerlo para que aparezca otro"
+          `🛡️ Escudo ${shieldCount} spawneado - siguiente en 10s después de recogerlo`
         );
-      } else {
-        console.log("🛡️ Ya existe un escudo, esperando...");
-      }
 
-      // Verificar de nuevo en 2 segundos
-      setTimeout(checkAndSpawnShield, 2000);
+        // 🔥 ESPERAR A QUE SE RECOJA EL ESCUDO
+        const checkPickup = () => {
+          const currentShields = window.PowerUpManager.powerUps.filter(
+            (p) => p.type && p.type.id === 0
+          );
+
+          if (currentShields.length === 0) {
+            // Escudo recogido, esperar 10 segundos
+            console.log("🛡️ Escudo recogido - esperando 10s para el siguiente");
+            setTimeout(spawnNextShield, 10000); // 10 segundos después
+          } else {
+            // Escudo aún ahí, verificar de nuevo en 1 segundo
+            setTimeout(checkPickup, 1000);
+          }
+        };
+
+        // Empezar a verificar si se recogió
+        setTimeout(checkPickup, 1000);
+      }
     };
 
     // Primer escudo después de 5 segundos
-    setTimeout(checkAndSpawnShield, 5000);
+    setTimeout(spawnNextShield, 5000);
   },
 
   spawnProtectiveShield() {
