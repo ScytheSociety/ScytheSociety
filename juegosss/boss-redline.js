@@ -76,35 +76,12 @@ const BossRedLine = {
 
     this.bossManager.makeImmune(9999);
 
+    // 🔥 BOSS DEBE ESTAR QUIETO Y NO SEGUIR AL JUGADOR
     if (this.bossManager.movement) {
       this.bossManager.movement.stopMovementAndCenter();
-    }
-
-    // 🔥 MOVIMIENTO ULTRA LENTO DEL JUGADOR
-    if (window.Player && Player.setSpeedModifier) {
-      this.originalPlayerSpeed = Player.getSpeedModifier();
-      Player.setSpeedModifier(0.01); // 🔥 CAMBIAR de 0.05 a 0.01 (1% velocidad)
-
-      // 🔥 VERIFICACIÓN INMEDIATA
-      console.log(
-        "🐌 Jugador ahora se mueve ULTRA LENTO (5% velocidad normal)"
-      );
-      console.log(
-        `🔍 VERIFICACIÓN: speedModifier = ${Player.getSpeedModifier()}`
-      );
-      console.log(`🔍 VERIFICACIÓN: moveSpeed = ${Player.moveSpeed}`);
-
-      // 🔥 TEST: Forzar actualización de posición para ver el log
-      setTimeout(() => {
-        Player.updatePosition();
-      }, 100);
-    } else {
-      console.error("❌ SISTEMA DE VELOCIDAD NO DISPONIBLE");
-      console.log("🔍 Debug: window.Player existe?", !!window.Player);
-      console.log(
-        "🔍 Debug: setSpeedModifier existe?",
-        !!(Player && Player.setSpeedModifier)
-      );
+      // 🔥 ASEGURAR QUE NO ENTRE EN HUNTING NUNCA
+      this.bossManager.movement.enabled = false;
+      console.log("🛡️ Boss COMPLETAMENTE INMÓVIL durante Red Line");
     }
 
     if (this.bossManager.ui) {
@@ -444,24 +421,21 @@ const BossRedLine = {
   },
 
   endRedLineMovement() {
-    console.log("🔴 Boss terminó el recorrido - iniciando pausa vulnerable");
+    console.log("🔴 Boss terminó el recorrido - continuando INMUNE");
 
     this.redLineMoving = false;
     this.redLinePath = [];
     this.redLineIndex = 0;
     this.cycleCount++;
 
-    // Boss vulnerable por 3 segundos
-    if (this.bossManager) {
-      this.bossManager.isImmune = false;
-      this.bossManager.immunityTimer = 0;
-      console.log("🔴 Boss FORZADO a ser vulnerable");
-    }
+    // 🔥 BOSS SIGUE INMUNE - NO VULNERABLE
+    // NO cambiar inmunidad aquí
+    console.log("🔴 Boss MANTIENE inmunidad durante Red Line");
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        "⚔️ ¡BOSS VULNERABLE! (3s)",
-        "#00FF00"
+        `🔴 DIBUJO ${this.cycleCount}/10 COMPLETADO`,
+        "#FFFF00"
       );
     }
 
@@ -469,9 +443,10 @@ const BossRedLine = {
       this.bossManager.comments.sayRandomComment("combate");
     }
 
+    // 🔥 SIN PAUSA DE 3 SEGUNDOS - CONTINUAR INMEDIATAMENTE
     setTimeout(() => {
       this.decideNextAction();
-    }, 3000);
+    }, 1000); // Solo 1 segundo entre dibujos
   },
 
   decideNextAction() {
@@ -480,22 +455,29 @@ const BossRedLine = {
 
     console.log(`🔴 Dibujo ${this.cycleCount}/${this.maxCycles} completado`);
 
-    // 🔥 SI COMPLETÓ LOS 10 DIBUJOS → VOLVER A HUNTING (NO YAN KEN PO)
+    // 🔥 SI COMPLETÓ LOS 10 DIBUJOS → TERMINAR Y SER VULNERABLE
     if (this.cycleCount >= this.maxCycles) {
       console.log("🔄 *** 10 DIBUJOS DE RED LINE COMPLETADOS ***");
-      console.log("🏃 REGRESANDO A HUNTING - Yan Ken Po solo al 3%");
+      console.log("🏃 REGRESANDO A HUNTING - Boss ahora VULNERABLE");
 
       this.endPhase();
 
-      // 🔥 VOLVER A HUNTING, NO A YAN KEN PO
+      // 🔥 AHORA SÍ HACER VULNERABLE Y ACTIVAR HUNTING
       setTimeout(() => {
+        if (this.bossManager) {
+          this.bossManager.isImmune = false;
+          this.bossManager.immunityTimer = 0;
+          console.log("⚔️ Boss FINALMENTE vulnerable después de 10 dibujos");
+        }
+
         if (this.bossManager.movement) {
+          this.bossManager.movement.enabled = true; // Reactivar movimiento
           this.bossManager.movement.enableFluidHunting();
         }
 
         if (this.bossManager.ui) {
           this.bossManager.ui.showScreenMessage(
-            "🏃 BOSS CAZANDO - Yan Ken Po al 3%",
+            "⚔️ ¡BOSS VULNERABLE! Red Line completado",
             "#00FF00"
           );
         }
@@ -503,11 +485,11 @@ const BossRedLine = {
       return;
     }
 
-    // Continuar con otro ciclo de Red Line
+    // 🔥 CONTINUAR CON OTRO DIBUJO - MANTENER INMUNE
     console.log(
       `🔄 Continuando dibujo ${this.cycleCount + 1}/${this.maxCycles}`
     );
-    this.bossManager.makeImmune(9999);
+    this.bossManager.makeImmune(9999); // Seguir inmune
 
     setTimeout(() => {
       this.startRedLineCycle();

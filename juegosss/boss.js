@@ -280,7 +280,11 @@ const BossManager = {
     }
 
     // Solo hunting si no hay fase activa
-    if (!isPhaseActive && currentPhase !== "HUNTING") {
+    if (
+      !isPhaseActive &&
+      currentPhase !== "HUNTING" &&
+      currentPhase !== "REDLINE"
+    ) {
       this.enterHuntingMode();
     }
   },
