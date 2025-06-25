@@ -152,10 +152,13 @@ const BossMines = {
       }
     }, 5000);
 
-    // Terminar después de 90 segundos
+    // 🔥 USAR CONFIGURACIÓN DINÁMICA
+    const duration = GameConfig.BOSS_PHASE_CONFIG.MINES_DURATION * (1000 / 60); // Convertir frames a ms
+    console.log(`💣 Fase de minas durará ${duration / 1000}s`);
+
     setTimeout(() => {
       this.endMineSequence();
-    }, 90000);
+    }, duration);
   },
 
   aggressiveTeleportAndMine() {

@@ -452,15 +452,15 @@ const BossPhases = {
   },
 
   executeRandomSummoning() {
-    this.bossManager.makeImmune(1800); // 30 segundos
+    this.bossManager.makeImmune(1800); // 30 segundos (reducido de 60)
 
     if (this.bossManager.movement) {
       this.bossManager.movement.stopMovementAndCenter();
     }
 
-    // Invocar enemigos cada 7 segundos
-    const summonTimes = [2000, 8000, 15000, 22000];
-    const enemyCounts = [5, 6, 7, 8];
+    // 🔥 MENOS OLEADAS para fase rápida
+    const summonTimes = [2000, 10000, 18000]; // Solo 3 oleadas
+    const enemyCounts = [4, 5, 6];
 
     summonTimes.forEach((time, index) => {
       setTimeout(() => this.summonEnemies(enemyCounts[index]), time);
@@ -473,7 +473,10 @@ const BossPhases = {
       );
     }
 
-    setTimeout(() => this.endRandomPhase(), 30000);
+    const duration =
+      GameConfig.BOSS_PHASE_CONFIG.RANDOM_PHASE_DURATIONS.SUMMONING *
+      (1000 / 60);
+    setTimeout(() => this.endRandomPhase(), duration);
   },
 
   executeRandomMines() {
@@ -490,7 +493,9 @@ const BossPhases = {
       );
     }
 
-    setTimeout(() => this.endRandomPhase(), 45000);
+    const duration =
+      GameConfig.BOSS_PHASE_CONFIG.RANDOM_PHASE_DURATIONS.MINES * (1000 / 60);
+    setTimeout(() => this.endRandomPhase(), duration);
   },
 
   executeRandomBullets() {
@@ -511,14 +516,16 @@ const BossPhases = {
       );
     }
 
-    setTimeout(() => this.endRandomPhase(), 60000);
+    const duration =
+      GameConfig.BOSS_PHASE_CONFIG.RANDOM_PHASE_DURATIONS.BULLETS * (1000 / 60);
+    setTimeout(() => this.endRandomPhase(), duration);
   },
 
   executeRandomRedline() {
     this.bossManager.makeImmune(9999);
 
     if (this.bossManager.redline) {
-      this.bossManager.redline.maxCycles = 5;
+      this.bossManager.redline.maxCycles = 5; // 🔥 5 rondas en lugar de 10
       this.bossManager.redline.startPhase();
     }
 

@@ -177,7 +177,12 @@ const BossBullets = {
       return;
     }
 
-    console.log("🌟 === INICIANDO FASE TOUHOU (90 SEGUNDOS) ===");
+    // 🔥 USAR CONFIGURACIÓN DINÁMICA
+    const duration =
+      GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION * (1000 / 60); // Convertir frames a ms
+    console.log(
+      `🌟 === INICIANDO FASE TOUHOU (${duration / 1000} SEGUNDOS) ===`
+    );
 
     this.patternActive = true;
     this.currentPatternIndex = 0;
@@ -204,7 +209,7 @@ const BossBullets = {
     // Terminar después de 90 segundos
     setTimeout(() => {
       this.endBulletPhase();
-    }, 90000);
+    }, duration);
   },
 
   executeSimplePatternSequence() {
@@ -231,30 +236,40 @@ const BossBullets = {
     this.executePattern(currentPattern);
 
     // Programar siguiente patrón cada 30 segundos
+    // 🔥 CALCULAR DURACIÓN DINÁMICA DE PATRONES
+    const totalDuration =
+      GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION * (1000 / 60);
+    const patternDuration = totalDuration / 3; // Dividir entre 3 patrones
+
     this.currentPatternIndex++;
     if (this.currentPatternIndex < 3) {
       setTimeout(() => {
         this.executeSimplePatternSequence();
-      }, 30000);
+      }, patternDuration);
     }
   },
 
   startShieldSpawning() {
+    // 🔥 SISTEMA DE ESCUDOS DINÁMICO
+    const totalDuration =
+      GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION * (1000 / 60);
+    const shieldInterval = 10000; // 10 segundos entre escudos
+    const maxShields = Math.floor(totalDuration / shieldInterval) + 2; // Calcular cantidad
     let shieldCount = 0;
-    const maxShields = 12;
+
+    console.log(
+      `🛡️ Se spawnearán ${maxShields} escudos durante ${totalDuration / 1000}s`
+    );
 
     const spawnShield = () => {
       if (!this.patternActive || shieldCount >= maxShields) return;
 
-      // 🔥 CORREGIDO: Spawnar escudo SIEMPRE cada 10 segundos
       this.spawnProtectiveShield();
       shieldCount++;
-      console.log(
-        `🛡️ Escudo ${shieldCount}/${maxShields} spawneado (automático cada 10s)`
-      );
+      console.log(`🛡️ Escudo ${shieldCount}/${maxShields} spawneado`);
 
-      // Programar siguiente escudo en 10 segundos
-      setTimeout(spawnShield, 10000);
+      // Programar siguiente escudo
+      setTimeout(spawnShield, shieldInterval);
     };
 
     // Primer escudo después de 5 segundos

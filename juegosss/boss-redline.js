@@ -71,7 +71,7 @@ const BossRedLine = {
 
     // 🔴 RALENTIZAR JUGADOR EXTREMADAMENTE
     this.originalPlayerSpeed = Player.moveSpeed;
-    Player.moveSpeed = 0.08; // SÚPER LENTO (antes era 0.15)
+    Player.moveSpeed = 0.03; // SÚPER LENTO (antes era 0.15)
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
@@ -236,20 +236,21 @@ const BossRedLine = {
     this.showLinePreview();
   },
 
+  // REEMPLAZAR adjustDifficultyForRound()
   adjustDifficultyForRound(roundNumber) {
-    // 🔴 VELOCIDAD MÁS AGRESIVA
-    if (roundNumber <= 2) {
-      this.redLineSpeed = 2; // Más lento al inicio
-    } else if (roundNumber <= 5) {
-      this.redLineSpeed = 3;
+    // 🔥 VELOCIDAD AJUSTADA PARA PATRONES GIGANTES
+    if (roundNumber <= 3) {
+      this.redLineSpeed = 1.5; // MÁS LENTO para patrones complejos
+    } else if (roundNumber <= 6) {
+      this.redLineSpeed = 2.0;
     } else if (roundNumber <= 8) {
-      this.redLineSpeed = 4;
+      this.redLineSpeed = 2.5;
     } else {
-      this.redLineSpeed = 5; // Máximo para las últimas 2 rondas
+      this.redLineSpeed = 3.0; // Máximo para últimas rondas
     }
 
     console.log(
-      `🔴 Ronda ${roundNumber}/10: Velocidad ajustada a ${this.redLineSpeed}`
+      `🔴 Ronda ${roundNumber}/10: Velocidad ${this.redLineSpeed} (patrones gigantes)`
     );
   },
 
@@ -412,7 +413,8 @@ const BossRedLine = {
       "wave",
       "lightning",
       "hell",
-      "chaos", // NUEVO patrón
+      "chaos",
+      "zigzag_wall", // AGREGAR ESTE
     ];
 
     // 40% probabilidad de HELL (más frecuente)
@@ -451,6 +453,9 @@ const BossRedLine = {
       case "bouncing":
         this.generateBouncingPattern(canvas, scale);
         break;
+      case "zigzag_wall":
+        this.generateZigzagWallPattern(canvas, scale);
+        break;
     }
 
     if (this.redLinePath.length === 0) {
@@ -481,26 +486,57 @@ const BossRedLine = {
   },
 
   generateStarPattern(canvas, scale = 1.0) {
+    console.log("🔴 Generando ESTRELLA GIGANTE con rebotes");
+
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
 
-    // 🔥 ESTRELLA GIGANTE
-    const baseRadius = Math.min(canvas.width, canvas.height) * 0.4 * scale; // Era 0.25
-    const outerRadius = Math.max(120, baseRadius); // Era 60
-    const innerRadius = outerRadius * 0.4; // Más pronunciada
+    // 🔥 ESTRELLA MÁXIMA QUE TOCA PAREDES
+    const margin = 25;
+    const outerRadius = Math.min(canvas.width, canvas.height) * 0.48; // 96% de pantalla
+    const innerRadius = outerRadius * 0.4;
+
     const points = [];
 
+    // Generar puntos de estrella tocando límites
     for (let i = 0; i < 10; i++) {
       const angle = (i * Math.PI) / 5;
       const radius = i % 2 === 0 ? outerRadius : innerRadius;
-      points.push({
-        x: centerX + Math.cos(angle) * radius,
-        y: centerY + Math.sin(angle) * radius,
-      });
+
+      let x = centerX + Math.cos(angle) * radius;
+      let y = centerY + Math.sin(angle) * radius;
+
+      // Forzar puntos externos a tocar paredes
+      if (i % 2 === 0) {
+        if (Math.abs(x - canvas.width) < margin) x = canvas.width - margin;
+        if (Math.abs(x) < margin) x = margin;
+        if (Math.abs(y - canvas.height) < margin) y = canvas.height - margin;
+        if (Math.abs(y) < margin) y = margin;
+      }
+
+      points.push({ x, y });
     }
 
+    // Cerrar estrella
     points.push(points[0]);
-    this.createSmoothPath(points);
+
+    // Generar ruta con rebotes
+    let allPoints = [];
+    for (let i = 0; i < points.length - 1; i++) {
+      const segmentPoints = this.calculateWallBounces(
+        points[i].x,
+        points[i].y,
+        points[i + 1].x,
+        points[i + 1].y,
+        canvas
+      );
+      allPoints = allPoints.concat(segmentPoints);
+    }
+
+    this.redLinePath = allPoints;
+    console.log(
+      `🔴 Estrella gigante: ${this.redLinePath.length} puntos totales`
+    );
   },
 
   generateDiamondPattern(canvas) {
@@ -593,43 +629,63 @@ const BossRedLine = {
   },
 
   generateTrianglePattern(canvas, scale = 1.0) {
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const size = Math.min(canvas.width, canvas.height) * 0.35 * scale;
+    console.log("🔴 Generando TRIÁNGULO GIGANTE con rebotes");
 
+    // 🔥 TRIÁNGULO QUE TOCA TODAS LAS PAREDES
+    const margin = 30;
     const points = [
-      { x: centerX, y: centerY - size }, // Arriba
-      { x: centerX + size * 0.866, y: centerY + size * 0.5 }, // Abajo derecha
-      { x: centerX - size * 0.866, y: centerY + size * 0.5 }, // Abajo izquierda
-      { x: centerX, y: centerY - size }, // Volver al inicio
+      { x: canvas.width / 2, y: margin }, // PUNTA SUPERIOR tocando techo
+      { x: canvas.width - margin, y: canvas.height - margin }, // ESQUINA INFERIOR DERECHA
+      { x: margin, y: canvas.height - margin }, // ESQUINA INFERIOR IZQUIERDA
     ];
 
-    this.createSmoothPath(points);
+    // Generar ruta con rebotes para cada segmento
+    let allPoints = [];
+
+    for (let i = 0; i < points.length; i++) {
+      const start = points[i];
+      const end = points[(i + 1) % points.length]; // Circular
+
+      const segmentPoints = this.calculateWallBounces(
+        start.x,
+        start.y,
+        end.x,
+        end.y,
+        canvas
+      );
+      allPoints = allPoints.concat(segmentPoints);
+    }
+
+    this.redLinePath = allPoints;
+    console.log(
+      `🔴 Triángulo gigante: ${this.redLinePath.length} puntos totales`
+    );
   },
 
   generateHellPattern(canvas, scale = 1.0) {
-    console.log("🔥 Generando patrón HELL PANTALLA COMPLETA");
+    console.log("🔴 Generando HELL GIGANTE con rebotes en toda la pantalla");
 
-    // 🔥 USAR TODA LA PANTALLA
-    const startX = canvas.width * 0.05; // 5% de margen
-    const startY = canvas.height * 0.15; // 15% desde arriba
-    const totalWidth = canvas.width * 0.9; // 90% del ancho
-    const letterHeight = canvas.height * 0.7; // 70% de altura
-    const letterWidth = totalWidth / 4.5; // Dividir entre 4 letras + espacios
+    // 🔥 HELL QUE OCUPA 95% DE LA PANTALLA
+    const margin = canvas.width * 0.025; // 2.5% de margen
+    const startX = margin;
+    const startY = canvas.height * 0.1; // 10% desde arriba
+    const totalWidth = canvas.width - margin * 2; // 95% del ancho
+    const letterHeight = canvas.height * 0.8; // 80% de altura
+    const letterWidth = totalWidth / 4.2; // Espacio para 4 letras
 
     const points = [];
 
-    // H - Letra más grande
+    // H - GIGANTE tocando paredes
     const hX = startX;
     points.push({ x: hX, y: startY });
     points.push({ x: hX, y: startY + letterHeight });
     points.push({ x: hX, y: startY + letterHeight / 2 });
-    points.push({ x: hX + letterWidth * 0.8, y: startY + letterHeight / 2 });
-    points.push({ x: hX + letterWidth * 0.8, y: startY });
-    points.push({ x: hX + letterWidth * 0.8, y: startY + letterHeight });
+    points.push({ x: hX + letterWidth * 0.85, y: startY + letterHeight / 2 });
+    points.push({ x: hX + letterWidth * 0.85, y: startY });
+    points.push({ x: hX + letterWidth * 0.85, y: startY + letterHeight });
 
-    // E - Más ancha
-    const eX = startX + letterWidth * 1.1;
+    // E - GIGANTE
+    const eX = startX + letterWidth * 1.05;
     points.push({ x: eX, y: startY });
     points.push({ x: eX + letterWidth * 0.9, y: startY });
     points.push({ x: eX, y: startY });
@@ -639,21 +695,68 @@ const BossRedLine = {
     points.push({ x: eX, y: startY + letterHeight });
     points.push({ x: eX + letterWidth * 0.9, y: startY + letterHeight });
 
-    // L1 - Más alta
-    const l1X = startX + letterWidth * 2.2;
+    // L1 - GIGANTE
+    const l1X = startX + letterWidth * 2.1;
     points.push({ x: l1X, y: startY });
     points.push({ x: l1X, y: startY + letterHeight });
     points.push({ x: l1X + letterWidth * 0.8, y: startY + letterHeight });
 
-    // L2 - Más alta
-    const l2X = startX + letterWidth * 3.3;
+    // L2 - GIGANTE
+    const l2X = startX + letterWidth * 3.15;
     points.push({ x: l2X, y: startY });
     points.push({ x: l2X, y: startY + letterHeight });
     points.push({ x: l2X + letterWidth * 0.8, y: startY + letterHeight });
 
-    this.createSmoothPath(points);
+    // Generar ruta con rebotes entre cada punto
+    let allPoints = [];
+    for (let i = 0; i < points.length - 1; i++) {
+      const segmentPoints = this.calculateWallBounces(
+        points[i].x,
+        points[i].y,
+        points[i + 1].x,
+        points[i + 1].y,
+        canvas
+      );
+      allPoints = allPoints.concat(segmentPoints);
+    }
+
+    this.redLinePath = allPoints;
     console.log(
-      `🔥 HELL PANTALLA COMPLETA generado con ${this.redLinePath.length} puntos`
+      `🔴 HELL GIGANTE: ${this.redLinePath.length} puntos con rebotes`
+    );
+  },
+
+  // NUEVA FUNCIÓN - AGREGAR después de generateHellPattern()
+  generateZigzagWallPattern(canvas, scale = 1.0) {
+    console.log("🔴 Generando ZIGZAG GIGANTE tocando todas las paredes");
+
+    const margin = 30;
+
+    // Z GIGANTE: esquina superior izquierda → superior derecha → inferior izquierda → inferior derecha
+    const points = [
+      { x: margin, y: margin }, // Esquina superior izquierda
+      { x: canvas.width - margin, y: margin }, // Esquina superior derecha
+      { x: margin, y: canvas.height - margin }, // Esquina inferior izquierda (diagonal)
+      { x: canvas.width - margin, y: canvas.height - margin }, // Esquina inferior derecha
+    ];
+
+    // Generar ruta con rebotes para cada segmento
+    let allPoints = [];
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const segmentPoints = this.calculateWallBounces(
+        points[i].x,
+        points[i].y,
+        points[i + 1].x,
+        points[i + 1].y,
+        canvas
+      );
+      allPoints = allPoints.concat(segmentPoints);
+    }
+
+    this.redLinePath = allPoints;
+    console.log(
+      `🔴 Zigzag gigante: ${this.redLinePath.length} puntos con rebotes`
     );
   },
 
@@ -736,6 +839,70 @@ const BossRedLine = {
       this.redLinePath.length,
       "puntos"
     );
+  },
+
+  // NUEVA FUNCIÓN - AGREGAR después de generateFallbackLine()
+  calculateWallBounces(startX, startY, endX, endY, canvas) {
+    console.log(
+      `🔴 Calculando rebotes de (${startX}, ${startY}) a (${endX}, ${endY})`
+    );
+
+    const points = [];
+    const margin = 20; // Margen de las paredes
+
+    let currentX = startX;
+    let currentY = startY;
+    let velocityX = (endX - startX) * 0.01; // Velocidad inicial
+    let velocityY = (endY - startY) * 0.01;
+
+    // Normalizar velocidades para movimiento consistente
+    const magnitude = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+    velocityX = (velocityX / magnitude) * 8; // Velocidad base
+    velocityY = (velocityY / magnitude) * 8;
+
+    const maxIterations = 2000; // Prevenir bucles infinitos
+    let iterations = 0;
+
+    while (iterations < maxIterations) {
+      points.push({ x: currentX, y: currentY });
+
+      // Calcular siguiente posición
+      const nextX = currentX + velocityX;
+      const nextY = currentY + velocityY;
+
+      // Verificar colisiones con paredes y REBOTAR
+      if (nextX <= margin || nextX >= canvas.width - margin) {
+        velocityX = -velocityX * 0.95; // Rebote horizontal con leve reducción
+        console.log(`🔴 Rebote horizontal en X=${nextX}`);
+      }
+
+      if (nextY <= margin || nextY >= canvas.height - margin) {
+        velocityY = -velocityY * 0.95; // Rebote vertical con leve reducción
+        console.log(`🔴 Rebote vertical en Y=${nextY}`);
+      }
+
+      // Mantener dentro de límites estrictos
+      currentX = Math.max(margin, Math.min(canvas.width - margin, nextX));
+      currentY = Math.max(margin, Math.min(canvas.height - margin, nextY));
+
+      // Condición de terminación: cerca del punto final O suficientes rebotes
+      const distanceToEnd = Math.sqrt(
+        Math.pow(currentX - endX, 2) + Math.pow(currentY - endY, 2)
+      );
+
+      if (distanceToEnd < 50 || iterations > 800) {
+        // Agregar punto final
+        points.push({ x: endX, y: endY });
+        break;
+      }
+
+      iterations++;
+    }
+
+    console.log(
+      `🔴 Calculados ${points.length} puntos con ${iterations} iteraciones`
+    );
+    return points;
   },
 
   // ======================================================

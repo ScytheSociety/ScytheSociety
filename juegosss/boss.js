@@ -218,6 +218,7 @@ const BossManager = {
     });
   },
 
+  // REEMPLAZAR executePhaseSequence()
   executePhaseSequence() {
     if (!this.active || !this.boss || this.introductionPhase) return;
 
@@ -230,31 +231,32 @@ const BossManager = {
     const currentPhase = this.phases?.getCurrentPhase() || "HUNTING";
     const isPhaseActive = this.phases?.isPhaseActive() || false;
 
-    // Fase final: Yan Ken Po (3% de vida)
+    // 🔥 NUEVA SECUENCIA CORREGIDA
+    // Fase final: Yan Ken Po (3% de vida) - INMUNE HASTA MORIR
     if (healthPercentage <= 0.03 && !this.phases.phasesExecuted.YANKENPO) {
-      console.log("🎮 INICIANDO FASE FINAL: Yan Ken Po");
+      console.log("🎮 INICIANDO FASE FINAL: Yan Ken Po (3% vida)");
       this.startYanKenPoPhase();
       return;
     }
 
-    // Fase del hilo rojo (15% de vida)
+    // Fase del hilo rojo (10% de vida)
     if (
-      healthPercentage <= 0.15 &&
+      healthPercentage <= 0.1 &&
       healthPercentage > 0.03 &&
       !this.phases.phasesExecuted.REDLINE
     ) {
-      console.log("🔴 INICIANDO FASE: Hilo Rojo");
+      console.log("🔴 INICIANDO FASE: Hilo Rojo (10% vida)");
       this.startRedLinePhase();
       return;
     }
 
-    // Fase de balas Touhou (30% de vida)
+    // Fase de balas Touhou (25% de vida)
     if (
-      healthPercentage <= 0.3 &&
-      healthPercentage > 0.15 &&
+      healthPercentage <= 0.25 &&
+      healthPercentage > 0.1 &&
       !this.phases.phasesExecuted.BULLETS
     ) {
-      console.log("🌟 INICIANDO FASE: Balas Touhou");
+      console.log("🌟 INICIANDO FASE: Balas Touhou (25% vida)");
       this.startBulletsPhase();
       return;
     }
@@ -262,10 +264,10 @@ const BossManager = {
     // Fase de minas (50% de vida)
     if (
       healthPercentage <= 0.5 &&
-      healthPercentage > 0.3 &&
+      healthPercentage > 0.25 &&
       !this.phases.phasesExecuted.MINES
     ) {
-      console.log("💣 INICIANDO FASE: Minas");
+      console.log("💣 INICIANDO FASE: Minas (50% vida)");
       this.startMinesPhase();
       return;
     }
@@ -276,7 +278,7 @@ const BossManager = {
       healthPercentage > 0.5 &&
       !this.phases.phasesExecuted.SUMMONING
     ) {
-      console.log("⚔️ INICIANDO FASE: Invocación");
+      console.log("⚔️ INICIANDO FASE: Invocación (75% vida)");
       this.startSummoningPhase();
       return;
     }
@@ -455,20 +457,46 @@ const BossManager = {
   // SISTEMA DE DAÑO
   // ======================================================
 
+  // REEMPLAZAR takeDamage()
   takeDamage(amount) {
-    if (!this.active || this.isImmune || this.currentHealth <= 0) {
+    if (!this.active || this.currentHealth <= 0) {
+      return;
+    }
+
+    // 🔥 NUEVA LÓGICA: En Yan Ken Po (3% vida) SOLO puede morir por Yan Ken Po
+    const healthPercentage = this.currentHealth / this.maxHealth;
+
+    if (healthPercentage <= 0.03) {
+      console.log("💀 Boss en fase final - SOLO puede morir por Yan Ken Po");
+      return; // NO recibe daño normal
+    }
+
+    // 🔥 INMUNE durante fases especiales
+    if (this.isImmune) {
+      console.log("🛡️ Boss inmune - daño bloqueado");
       return;
     }
 
     if (this.phases && this.phases.isInSpecialPhase()) {
+      console.log("🔥 Boss en fase especial - daño bloqueado");
       return;
     }
 
+    // Daño normal reducido
     const reducedDamage = Math.max(1, Math.floor(amount * 0.7));
     this.currentHealth = Math.max(0, this.currentHealth - reducedDamage);
 
-    const healthPercentage = this.currentHealth / this.maxHealth;
-    this.boss.aggressionLevel = 1.0 + (1.0 - healthPercentage) * 0.8;
+    // LÍMITE MÍNIMO: No puede bajar de 3% por daño normal
+    const minHealth = Math.ceil(this.maxHealth * 0.03); // 3% = 15 vida
+    if (this.currentHealth < minHealth) {
+      this.currentHealth = minHealth;
+      console.log(
+        `🔒 Vida limitada a ${minHealth} - solo Yan Ken Po puede matarlo`
+      );
+    }
+
+    const newHealthPercentage = this.currentHealth / this.maxHealth;
+    this.boss.aggressionLevel = 1.0 + (1.0 - newHealthPercentage) * 0.8;
 
     if (this.ui) {
       this.ui.createParticleEffect(
@@ -487,10 +515,39 @@ const BossManager = {
       `👹 Boss recibió ${reducedDamage} daño. Vida: ${this.currentHealth}/${this.maxHealth}`
     );
 
-    this.onDamageReceived(healthPercentage);
+    this.onDamageReceived(newHealthPercentage);
+
+    // Solo puede morir por Yan Ken Po ahora
+    if (
+      this.currentHealth <= minHealth &&
+      !this.phases.phasesExecuted.YANKENPO
+    ) {
+      console.log("🎮 Forzando inicio de Yan Ken Po - vida mínima alcanzada");
+      setTimeout(() => this.startYanKenPoPhase(), 1000);
+    }
+  },
+
+  // NUEVA FUNCIÓN - AGREGAR después de takeDamage()
+  takeDamageFromYanKenPo(amount) {
+    console.log(`💥 Boss recibe ${amount} daño de Yan Ken Po`);
+
+    this.currentHealth = Math.max(0, this.currentHealth - amount);
+
+    if (this.ui) {
+      this.ui.createParticleEffect(
+        this.boss.x + this.boss.width / 2,
+        this.boss.y + this.boss.height / 2,
+        "#00FF00",
+        30
+      );
+    }
+
+    console.log(
+      `👹 Boss dañado por Yan Ken Po - Vida restante: ${this.currentHealth}`
+    );
 
     if (this.currentHealth <= 0) {
-      this.defeat();
+      setTimeout(() => this.defeat(), 1000);
     }
   },
 

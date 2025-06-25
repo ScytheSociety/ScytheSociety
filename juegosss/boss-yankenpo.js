@@ -57,6 +57,9 @@ const BossYanKenPo = {
     this.uiCreated = false;
     this.keyHandler = null;
     this.originalPlayerControls = null;
+    this.bossDefeats = 0; // Victorias del jugador contra el boss
+    this.maxDefeats = 3; // 3 derrotas para matar al boss
+    this.randomPhaseActive = false;
     console.log("✂️ Sistema Yan Ken Po del boss inicializado");
   },
 
@@ -241,61 +244,82 @@ const BossYanKenPo = {
     }
   },
 
+  // REEMPLAZAR handleGameWin()
   handleGameWin() {
     console.log("🏆 ¡Jugador ganó el Yan Ken Po!");
 
     this.gameState = "completed";
+    this.bossDefeats++; // 🔥 CONTAR VICTORIA
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        "🏆 ¡GANASTE YAN KEN PO!",
+        `🏆 ¡GANASTE! (${this.bossDefeats}/${this.maxDefeats})`,
         "#00FF00"
       );
     }
 
     if (this.bossManager.comments) {
-      this.bossManager.comments.showBossMessage("¡Imposible! ¡Has ganado!");
+      this.bossManager.comments.sayComment("¡Imposible! ¡Has ganado!");
     }
 
-    // Dañar significativamente al boss
-    const damage = 20; // Daño fijo
-    this.bossManager.currentHealth = Math.max(
-      0,
-      this.bossManager.currentHealth - damage
-    );
+    // 🔥 DAÑAR AL BOSS CON FUNCIÓN ESPECIAL
+    const damage = Math.ceil(this.bossManager.maxHealth * 0.01); // 1% de vida
+    this.bossManager.takeDamageFromYanKenPo(damage);
 
-    console.log(
-      `💥 Boss dañado por Yan Ken Po - Vida restante: ${this.bossManager.currentHealth}`
-    );
+    // 🔥 VERIFICAR SI BOSS MUERE (3 DERROTAS)
+    if (this.bossDefeats >= this.maxDefeats) {
+      console.log("💀 Boss derrotado completamente - 3 Yan Ken Po perdidos");
 
-    // Efectos visuales de victoria
-    if (this.bossManager.ui) {
-      for (let i = 0; i < 5; i++) {
-        setTimeout(() => {
-          this.bossManager.ui.createParticleEffect(
-            this.bossManager.boss.x + this.bossManager.boss.width / 2,
-            this.bossManager.boss.y + this.bossManager.boss.height / 2,
-            "#00FF00",
-            30
-          );
-        }, i * 200);
+      if (this.bossManager.ui) {
+        this.bossManager.ui.showScreenMessage(
+          "👑 ¡BOSS DERROTADO DEFINITIVAMENTE!",
+          "#FFD700"
+        );
       }
-    }
 
-    // Verificar si el boss fue derrotado
-    if (this.bossManager.currentHealth <= 0) {
       setTimeout(() => {
         this.endPhase();
         this.bossManager.defeat();
-      }, 2000);
-    } else {
-      // Continuar con el juego
-      setTimeout(() => {
-        this.endPhase();
-        if (this.bossManager.movement) {
-          this.bossManager.movement.enableFluidHunting();
-        }
       }, 3000);
+      return;
+    }
+
+    // 🔥 BOSS SIGUE VIVO - SIGUIENTE YAN KEN PO
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        `🎮 Siguiente Yan Ken Po en 3s... (${this.bossDefeats}/${this.maxDefeats})`,
+        "#FFFF00"
+      );
+    }
+
+    setTimeout(() => {
+      this.restartYanKenPo();
+    }, 3000);
+  },
+
+  // NUEVA FUNCIÓN - AGREGAR después de handleGameWin()
+  restartYanKenPo() {
+    console.log(
+      `🔄 Reiniciando Yan Ken Po - Derrotas del boss: ${this.bossDefeats}/${this.maxDefeats}`
+    );
+
+    // Resetear estado del juego pero mantener contador de derrotas
+    this.gameState = "countdown";
+    this.roundsWon = 0;
+    this.currentRound = 1;
+    this.countdown = this.gameConfig.countdownDuration;
+    this.countdownTimer = 0;
+    this.playerChoice = null;
+    this.bossChoice = null;
+    this.lastResult = null;
+
+    // Boss sigue inmune
+    this.bossManager.makeImmune(9999);
+
+    this.updateInfoDisplay();
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage("🎮 ¡NUEVO YAN KEN PO!", "#FFD700");
     }
   },
 

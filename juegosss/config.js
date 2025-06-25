@@ -195,32 +195,62 @@ const GameConfig = {
     },
   },
 
-  // 🔥 NUEVO: Configuración específica de fases del boss
+  // REEMPLAZAR BOSS_PHASE_CONFIG
   BOSS_PHASE_CONFIG: {
-    // Tiempos en frames (60fps)
+    // Tiempos en frames (60fps) - SECUENCIA CORREGIDA
     INTRO_DURATION: 600, // 10 segundos - Boss inmune en centro
-    SUMMONING_DURATION: 1800, // 30 segundos - Invocación
-    MINES_DURATION: 2700, // 45 segundos - Minas
-    BULLETS_DURATION: 3600, // 60 segundos - Touhou
-    REDLINE_COUNT: 10, // 10 hilos rojos
+    SUMMONING_DURATION: 3600, // 60 segundos - Invocación (75% vida)
+    MINES_DURATION: 5400, // 90 segundos - Minas (50% vida)
+    BULLETS_DURATION: 7200, // 120 segundos - Touhou (25% vida)
+    REDLINE_COUNT: 10, // 10 hilos rojos (10% vida)
     REDLINE_PAUSE: 180, // 3 segundos entre hilos
-    YANKENPO_WINS: 3, // 3 victorias para matar boss
+    YANKENPO_WINS: 3, // 3 victorias para matar boss (3% vida)
 
-    // Umbrales de vida para activar fases
+    // 🔥 UMBRALES CORREGIDOS
     HEALTH_THRESHOLDS: {
-      SUMMONING: 0.75, // 75%
-      MINES: 0.5, // 50%
-      BULLETS: 0.3, // 30%
-      REDLINE: 0.15, // 15%
-      YANKENPO: 0.03, // 3%
+      SUMMONING: 0.75, // 75% vida
+      MINES: 0.5, // 50% vida
+      BULLETS: 0.25, // 25% vida
+      REDLINE: 0.1, // 10% vida
+      YANKENPO: 0.03, // 3% vida - INMUNE HASTA MORIR
     },
 
-    // Mensajes de pausa entre fases
+    // Fases aleatorias reducidas
+    RANDOM_PHASE_DURATIONS: {
+      SUMMONING: 1800, // 30s (en lugar de 60s)
+      MINES: 2700, // 45s (en lugar de 90s)
+      BULLETS: 3600, // 60s (en lugar de 120s)
+      REDLINE: 5, // 5 rondas (en lugar de 10)
+    },
+
+    // Mensajes
     TRANSITION_MESSAGES: {
       VULNERABLE: "⚔️ ¡Boss vulnerable!",
       IMMUNE: "🛡️ Boss inmune durante fase",
       PHASE_END: "✅ Fase completada",
       HUNTING: "👹 ¡A la caza!",
+      YANKENPO_FINAL: "💀 Solo Yan Ken Po puede matarlo",
+    },
+  },
+
+  // DENTRO DE BOSS_PHASE_CONFIG, REEMPLAZAR:
+  REDLINE_COUNT: 10, // 10 hilos rojos
+  REDLINE_PAUSE: 180, // 3 segundos entre hilos
+
+  // CON ESTO:
+  REDLINE_CONFIG: {
+    totalRounds: 10,
+    pauseBetweenRounds: 180, // 3 segundos
+    playerSlowFactor: 0.05, // Jugador súper lento
+    bossSpeed: 4, // Velocidad del boss en la línea
+    wallBounceReduction: 0.95, // Reducir velocidad en rebotes (opcional)
+
+    // Configuración de patrones
+    patterns: {
+      fullScreen: true, // Usar toda la pantalla
+      forceWallBounce: true, // Forzar rebotes en paredes
+      minWallDistance: 50, // Distancia mínima a paredes
+      pathComplexity: "extreme", // Complejidad de rutas
     },
   },
 
