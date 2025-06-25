@@ -196,6 +196,7 @@ const GameConfig = {
   },
 
   // REEMPLAZAR BOSS_PHASE_CONFIG
+  // REEMPLAZAR BOSS_PHASE_CONFIG
   BOSS_PHASE_CONFIG: {
     // Tiempos en frames (60fps) - SECUENCIA CORREGIDA
     INTRO_DURATION: 600, // 10 segundos - Boss inmune en centro
@@ -215,12 +216,19 @@ const GameConfig = {
       YANKENPO: 0.03, // 3% vida - INMUNE HASTA MORIR
     },
 
-    // Fases aleatorias reducidas
+    // 🔥 FASES ALEATORIAS REDUCIDAS (cuando pierdes Yan Ken Po)
     RANDOM_PHASE_DURATIONS: {
       SUMMONING: 1800, // 30s (en lugar de 60s)
       MINES: 2700, // 45s (en lugar de 90s)
       BULLETS: 3600, // 60s (en lugar de 120s)
       REDLINE: 5, // 5 rondas (en lugar de 10)
+    },
+
+    // 🔥 LÍMITES DE FASES ALEATORIAS
+    RANDOM_PHASE_LIMITS: {
+      maxExecutions: 3, // Máximo 3 veces cada fase
+      cooldownBetweenPhases: 2000, // 2s entre fase y Yan Ken Po
+      yankenpoRetryDelay: 3000, // 3s antes de nuevo Yan Ken Po
     },
 
     // Mensajes
@@ -230,6 +238,7 @@ const GameConfig = {
       PHASE_END: "✅ Fase completada",
       HUNTING: "👹 ¡A la caza!",
       YANKENPO_FINAL: "💀 Solo Yan Ken Po puede matarlo",
+      RANDOM_PHASE: "🎲 Fase aleatoria activada",
     },
   },
 

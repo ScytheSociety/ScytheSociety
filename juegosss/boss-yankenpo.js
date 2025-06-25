@@ -323,21 +323,26 @@ const BossYanKenPo = {
     }
   },
 
+  // REEMPLAZAR handleGameLoss() en boss-yankenpo.js
   handleGameLoss() {
-    console.log("💀 Jugador perdió el Yan Ken Po - iniciando fase aleatoria");
+    console.log("💀 Jugador perdió/empató el Yan Ken Po");
 
     this.gameState = "completed";
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        "💀 ¡PERDISTE! Fase aleatoria",
+        "💀 ¡PERDISTE! Iniciando fase aleatoria...",
         "#FF0000"
       );
     }
 
+    // 🔥 OCULTAR UI DE YAN KEN PO
+    this.removeGameUI();
+
     setTimeout(() => {
       this.endPhase();
 
+      // 🔥 ACTIVAR FASE ALEATORIA
       if (this.bossManager.phases) {
         this.bossManager.phases.handleYanKenPoLoss();
       }

@@ -38,6 +38,15 @@ const BossPhases = {
   // Control para fases aleatorias (pueden repetirse)
   randomPhaseActive: false,
 
+  // 🔥 NUEVO: Control de fases aleatorias ejecutadas
+  randomPhasesExecuted: {
+    SUMMONING: 0,
+    MINES: 0,
+    BULLETS: 0,
+    REDLINE: 0,
+  },
+  maxRandomExecutions: 3, // Máximo 3 veces cada una
+
   // ======================================================
   // INICIALIZACIÓN
   // ======================================================
@@ -537,21 +546,44 @@ const BossPhases = {
     }
   },
 
+  // REEMPLAZAR endRandomPhase()
   endRandomPhase() {
     console.log("🔄 Terminando fase aleatoria - volviendo a Yan Ken Po");
 
     this.phaseActive = false;
     this.isRandomPhase = false;
-    this.randomPhaseActive = false; // ← LIMPIAR FLAG
+    this.randomPhaseActive = false;
+
+    // 🔥 INCREMENTAR CONTADOR DE FASE EJECUTADA
+    const currentPhase = this.currentPhase;
+    if (this.randomPhasesExecuted[currentPhase] !== undefined) {
+      this.randomPhasesExecuted[currentPhase]++;
+      console.log(
+        `📊 Fase ${currentPhase} ejecutada ${this.randomPhasesExecuted[currentPhase]} veces`
+      );
+    }
 
     this.cleanupAllSystems();
 
-    // Volver a Yan Ken Po después de 2 segundos
+    // 🔥 BOSS INMUNE Y AL CENTRO para nuevo Yan Ken Po
+    this.bossManager.makeImmune(9999);
+    if (this.bossManager.movement) {
+      this.bossManager.movement.stopMovementAndCenter();
+    }
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage(
+        "🎮 Preparando nuevo Yan Ken Po...",
+        "#FFD700"
+      );
+    }
+
+    // Volver a Yan Ken Po después de 3 segundos
     setTimeout(() => {
       if (this.bossManager.yankenpo) {
         this.bossManager.yankenpo.startPhase();
       }
-    }, 2000);
+    }, 3000);
   },
 
   // ======================================================
@@ -663,29 +695,50 @@ const BossPhases = {
   // UTILIDADES
   // ======================================================
 
+  // REEMPLAZAR cleanupAllSystems()
   cleanupAllSystems() {
+    console.log("🧹 Limpiando TODOS los sistemas para transición");
+
     const systems = [
-      this.bossManager.mines,
-      this.bossManager.bullets,
-      // NO limpiar redline aquí si viene desde Red Line completo
+      { system: this.bossManager.mines, name: "minas" },
+      { system: this.bossManager.bullets, name: "bullets" },
     ];
 
-    systems.forEach((system) => {
+    systems.forEach(({ system, name }) => {
       if (system && system.cleanup) {
+        console.log(`🧹 Limpiando sistema: ${name}`);
         system.cleanup();
       }
     });
 
-    // Solo limpiar redline si está activo Y no viene de completar 10 rondas
+    // 🔥 LIMPIAR RED LINE solo si NO viene de completar 10 rondas
     if (this.bossManager.redline && this.bossManager.redline.isActive()) {
       const redLineCount = this.bossManager.redline.getCurrentCycle();
       const redLineMax = this.bossManager.redline.getMaxCycles();
 
       if (redLineCount < redLineMax) {
-        // Red Line incompleto, limpiarlo
-        this.bossManager.redline.endPhase();
+        console.log("🧹 Limpiando Red Line incompleto");
+        this.bossManager.redline.cleanup();
+      } else {
+        console.log("🔴 Red Line completado - NO limpiar");
       }
-      // Si está completo (redLineCount >= redLineMax), NO limpiarlo
+    }
+
+    // 🔥 LIMPIAR TODOS LOS POWER-UPS RESTANTES
+    if (window.PowerUpManager && window.PowerUpManager.powerUps) {
+      window.PowerUpManager.powerUps = [];
+      console.log("🧹 Power-ups limpiados");
+    }
+
+    // 🔥 LIMPIAR ENEMIGOS INVOCADOS
+    if (window.EnemyManager && window.EnemyManager.enemies) {
+      const minionsCount = window.EnemyManager.enemies.filter(
+        (e) => e.isBossMinion
+      ).length;
+      window.EnemyManager.enemies = window.EnemyManager.enemies.filter(
+        (e) => !e.isBossMinion
+      );
+      console.log(`🧹 ${minionsCount} esbirros eliminados`);
     }
   },
 
