@@ -1,6 +1,9 @@
 /**
- * Hell Shooter - Boss Bullets System Optimizado
- * Sistema modular de patrones de balas estilo Touhou
+ * Hell Shooter - Boss Bullets System ARREGLADO
+ * CAMBIOS:
+ * - Boss SIEMPRE inmóvil en fase Touhou
+ * - Patrones de spiral y cruz CORREGIDOS (no spam)
+ * - Boss vulnerable después de fase
  */
 
 const BossBullets = {
@@ -28,27 +31,19 @@ const BossBullets = {
     };
   },
 
-  // Configuración específica por patrón
+  // 🔥 CONFIGURACIÓN CORREGIDA - PATRONES FLUIDOS
   patternConfigs: {
     spiral: {
-      bulletInterval: 50,
-      rotationSpeed: 0.15,
-      bulletsPerFrame: 2,
+      bulletInterval: 120, // MÁS LENTO para línea fluida
+      rotationSpeed: 0.08, // MÁS LENTO para espiral suave
       speed: 0.002,
       color: "#FF6B6B",
     },
-    walls: {
-      wallInterval: 1000,
-      bulletCount: 12,
-      gapSize: 4,
-      speed: 0.004,
-      color: "#4ECDC4",
-    },
     cross: {
-      bulletInterval: 100,
-      directions: 4,
-      diagonalFreq: 30,
-      speed: 0.004,
+      bulletInterval: 200, // MÁS LENTO para grupos
+      groupSize: 8, // Balas por grupo
+      groupDelay: 40, // Tiempo entre balas del grupo
+      speed: 0.003,
       color: "#9B59B6",
     },
     rain: {
@@ -57,18 +52,6 @@ const BossBullets = {
       spread: 0.5,
       speed: 0.005,
       color: "#F39C12",
-    },
-    burst: {
-      burstInterval: 60,
-      bulletsPerBurst: 16,
-      speed: 0.003,
-      color: "#E74C3C",
-    },
-    laser: {
-      chargeTime: 60,
-      laserWidth: 30,
-      speed: 0.008,
-      color: "#FF00FF",
     },
   },
 
@@ -177,9 +160,8 @@ const BossBullets = {
       return;
     }
 
-    // 🔥 USAR CONFIGURACIÓN DINÁMICA
     const duration =
-      GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION * (1000 / 60); // Convertir frames a ms
+      GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION * (1000 / 60);
     console.log(
       `🌟 === INICIANDO FASE TOUHOU (${duration / 1000} SEGUNDOS) ===`
     );
@@ -187,11 +169,8 @@ const BossBullets = {
     this.patternActive = true;
     this.currentPatternIndex = 0;
 
-    // Centrar boss y MANTENERLO QUIETO
-    if (this.bossManager.movement) {
-      this.bossManager.movement.teleportToCenter();
-      this.bossManager.movement.stopMovementAndCenter();
-    }
+    // 🔥 BOSS INMÓVIL GARANTIZADO
+    this.forceBossStationary();
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
@@ -203,7 +182,7 @@ const BossBullets = {
     // SOLO 3 patrones cada 30 segundos
     this.executeSimplePatternSequence();
 
-    // 🛡️ INICIAR SPAWN DE ESCUDOS (esto faltaba)
+    // Iniciar spawn de escudos
     this.startShieldSpawning();
 
     // Terminar después de 90 segundos
@@ -212,17 +191,38 @@ const BossBullets = {
     }, duration);
   },
 
+  // 🔥 NUEVA FUNCIÓN: FORZAR BOSS INMÓVIL
+  forceBossStationary() {
+    console.log("🛑 FORZANDO boss completamente inmóvil");
+
+    // 1. Centrar boss
+    const canvas = window.getCanvas();
+    const boss = this.bossManager.boss;
+    boss.x = (canvas.width - boss.width) / 2;
+    boss.y = (canvas.height - boss.height) / 2;
+    boss.velocityX = 0;
+    boss.velocityY = 0;
+
+    // 2. Desactivar COMPLETAMENTE el movimiento
+    if (this.bossManager.movement) {
+      this.bossManager.movement.enabled = false;
+      this.bossManager.movement.pattern = "stationary";
+      console.log("🛑 Movimiento del boss DESACTIVADO");
+    }
+
+    // 3. Bloquear posición (flag especial)
+    boss.isStationary = true;
+  },
+
   executeSimplePatternSequence() {
     if (!this.patternActive) return;
 
-    const allowedPatterns = ["spiral", "cross", "rain"]; // SOLO estos 3
+    const allowedPatterns = ["spiral", "cross", "rain"];
     const currentPattern =
       allowedPatterns[this.currentPatternIndex % allowedPatterns.length];
 
     console.log(
-      `🌟 Ejecutando patrón PERMITIDO ${
-        this.currentPatternIndex + 1
-      }: ${currentPattern}`
+      `🌟 Ejecutando patrón ${this.currentPatternIndex + 1}: ${currentPattern}`
     );
 
     const messages = {
@@ -249,164 +249,10 @@ const BossBullets = {
     }
   },
 
-  startShieldSpawning() {
-    console.log("🛡️ Iniciando sistema de escudo con delay de 10s");
-
-    let shieldCount = 0;
-    const maxShields = 10; // Máximo durante la fase
-
-    const spawnNextShield = () => {
-      if (!this.patternActive || shieldCount >= maxShields) return;
-
-      // Verificar que NO haya escudos existentes
-      const existingShields = window.PowerUpManager.powerUps.filter(
-        (p) => p.type && p.type.id === 0
-      );
-
-      if (existingShields.length === 0) {
-        this.spawnProtectiveShield();
-        shieldCount++;
-        console.log(
-          `🛡️ Escudo ${shieldCount} spawneado - siguiente en 10s después de recogerlo`
-        );
-
-        // 🔥 ESPERAR A QUE SE RECOJA EL ESCUDO
-        const checkPickup = () => {
-          const currentShields = window.PowerUpManager.powerUps.filter(
-            (p) => p.type && p.type.id === 0
-          );
-
-          if (currentShields.length === 0) {
-            // Escudo recogido, esperar 10 segundos
-            console.log("🛡️ Escudo recogido - esperando 10s para el siguiente");
-            setTimeout(spawnNextShield, 10000); // 10 segundos después
-          } else {
-            // Escudo aún ahí, verificar de nuevo en 1 segundo
-            setTimeout(checkPickup, 1000);
-          }
-        };
-
-        // Empezar a verificar si se recogió
-        setTimeout(checkPickup, 1000);
-      }
-    };
-
-    // Primer escudo después de 5 segundos
-    setTimeout(spawnNextShield, 5000);
-  },
-
-  spawnProtectiveShield() {
-    console.log("🛡️ Intentando spawnar escudo protector...");
-
-    if (!window.PowerUpManager) {
-      console.error("❌ PowerUpManager no disponible");
-      return;
-    }
-
-    if (!GameConfig.POWERUP_CONFIG || !GameConfig.POWERUP_CONFIG.types) {
-      console.error("❌ POWERUP_CONFIG no disponible");
-      return;
-    }
-
-    const canvas = window.getCanvas();
-
-    // 🔥 POSICIONAMIENTO INTELIGENTE - Evitar que aparezcan muy cerca
-    let x, y;
-    let attempts = 0;
-    const minDistance = 150; // Distancia mínima entre escudos
-
-    do {
-      // Posición aleatoria con margen
-      x = 80 + Math.random() * (canvas.width - 160);
-      y = 80 + Math.random() * (canvas.height - 160);
-
-      // Verificar distancia con escudos existentes
-      let tooClose = false;
-      for (const powerUp of window.PowerUpManager.powerUps) {
-        if (powerUp.type && powerUp.type.id === 0) {
-          // Si es escudo
-          const distance = Math.sqrt(
-            Math.pow(x - powerUp.x, 2) + Math.pow(y - powerUp.y, 2)
-          );
-          if (distance < minDistance) {
-            tooClose = true;
-            break;
-          }
-        }
-      }
-
-      if (!tooClose) break;
-      attempts++;
-    } while (attempts < 20); // Máximo 20 intentos
-
-    // 🔥 CREAR ESCUDO ESTÁTICO USANDO EL SISTEMA CORRECTO
-    const shieldSize = GameConfig.PLAYER_SIZE * 0.8;
-
-    const shield = {
-      x: x,
-      y: y,
-      width: shieldSize,
-      height: shieldSize,
-      velocityX: 0, // 🔥 ESTÁTICO: Sin movimiento
-      velocityY: 0, // 🔥 ESTÁTICO: Sin movimiento
-
-      // 🔥 USAR EL TIPO CORRECTO DE ESCUDO
-      type: GameConfig.POWERUP_CONFIG.types.SHIELD, // Tipo escudo del config
-
-      // Efectos visuales
-      pulseTimer: 0,
-      glowIntensity: 0.8,
-      spawnTime: window.getGameTime(),
-      isStatic: true, // Marcador para identificar que es estático
-    };
-
-    window.PowerUpManager.powerUps.push(shield);
-
-    console.log(
-      `🛡️ Escudo estático spawneado en (${Math.round(x)}, ${Math.round(y)})`
-    );
-    console.log("🛡️ Total power-ups:", window.PowerUpManager.powerUps.length);
-  },
-
-  endBulletPhase() {
-    console.log("🌟 Terminando fase Touhou (90s completados)");
-
-    this.patternActive = false;
-    this.cleanup();
-
-    // BOSS SE QUEDA QUIETO hasta ser vulnerable
-    if (this.bossManager.movement) {
-      this.bossManager.movement.stopMovementAndCenter();
-    }
-
-    if (this.bossManager.comments) {
-      this.bossManager.comments.sayComment("¡Fase Touhou completada!");
-    }
-
-    if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage("⚔️ ¡BOSS VULNERABLE!", "#00FF00");
-    }
-
-    // Boss vulnerable PERO QUIETO
-    this.bossManager.isImmune = false;
-    this.bossManager.immunityTimer = 0;
-
-    // MOVIMIENTO SOLO DESPUÉS DE 5 SEGUNDOS
-    setTimeout(() => {
-      if (this.bossManager.movement) {
-        this.bossManager.movement.enableFluidHunting();
-        console.log("🏃 Boss ahora puede moverse después de ser vulnerable");
-      }
-    }, 5000);
-  },
-
   executePattern(patternType) {
     switch (patternType) {
       case "spiral":
         this.createSpiralPattern();
-        break;
-      case "walls":
-        this.createWallPattern();
         break;
       case "cross":
         this.createCrossPattern();
@@ -414,89 +260,33 @@ const BossBullets = {
       case "rain":
         this.createRainPattern();
         break;
-      case "burst":
-        this.createBurstPattern();
-        break;
-      case "laser":
-        this.createLaserPattern();
-        break;
     }
   },
 
   // ======================================================
-  // PATRONES ESPECÍFICOS
+  // 🔥 PATRONES CORREGIDOS - NO SPAM
   // ======================================================
 
   createSpiralPattern() {
     const config = this.patternConfigs.spiral;
+    let angle = 0;
 
-    // 🔥 UNA SOLA ESPIRAL INTELIGENTE que cubre todas las direcciones
-    let angle = Math.random() * Math.PI * 2; // Empezar en ángulo aleatorio
-
-    spiralInterval = setInterval(() => {
+    const spiralInterval = setInterval(() => {
       if (!this.patternActive) {
         clearInterval(spiralInterval);
         return;
       }
 
-      // 🔥 DISPARAR UNA BALA CADA VEZ (como antes, sin spam)
+      // 🔥 UNA SOLA BALA POR VEZ (LÍNEA FLUIDA)
       this.createTouhouBullet(angle, config.speed, config.color);
 
-      // 🔥 INCREMENTO PEQUEÑO para cubrir TODA la circunferencia gradualmente
-      angle += config.rotationSpeed * 1.5; // Ligeramente más rápido para cubrir más área
-
-      // 🔥 RESETEAR ÁNGULO para evitar overflow
+      // 🔥 INCREMENTO PEQUEÑO para espiral suave
+      angle += config.rotationSpeed;
       if (angle > Math.PI * 2) angle -= Math.PI * 2;
-    }, config.bulletInterval + 50); // Mismo timing que antes
+    }, config.bulletInterval);
 
     this.activeIntervals.push(spiralInterval);
-  },
-
-  createWallPattern() {
-    const config = this.patternConfigs.walls;
-    let wallCount = 0;
-
-    const wallInterval = setInterval(() => {
-      if (!this.patternActive || wallCount >= 4) {
-        clearInterval(wallInterval);
-        return;
-      }
-
-      this.createWallOfBullets(config);
-      wallCount++;
-    }, config.wallInterval);
-
-    this.activeIntervals.push(wallInterval);
-  },
-
-  createWallOfBullets(config) {
-    const canvas = window.getCanvas();
-    const playerPos = Player.getPosition();
-
-    // 🔥 MUCHAS MENOS BALAS para espacios enormes
-    const bulletCount = Math.max(4, config.bulletCount - 8); // Reducir AÚN MÁS
-
-    // 🔥 ZONA SEGURA GIGANTE para esquivar
-    const safeZoneStart =
-      Math.floor((playerPos.x / canvas.width) * bulletCount) - 1;
-    const safeZoneEnd = safeZoneStart + (config.gapSize + 4); // +4 para ESPACIO ENORME
-
-    for (let i = 0; i < bulletCount; i++) {
-      if (i >= safeZoneStart && i <= safeZoneEnd) continue;
-
-      const x = (canvas.width / bulletCount) * i;
-      const bullet = this.createBulletObject(
-        x,
-        -20,
-        0,
-        config.speed * canvas.height,
-        config.color
-      );
-
-      this.bulletPatterns.push(bullet);
-    }
-
-    console.log(`🧱 Muro de SOLO ${bulletCount} balas con ZONA SEGURA GIGANTE`);
+    console.log("🌀 SPIRAL: Línea fluida girando iniciada");
   },
 
   createCrossPattern() {
@@ -509,45 +299,22 @@ const BossBullets = {
       }
 
       // 🔥 DIRECCIONES FIJAS: arriba, abajo, derecha, izquierda
-      const directions = [
-        0, // Derecha
-        Math.PI / 2, // Abajo
-        Math.PI, // Izquierda
-        Math.PI * 1.5, // Arriba
-      ];
+      const directions = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
 
-      // 🔥 PARA CADA DIRECCIÓN: grupos aleatorios
       directions.forEach((direction) => {
-        // 🔥 TAMAÑO DE GRUPO ALEATORIO: 4, 5, o 10 balas juntas
-        const groupSizes = [4, 5, 10];
-        const groupSize =
-          groupSizes[Math.floor(Math.random() * groupSizes.length)];
-
-        console.log(
-          `✚ Grupo de ${groupSize} balas en dirección ${(
-            (direction * 180) /
-            Math.PI
-          ).toFixed(0)}°`
-        );
-
-        // 🔥 DISPARAR EL GRUPO CON PEQUEÑA SEPARACIÓN
-        for (let i = 0; i < groupSize; i++) {
+        // 🔥 GRUPO DE BALAS UNA TRAS OTRA
+        for (let i = 0; i < config.groupSize; i++) {
           setTimeout(() => {
             if (this.patternActive) {
-              // 🔥 MUY PEQUEÑA VARIACIÓN para que vayan juntas pero no exactamente iguales
-              const angleVariation = (i - groupSize / 2) * 0.05; // Muy pequeña dispersión
-              this.createTouhouBullet(
-                direction + angleVariation,
-                config.speed,
-                config.color
-              );
+              this.createTouhouBullet(direction, config.speed, config.color);
             }
-          }, i * 50); // 50ms entre cada bala del grupo
+          }, i * config.groupDelay);
         }
       });
-    }, config.bulletInterval + 80); // Un poco más lento que antes
+    }, config.bulletInterval);
 
     this.activeIntervals.push(crossInterval);
+    console.log("✚ CRUZ: Grupos de balas en línea iniciados");
   },
 
   createRainPattern() {
@@ -583,78 +350,118 @@ const BossBullets = {
     }, config.bulletInterval);
 
     this.activeIntervals.push(rainInterval);
+    console.log("🌧️ LLUVIA: Balas dirigidas al jugador iniciadas");
   },
 
-  createBurstPattern() {
-    const config = this.patternConfigs.burst;
+  // ======================================================
+  // SPAWN DE ESCUDOS
+  // ======================================================
 
-    const burstInterval = setInterval(() => {
-      if (!this.patternActive) {
-        clearInterval(burstInterval);
-        return;
-      }
+  startShieldSpawning() {
+    console.log("🛡️ Iniciando sistema de escudo con delay de 10s");
 
-      // 🔥 MENOS BALAS en la ráfaga circular
-      const reducedBulletCount = Math.max(8, config.bulletsPerBurst - 8); // De 16 a 8 balas
+    let shieldCount = 0;
+    const maxShields = 10;
 
-      for (let i = 0; i < reducedBulletCount; i++) {
-        const angle = (i * Math.PI * 2) / reducedBulletCount;
-        this.createTouhouBullet(angle, config.speed, config.color);
-      }
+    const spawnNextShield = () => {
+      if (!this.patternActive || shieldCount >= maxShields) return;
 
-      if (this.bossManager.ui) {
-        this.bossManager.ui.createParticleEffect(
-          this.bossManager.boss.x + this.bossManager.boss.width / 2,
-          this.bossManager.boss.y + this.bossManager.boss.height / 2,
-          config.color,
-          20
+      const existingShields = window.PowerUpManager.powerUps.filter(
+        (p) => p.type && p.type.id === 0
+      );
+
+      if (existingShields.length === 0) {
+        this.spawnProtectiveShield();
+        shieldCount++;
+        console.log(
+          `🛡️ Escudo ${shieldCount} spawneado - siguiente en 10s después de recogerlo`
         );
-      }
-    }, config.burstInterval + 40); // 🔥 +40ms más lento entre ráfagas
 
-    this.activeIntervals.push(burstInterval);
+        const checkPickup = () => {
+          const currentShields = window.PowerUpManager.powerUps.filter(
+            (p) => p.type && p.type.id === 0
+          );
+
+          if (currentShields.length === 0) {
+            console.log("🛡️ Escudo recogido - esperando 10s para el siguiente");
+            setTimeout(spawnNextShield, 10000);
+          } else {
+            setTimeout(checkPickup, 1000);
+          }
+        };
+
+        setTimeout(checkPickup, 1000);
+      }
+    };
+
+    setTimeout(spawnNextShield, 5000);
   },
 
-  createLaserPattern() {
-    const config = this.patternConfigs.laser;
+  spawnProtectiveShield() {
+    console.log("🛡️ Spawneando escudo protector...");
 
-    // Fase de carga
-    if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage("⚡ CARGANDO LÁSER...", "#FF00FF");
+    const canvas = window.getCanvas();
+    const x = 80 + Math.random() * (canvas.width - 160);
+    const y = 80 + Math.random() * (canvas.height - 160);
+    const shieldSize = GameConfig.PLAYER_SIZE * 0.8;
+
+    const shield = {
+      x: x,
+      y: y,
+      width: shieldSize,
+      height: shieldSize,
+      velocityX: 0,
+      velocityY: 0,
+      type: GameConfig.POWERUP_CONFIG.types.SHIELD,
+      pulseTimer: 0,
+      glowIntensity: 0.8,
+      spawnTime: window.getGameTime(),
+      isStatic: true,
+    };
+
+    window.PowerUpManager.powerUps.push(shield);
+    console.log(
+      `🛡️ Escudo estático spawneado en (${Math.round(x)}, ${Math.round(y)})`
+    );
+  },
+
+  // ======================================================
+  // 🔥 FINAL DE FASE CORREGIDO
+  // ======================================================
+
+  endBulletPhase() {
+    console.log("🌟 Terminando fase Touhou (90s completados)");
+
+    this.patternActive = false;
+    this.cleanup();
+
+    // 🔥 LIBERAR AL BOSS DE RESTRICCIONES
+    if (this.bossManager.boss) {
+      this.bossManager.boss.isStationary = false;
     }
 
+    // 🔥 BOSS VULNERABLE INMEDIATAMENTE
+    this.bossManager.isImmune = false;
+    this.bossManager.immunityTimer = 0;
+    console.log("⚔️ Boss VULNERABLE después de Touhou");
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage("⚔️ ¡BOSS VULNERABLE!", "#00FF00");
+    }
+
+    if (this.bossManager.comments) {
+      this.bossManager.comments.sayComment("¡Fase Touhou completada!");
+    }
+
+    // 🔥 REACTIVAR HUNTING DESPUÉS DE 2 SEGUNDOS
     setTimeout(() => {
-      if (!this.patternActive) return;
-
-      // Disparar láser hacia el jugador
-      const playerPos = Player.getPosition();
-      const playerSize = Player.getSize();
-      const boss = this.bossManager.boss;
-
-      const targetX = playerPos.x + playerSize.width / 2;
-      const targetY = playerPos.y + playerSize.height / 2;
-
-      const bossCenterX = boss.x + boss.width / 2;
-      const bossCenterY = boss.y + boss.height / 2;
-
-      const angle = Math.atan2(targetY - bossCenterY, targetX - bossCenterX);
-
-      // Crear múltiples balas para simular láser
-      for (let i = 0; i < 20; i++) {
-        setTimeout(() => {
-          if (this.patternActive) {
-            this.createTouhouBullet(angle, config.speed, config.color, true);
-          }
-        }, i * 20);
+      if (this.bossManager.movement) {
+        this.bossManager.movement.enabled = true;
+        this.bossManager.movement.pattern = "hunting";
+        this.bossManager.movement.enableFluidHunting();
+        console.log("🏃 Boss reactivado en modo HUNTING");
       }
-
-      if (this.bossManager.ui) {
-        this.bossManager.ui.showScreenMessage(
-          "⚡ ¡LÁSER DISPARADO!",
-          "#FFFF00"
-        );
-      }
-    }, config.chargeTime * 16.67);
+    }, 2000);
   },
 
   // ======================================================
@@ -823,4 +630,4 @@ const BossBullets = {
 
 window.BossBullets = BossBullets;
 
-console.log("🌟 boss-bullets.js optimizado cargado");
+console.log("🌟 boss-bullets.js ARREGLADO COMPLETAMENTE");

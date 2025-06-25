@@ -1,6 +1,9 @@
 /**
- * Hell Shooter - Boss Movement System Optimizado
- * Sistema modular de movimiento fluido del boss
+ * Hell Shooter - Boss Movement System ARREGLADO
+ * CAMBIOS:
+ * - Boss SOLO se mueve en fase HUNTING
+ * - Verificación estricta de isStationary
+ * - No movimiento en fases especiales
  */
 
 const BossMovement = {
@@ -99,21 +102,48 @@ const BossMovement = {
   },
 
   // ======================================================
-  // ACTUALIZACIÓN PRINCIPAL
+  // 🔥 ACTUALIZACIÓN CORREGIDA - VERIFICACIONES ESTRICTAS
   // ======================================================
 
   update() {
-    if (!this.bossManager.active || !this.movement.enabled) return;
+    if (!this.bossManager.active) return;
 
+    // 🔥 VERIFICACIÓN 1: Boss marcado como estacionario
+    if (this.bossManager.boss && this.bossManager.boss.isStationary) {
+      console.log("🛑 Boss marcado como estacionario - NO MOVER");
+      return;
+    }
+
+    // 🔥 VERIFICACIÓN 2: Movimiento desactivado
+    if (!this.movement.enabled) {
+      return;
+    }
+
+    // 🔥 VERIFICACIÓN 3: Solo hunting permite movimiento
+    if (
+      this.movement.pattern !== "hunting" &&
+      this.movement.pattern !== "teleporting"
+    ) {
+      return;
+    }
+
+    // 🔥 VERIFICACIÓN 4: Fase actual del boss
+    const currentPhase = this.bossManager.phases
+      ? this.bossManager.phases.getCurrentPhase()
+      : "UNKNOWN";
+
+    if (currentPhase !== "HUNTING" && this.movement.pattern === "hunting") {
+      console.log(`🛑 Boss en fase ${currentPhase} - NO debería moverse`);
+      return;
+    }
+
+    // 🔥 Solo ejecutar movimiento si pasa TODAS las verificaciones
     switch (this.movement.pattern) {
       case "hunting":
         this.perfectHunting();
         break;
       case "teleporting":
         this.updateTeleporting();
-        break;
-      case "stationary":
-        // Boss quieto
         break;
     }
   },
@@ -142,9 +172,6 @@ const BossMovement = {
       // 🔥 APLICAR SLOWMOTION AL BOSS
       if (window.slowMotionActive && window.slowMotionFactor) {
         speed *= window.slowMotionFactor;
-        console.log(
-          `🌊 Boss nadando lentamente: velocidad ${speed.toFixed(4)}`
-        );
       }
 
       const dirX = dx / distance;
@@ -377,4 +404,4 @@ const BossMovement = {
 
 window.BossMovement = BossMovement;
 
-console.log("🚶 boss-movement.js optimizado cargado");
+console.log("🚶 boss-movement.js ARREGLADO - Solo movimiento en HUNTING");
