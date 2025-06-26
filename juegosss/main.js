@@ -1487,8 +1487,9 @@ function victory() {
  * Reiniciar juego
  */
 function restartGame() {
-  console.log("🔄 Reiniciando juego...");
+  console.log("🔄 Reiniciando juego COMPLETO...");
 
+  // 🔥 FORZAR LIMPIEZA COMPLETA PRIMERO
   cleanupBossElements();
 
   const gameOverScreen = document.getElementById("game-over");
@@ -1497,25 +1498,56 @@ function restartGame() {
     gameOverScreen.innerHTML = "";
   }
 
+  // 🔥 MARCAR GAME ENDED INMEDIATAMENTE
   gameEnded = true;
+
+  // 🔥 RESETEO COMPLETO GARANTIZADO
   resetGameState();
 
-  if (typeof ComboSystem !== "undefined") {
-    if (ComboSystem.reset) ComboSystem.reset();
+  // 🔥 VERIFICACIÓN ADICIONAL - Limpiar cualquier cosa que quede
+  setTimeout(() => {
+    // Limpiar flags globales
+    window.slowMotionActive = false;
+    window.slowMotionFactor = 1.0;
+    window.frenzyModeActive = false;
+
+    // Verificar que BossManager esté limpio
+    if (window.BossManager) {
+      if (window.BossManager.redline) {
+        window.BossManager.redline.redLineForceActive = false;
+      }
+      if (window.BossManager.phases) {
+        window.BossManager.phases.currentPhase = "HUNTING";
+        window.BossManager.phases.phaseActive = false;
+      }
+    }
+
+    console.log("🔄 Verificación post-reset completada");
+  }, 100);
+
+  // Recrear ComboSystem
+  if (window.ComboSystem) {
+    if (window.ComboSystem.reset) window.ComboSystem.reset();
     setTimeout(() => {
-      if (ComboSystem.createComboDisplay) ComboSystem.createComboDisplay();
-    }, 100);
+      if (window.ComboSystem.createComboDisplay) {
+        window.ComboSystem.createComboDisplay();
+      }
+    }, 300);
   }
 
+  // 🔥 INICIAR JUEGO LIMPIO
   startGame();
+
+  console.log("✅ Juego reiniciado COMPLETAMENTE");
 }
 
 /**
  * Resetear estado del juego
  */
 function resetGameState() {
-  console.log("🔄 Reseteando estado...");
+  console.log("🔄 Reseteando estado COMPLETO...");
 
+  // 🔥 LIMPIAR BOSS ELEMENTS PRIMERO
   cleanupBossElements();
 
   if (gameInterval) {
@@ -1534,37 +1566,126 @@ function resetGameState() {
   slowMotionFactor = 1.0;
   frenzyModeActive = false;
 
-  // Resetear módulos en orden correcto
-  if (typeof Player !== "undefined" && Player.reset) Player.reset();
-  if (typeof BulletManager !== "undefined" && BulletManager.reset)
-    BulletManager.reset();
-  if (typeof EnemyManager !== "undefined" && EnemyManager.reset)
-    EnemyManager.reset();
-  if (typeof PowerUpManager !== "undefined" && PowerUpManager.reset)
-    PowerUpManager.reset();
-  if (typeof BossManager !== "undefined" && BossManager.reset)
-    BossManager.reset();
-  if (typeof UI !== "undefined" && UI.reset) UI.reset();
+  // 🔥 RESETEO GARANTIZADO DE TODOS LOS MÓDULOS
+  const modules = [
+    { module: window.Player, name: "Player" },
+    { module: window.BulletManager, name: "BulletManager" },
+    { module: window.EnemyManager, name: "EnemyManager" },
+    { module: window.PowerUpManager, name: "PowerUpManager" },
+    { module: window.BossManager, name: "BossManager" },
+    { module: window.UI, name: "UI" },
+    { module: window.ComboSystem, name: "ComboSystem" },
+  ];
 
-  // Resetear ComboSystem
-  if (typeof ComboSystem !== "undefined") {
-    if (ComboSystem.cleanup) ComboSystem.cleanup();
-    if (ComboSystem.reset) ComboSystem.reset();
-    setTimeout(() => {
-      if (ComboSystem.createComboDisplay) ComboSystem.createComboDisplay();
-    }, 200);
+  modules.forEach(({ module, name }) => {
+    if (module && typeof module.reset === "function") {
+      try {
+        module.reset();
+        console.log(`✅ ${name} reseteado`);
+      } catch (error) {
+        console.error(`❌ Error reseteando ${name}:`, error);
+      }
+    }
+  });
+
+  // 🔥 RESETEO ESPECÍFICO Y FORZADO DE RED LINE
+  if (window.BossManager && window.BossManager.redline) {
+    try {
+      window.BossManager.redline.phaseActive = false;
+      window.BossManager.redline.redLineMoving = false;
+      window.BossManager.redline.showingPreview = false;
+      window.BossManager.redline.redLineForceActive = false; // 🔥 CRÍTICO
+      window.BossManager.redline.cycleCount = 0;
+      window.BossManager.redline.redLinePath = [];
+      window.BossManager.redline.gridLines = [];
+      console.log("🔴 Red Line FORZADO a estado inicial");
+    } catch (error) {
+      console.error("❌ Error reseteando Red Line:", error);
+    }
   }
 
-  console.log("🔄 Estado reseteado completamente");
+  // 🔥 RESETEO ESPECÍFICO DE PHASES
+  if (window.BossManager && window.BossManager.phases) {
+    try {
+      window.BossManager.phases.phaseActive = false;
+      window.BossManager.phases.currentPhase = "HUNTING";
+      window.BossManager.phases.isRandomPhase = false;
+      window.BossManager.phases.randomPhaseActive = false;
+      window.BossManager.phases.phasesExecuted = {
+        SUMMONING: false,
+        MINES: false,
+        BULLETS: false,
+        REDLINE: false,
+        YANKENPO: false,
+      };
+      console.log("⚔️ Phases FORZADO a estado inicial");
+    } catch (error) {
+      console.error("❌ Error reseteando Phases:", error);
+    }
+  }
+
+  // 🔥 RESETEO ESPECÍFICO DE BOSS MANAGER
+  if (window.BossManager) {
+    try {
+      window.BossManager.active = false;
+      window.BossManager.isImmune = false;
+      window.BossManager.immunityTimer = 0;
+      window.BossManager.boss = null;
+      console.log("👹 BossManager FORZADO a estado inicial");
+    } catch (error) {
+      console.error("❌ Error reseteando BossManager:", error);
+    }
+  }
+
+  // 🔥 LIMPIAR TODOS LOS ELEMENTOS DOM DEL BOSS
+  const allBossElements = [
+    "yankenpo-container",
+    "boss-speech-bubble",
+    "boss-phase-timer",
+    "boss-health-bar",
+    "boss-phase-indicator",
+    "boss-comment",
+    "level-transition",
+    "music-ticker",
+  ];
+
+  allBossElements.forEach((elementId) => {
+    const element = document.getElementById(elementId);
+    if (element && element.parentNode) {
+      element.parentNode.removeChild(element);
+      console.log(`🗑️ Elemento ${elementId} eliminado`);
+    }
+  });
+
+  // 🔥 RESETEO DE COMBO SYSTEM
+  if (window.ComboSystem) {
+    try {
+      if (window.ComboSystem.cleanup) window.ComboSystem.cleanup();
+      if (window.ComboSystem.reset) window.ComboSystem.reset();
+      setTimeout(() => {
+        if (window.ComboSystem.createComboDisplay) {
+          window.ComboSystem.createComboDisplay();
+        }
+      }, 200);
+      console.log("🔥 ComboSystem limpiado y recreado");
+    } catch (error) {
+      console.error("❌ Error reseteando ComboSystem:", error);
+    }
+  }
+
+  console.log("🔄 Estado reseteado COMPLETAMENTE - TODO limpio");
 }
 
 /**
  * Volver al menú principal
  */
 function backToMenu() {
-  console.log("🏠 Volviendo al menú principal...");
+  console.log("🏠 Volviendo al menú principal COMPLETO...");
 
+  // 🔥 FORZAR GAME ENDED
   gameEnded = true;
+
+  // 🔥 LIMPIEZA COMPLETA FORZADA
   cleanupBossElements();
 
   const gameOverScreen = document.getElementById("game-over");
@@ -1573,14 +1694,17 @@ function backToMenu() {
     gameOverScreen.innerHTML = "";
   }
 
-  if (typeof ComboSystem !== "undefined" && ComboSystem.cleanup) {
-    ComboSystem.cleanup();
+  // 🔥 COMBO SYSTEM CLEANUP
+  if (window.ComboSystem && window.ComboSystem.cleanup) {
+    window.ComboSystem.cleanup();
   }
 
+  // 🔥 RESETEO COMPLETO
   resetGameState();
 
-  if (typeof UI !== "undefined" && UI.removeMusicTicker) {
-    UI.removeMusicTicker();
+  // 🔥 MUSIC TICKER CLEANUP
+  if (window.UI && window.UI.removeMusicTicker) {
+    window.UI.removeMusicTicker();
   }
 
   // Cambiar pantallas
@@ -1588,8 +1712,8 @@ function backToMenu() {
   document.getElementById("ranking-container").style.display = "none";
   document.getElementById("main-menu").style.display = "block";
 
-  if (typeof UI !== "undefined" && UI.centerMainMenu) {
-    UI.centerMainMenu();
+  if (window.UI && window.UI.centerMainMenu) {
+    window.UI.centerMainMenu();
   }
 
   // Ocultar contador
@@ -1598,7 +1722,27 @@ function backToMenu() {
     totalDisplay.style.display = "none";
   }
 
-  console.log("✅ Vuelto al menú principal");
+  // 🔥 VERIFICACIÓN FINAL DESPUÉS DE 200MS
+  setTimeout(() => {
+    // Limpiar cualquier elemento DOM que quede
+    const remainingElements = [
+      "yankenpo-container",
+      "boss-speech-bubble",
+      "boss-phase-timer",
+    ];
+
+    remainingElements.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
+        console.log(`🗑️ Limpieza final: ${id} eliminado`);
+      }
+    });
+
+    console.log("✅ Vuelta al menú COMPLETADA - Todo limpio");
+  }, 200);
+
+  console.log("✅ Vuelto al menú principal COMPLETAMENTE");
 }
 
 /**

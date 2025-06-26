@@ -507,28 +507,48 @@ const BossRedLine = {
     // 🔥 SI COMPLETÓ LOS 10 DIBUJOS → TERMINAR Y SER VULNERABLE
     if (this.cycleCount >= this.maxCycles) {
       console.log("🔄 *** 10 DIBUJOS DE RED LINE COMPLETADOS ***");
-      console.log("🏃 REGRESANDO A HUNTING - Boss ahora VULNERABLE");
+      console.log(
+        "🏃 TERMINANDO RED LINE - Boss ahora VULNERABLE y en HUNTING"
+      );
 
+      // 🔥 TERMINAR COMPLETAMENTE RED LINE
       this.endPhase();
 
-      // 🔥 AHORA SÍ HACER VULNERABLE Y ACTIVAR HUNTING
+      // 🔥 FORZAR DESBLOQUEO INMEDIATO
       setTimeout(() => {
         if (this.bossManager) {
+          // Boss vulnerable
           this.bossManager.isImmune = false;
           this.bossManager.immunityTimer = 0;
-          console.log("⚔️ Boss FINALMENTE vulnerable después de 10 dibujos");
-        }
+          console.log("⚔️ Boss FORZADO vulnerable después de 10 dibujos");
 
-        if (this.bossManager.movement) {
-          this.bossManager.movement.enabled = true; // Reactivar movimiento
-          this.bossManager.movement.enableFluidHunting();
-        }
+          // 🔥 FORZAR SISTEMA DE FASES A HUNTING
+          if (this.bossManager.phases) {
+            this.bossManager.phases.phaseActive = false;
+            this.bossManager.phases.currentPhase = "HUNTING";
+            this.bossManager.phases.redLineForceActive = false; // 🔥 CRÍTICO
+            console.log("🔄 Fases FORZADAS a HUNTING");
+          }
 
-        if (this.bossManager.ui) {
-          this.bossManager.ui.showScreenMessage(
-            "⚔️ ¡BOSS VULNERABLE! Red Line completado",
-            "#00FF00"
-          );
+          // 🔥 CENTRAR BOSS Y LUEGO ACTIVAR HUNTING
+          this.centerBossBeforeHunting();
+
+          // 🔥 ACTIVAR HUNTING DESPUÉS DE 1 SEGUNDO
+          setTimeout(() => {
+            if (this.bossManager.movement) {
+              this.bossManager.movement.enabled = true;
+              this.bossManager.movement.pattern = "hunting";
+              this.bossManager.movement.enableFluidHunting();
+              console.log("🏃 Boss ACTIVADO en modo HUNTING fluido");
+            }
+          }, 1000);
+
+          if (this.bossManager.ui) {
+            this.bossManager.ui.showScreenMessage(
+              "⚔️ ¡RED LINE COMPLETADO! Boss vulnerable",
+              "#00FF00"
+            );
+          }
         }
       }, 500);
       return;
@@ -543,6 +563,48 @@ const BossRedLine = {
     setTimeout(() => {
       this.startRedLineCycle();
     }, 1000);
+  },
+
+  // 🔥 NUEVA FUNCIÓN: Centrar boss de forma segura
+  centerBossBeforeHunting() {
+    const canvas = window.getCanvas();
+    const boss = this.bossManager.boss;
+
+    if (!boss || !canvas) return;
+
+    // 🔥 CENTRAR BOSS CON MÁRGENES SEGUROS
+    const safeMargin = 100; // Margen de las esquinas
+    const centerX = canvas.width / 2 - boss.width / 2;
+    const centerY = canvas.height / 2 - boss.height / 2;
+
+    // Asegurar que esté dentro de límites seguros
+    boss.x = Math.max(
+      safeMargin,
+      Math.min(canvas.width - boss.width - safeMargin, centerX)
+    );
+    boss.y = Math.max(
+      safeMargin,
+      Math.min(canvas.height - boss.height - safeMargin, centerY)
+    );
+
+    boss.velocityX = 0;
+    boss.velocityY = 0;
+
+    console.log(
+      `🎯 Boss centrado en posición segura: (${Math.round(
+        boss.x
+      )}, ${Math.round(boss.y)})`
+    );
+
+    // Efecto visual
+    if (this.bossManager.ui) {
+      this.bossManager.ui.createParticleEffect(
+        boss.x + boss.width / 2,
+        boss.y + boss.height / 2,
+        "#00FF00",
+        50
+      );
+    }
   },
 
   // ======================================================

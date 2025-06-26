@@ -68,10 +68,23 @@ const BossPhases = {
   update() {
     if (!this.bossManager.active) return;
 
-    // 🔥 NUEVO: NO HACER NADA SI RED LINE ESTÁ FORZADO
-    if (this.redLineForceActive) {
-      console.log("🔴 Phases update BLOQUEADO - Red Line activo");
+    // 🔥 VERIFICACIÓN MEJORADA: Solo bloquear si Red Line está REALMENTE activo
+    if (this.bossManager.redline && this.bossManager.redline.phaseActive) {
+      // Solo mostrar log cada 60 frames (1 segundo) para no spam
+      if (window.getGameTime() % 60 === 0) {
+        console.log("🔴 Phases update pausado - Red Line actualmente activo");
+      }
       return;
+    }
+
+    // 🔥 NUEVO: Verificar si Red Line fue completado y limpiar
+    if (
+      this.bossManager.redline &&
+      this.bossManager.redline.redLineForceActive &&
+      !this.bossManager.redline.phaseActive
+    ) {
+      console.log("🔴 Red Line completado pero flag activo - limpiando");
+      this.bossManager.redline.redLineForceActive = false;
     }
 
     if (this.phaseActive) {

@@ -260,8 +260,159 @@ const BossMovement = {
     const canvas = window.getCanvas();
     const boss = this.bossManager.boss;
 
-    boss.x = Math.max(10, Math.min(canvas.width - boss.width - 10, boss.x));
-    boss.y = Math.max(60, Math.min(canvas.height - boss.height - 10, boss.y));
+    // 🔥 MÁRGENES SEGUROS PARA EVITAR ESQUINAS
+    const safeMargin = 80; // Distancia mínima de bordes
+
+    const oldX = boss.x;
+    const oldY = boss.y;
+
+    // Mantener dentro de límites seguros
+    boss.x = Math.max(
+      safeMargin,
+      Math.min(canvas.width - boss.width - safeMargin, boss.x)
+    );
+    boss.y = Math.max(
+      safeMargin,
+      Math.min(canvas.height - boss.height - safeMargin, boss.y)
+    );
+
+    // 🔥 DETECTAR SI SE PEGÓ EN UNA ESQUINA
+    if (this.isBossStuckInCorner(boss, canvas)) {
+      console.log("🚧 Boss detectado en esquina - reposicionando al centro");
+      this.repositionFromCorner(boss, canvas);
+    }
+
+    // 🔥 DETECTAR SI NO SE PUDO MOVER (pegado)
+    if (
+      oldX === boss.x &&
+      oldY === boss.y &&
+      this.movement.pattern === "hunting"
+    ) {
+      this.stuckCounter = (this.stuckCounter || 0) + 1;
+
+      if (this.stuckCounter > 30) {
+        // 30 frames pegado = 0.5 segundos
+        console.log("🚧 Boss pegado detectado - teletransporte de emergencia");
+        this.emergencyRepositioning(boss, canvas);
+        this.stuckCounter = 0;
+      }
+    } else {
+      this.stuckCounter = 0;
+    }
+  },
+
+  // 🔥 NUEVA FUNCIÓN: Detectar si está en esquina
+  isBossStuckInCorner(boss, canvas) {
+    const cornerThreshold = 120; // Distancia para considerar "esquina"
+
+    // Verificar las 4 esquinas
+    const isNearTopLeft = boss.x < cornerThreshold && boss.y < cornerThreshold;
+    const isNearTopRight =
+      boss.x > canvas.width - boss.width - cornerThreshold &&
+      boss.y < cornerThreshold;
+    const isNearBottomLeft =
+      boss.x < cornerThreshold &&
+      boss.y > canvas.height - boss.height - cornerThreshold;
+    const isNearBottomRight =
+      boss.x > canvas.width - boss.width - cornerThreshold &&
+      boss.y > canvas.height - boss.height - cornerThreshold;
+
+    return (
+      isNearTopLeft || isNearTopRight || isNearBottomLeft || isNearBottomRight
+    );
+  },
+
+  // 🔥 NUEVA FUNCIÓN: Reposicionar desde esquina
+  repositionFromCorner(boss, canvas) {
+    const centerX = canvas.width / 2 - boss.width / 2;
+    const centerY = canvas.height / 2 - boss.height / 2;
+
+    // Mover hacia el centro con un poco de aleatoriedad
+    const offsetX = (Math.random() - 0.5) * 200;
+    const offsetY = (Math.random() - 0.5) * 200;
+
+    boss.x = centerX + offsetX;
+    boss.y = centerY + offsetY;
+
+    // Asegurar que sigue dentro de límites
+    const safeMargin = 80;
+    boss.x = Math.max(
+      safeMargin,
+      Math.min(canvas.width - boss.width - safeMargin, boss.x)
+    );
+    boss.y = Math.max(
+      safeMargin,
+      Math.min(canvas.height - boss.height - safeMargin, boss.y)
+    );
+
+    // Efecto visual
+    if (this.bossManager.ui) {
+      this.bossManager.ui.createParticleEffect(
+        boss.x + boss.width / 2,
+        boss.y + boss.height / 2,
+        "#FFD700",
+        30
+      );
+    }
+
+    console.log(
+      `🎯 Boss reposicionado desde esquina a: (${Math.round(
+        boss.x
+      )}, ${Math.round(boss.y)})`
+    );
+  },
+
+  // 🔥 NUEVA FUNCIÓN: Reposicionamiento de emergencia
+  emergencyRepositioning(boss, canvas) {
+    console.log("🚨 REPOSICIONAMIENTO DE EMERGENCIA");
+
+    // Posiciones seguras predefinidas
+    const safePositions = [
+      { x: canvas.width * 0.5, y: canvas.height * 0.3 }, // Centro-arriba
+      { x: canvas.width * 0.3, y: canvas.height * 0.5 }, // Centro-izquierda
+      { x: canvas.width * 0.7, y: canvas.height * 0.5 }, // Centro-derecha
+      { x: canvas.width * 0.5, y: canvas.height * 0.7 }, // Centro-abajo
+      { x: canvas.width * 0.5, y: canvas.height * 0.5 }, // Centro exacto
+    ];
+
+    // Elegir posición aleatoria
+    const randomPos =
+      safePositions[Math.floor(Math.random() * safePositions.length)];
+
+    boss.x = randomPos.x - boss.width / 2;
+    boss.y = randomPos.y - boss.height / 2;
+
+    // Verificar límites finales
+    const safeMargin = 80;
+    boss.x = Math.max(
+      safeMargin,
+      Math.min(canvas.width - boss.width - safeMargin, boss.x)
+    );
+    boss.y = Math.max(
+      safeMargin,
+      Math.min(canvas.height - boss.height - safeMargin, boss.y)
+    );
+
+    // Reset velocidades
+    boss.velocityX = 0;
+    boss.velocityY = 0;
+
+    // Efecto visual dramático
+    if (this.bossManager.ui) {
+      this.bossManager.ui.createParticleEffect(
+        boss.x + boss.width / 2,
+        boss.y + boss.height / 2,
+        "#FF00FF",
+        60
+      );
+      this.bossManager.ui.showScreenMessage("📡 Boss reposicionado", "#FF00FF");
+    }
+
+    console.log(
+      `🚨 Boss reposicionado de emergencia a: (${Math.round(
+        boss.x
+      )}, ${Math.round(boss.y)})`
+    );
   },
 
   // ======================================================
