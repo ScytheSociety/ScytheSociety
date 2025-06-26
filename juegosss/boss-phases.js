@@ -316,40 +316,38 @@ const BossPhases = {
       timerElement.remove();
     }
 
-    this.phaseActive = false;
     const previousPhase = this.currentPhase;
+
+    // RESETEAR ESTADO DE FASE
+    this.phaseActive = false;
     this.currentPhase = "HUNTING";
     this.phaseTimer = 0;
 
-    // 🔥 BOSS VULNERABLE INMEDIATAMENTE después de fase
-    this.bossManager.isImmune = false;
-    this.bossManager.immunityTimer = 0;
+    // FORZAR BOSS VULNERABLE (excepto si viene de Yan Ken Po)
+    if (previousPhase !== "YANKENPO") {
+      this.bossManager.isImmune = false;
+      this.bossManager.immunityTimer = 0;
+      console.log("⚔️ Boss FORZADO vulnerable después de fase");
+    }
 
-    // 🔥 NUEVO: NO ACTIVAR HUNTING SI RED LINE ESTÁ ACTIVO
+    // NO activar hunting si Red Line está activo
     if (this.bossManager.redline && this.bossManager.redline.phaseActive) {
       console.log("🚫 NO se reactiva HUNTING - Red Line en curso");
-      if (this.bossManager.ui) {
-        this.bossManager.ui.showScreenMessage(
-          `✅ ${previousPhase} COMPLETADO - Red Line continúa`,
-          "#FFFF00"
-        );
-      }
       return;
     }
 
-    // 🔥 ACTIVAR HUNTING FLUIDO DESPUÉS DE 2 SEGUNDOS (solo si NO hay Red Line)
+    // REACTIVAR HUNTING DESPUÉS DE 1 SEGUNDO
     setTimeout(() => {
       if (this.bossManager.movement && this.currentPhase === "HUNTING") {
-        // Verificar de nuevo que Red Line no esté activo
-        if (
-          !this.bossManager.redline ||
-          !this.bossManager.redline.phaseActive
-        ) {
+        // Verificar que no haya otra fase activa
+        if (!this.phaseActive && !this.bossManager.redline?.phaseActive) {
+          this.bossManager.movement.enabled = true;
+          this.bossManager.movement.pattern = "hunting";
           this.bossManager.movement.enableFluidHunting();
           console.log("🏃 Boss ahora en modo HUNTING fluido");
         }
       }
-    }, 2000);
+    }, 1000);
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(

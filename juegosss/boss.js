@@ -231,14 +231,25 @@ const BossManager = {
     const currentPhase = this.phases?.getCurrentPhase() || "HUNTING";
     const isPhaseActive = this.phases?.isPhaseActive() || false;
 
-    // 🔥 YAN KEN PO SOLO AL 3% (NO AL 10%)
+    // Si hay una fase activa, no iniciar otra
+    if (isPhaseActive && currentPhase !== "HUNTING") {
+      return;
+    }
+
+    // Solo verificar umbrales si estamos en HUNTING
+    if (currentPhase !== "HUNTING") {
+      return;
+    }
+
+    // VERIFICAR UMBRALES EN ORDEN ESTRICTO
+    // YAN KEN PO - 3%
     if (healthPercentage <= 0.03 && !this.phases.phasesExecuted.YANKENPO) {
       console.log("🎮 VIDA 3% - INICIANDO YAN KEN PO");
       this.startYanKenPoPhase();
       return;
     }
 
-    // 🔥 RED LINE AL 10% → LUEGO HUNTING HASTA 3%
+    // RED LINE - 10%
     if (
       healthPercentage <= 0.1 &&
       healthPercentage > 0.03 &&
@@ -249,6 +260,7 @@ const BossManager = {
       return;
     }
 
+    // BULLETS - 25%
     if (
       healthPercentage <= 0.25 &&
       healthPercentage > 0.1 &&
@@ -259,6 +271,7 @@ const BossManager = {
       return;
     }
 
+    // MINES - 50%
     if (
       healthPercentage <= 0.5 &&
       healthPercentage > 0.25 &&
@@ -269,6 +282,7 @@ const BossManager = {
       return;
     }
 
+    // SUMMONING - 75%
     if (
       healthPercentage <= 0.75 &&
       healthPercentage > 0.5 &&
@@ -277,15 +291,6 @@ const BossManager = {
       console.log("⚔️ VIDA 75% - INICIANDO SUMMONING");
       this.startSummoningPhase();
       return;
-    }
-
-    // Solo hunting si no hay fase activa
-    if (
-      !isPhaseActive &&
-      currentPhase !== "HUNTING" &&
-      currentPhase !== "REDLINE"
-    ) {
-      this.enterHuntingMode();
     }
   },
 
@@ -790,12 +795,21 @@ const BossManager = {
   reset() {
     console.log("🔄 RESET COMPLETO del boss modular");
 
+    // FORZAR LIMPIEZA DE FLAGS CRÍTICOS
     this.active = false;
     this.boss = null;
     this.currentHealth = this.maxHealth;
     this.isImmune = false;
     this.immunityTimer = 0;
+    this.introductionPhase = false;
 
+    // Limpiar boss si existe
+    if (this.boss) {
+      this.boss.isStationary = false;
+      this.boss.isLocked = false;
+    }
+
+    // RESETEAR TODOS LOS SISTEMAS
     const systems = [
       this.movement,
       this.phases,
@@ -813,8 +827,19 @@ const BossManager = {
       }
     });
 
-    // DOUBLE CHECK: Asegurar que fases estén reseteadas
-    if (this.phases && this.phases.phasesExecuted) {
+    // FORZAR LIMPIEZA DE FLAGS ESPECIALES
+    if (this.redline) {
+      this.redline.phaseActive = false;
+      this.redline.redLineForceActive = false;
+      this.redline.redLineMoving = false;
+      this.redline.showingPreview = false;
+    }
+
+    if (this.phases) {
+      this.phases.phaseActive = false;
+      this.phases.currentPhase = "HUNTING";
+      this.phases.isRandomPhase = false;
+      this.phases.randomPhaseActive = false;
       this.phases.phasesExecuted = {
         SUMMONING: false,
         MINES: false,
@@ -824,9 +849,12 @@ const BossManager = {
       };
     }
 
-    console.log(
-      "✅ Boss modular completamente reseteado - Fases ejecutadas limpiadas"
-    );
+    if (this.movement) {
+      this.movement.enabled = false;
+      this.movement.pattern = "hunting";
+    }
+
+    console.log("✅ Boss modular COMPLETAMENTE reseteado");
   },
 
   // ======================================================

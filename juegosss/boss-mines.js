@@ -231,6 +231,11 @@ const BossMines = {
       // 🔥 MINA ESPECÍFICA DONDE ESTÁ EL JUGADOR AHORA
       this.spawnTargetedMine(playerPos);
 
+      // 25% de probabilidad de generar mina en L
+      if (Math.random() < 0.25) {
+        this.spawnCornerLMine();
+      }
+
       console.log(
         `💣 Boss teletransportado + minas globales spawneadas (${
           GameConfig.isMobile ? "MÓVIL" : "PC"
@@ -396,6 +401,84 @@ const BossMines = {
     }
 
     console.log(`💣 Campo de ${mineCount} minas estáticas DIRIGIDAS spawneado`);
+  },
+
+  spawnCornerLMine() {
+    const canvas = window.getCanvas();
+
+    // Definir las 4 esquinas con sus direcciones de explosión en L
+    const corners = [
+      {
+        x: 80,
+        y: 80,
+        name: "top-left",
+        explosionDirs: [
+          { x: 1, y: 0 },
+          { x: 0, y: 1 },
+        ], // Derecha y abajo
+      },
+      {
+        x: canvas.width - 120,
+        y: 80,
+        name: "top-right",
+        explosionDirs: [
+          { x: -1, y: 0 },
+          { x: 0, y: 1 },
+        ], // Izquierda y abajo
+      },
+      {
+        x: 80,
+        y: canvas.height - 120,
+        name: "bottom-left",
+        explosionDirs: [
+          { x: 1, y: 0 },
+          { x: 0, y: -1 },
+        ], // Derecha y arriba
+      },
+      {
+        x: canvas.width - 120,
+        y: canvas.height - 120,
+        name: "bottom-right",
+        explosionDirs: [
+          { x: -1, y: 0 },
+          { x: 0, y: -1 },
+        ], // Izquierda y arriba
+      },
+    ];
+
+    // Elegir esquina aleatoria
+    const corner = corners[Math.floor(Math.random() * corners.length)];
+
+    // Crear mina cuadrada especial
+    const lMine = {
+      x: corner.x,
+      y: corner.y,
+      width: this.mineConfig.size * 1.5, // Más grande
+      height: this.mineConfig.size * 1.5,
+      timer: 300, // 5 segundos
+      armed: true,
+      blinkTimer: 0,
+      blinkSpeed: 5,
+      dangerRadius: 200, // Radio más grande
+      showDangerZone: true,
+      warningPhase: false,
+      pulseIntensity: 0,
+      glowIntensity: 0.8,
+      isStatic: false,
+      type: "l-mine",
+      isSquare: true, // Para dibujarla cuadrada
+      corner: corner.name,
+      explosionDirs: corner.explosionDirs,
+      color: "#FF00FF", // Color púrpura para diferenciarla
+    };
+
+    this.mines.push(lMine);
+
+    console.log(`💣 Mina en L spawneada en esquina ${corner.name}`);
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage("💣 ¡MINA ESQUINA!", "#FF00FF");
+    }
   },
 
   // Función para evitar minas superpuestas
@@ -592,6 +675,13 @@ const BossMines = {
     const centerX = mine.x + mine.width / 2;
     const centerY = mine.y + mine.height / 2;
 
+    // NUEVO: Explosión especial para minas en L
+    if (mine.type === "l-mine") {
+      // Explosión en el centro
+      this.createLExplosion(mine);
+      return;
+    }
+
     // 🔥 EFECTOS DIFERENTES SEGÚN TIPO
     if (mine.isStatic) {
       // Minas estáticas: Explosión amarilla más intensa
@@ -622,6 +712,57 @@ const BossMines = {
         }, i * 100);
       }
     }
+  },
+
+  createLExplosion(mine) {
+    const centerX = mine.x + mine.width / 2;
+    const centerY = mine.y + mine.height / 2;
+
+    // Explosión central
+    this.bossManager.ui.createParticleEffect(centerX, centerY, "#FF00FF", 50);
+
+    // Explosiones en forma de L
+    const explosionDistance = 50; // Distancia entre explosiones
+    const explosionCount = 5; // Número de explosiones por dirección
+
+    mine.explosionDirs.forEach((dir, dirIndex) => {
+      for (let i = 1; i <= explosionCount; i++) {
+        setTimeout(() => {
+          const explosionX = centerX + dir.x * explosionDistance * i;
+          const explosionY = centerY + dir.y * explosionDistance * i;
+
+          // Crear explosión
+          this.bossManager.ui.createParticleEffect(
+            explosionX,
+            explosionY,
+            "#FF00FF",
+            30
+          );
+
+          // Verificar daño al jugador en cada explosión
+          const playerPos = Player.getPosition();
+          const playerSize = Player.getSize();
+          const playerCenterX = playerPos.x + playerSize.width / 2;
+          const playerCenterY = playerPos.y + playerSize.height / 2;
+
+          const distance = Math.sqrt(
+            Math.pow(playerCenterX - explosionX, 2) +
+              Math.pow(playerCenterY - explosionY, 2)
+          );
+
+          if (distance < 60) {
+            // Radio de daño
+            Player.takeDamage();
+            if (this.bossManager.ui) {
+              this.bossManager.ui.showScreenMessage(
+                "💥 ¡EXPLOSIÓN EN L!",
+                "#FF00FF"
+              );
+            }
+          }
+        }, i * 100 + dirIndex * 500); // Delay escalonado
+      }
+    });
   },
 
   // ======================================================

@@ -50,15 +50,23 @@ const BossMovement = {
 
   stopMovementAndCenter() {
     console.log("⏸️ Boss deteniéndose para fase especial");
+
+    // DESACTIVAR COMPLETAMENTE el movimiento
     this.movement.enabled = false;
     this.movement.pattern = "stationary";
 
+    // Centrar boss
     const canvas = window.getCanvas();
     const boss = this.bossManager.boss;
     boss.x = (canvas.width - boss.width) / 2;
     boss.y = (canvas.height - boss.height) / 2;
     boss.velocityX = 0;
     boss.velocityY = 0;
+
+    // MARCAR BOSS COMO ESTACIONARIO
+    boss.isStationary = true;
+
+    console.log("🛑 Boss centrado y marcado como estacionario");
   },
 
   enableTeleporting() {
@@ -108,18 +116,18 @@ const BossMovement = {
   update() {
     if (!this.bossManager.active) return;
 
-    // 🔥 VERIFICACIÓN 1: Boss marcado como estacionario
+    // VERIFICACIÓN 1: Boss marcado como estacionario
     if (this.bossManager.boss && this.bossManager.boss.isStationary) {
       console.log("🛑 Boss marcado como estacionario - NO MOVER");
       return;
     }
 
-    // 🔥 VERIFICACIÓN 2: Movimiento desactivado
+    // VERIFICACIÓN 2: Movimiento desactivado
     if (!this.movement.enabled) {
       return;
     }
 
-    // 🔥 VERIFICACIÓN 3: Solo hunting permite movimiento
+    // VERIFICACIÓN 3: Patrón debe ser hunting o teleporting
     if (
       this.movement.pattern !== "hunting" &&
       this.movement.pattern !== "teleporting"
@@ -127,17 +135,27 @@ const BossMovement = {
       return;
     }
 
-    // 🔥 VERIFICACIÓN 4: Fase actual del boss
-    const currentPhase = this.bossManager.phases
-      ? this.bossManager.phases.getCurrentPhase()
-      : "UNKNOWN";
+    // VERIFICACIÓN 4: No mover si hay una fase especial activa
+    const currentPhase =
+      this.bossManager.phases?.getCurrentPhase() || "UNKNOWN";
+    const isPhaseActive = this.bossManager.phases?.isPhaseActive() || false;
 
-    if (currentPhase !== "HUNTING" && this.movement.pattern === "hunting") {
-      console.log(`🛑 Boss en fase ${currentPhase} - NO debería moverse`);
+    // Lista de fases donde el boss NO debe moverse
+    const stationaryPhases = ["SUMMONING", "BULLETS", "REDLINE", "YANKENPO"];
+
+    if (stationaryPhases.includes(currentPhase) && isPhaseActive) {
+      console.log(`🛑 Boss en fase ${currentPhase} - NO debe moverse`);
+      this.movement.enabled = false;
       return;
     }
 
-    // 🔥 Solo ejecutar movimiento si pasa TODAS las verificaciones
+    // VERIFICACIÓN 5: Red Line activo
+    if (this.bossManager.redline && this.bossManager.redline.phaseActive) {
+      console.log("🛑 Red Line activo - Boss NO debe moverse");
+      return;
+    }
+
+    // Solo ejecutar movimiento si pasa TODAS las verificaciones
     switch (this.movement.pattern) {
       case "hunting":
         this.perfectHunting();
@@ -260,8 +278,8 @@ const BossMovement = {
     const canvas = window.getCanvas();
     const boss = this.bossManager.boss;
 
-    // 🔥 MÁRGENES SEGUROS PARA EVITAR ESQUINAS
-    const safeMargin = 80; // Distancia mínima de bordes
+    // MÁRGENES SEGUROS PARA EVITAR ESQUINAS
+    const safeMargin = 80;
 
     const oldX = boss.x;
     const oldY = boss.y;
@@ -276,28 +294,34 @@ const BossMovement = {
       Math.min(canvas.height - boss.height - safeMargin, boss.y)
     );
 
-    // 🔥 DETECTAR SI SE PEGÓ EN UNA ESQUINA
-    if (this.isBossStuckInCorner(boss, canvas)) {
-      console.log("🚧 Boss detectado en esquina - reposicionando al centro");
-      this.repositionFromCorner(boss, canvas);
-    }
+    // SOLO VERIFICAR REBOTE SI ESTÁ EN MODO TELEPORTING
+    if (this.movement.pattern === "teleporting") {
+      // Detectar si se pegó en una esquina
+      if (this.isBossStuckInCorner(boss, canvas)) {
+        console.log(
+          "🚧 Boss detectado en esquina durante teleport - reposicionando"
+        );
+        this.repositionFromCorner(boss, canvas);
+      }
 
-    // 🔥 DETECTAR SI NO SE PUDO MOVER (pegado)
-    if (
-      oldX === boss.x &&
-      oldY === boss.y &&
-      this.movement.pattern === "hunting"
-    ) {
-      this.stuckCounter = (this.stuckCounter || 0) + 1;
+      // Detectar si no se pudo mover (pegado)
+      if (oldX === boss.x && oldY === boss.y) {
+        this.stuckCounter = (this.stuckCounter || 0) + 1;
 
-      if (this.stuckCounter > 30) {
-        // 30 frames pegado = 0.5 segundos
-        console.log("🚧 Boss pegado detectado - teletransporte de emergencia");
-        this.emergencyRepositioning(boss, canvas);
+        if (this.stuckCounter > 30) {
+          // 0.5 segundos pegado
+          console.log("🚧 Boss pegado durante teleport - reposicionando");
+          this.emergencyRepositioning(boss, canvas);
+          this.stuckCounter = 0;
+        }
+      } else {
         this.stuckCounter = 0;
       }
-    } else {
-      this.stuckCounter = 0;
+    }
+    // EN MODO HUNTING NO HAY REBOTE - Solo seguir al jugador
+    else if (this.movement.pattern === "hunting") {
+      // No hacer nada especial, el boss sigue al jugador normalmente
+      // aunque esté en una pared
     }
   },
 
