@@ -715,52 +715,65 @@ const BossMines = {
   },
 
   createLExplosion(mine) {
+    const canvas = window.getCanvas();
     const centerX = mine.x + mine.width / 2;
     const centerY = mine.y + mine.height / 2;
 
     // Explosión central
     this.bossManager.ui.createParticleEffect(centerX, centerY, "#FF00FF", 50);
 
-    // Explosiones en forma de L
-    const explosionDistance = 50; // Distancia entre explosiones
-    const explosionCount = 5; // Número de explosiones por dirección
-
     mine.explosionDirs.forEach((dir, dirIndex) => {
-      for (let i = 1; i <= explosionCount; i++) {
-        setTimeout(() => {
-          const explosionX = centerX + dir.x * explosionDistance * i;
-          const explosionY = centerY + dir.y * explosionDistance * i;
+      let explosionX = centerX;
+      let explosionY = centerY;
+      let i = 1;
 
-          // Crear explosión
-          this.bossManager.ui.createParticleEffect(
-            explosionX,
-            explosionY,
-            "#FF00FF",
-            30
-          );
+      // Explosión continua hasta el borde
+      while (
+        explosionX > 0 &&
+        explosionX < canvas.width &&
+        explosionY > 0 &&
+        explosionY < canvas.height
+      ) {
+        explosionX += dir.x * 50; // Ajustar la distancia según sea necesario
+        explosionY += dir.y * 50;
 
-          // Verificar daño al jugador en cada explosión
-          const playerPos = Player.getPosition();
-          const playerSize = Player.getSize();
-          const playerCenterX = playerPos.x + playerSize.width / 2;
-          const playerCenterY = playerPos.y + playerSize.height / 2;
+        //Crear explosión solo si esta dentro del canvas
+        if (
+          explosionX > 0 &&
+          explosionX < canvas.width &&
+          explosionY > 0 &&
+          explosionY < canvas.height
+        ) {
+          setTimeout(() => {
+            this.bossManager.ui.createParticleEffect(
+              explosionX,
+              explosionY,
+              "#FF00FF",
+              30
+            );
 
-          const distance = Math.sqrt(
-            Math.pow(playerCenterX - explosionX, 2) +
-              Math.pow(playerCenterY - explosionY, 2)
-          );
-
-          if (distance < 60) {
-            // Radio de daño
-            Player.takeDamage();
-            if (this.bossManager.ui) {
-              this.bossManager.ui.showScreenMessage(
-                "💥 ¡EXPLOSIÓN EN L!",
-                "#FF00FF"
-              );
+            // Verificar daño al jugador en cada explosión
+            const playerPos = Player.getPosition();
+            const playerSize = Player.getSize();
+            const playerCenterX = playerPos.x + playerSize.width / 2;
+            const playerCenterY = playerPos.y + playerSize.height / 2;
+            const distance = Math.sqrt(
+              Math.pow(playerCenterX - explosionX, 2) +
+                Math.pow(playerCenterY - explosionY, 2)
+            );
+            if (distance < 60) {
+              // Radio de daño
+              Player.takeDamage();
+              if (this.bossManager.ui) {
+                this.bossManager.ui.showScreenMessage(
+                  "💥 ¡EXPLOSIÓN EN L!",
+                  "#FF00FF"
+                );
+              }
             }
-          }
-        }, i * 100 + dirIndex * 500); // Delay escalonado
+          }, i * 100 + dirIndex * 500); // Delay escalonado
+        }
+        i++;
       }
     });
   },
