@@ -222,6 +222,11 @@ const BossManager = {
   executePhaseSequence() {
     if (!this.active || !this.boss || this.introductionPhase) return;
 
+    // NUEVO: Si Red Line está activo, NO hacer nada más
+    if (this.redline && this.redline.phaseActive) {
+      return;
+    }
+
     // NO interferir con fases aleatorias del Yan Ken Po
     if (this.phases?.randomPhaseActive) {
       return;

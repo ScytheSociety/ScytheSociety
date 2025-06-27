@@ -521,20 +521,26 @@ const BossMovement = {
   // ======================================================
 
   adjustForPhase(phase) {
+    console.log(`🎯 Ajustando movimiento para fase: ${phase}`);
+
     switch (phase) {
+      case "HUNTING":
+        this.enableFluidHunting();
+        break;
+
       case "SUMMONING":
       case "BULLETS":
       case "REDLINE":
       case "YANKENPO":
         this.stopMovementAndCenter();
         break;
+
       case "MINES":
         this.enableTeleporting();
         break;
-      case "HUNTING":
+
       default:
-        this.enableFluidHunting();
-        break;
+        console.log(`⚠️ Fase desconocida: ${phase}`);
     }
   },
 

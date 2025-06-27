@@ -153,7 +153,7 @@ const BossMines = {
     }, 5000);
 
     // 🔥 USAR CONFIGURACIÓN DINÁMICA
-    const duration = GameConfig.BOSS_PHASE_CONFIG.MINES_DURATION * (1000 / 60); // Convertir frames a ms
+    const duration = (GameConfig.BOSS_PHASE_CONFIG.MINES_DURATION * 1000) / 60;
     console.log(`💣 Fase de minas durará ${duration / 1000}s`);
 
     setTimeout(() => {
@@ -406,75 +406,71 @@ const BossMines = {
   spawnCornerLMine() {
     const canvas = window.getCanvas();
 
-    // Definir las 4 esquinas con sus direcciones de explosión en L
+    // Definir las 4 esquinas con sus direcciones de explosión
     const corners = [
       {
-        x: 80,
-        y: 80,
+        x: 60,
+        y: 60,
         name: "top-left",
-        explosionDirs: [
-          { x: 1, y: 0 },
-          { x: 0, y: 1 },
-        ], // Derecha y abajo
+        explosionPaths: [
+          { dx: 1, dy: 0, length: 8 }, // Derecha
+          { dx: 0, dy: 1, length: 8 }, // Abajo
+        ],
       },
       {
-        x: canvas.width - 120,
-        y: 80,
+        x: canvas.width - 100,
+        y: 60,
         name: "top-right",
-        explosionDirs: [
-          { x: -1, y: 0 },
-          { x: 0, y: 1 },
-        ], // Izquierda y abajo
+        explosionPaths: [
+          { dx: -1, dy: 0, length: 8 }, // Izquierda
+          { dx: 0, dy: 1, length: 8 }, // Abajo
+        ],
       },
       {
-        x: 80,
-        y: canvas.height - 120,
+        x: 60,
+        y: canvas.height - 100,
         name: "bottom-left",
-        explosionDirs: [
-          { x: 1, y: 0 },
-          { x: 0, y: -1 },
-        ], // Derecha y arriba
+        explosionPaths: [
+          { dx: 1, dy: 0, length: 8 }, // Derecha
+          { dx: 0, dy: -1, length: 8 }, // Arriba
+        ],
       },
       {
-        x: canvas.width - 120,
-        y: canvas.height - 120,
+        x: canvas.width - 100,
+        y: canvas.height - 100,
         name: "bottom-right",
-        explosionDirs: [
-          { x: -1, y: 0 },
-          { x: 0, y: -1 },
-        ], // Izquierda y arriba
+        explosionPaths: [
+          { dx: -1, dy: 0, length: 8 }, // Izquierda
+          { dx: 0, dy: -1, length: 8 }, // Arriba
+        ],
       },
     ];
 
-    // Elegir esquina aleatoria
     const corner = corners[Math.floor(Math.random() * corners.length)];
 
-    // Crear mina cuadrada especial
     const lMine = {
       x: corner.x,
       y: corner.y,
-      width: this.mineConfig.size * 1.5, // Más grande
-      height: this.mineConfig.size * 1.5,
+      width: 40, // Tamaño fijo cuadrado pequeño
+      height: 40, // Tamaño fijo cuadrado pequeño
       timer: 300, // 5 segundos
       armed: true,
       blinkTimer: 0,
       blinkSpeed: 5,
-      dangerRadius: 200, // Radio más grande
-      showDangerZone: true,
+      dangerRadius: 0, // Sin radio circular
+      showDangerZone: false,
       warningPhase: false,
-      pulseIntensity: 0,
-      glowIntensity: 0.8,
       isStatic: false,
       type: "l-mine",
-      isSquare: true, // Para dibujarla cuadrada
+      isSquare: true,
       corner: corner.name,
-      explosionDirs: corner.explosionDirs,
-      color: "#FF00FF", // Color púrpura para diferenciarla
+      explosionPaths: corner.explosionPaths,
+      color: "#FF00FF",
     };
 
     this.mines.push(lMine);
 
-    console.log(`💣 Mina en L spawneada en esquina ${corner.name}`);
+    console.log(`💣 Mina cuadrada en L spawneada en ${corner.name}`);
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage("💣 ¡MINA ESQUINA!", "#FF00FF");
@@ -715,72 +711,81 @@ const BossMines = {
   },
 
   createLExplosion(mine) {
-    const canvas = window.getCanvas();
-    const centerX = mine.x + mine.width / 2;
-    const centerY = mine.y + mine.height / 2;
+    const startX = mine.x + mine.width / 2;
+    const startY = mine.y + mine.height / 2;
 
-    // Explosión central
-    this.bossManager.ui.createParticleEffect(centerX, centerY, "#FF00FF", 50);
+    // Explosión central primero
+    this.bossManager.ui.createParticleEffect(startX, startY, "#FF00FF", 30);
 
-    mine.explosionDirs.forEach((dir, dirIndex) => {
-      let explosionX = centerX;
-      let explosionY = centerY;
-      let i = 1;
+    // Crear las líneas de explosión
+    mine.explosionPaths.forEach((path, pathIndex) => {
+      // Disparar una línea de explosiones
+      for (let i = 0; i <= path.length; i++) {
+        setTimeout(() => {
+          const explosionX = startX + path.dx * i * 60; // 60px entre explosiones
+          const explosionY = startY + path.dy * i * 60;
 
-      // Explosión continua hasta el borde
-      while (
-        explosionX > 0 &&
-        explosionX < canvas.width &&
-        explosionY > 0 &&
-        explosionY < canvas.height
-      ) {
-        explosionX += dir.x * 50; // Ajustar la distancia según sea necesario
-        explosionY += dir.y * 50;
+          // Crear explosión visual
+          this.bossManager.ui.createParticleEffect(
+            explosionX,
+            explosionY,
+            "#FF00FF",
+            25
+          );
 
-        //Crear explosión solo si esta dentro del canvas
-        if (
-          explosionX > 0 &&
-          explosionX < canvas.width &&
-          explosionY > 0 &&
-          explosionY < canvas.height
-        ) {
-          setTimeout(() => {
-            this.bossManager.ui.createParticleEffect(
-              explosionX,
-              explosionY,
-              "#FF00FF",
-              30
-            );
-
-            // Verificar daño al jugador en cada explosión
-            const playerPos = Player.getPosition();
-            const playerSize = Player.getSize();
-            const playerCenterX = playerPos.x + playerSize.width / 2;
-            const playerCenterY = playerPos.y + playerSize.height / 2;
-            const distance = Math.sqrt(
-              Math.pow(playerCenterX - explosionX, 2) +
-                Math.pow(playerCenterY - explosionY, 2)
-            );
-            if (distance < 60) {
-              // Radio de daño
-              Player.takeDamage();
-              if (this.bossManager.ui) {
-                this.bossManager.ui.showScreenMessage(
-                  "💥 ¡EXPLOSIÓN EN L!",
-                  "#FF00FF"
-                );
-              }
-            }
-          }, i * 100 + dirIndex * 500); // Delay escalonado
-        }
-        i++;
+          // Crear zona de daño que dura un momento
+          this.createDamageZone(explosionX, explosionY, 50, 500); // 500ms de duración
+        }, i * 100); // 100ms entre cada explosión de la línea
       }
     });
+
+    if (this.bossManager.ui) {
+      this.bossManager.ui.showScreenMessage("💥 ¡EXPLOSIÓN EN L!", "#FF00FF");
+    }
+  },
+
+  // Nueva función para crear zonas de daño temporales
+  createDamageZone(x, y, radius, duration) {
+    const damageZone = {
+      x: x,
+      y: y,
+      radius: radius,
+      duration: duration,
+      startTime: Date.now(),
+    };
+
+    // Verificar daño inmediatamente
+    const checkDamage = () => {
+      const playerPos = Player.getPosition();
+      const playerSize = Player.getSize();
+      const playerCenterX = playerPos.x + playerSize.width / 2;
+      const playerCenterY = playerPos.y + playerSize.height / 2;
+
+      const distance = Math.sqrt(
+        Math.pow(playerCenterX - x, 2) + Math.pow(playerCenterY - y, 2)
+      );
+
+      if (distance < radius) {
+        Player.takeDamage();
+        return true; // Daño aplicado
+      }
+      return false;
+    };
+
+    // Verificar daño varias veces durante la duración
+    let checks = 0;
+    const damageInterval = setInterval(() => {
+      checks++;
+
+      if (checkDamage() || checks * 100 >= duration) {
+        clearInterval(damageInterval);
+      }
+    }, 100);
   },
 
   // ======================================================
   // RENDERIZADO MEJORADO
-  // ======================================================
+  // ===================st duration = Game===================================
 
   draw(ctx) {
     for (const mine of this.mines) {
@@ -803,6 +808,35 @@ const BossMines = {
 
     if (mine.isStatic) {
       this.drawStaticIndicator(ctx, mine);
+    }
+
+    // Dibujo especial para minas cuadradas
+    if (mine.isSquare) {
+      ctx.save();
+
+      // Dibujar cuadrado en lugar de círculo
+      ctx.fillStyle = mine.color || "#FF00FF";
+      ctx.fillRect(mine.x, mine.y, mine.width, mine.height);
+
+      // Borde blanco
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(mine.x, mine.y, mine.width, mine.height);
+
+      // Símbolo de advertencia
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 20px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("L", mine.x + mine.width / 2, mine.y + mine.height / 2 + 7);
+
+      // Indicador de tiempo
+      const timeLeft = Math.ceil(mine.timer / 60);
+      ctx.fillStyle = "#FFFF00";
+      ctx.font = "bold 14px Arial";
+      ctx.fillText(timeLeft, mine.x + mine.width / 2, mine.y - 5);
+
+      ctx.restore();
+      return; // No dibujar el resto
     }
 
     ctx.restore();
@@ -1128,15 +1162,13 @@ const BossMines = {
   endMineSequence() {
     console.log("💣 Secuencia de minas terminada (90s completados)");
 
-    // Usar limpieza unificada
-    const success = this.performCleanup("sequence_end");
-    if (!success) {
-      console.warn("💣 ⚠️ Falló la limpieza al final de secuencia");
-      return;
-    }
+    // Limpiar minas
+    this.performCleanup("sequence_end");
 
-    // Lógica específica del final de secuencia
-    this.handleSequenceEndLogic();
+    // SIEMPRE llamar a endCurrentPhase del sistema de fases
+    if (this.bossManager.phases) {
+      this.bossManager.phases.endCurrentPhase();
+    }
   },
 
   handleSequenceEndLogic() {

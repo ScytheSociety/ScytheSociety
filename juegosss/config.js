@@ -196,7 +196,6 @@ const GameConfig = {
   },
 
   // REEMPLAZAR BOSS_PHASE_CONFIG
-  // REEMPLAZAR BOSS_PHASE_CONFIG
   BOSS_PHASE_CONFIG: {
     // Tiempos en frames (60fps) - SECUENCIA CORREGIDA
     INTRO_DURATION: 600, // 10 segundos - Boss inmune en centro
@@ -239,6 +238,19 @@ const GameConfig = {
       HUNTING: "👹 ¡A la caza!",
       YANKENPO_FINAL: "💀 Solo Yan Ken Po puede matarlo",
       RANDOM_PHASE: "🎲 Fase aleatoria activada",
+    },
+
+    // Dentro de BOSS_PHASE_CONFIG, agregar:
+    getDurationInMs(phase) {
+      const durations = {
+        SUMMONING: this.SUMMONING_DURATION,
+        MINES: this.MINES_DURATION,
+        BULLETS: this.BULLETS_DURATION,
+        INTRO: this.INTRO_DURATION,
+      };
+
+      const frames = durations[phase] || 0;
+      return (frames * 1000) / 60; // Convertir frames a milisegundos
     },
   },
 

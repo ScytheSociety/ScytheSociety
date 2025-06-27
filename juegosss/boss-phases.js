@@ -240,7 +240,7 @@ const BossPhases = {
   // ======================================================
 
   startSummoningSequence() {
-    console.log("⚔️ === INICIANDO SECUENCIA DE INVOCACIÓN (60s) ===");
+    console.log("⚔️ === INICIANDO SECUENCIA DE INVOCACIÓN ===");
 
     // Limpiar cualquier timeout previo
     if (this.summoningTimeouts) {
@@ -248,22 +248,21 @@ const BossPhases = {
     }
     this.summoningTimeouts = [];
 
-    // 🔥 OLEADAS CADA 8 SEGUNDOS DURANTE 60 SEGUNDOS
+    // 🔥 USAR CONFIGURACIÓN CENTRAL
+    const durationInMs =
+      (GameConfig.BOSS_PHASE_CONFIG.SUMMONING_DURATION * 1000) / 60; // Convertir frames a ms
     const waveInterval = 8000; // 8 segundos entre oleadas
-    const totalDuration = 60000; // 60 segundos total
-    const waveCount = Math.floor(totalDuration / waveInterval); // 7-8 oleadas
+    const waveCount = Math.floor(durationInMs / waveInterval);
 
+    console.log(`⚔️ Duración desde config: ${durationInMs / 1000}s`);
     console.log(
-      `⚔️ Programando ${waveCount} oleadas cada ${
-        waveInterval / 1000
-      }s durante ${totalDuration / 1000}s`
+      `⚔️ Programando ${waveCount} oleadas cada ${waveInterval / 1000}s`
     );
 
     for (let wave = 0; wave < waveCount; wave++) {
       const timeout = setTimeout(() => {
         if (this.currentPhase === "SUMMONING" && this.phaseActive) {
-          // 🔥 CANTIDAD CRECIENTE DE ENEMIGOS POR OLEADA
-          const enemyCount = 3 + Math.floor(wave / 2); // Empieza con 3, sube gradualmente
+          const enemyCount = 3 + Math.floor(wave / 2);
           this.summonEnemies(enemyCount);
 
           console.log(
@@ -284,15 +283,20 @@ const BossPhases = {
       this.summoningTimeouts.push(timeout);
     }
 
-    // 🔥 MENSAJE INICIAL
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        "⚔️ FASE DE INVOCACIÓN (60s)",
+        `⚔️ FASE DE INVOCACIÓN (${durationInMs / 1000}s)`,
         "#FF0000"
       );
     }
 
-    console.log("⚔️ Secuencia de invocación programada correctamente");
+    // 🔥 USAR DURACIÓN DE CONFIG
+    setTimeout(() => {
+      if (this.currentPhase === "SUMMONING") {
+        console.log("⚔️ Tiempo de invocación completado - terminando fase");
+        this.endCurrentPhase();
+      }
+    }, durationInMs);
   },
 
   // ======================================================
@@ -304,7 +308,7 @@ const BossPhases = {
       `✅ Terminando fase: ${this.currentPhase} - VOLVIENDO A HUNTING`
     );
 
-    // Limpiar timeouts de invocación
+    // Limpiar timeouts de invocación si existen
     if (this.summoningTimeouts) {
       this.summoningTimeouts.forEach((timeout) => clearTimeout(timeout));
       this.summoningTimeouts = [];
@@ -318,45 +322,37 @@ const BossPhases = {
 
     const previousPhase = this.currentPhase;
 
-    // RESETEAR ESTADO DE FASE
+    // SIMPLE: Resetear estado
     this.phaseActive = false;
     this.currentPhase = "HUNTING";
     this.phaseTimer = 0;
 
-    // FORZAR BOSS VULNERABLE (excepto si viene de Yan Ken Po)
+    // SIMPLE: Boss vulnerable (excepto Yan Ken Po)
     if (previousPhase !== "YANKENPO") {
       this.bossManager.isImmune = false;
       this.bossManager.immunityTimer = 0;
-      console.log("⚔️ Boss FORZADO vulnerable después de fase");
     }
 
-    // NO activar hunting si Red Line está activo
-    if (this.bossManager.redline && this.bossManager.redline.phaseActive) {
-      console.log("🚫 NO se reactiva HUNTING - Red Line en curso");
-      return;
+    // SIMPLE: Desbloquear boss
+    if (this.bossManager.boss) {
+      this.bossManager.boss.isStationary = false;
     }
 
-    // REACTIVAR HUNTING DESPUÉS DE 1 SEGUNDO
-    setTimeout(() => {
-      if (this.bossManager.movement && this.currentPhase === "HUNTING") {
-        // Verificar que no haya otra fase activa
-        if (!this.phaseActive && !this.bossManager.redline?.phaseActive) {
-          this.bossManager.movement.enabled = true;
-          this.bossManager.movement.pattern = "hunting";
-          this.bossManager.movement.enableFluidHunting();
-          console.log("🏃 Boss ahora en modo HUNTING fluido");
-        }
-      }
-    }, 1000);
+    // SIMPLE: Activar movimiento HUNTING inmediatamente
+    if (this.bossManager.movement) {
+      this.bossManager.movement.enabled = true;
+      this.bossManager.movement.pattern = "hunting";
+      this.bossManager.movement.enableFluidHunting();
+    }
 
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
-        `✅ ${previousPhase} COMPLETADO - Boss vulnerable`,
+        `✅ ${previousPhase} COMPLETADO - Boss vulnerable y cazando`,
         "#00FF00"
       );
     }
 
-    console.log(`🏃 Transición completa: ${previousPhase} → HUNTING`);
+    console.log(`✅ ${previousPhase} → HUNTING activado`);
   },
 
   notifyPhaseChange(newPhase) {

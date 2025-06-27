@@ -161,7 +161,7 @@ const BossBullets = {
     }
 
     const duration =
-      GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION * (1000 / 60);
+      (GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION * 1000) / 60;
     console.log(
       `🌟 === INICIANDO FASE TOUHOU (${duration / 1000} SEGUNDOS) ===`
     );
@@ -430,46 +430,20 @@ const BossBullets = {
   // ======================================================
 
   endBulletPhase() {
-    console.log("🌟 Terminando fase Touhou (90s completados)");
+    console.log("🌟 Terminando fase Touhou (120s completados)");
 
     this.patternActive = false;
     this.cleanup();
 
-    // 🔥 LIBERAR AL BOSS DE RESTRICCIONES
+    // Liberar boss
     if (this.bossManager.boss) {
       this.bossManager.boss.isStationary = false;
-      console.log("🔓 Boss liberado de restricciones");
     }
 
-    // 🔥 BOSS VULNERABLE INMEDIATAMENTE Y FORZADO
-    this.bossManager.isImmune = false;
-    this.bossManager.immunityTimer = 0;
-    console.log("⚔️ Boss FORZADO vulnerable después de Touhou");
-
-    if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage("⚔️ ¡BOSS VULNERABLE!", "#00FF00");
-    }
-
-    if (this.bossManager.comments) {
-      this.bossManager.comments.sayComment("¡Fase Touhou completada!");
-    }
-
-    // 🔥 MARCAR FASE COMO COMPLETADA en el sistema de fases
+    // SIEMPRE llamar a endCurrentPhase del sistema de fases
     if (this.bossManager.phases) {
-      this.bossManager.phases.phaseActive = false;
-      this.bossManager.phases.currentPhase = "HUNTING";
-      console.log("🔄 Fase cambiada a HUNTING en sistema de fases");
+      this.bossManager.phases.endCurrentPhase();
     }
-
-    // 🔥 REACTIVAR HUNTING INMEDIATAMENTE (no esperar)
-    if (this.bossManager.movement) {
-      this.bossManager.movement.enabled = true;
-      this.bossManager.movement.pattern = "hunting";
-      this.bossManager.movement.enableFluidHunting();
-      console.log("🏃 Boss reactivado INMEDIATAMENTE en modo HUNTING");
-    }
-
-    console.log("✅ Transición Touhou → HUNTING completada");
   },
 
   // ======================================================
