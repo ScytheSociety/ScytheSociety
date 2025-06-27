@@ -114,48 +114,25 @@ const BossMovement = {
   // ======================================================
 
   update() {
-    if (!this.bossManager.active) return;
+    if (!this.bossManager.active || !this.bossManager.boss) return;
 
-    // VERIFICACIÓN 1: Boss marcado como estacionario
-    if (this.bossManager.boss && this.bossManager.boss.isStationary) {
-      console.log("🛑 Boss marcado como estacionario - NO MOVER");
-      return;
-    }
+    // Si el boss está marcado como estacionario, no mover
+    if (this.bossManager.boss.isStationary) return;
 
-    // VERIFICACIÓN 2: Movimiento desactivado
-    if (!this.movement.enabled) {
-      return;
-    }
+    // Si el movimiento está desactivado, no mover
+    if (!this.movement.enabled) return;
 
-    // VERIFICACIÓN 3: Patrón debe ser hunting o teleporting
-    if (
-      this.movement.pattern !== "hunting" &&
-      this.movement.pattern !== "teleporting"
-    ) {
-      return;
-    }
-
-    // VERIFICACIÓN 4: No mover si hay una fase especial activa
+    // No mover durante fases especiales
     const currentPhase =
       this.bossManager.phases?.getCurrentPhase() || "UNKNOWN";
     const isPhaseActive = this.bossManager.phases?.isPhaseActive() || false;
 
-    // Lista de fases donde el boss NO debe moverse
-    const stationaryPhases = ["SUMMONING", "BULLETS", "REDLINE", "YANKENPO"];
+    if (isPhaseActive && currentPhase !== "HUNTING") return;
 
-    if (stationaryPhases.includes(currentPhase) && isPhaseActive) {
-      console.log(`🛑 Boss en fase ${currentPhase} - NO debe moverse`);
-      this.movement.enabled = false;
-      return;
-    }
+    // No mover durante Red Line
+    if (this.bossManager.redline?.phaseActive) return;
 
-    // VERIFICACIÓN 5: Red Line activo
-    if (this.bossManager.redline && this.bossManager.redline.phaseActive) {
-      console.log("🛑 Red Line activo - Boss NO debe moverse");
-      return;
-    }
-
-    // Solo ejecutar movimiento si pasa TODAS las verificaciones
+    // Ejecutar el patrón de movimiento actual
     switch (this.movement.pattern) {
       case "hunting":
         this.perfectHunting();

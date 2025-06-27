@@ -499,62 +499,45 @@ const BossRedLine = {
   },
 
   decideNextAction() {
-    const healthPercentage =
-      this.bossManager.currentHealth / this.bossManager.maxHealth;
-
     console.log(`🔴 Dibujo ${this.cycleCount}/${this.maxCycles} completado`);
 
-    // 🔥 SI COMPLETÓ LOS 10 DIBUJOS → TERMINAR Y SER VULNERABLE
+    // Si completó los 10 dibujos - terminar y volver a HUNTING
     if (this.cycleCount >= this.maxCycles) {
       console.log("🔄 *** 10 DIBUJOS DE RED LINE COMPLETADOS ***");
-      console.log(
-        "🏃 TERMINANDO RED LINE - Boss ahora VULNERABLE y en HUNTING"
-      );
 
-      // 🔥 TERMINAR COMPLETAMENTE RED LINE
-      this.endPhase();
+      // Primero terminar Red Line completamente
+      this.phaseActive = false;
 
-      // 🔥 FORZAR DESBLOQUEO INMEDIATO
+      // Luego desbloquear el boss
+      if (this.bossManager && this.bossManager.phases) {
+        this.bossManager.phases.redLineForceActive = false;
+        this.bossManager.phases.endCurrentPhase();
+      }
+
+      // Hacer al boss vulnerable
+      if (this.bossManager) {
+        this.bossManager.isImmune = false;
+        this.bossManager.immunityTimer = 0;
+      }
+
+      // Activar hunting después de pequeño delay
       setTimeout(() => {
-        if (this.bossManager) {
-          // Boss vulnerable
-          this.bossManager.isImmune = false;
-          this.bossManager.immunityTimer = 0;
-          console.log("⚔️ Boss FORZADO vulnerable después de 10 dibujos");
-
-          // 🔥 FORZAR SISTEMA DE FASES A HUNTING
-          if (this.bossManager.phases) {
-            this.bossManager.phases.phaseActive = false;
-            this.bossManager.phases.currentPhase = "HUNTING";
-            this.bossManager.phases.redLineForceActive = false; // 🔥 CRÍTICO
-            console.log("🔄 Fases FORZADAS a HUNTING");
-          }
-
-          // 🔥 CENTRAR BOSS Y LUEGO ACTIVAR HUNTING
-          this.centerBossBeforeHunting();
-
-          // 🔥 ACTIVAR HUNTING DESPUÉS DE 1 SEGUNDO
-          setTimeout(() => {
-            if (this.bossManager.movement) {
-              this.bossManager.movement.enabled = true;
-              this.bossManager.movement.pattern = "hunting";
-              this.bossManager.movement.enableFluidHunting();
-              console.log("🏃 Boss ACTIVADO en modo HUNTING fluido");
-            }
-          }, 1000);
-
-          if (this.bossManager.ui) {
-            this.bossManager.ui.showScreenMessage(
-              "⚔️ ¡RED LINE COMPLETADO! Boss vulnerable",
-              "#00FF00"
-            );
-          }
+        if (this.bossManager && this.bossManager.movement) {
+          this.bossManager.movement.enableFluidHunting();
         }
-      }, 500);
+
+        if (this.bossManager && this.bossManager.ui) {
+          this.bossManager.ui.showScreenMessage(
+            "⚔️ ¡RED LINE COMPLETADO! Boss vulnerable",
+            "#00FF00"
+          );
+        }
+      }, 1000);
+
       return;
     }
 
-    // 🔥 CONTINUAR CON OTRO DIBUJO - MANTENER INMUNE
+    // Continuar con otro dibujo - mantener inmune
     console.log(
       `🔄 Continuando dibujo ${this.cycleCount + 1}/${this.maxCycles}`
     );
@@ -1017,12 +1000,10 @@ const BossRedLine = {
     this.showingPreview = false;
     this.redLinePath = [];
     this.redLineIndex = 0;
-    this.cycleCount = 0;
     this.gridLines = [];
 
-    // 🔥 NUEVO: RESETEAR FLAG FORZADO
+    // Asegurarse de que redLineForceActive esté apagado
     this.redLineForceActive = false;
-    console.log("🔴 redLineForceActive RESETEADO en cleanup");
 
     // Restaurar velocidad del jugador
     if (window.Player && Player.restoreNormalSpeed) {

@@ -1163,9 +1163,9 @@ const BossMines = {
     console.log("💣 Secuencia de minas terminada (90s completados)");
 
     // Limpiar minas
-    this.performCleanup("sequence_end");
+    this.cleanup();
 
-    // SIEMPRE llamar a endCurrentPhase del sistema de fases
+    // Volver a fase HUNTING a través del sistema de fases
     if (this.bossManager.phases) {
       this.bossManager.phases.endCurrentPhase();
     }
@@ -1212,7 +1212,27 @@ const BossMines = {
 
   cleanup() {
     console.log("🧹 Limpiando sistema de minas");
-    return this.performCleanup("standard");
+
+    // 1. Detener todos los intervalos
+    if (this.teleportInterval) {
+      clearInterval(this.teleportInterval);
+      this.teleportInterval = null;
+    }
+
+    if (this.staticMineInterval) {
+      clearInterval(this.staticMineInterval);
+      this.staticMineInterval = null;
+    }
+
+    // 2. Limpiar todas las minas
+    this.mines = [];
+
+    // 3. Resetear estado
+    this.miningPhase = false;
+    this.sequenceActive = false;
+
+    console.log("✅ Sistema de minas completamente limpiado");
+    return true;
   },
 
   reset() {

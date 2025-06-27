@@ -169,7 +169,7 @@ const BossBullets = {
     this.patternActive = true;
     this.currentPatternIndex = 0;
 
-    // 🔥 BOSS INMÓVIL GARANTIZADO
+    // Asegurar que el boss esté inmóvil
     this.forceBossStationary();
 
     if (this.bossManager.ui) {
@@ -179,13 +179,13 @@ const BossBullets = {
       );
     }
 
-    // SOLO 3 patrones cada 30 segundos
+    // Solo 3 patrones cada 30 segundos
     this.executeSimplePatternSequence();
 
     // Iniciar spawn de escudos
     this.startShieldSpawning();
 
-    // Terminar después de 90 segundos
+    // Terminar después del tiempo configurado
     setTimeout(() => {
       this.endBulletPhase();
     }, duration);
@@ -430,7 +430,7 @@ const BossBullets = {
   // ======================================================
 
   endBulletPhase() {
-    console.log("🌟 Terminando fase Touhou (120s completados)");
+    console.log("🌟 Terminando fase Touhou");
 
     this.patternActive = false;
     this.cleanup();
@@ -440,7 +440,7 @@ const BossBullets = {
       this.bossManager.boss.isStationary = false;
     }
 
-    // SIEMPRE llamar a endCurrentPhase del sistema de fases
+    // Volver a HUNTING a través del sistema de fases
     if (this.bossManager.phases) {
       this.bossManager.phases.endCurrentPhase();
     }

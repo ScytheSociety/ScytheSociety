@@ -12,8 +12,8 @@ const BossManager = {
   active: false,
 
   // Estadísticas básicas
-  maxHealth: 100,
-  currentHealth: 100,
+  maxHealth: GameConfig.BOSS_CONFIG.health || 500,
+  currentHealth: GameConfig.BOSS_CONFIG.health || 500,
 
   // Sistemas modulares
   movement: null,
@@ -34,7 +34,7 @@ const BossManager = {
   // INICIALIZACIÓN
   // ======================================================
 
-  async init() {
+  init() {
     console.log("👹 === INICIALIZANDO BOSS MODULAR ===");
 
     this.loadModules();
@@ -64,13 +64,10 @@ const BossManager = {
     const canvas = window.getCanvas();
     const config = GameConfig.BOSS_CONFIG;
 
-    // 🔥 TAMAÑO RESPONSIVO DEL BOSS
+    // Tamaño responsivo
     const screenScale = Math.min(canvas.width, canvas.height) / 800;
     const mobileScale = GameConfig.isMobile ? 0.8 : 1.0;
-    const bossSize = Math.max(
-      80,
-      config.size * 1.5 * screenScale * mobileScale
-    );
+    const bossSize = Math.max(80, config.size * screenScale * mobileScale);
 
     this.boss = {
       x: canvas.width / 2 - bossSize / 2,
@@ -81,15 +78,12 @@ const BossManager = {
       velocityY: 0,
       color: "#8B0000",
       glowIntensity: 0,
-      moveSpeed: config.speed * 1.5 * (GameConfig.isMobile ? 0.8 : 1.0),
+      moveSpeed: config.speed * (GameConfig.isMobile ? 0.8 : 1.0),
       aggressionLevel: 1.0,
+      isStationary: false,
     };
 
-    console.log(
-      `👹 Boss creado responsivo: ${bossSize}px (${
-        GameConfig.isMobile ? "MÓVIL" : "PC"
-      })`
-    );
+    console.log(`👹 Boss creado con tamaño: ${bossSize}px`);
   },
 
   initializeSystems() {
@@ -118,7 +112,7 @@ const BossManager = {
     this.active = true;
     this.currentHealth = this.maxHealth;
     this.isImmune = true;
-    this.immunityTimer = 600; // 10 segundos
+    this.immunityTimer = GameConfig.BOSS_PHASE_CONFIG.INTRO_DURATION || 600; // 10 segundos
     this.introductionPhase = true;
 
     // Efectos de entrada
@@ -218,46 +212,44 @@ const BossManager = {
     });
   },
 
-  // REEMPLAZAR executePhaseSequence()
   executePhaseSequence() {
     if (!this.active || !this.boss || this.introductionPhase) return;
 
-    // NUEVO: Si Red Line está activo, NO hacer nada más
-    if (this.redline && this.redline.phaseActive) {
+    // No interferir con fases activas
+    if (
+      this.phases?.isPhaseActive() &&
+      this.phases?.getCurrentPhase() !== "HUNTING"
+    ) {
       return;
     }
 
-    // NO interferir con fases aleatorias del Yan Ken Po
+    // No interferir si Red Line está activo
+    if (this.redline?.phaseActive) {
+      return;
+    }
+
+    // No interferir con fases aleatorias
     if (this.phases?.randomPhaseActive) {
       return;
     }
 
     const healthPercentage = this.currentHealth / this.maxHealth;
-    const currentPhase = this.phases?.getCurrentPhase() || "HUNTING";
-    const isPhaseActive = this.phases?.isPhaseActive() || false;
+    const thresholds = GameConfig.BOSS_PHASE_CONFIG.HEALTH_THRESHOLDS;
 
-    // Si hay una fase activa, no iniciar otra
-    if (isPhaseActive && currentPhase !== "HUNTING") {
-      return;
-    }
-
-    // Solo verificar umbrales si estamos en HUNTING
-    if (currentPhase !== "HUNTING") {
-      return;
-    }
-
-    // VERIFICAR UMBRALES EN ORDEN ESTRICTO
-    // YAN KEN PO - 3%
-    if (healthPercentage <= 0.03 && !this.phases.phasesExecuted.YANKENPO) {
+    // YANKENPO - 3%
+    if (
+      healthPercentage <= thresholds.YANKENPO &&
+      !this.phases.phasesExecuted.YANKENPO
+    ) {
       console.log("🎮 VIDA 3% - INICIANDO YAN KEN PO");
       this.startYanKenPoPhase();
       return;
     }
 
-    // RED LINE - 10%
+    // REDLINE - 10%
     if (
-      healthPercentage <= 0.1 &&
-      healthPercentage > 0.03 &&
+      healthPercentage <= thresholds.REDLINE &&
+      healthPercentage > thresholds.YANKENPO &&
       !this.phases.phasesExecuted.REDLINE
     ) {
       console.log("🔴 VIDA 10% - INICIANDO RED LINE");
@@ -267,8 +259,8 @@ const BossManager = {
 
     // BULLETS - 25%
     if (
-      healthPercentage <= 0.25 &&
-      healthPercentage > 0.1 &&
+      healthPercentage <= thresholds.BULLETS &&
+      healthPercentage > thresholds.REDLINE &&
       !this.phases.phasesExecuted.BULLETS
     ) {
       console.log("🌟 VIDA 25% - INICIANDO TOUHOU");
@@ -278,8 +270,8 @@ const BossManager = {
 
     // MINES - 50%
     if (
-      healthPercentage <= 0.5 &&
-      healthPercentage > 0.25 &&
+      healthPercentage <= thresholds.MINES &&
+      healthPercentage > thresholds.BULLETS &&
       !this.phases.phasesExecuted.MINES
     ) {
       console.log("💣 VIDA 50% - INICIANDO MINAS");
@@ -289,8 +281,8 @@ const BossManager = {
 
     // SUMMONING - 75%
     if (
-      healthPercentage <= 0.75 &&
-      healthPercentage > 0.5 &&
+      healthPercentage <= thresholds.SUMMONING &&
+      healthPercentage > thresholds.MINES &&
       !this.phases.phasesExecuted.SUMMONING
     ) {
       console.log("⚔️ VIDA 75% - INICIANDO SUMMONING");
@@ -324,43 +316,27 @@ const BossManager = {
   startSummoningPhase() {
     console.log("⚔️ INICIANDO FASE: Invocación de enemigos");
 
-    this.makeImmune(3600); // 60 segundos
+    this.makeImmune(GameConfig.BOSS_PHASE_CONFIG.SUMMONING_DURATION);
 
     if (this.movement) {
       this.movement.stopMovementAndCenter();
     }
 
-    if (this.comments) {
-      this.comments.sayComment("¡Legiones del abismo, vengan a mí!");
-    }
-
-    // MARCAR FASE ANTES DE CAMBIAR
     if (this.phases) {
-      this.phases.currentPhase = "SUMMONING";
-      this.phases.phaseActive = true;
-      this.phases.phaseTimer = 0;
       this.phases.changePhase("SUMMONING");
     }
-
-    console.log("⚔️ Fase de invocación iniciada correctamente");
   },
 
   startMinesPhase() {
-    this.makeImmune(5400); // 90 segundos
+    console.log("💣 INICIANDO FASE: Minas explosivas");
+
+    this.makeImmune(GameConfig.BOSS_PHASE_CONFIG.MINES_DURATION);
 
     if (this.movement) {
       this.movement.stopMovementAndCenter();
     }
 
-    if (this.comments) {
-      this.comments.sayComment("¡El suelo bajo sus pies es traicionero!");
-    }
-
-    // MARCAR FASE ANTES DE CAMBIAR
     if (this.phases) {
-      this.phases.currentPhase = "MINES";
-      this.phases.phaseActive = true;
-      this.phases.phaseTimer = 0;
       this.phases.changePhase("MINES");
     }
   },
@@ -368,66 +344,46 @@ const BossManager = {
   startBulletsPhase() {
     console.log("🌟 INICIANDO FASE: Balas Touhou");
 
-    // 🔥 NUEVO: Limpiar completamente el sistema de minas antes
-    if (this.mines && this.mines.forceCleanupMines) {
-      this.mines.forceCleanupMines();
+    // Limpiar minas previas si existen
+    if (this.mines && this.mines.cleanup) {
+      this.mines.cleanup();
     }
 
-    this.makeImmune(7200); // 120 segundos
+    this.makeImmune(GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION);
 
     if (this.movement) {
       this.movement.stopMovementAndCenter();
     }
 
-    if (this.comments) {
-      this.comments.sayComment("¡Lluvia de muerte del inframundo!");
-    }
-
-    // MARCAR FASE ANTES DE CAMBIAR
     if (this.phases) {
-      this.phases.currentPhase = "BULLETS";
-      this.phases.phaseActive = true;
-      this.phases.phaseTimer = 0;
       this.phases.changePhase("BULLETS");
     }
   },
 
   startRedLinePhase() {
-    this.makeImmune(9999);
+    console.log("🔴 INICIANDO FASE: Hilo Rojo");
+
+    this.makeImmune(9999); // Inmune indefinidamente durante Red Line
 
     if (this.movement) {
       this.movement.stopMovementAndCenter();
     }
 
-    if (this.comments) {
-      this.comments.sayComment("¡Sigue mi rastro mortal!");
-    }
-
-    // MARCAR FASE ANTES DE CAMBIAR
     if (this.phases) {
-      this.phases.currentPhase = "REDLINE";
-      this.phases.phaseActive = true;
-      this.phases.phaseTimer = 0;
       this.phases.changePhase("REDLINE");
     }
   },
 
   startYanKenPoPhase() {
-    this.makeImmune(9999);
+    console.log("🎮 INICIANDO FASE FINAL: Yan Ken Po");
+
+    this.makeImmune(9999); // Inmune indefinidamente durante Yan Ken Po
 
     if (this.movement) {
       this.movement.stopMovementAndCenter();
     }
 
-    if (this.comments) {
-      this.comments.sayComment("¡Última oportunidad, mortal!");
-    }
-
-    // MARCAR FASE ANTES DE CAMBIAR
     if (this.phases) {
-      this.phases.currentPhase = "YANKENPO";
-      this.phases.phaseActive = true;
-      this.phases.phaseTimer = 0;
       this.phases.changePhase("YANKENPO");
     }
   },
@@ -448,7 +404,7 @@ const BossManager = {
   },
 
   updateImmunity() {
-    if (this.isImmune) {
+    if (this.isImmune && this.immunityTimer > 0) {
       this.immunityTimer--;
 
       if (this.immunityTimer <= 0) {
@@ -467,21 +423,22 @@ const BossManager = {
   // SISTEMA DE DAÑO
   // ======================================================
 
-  // REEMPLAZAR takeDamage()
   takeDamage(amount) {
     if (!this.active || this.currentHealth <= 0) {
       return;
     }
 
-    // 🔥 NUEVA LÓGICA: En Yan Ken Po (3% vida) SOLO puede morir por Yan Ken Po
+    // En Yan Ken Po (3% vida) SOLO puede morir por Yan Ken Po
     const healthPercentage = this.currentHealth / this.maxHealth;
-
-    if (healthPercentage <= 0.03) {
+    if (
+      healthPercentage <=
+      GameConfig.BOSS_PHASE_CONFIG.HEALTH_THRESHOLDS.YANKENPO
+    ) {
       console.log("💀 Boss en fase final - SOLO puede morir por Yan Ken Po");
-      return; // NO recibe daño normal
+      return; // No recibe daño normal
     }
 
-    // 🔥 INMUNE durante fases especiales
+    // Inmune durante fases especiales
     if (this.isImmune) {
       console.log("🛡️ Boss inmune - daño bloqueado");
       return;
@@ -497,7 +454,9 @@ const BossManager = {
     this.currentHealth = Math.max(0, this.currentHealth - reducedDamage);
 
     // LÍMITE MÍNIMO: No puede bajar de 3% por daño normal
-    const minHealth = Math.ceil(this.maxHealth * 0.03); // 3% = 15 vida
+    const minHealth = Math.ceil(
+      this.maxHealth * GameConfig.BOSS_PHASE_CONFIG.HEALTH_THRESHOLDS.YANKENPO
+    );
     if (this.currentHealth < minHealth) {
       this.currentHealth = minHealth;
       console.log(
@@ -527,7 +486,7 @@ const BossManager = {
 
     this.onDamageReceived(newHealthPercentage);
 
-    // Solo puede morir por Yan Ken Po ahora
+    // Iniciar Yan Ken Po si alcanza vida mínima
     if (
       this.currentHealth <= minHealth &&
       !this.phases.phasesExecuted.YANKENPO
@@ -537,7 +496,6 @@ const BossManager = {
     }
   },
 
-  // NUEVA FUNCIÓN - AGREGAR después de takeDamage()
   takeDamageFromYanKenPo(amount) {
     console.log(`💥 Boss recibe ${amount} daño de Yan Ken Po`);
 
@@ -588,7 +546,7 @@ const BossManager = {
     this.currentHealth = 0;
 
     if (this.comments) {
-      this.comments.sayComment("derrota_boss");
+      this.comments.sayRandomComment("derrota_boss");
     }
 
     if (this.ui) {
@@ -698,7 +656,7 @@ const BossManager = {
 
     let bossDibujado = false;
 
-    // Frames animados
+    // Dibujar usando frames animados si existen
     if (GameConfig.bossFrames && GameConfig.bossFrames.length > 0) {
       const frameIndex =
         Math.floor(window.getGameTime() / 12) % GameConfig.bossFrames.length;
@@ -716,7 +674,7 @@ const BossManager = {
       }
     }
 
-    // Imagen estática
+    // Dibujar usando imagen estática si no hay frames o falló el dibujo
     if (
       !bossDibujado &&
       GameConfig.bossImage &&
@@ -732,7 +690,7 @@ const BossManager = {
       bossDibujado = true;
     }
 
-    // Fallback visual
+    // Fallback visual si no hay imágenes
     if (!bossDibujado) {
       this.drawBossFallback(ctx);
     }
@@ -800,7 +758,7 @@ const BossManager = {
   reset() {
     console.log("🔄 RESET COMPLETO del boss modular");
 
-    // FORZAR LIMPIEZA DE FLAGS CRÍTICOS
+    // Resetear estado principal
     this.active = false;
     this.boss = null;
     this.currentHealth = this.maxHealth;
@@ -808,13 +766,7 @@ const BossManager = {
     this.immunityTimer = 0;
     this.introductionPhase = false;
 
-    // Limpiar boss si existe
-    if (this.boss) {
-      this.boss.isStationary = false;
-      this.boss.isLocked = false;
-    }
-
-    // RESETEAR TODOS LOS SISTEMAS
+    // Resetear todos los subsistemas
     const systems = [
       this.movement,
       this.phases,
@@ -832,34 +784,31 @@ const BossManager = {
       }
     });
 
-    // FORZAR LIMPIEZA DE FLAGS ESPECIALES
+    console.log("✅ Boss modular COMPLETAMENTE reseteado");
+  },
+
+  forceReset() {
+    // Versión más agresiva del reset para casos críticos
+    this.reset();
+
+    // Forzar limpieza de Red Line
     if (this.redline) {
       this.redline.phaseActive = false;
-      this.redline.redLineForceActive = false;
       this.redline.redLineMoving = false;
       this.redline.showingPreview = false;
+      this.redline.cycleCount = 0;
+      this.redline.redLinePath = [];
+      this.redline.gridLines = [];
     }
 
+    // Forzar limpieza de Phases
     if (this.phases) {
       this.phases.phaseActive = false;
       this.phases.currentPhase = "HUNTING";
-      this.phases.isRandomPhase = false;
       this.phases.randomPhaseActive = false;
-      this.phases.phasesExecuted = {
-        SUMMONING: false,
-        MINES: false,
-        BULLETS: false,
-        REDLINE: false,
-        YANKENPO: false,
-      };
     }
 
-    if (this.movement) {
-      this.movement.enabled = false;
-      this.movement.pattern = "hunting";
-    }
-
-    console.log("✅ Boss modular COMPLETAMENTE reseteado");
+    console.log("🔄 Force Reset completado en Boss Manager");
   },
 
   // ======================================================

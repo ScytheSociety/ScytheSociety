@@ -1,6 +1,6 @@
 /**
  * Hell Shooter - Boss Phases System Optimizado
- * Sistema modular de gestión de fases inteligentes del boss
+ * Sistema modular de gestión de fases del boss
  */
 
 const BossPhases = {
@@ -15,16 +15,14 @@ const BossPhases = {
   phaseActive: false,
   phaseTimer: 0,
 
-  PHASE_DURATIONS: {
-    SUMMONING: GameConfig.BOSS_PHASE_CONFIG.SUMMONING_DURATION || 3600,
-    MINES: GameConfig.BOSS_PHASE_CONFIG.MINES_DURATION || 5400,
-    BULLETS: GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION || 7200,
+  // Duración de fases desde configuración central
+  get PHASE_DURATIONS() {
+    return {
+      SUMMONING: GameConfig.BOSS_PHASE_CONFIG.SUMMONING_DURATION || 3600,
+      MINES: GameConfig.BOSS_PHASE_CONFIG.MINES_DURATION || 5400,
+      BULLETS: GameConfig.BOSS_PHASE_CONFIG.BULLETS_DURATION || 7200,
+    };
   },
-
-  // Control de fases aleatorias
-  isRandomPhase: false,
-  // Control de timeouts
-  summoningTimeouts: [],
 
   // Control de fases ejecutadas
   phasesExecuted: {
@@ -37,8 +35,6 @@ const BossPhases = {
 
   // Control para fases aleatorias (pueden repetirse)
   randomPhaseActive: false,
-
-  // 🔥 NUEVO: Control de fases aleatorias ejecutadas
   randomPhasesExecuted: {
     SUMMONING: 0,
     MINES: 0,
@@ -53,11 +49,8 @@ const BossPhases = {
 
   init(bossManagerRef) {
     this.bossManager = bossManagerRef;
-    this.currentPhase = "HUNTING";
-    this.phaseActive = false;
-    this.phaseTimer = 0;
-    this.isRandomPhase = false;
-    this.addSkullTimerStyles(); // ← AGREGAR ESTA LÍNEA
+    this.reset();
+    this.addSkullTimerStyles();
     console.log("⚔️ Sistema de fases del boss inicializado");
   },
 
@@ -68,23 +61,9 @@ const BossPhases = {
   update() {
     if (!this.bossManager.active) return;
 
-    // 🔥 VERIFICACIÓN MEJORADA: Solo bloquear si Red Line está REALMENTE activo
+    // No actualizar si Red Line está activo
     if (this.bossManager.redline && this.bossManager.redline.phaseActive) {
-      // Solo mostrar log cada 60 frames (1 segundo) para no spam
-      if (window.getGameTime() % 60 === 0) {
-        console.log("🔴 Phases update pausado - Red Line actualmente activo");
-      }
       return;
-    }
-
-    // 🔥 NUEVO: Verificar si Red Line fue completado y limpiar
-    if (
-      this.bossManager.redline &&
-      this.bossManager.redline.redLineForceActive &&
-      !this.bossManager.redline.phaseActive
-    ) {
-      console.log("🔴 Red Line completado pero flag activo - limpiando");
-      this.bossManager.redline.redLineForceActive = false;
     }
 
     if (this.phaseActive) {
@@ -117,56 +96,56 @@ const BossPhases = {
     const timerContainer = document.createElement("div");
     timerContainer.id = "boss-phase-timer";
     timerContainer.style.cssText = `
-    position: fixed;
-    top: 120px;
-    left: 20px;
-    z-index: 2000;
-    pointer-events: none;
-  `;
+      position: fixed;
+      top: 120px;
+      left: 20px;
+      z-index: 2000;
+      pointer-events: none;
+    `;
 
     // Contenedor de la calavera con máscara de sangre
     const skullContainer = document.createElement("div");
     skullContainer.style.cssText = `
-    position: relative;
-    width: 60px;
-    height: 60px;
-    overflow: hidden;
-    border-radius: 50%;
-    border: 1px solid #FF0000;
-    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
-  `;
+      position: relative;
+      width: 60px;
+      height: 60px;
+      overflow: hidden;
+      border-radius: 50%;
+      border: 1px solid #FF0000;
+      box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+    `;
 
     // Imagen de calavera base
     const skullImage = document.createElement("img");
     skullImage.src = "images/calaveratimer.png";
     skullImage.style.cssText = `
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
-  `;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    `;
 
     // Máscara de sangre más transparente
     const bloodFill = document.createElement("div");
     const fillHeight = progress * 100; // Convertir progreso a porcentaje
     bloodFill.style.cssText = `
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: ${fillHeight}%;
-    background: linear-gradient(to top, 
-      rgba(139, 0, 0, 0.6) 0%, 
-      rgba(220, 20, 60, 0.6) 30%, 
-      rgba(255, 69, 0, 0.6) 60%, 
-      rgba(255, 99, 71, 0.6) 100%);
-    z-index: 2;
-    transition: height 0.3s ease;
-  `;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: ${fillHeight}%;
+      background: linear-gradient(to top, 
+        rgba(139, 0, 0, 0.6) 0%, 
+        rgba(220, 20, 60, 0.6) 30%, 
+        rgba(255, 69, 0, 0.6) 60%, 
+        rgba(255, 99, 71, 0.6) 100%);
+      z-index: 2;
+      transition: height 0.3s ease;
+    `;
 
-    // Ensamblar elementos (SIN texto de fase)
+    // Ensamblar elementos
     skullContainer.appendChild(skullImage);
     skullContainer.appendChild(bloodFill);
     timerContainer.appendChild(skullContainer);
@@ -187,9 +166,6 @@ const BossPhases = {
     const maxDuration = this.PHASE_DURATIONS[this.currentPhase];
 
     if (maxDuration && this.phaseTimer >= maxDuration) {
-      console.log(
-        `⏰ Fase ${this.currentPhase} completada por tiempo (${this.phaseTimer}/${maxDuration})`
-      );
       this.endCurrentPhase();
     }
   },
@@ -201,13 +177,13 @@ const BossPhases = {
     this.phaseActive = true;
     this.phaseTimer = 0;
 
-    // MARCAR FASE COMO EJECUTADA
+    // Marcar fase como ejecutada
     this.phasesExecuted[newPhase] = true;
     console.log(`✅ Fase ${newPhase} marcada como ejecutada`);
 
     this.notifyPhaseChange(newPhase);
 
-    // EJECUTAR INMEDIATAMENTE LA LÓGICA DE LA FASE
+    // Ejecutar lógica de la fase según corresponda
     switch (newPhase) {
       case "SUMMONING":
         this.startSummoningSequence();
@@ -236,7 +212,7 @@ const BossPhases = {
   },
 
   // ======================================================
-  // SECUENCIA DE INVOCACIÓN CORREGIDA
+  // SECUENCIA DE INVOCACIÓN
   // ======================================================
 
   startSummoningSequence() {
@@ -248,28 +224,17 @@ const BossPhases = {
     }
     this.summoningTimeouts = [];
 
-    // 🔥 USAR CONFIGURACIÓN CENTRAL
+    // Usar configuración central
     const durationInMs =
       (GameConfig.BOSS_PHASE_CONFIG.SUMMONING_DURATION * 1000) / 60; // Convertir frames a ms
     const waveInterval = 8000; // 8 segundos entre oleadas
     const waveCount = Math.floor(durationInMs / waveInterval);
-
-    console.log(`⚔️ Duración desde config: ${durationInMs / 1000}s`);
-    console.log(
-      `⚔️ Programando ${waveCount} oleadas cada ${waveInterval / 1000}s`
-    );
 
     for (let wave = 0; wave < waveCount; wave++) {
       const timeout = setTimeout(() => {
         if (this.currentPhase === "SUMMONING" && this.phaseActive) {
           const enemyCount = 3 + Math.floor(wave / 2);
           this.summonEnemies(enemyCount);
-
-          console.log(
-            `⚔️ Oleada ${
-              wave + 1
-            }/${waveCount}: ${enemyCount} enemigos invocados`
-          );
 
           if (this.bossManager.ui) {
             this.bossManager.ui.showScreenMessage(
@@ -289,18 +254,10 @@ const BossPhases = {
         "#FF0000"
       );
     }
-
-    // 🔥 USAR DURACIÓN DE CONFIG
-    setTimeout(() => {
-      if (this.currentPhase === "SUMMONING") {
-        console.log("⚔️ Tiempo de invocación completado - terminando fase");
-        this.endCurrentPhase();
-      }
-    }, durationInMs);
   },
 
   // ======================================================
-  // FINALIZACIÓN MEJORADA DE FASE
+  // FINALIZACIÓN DE FASE
   // ======================================================
 
   endCurrentPhase() {
@@ -322,23 +279,23 @@ const BossPhases = {
 
     const previousPhase = this.currentPhase;
 
-    // SIMPLE: Resetear estado
+    // Resetear estado
     this.phaseActive = false;
     this.currentPhase = "HUNTING";
     this.phaseTimer = 0;
 
-    // SIMPLE: Boss vulnerable (excepto Yan Ken Po)
+    // Boss vulnerable (excepto Yan Ken Po)
     if (previousPhase !== "YANKENPO") {
       this.bossManager.isImmune = false;
       this.bossManager.immunityTimer = 0;
     }
 
-    // SIMPLE: Desbloquear boss
+    // Desbloquear boss
     if (this.bossManager.boss) {
       this.bossManager.boss.isStationary = false;
     }
 
-    // SIMPLE: Activar movimiento HUNTING inmediatamente
+    // Activar movimiento HUNTING inmediatamente
     if (this.bossManager.movement) {
       this.bossManager.movement.enabled = true;
       this.bossManager.movement.pattern = "hunting";
@@ -351,8 +308,6 @@ const BossPhases = {
         "#00FF00"
       );
     }
-
-    console.log(`✅ ${previousPhase} → HUNTING activado`);
   },
 
   notifyPhaseChange(newPhase) {
@@ -419,51 +374,11 @@ const BossPhases = {
       );
     }
 
-    // Iniciar Yan Ken Po después de un delay
     setTimeout(() => {
       if (this.bossManager.yankenpo) {
         this.bossManager.yankenpo.startPhase();
       }
     }, 1000);
-  },
-
-  forceStartYanKenPo() {
-    console.log("🎮 FORZANDO inicio de Yan Ken Po desde Red Line");
-
-    // Limpiar cualquier fase activa
-    this.phaseActive = false;
-    this.currentPhase = "YANKENPO";
-    this.phaseTimer = 0;
-
-    // Marcar Red Line como ejecutado
-    this.phasesExecuted["REDLINE"] = true;
-    this.phasesExecuted["YANKENPO"] = true;
-
-    // Limpiar sistemas previos
-    this.cleanupAllSystems();
-
-    // Boss inmune
-    this.bossManager.makeImmune(9999);
-
-    // Centrar boss
-    if (this.bossManager.movement) {
-      this.bossManager.movement.teleportToCenter();
-      this.bossManager.movement.adjustForPhase("YANKENPO");
-    }
-
-    if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage(
-        "🎮 ¡FASE FINAL: YAN KEN PO!",
-        "#FFD700"
-      );
-    }
-
-    // Iniciar Yan Ken Po INMEDIATAMENTE
-    setTimeout(() => {
-      if (this.bossManager.yankenpo) {
-        this.bossManager.yankenpo.startPhase();
-      }
-    }, 500);
   },
 
   // ======================================================
@@ -478,27 +393,37 @@ const BossPhases = {
       );
     }
 
-    console.log("🎮 Yan Ken Po perdido - iniciando fase aleatoria");
-
     setTimeout(() => {
       this.executeRandomPhase();
     }, 2000);
   },
 
   executeRandomPhase() {
-    const availablePhases = ["SUMMONING", "MINES", "BULLETS", "REDLINE"];
+    // Elegir una fase aleatoria excluyendo las que ya alcanzaron el máximo
+    const availablePhases = ["SUMMONING", "MINES", "BULLETS", "REDLINE"].filter(
+      (phase) => this.randomPhasesExecuted[phase] < this.maxRandomExecutions
+    );
+
+    // Si no hay fases disponibles, reiniciar contadores y elegir cualquiera
+    if (availablePhases.length === 0) {
+      for (const phase in this.randomPhasesExecuted) {
+        this.randomPhasesExecuted[phase] = 0;
+      }
+      availablePhases.push("SUMMONING", "MINES", "BULLETS", "REDLINE");
+    }
+
     const randomPhase =
       availablePhases[Math.floor(Math.random() * availablePhases.length)];
 
     console.log(`🎲 Ejecutando fase aleatoria: ${randomPhase}`);
 
-    this.isRandomPhase = true;
-    this.randomPhaseActive = true; // ← NUEVO FLAG
+    this.randomPhaseActive = true;
     this.currentPhase = randomPhase;
     this.phaseActive = true;
     this.phaseTimer = 0;
+    this.randomPhasesExecuted[randomPhase]++;
 
-    // Ejecutar la fase específica (versión corta)
+    // Ejecutar la fase específica
     switch (randomPhase) {
       case "SUMMONING":
         this.executeRandomSummoning();
@@ -516,13 +441,13 @@ const BossPhases = {
   },
 
   executeRandomSummoning() {
-    this.bossManager.makeImmune(1800); // 30 segundos (reducido de 60)
+    this.bossManager.makeImmune(1800); // 30 segundos
 
     if (this.bossManager.movement) {
       this.bossManager.movement.stopMovementAndCenter();
     }
 
-    // 🔥 MENOS OLEADAS para fase rápida
+    // Oleadas reducidas para fase rápida
     const summonTimes = [2000, 10000, 18000]; // Solo 3 oleadas
     const enemyCounts = [4, 5, 6];
 
@@ -589,7 +514,7 @@ const BossPhases = {
     this.bossManager.makeImmune(9999);
 
     if (this.bossManager.redline) {
-      this.bossManager.redline.maxCycles = 5; // 🔥 5 rondas en lugar de 10
+      this.bossManager.redline.maxCycles = 5; // 5 rondas en lugar de 10
       this.bossManager.redline.startPhase();
     }
 
@@ -601,17 +526,14 @@ const BossPhases = {
     }
   },
 
-  // REEMPLAZAR endRandomPhase()
   endRandomPhase() {
     console.log("🔄 Terminando fase aleatoria - volviendo a Yan Ken Po");
 
     this.phaseActive = false;
-    this.isRandomPhase = false;
     this.randomPhaseActive = false;
-
     this.cleanupAllSystems();
 
-    // 🔥 BOSS INMUNE Y AL CENTRO para nuevo Yan Ken Po
+    // Boss inmune y al centro para nuevo Yan Ken Po
     this.bossManager.makeImmune(9999);
     if (this.bossManager.movement) {
       this.bossManager.movement.stopMovementAndCenter();
@@ -624,7 +546,7 @@ const BossPhases = {
       );
     }
 
-    // 🔥 VOLVER A YAN KEN PO (NO TERMINAR FASE YANKENPO)
+    // Volver a Yan Ken Po después de un breve delay
     setTimeout(() => {
       if (this.bossManager.yankenpo) {
         this.bossManager.yankenpo.restartYanKenPo();
@@ -633,10 +555,8 @@ const BossPhases = {
   },
 
   // ======================================================
-  // INVOCACIÓN DE ENEMIGOS CORREGIDA
+  // INVOCACIÓN DE ENEMIGOS
   // ======================================================
-
-  // REEMPLAZAR en boss-phases.js la función summonEnemies() completa:
 
   summonEnemies(count) {
     const canvas = window.getCanvas();
@@ -649,26 +569,24 @@ const BossPhases = {
       );
     }
 
-    // 🔥 GENERAR ENEMIGOS DE TODOS LOS NIVELES (1 hasta nivel actual)
+    // Generar enemigos de todos los niveles
     const enemyLevels = [];
     for (let level = 1; level <= currentLevel; level++) {
       enemyLevels.push(level);
     }
 
-    console.log(`👹 Invocando enemigos de niveles: ${enemyLevels.join(", ")}`);
-
     for (let i = 0; i < count; i++) {
       setTimeout(() => {
-        // Seleccionar nivel aleatorio de todos los disponibles
+        // Seleccionar nivel aleatorio
         const randomLevel =
           enemyLevels[Math.floor(Math.random() * enemyLevels.length)];
 
-        // 🔥 TAMAÑO BASADO EN NIVEL (más grandes = más peligrosos)
-        const baseSize = 20 + randomLevel * 2; // 🔥 MÁS PEQUEÑOS
-        const sizeVariation = Math.random() * 4; // 🔥 MENOS VARIACIÓN
-        const enemySize = Math.min(40, baseSize + sizeVariation); // 🔥 MÁXIMO 40px
+        // Tamaño basado en nivel
+        const baseSize = 20 + randomLevel * 2;
+        const sizeVariation = Math.random() * 4;
+        const enemySize = Math.min(40, baseSize + sizeVariation);
 
-        // 🔥 POSICIONES ESTRATÉGICAS (evitar centro donde está el boss)
+        // Posiciones estratégicas para spawn
         const spawnPositions = [
           // Esquinas
           { x: 50, y: 50 },
@@ -693,69 +611,45 @@ const BossPhases = {
 
         const pos = spawnPositions[i % spawnPositions.length];
 
-        // 🔥 CREAR ENEMIGO COMPLETO CON TODAS LAS PROPIEDADES
+        // Crear enemigo con propiedades
         const enemy = {
           x: pos.x,
           y: pos.y,
           width: enemySize,
           height: enemySize,
-          velocityX: (Math.random() - 0.5) * (2 + randomLevel * 0.5), // Más rápidos por nivel
+          velocityX: (Math.random() - 0.5) * (2 + randomLevel * 0.5),
           velocityY: (Math.random() - 0.5) * (2 + randomLevel * 0.5),
           level: randomLevel,
           type: "boss_minion",
           isBossMinion: true,
-
-          // 🔥 ESTADÍSTICAS ESCALADAS POR NIVEL
-          speedFactor: 1.0 + randomLevel * 0.15, // Más rápidos
-          aggressionLevel: 1.0 + randomLevel * 0.2, // Más agresivos
+          speedFactor: 1.0 + randomLevel * 0.15,
+          aggressionLevel: 1.0 + randomLevel * 0.2,
           bounceCount: 0,
-          maxBounces: 2 + randomLevel, // Más rebotes
+          maxBounces: 2 + randomLevel,
           spawnTime: window.getGameTime(),
-
-          // 🔥 SALUD ESCALADA (opcional para boss minions)
-          health: Math.max(1, randomLevel - 2), // Niveles altos tienen más vida
+          health: Math.max(1, randomLevel - 2),
           maxHealth: Math.max(1, randomLevel - 2),
-
-          // 🔥 USAR IMAGEN CORRECTA SEGÚN NIVEL
           image: this.getEnemyImageForLevel(randomLevel),
-
-          // 🔥 ESCALADO DINÁMICO (algunos enemigos)
           dynamicScaling: {
-            enabled: Math.random() < 0.4, // 40% tienen escalado
+            enabled: Math.random() < 0.4,
             baseSize: enemySize,
             currentScale: 1.0,
             scaleDirection: 1,
-            scaleSpeed: 0.003 + randomLevel * 0.001, // Más rápido por nivel
+            scaleSpeed: 0.003 + randomLevel * 0.001,
             minScale: 0.7,
-            maxScale: 1.4 + randomLevel * 0.1, // Más grandes por nivel
+            maxScale: 1.4 + randomLevel * 0.1,
             pulseTimer: 0,
           },
-
-          // ❌ GLOW ELIMINADO - Las siguientes líneas fueron removidas:
-          // glowColor: this.getGlowColorForLevel(randomLevel),
-          // glowIntensity: 0.3 + randomLevel * 0.1,
         };
 
-        // 🔥 AGREGAR AL SISTEMA DE ENEMIGOS
+        // Agregar al sistema de enemigos
         if (window.EnemyManager) {
           EnemyManager.enemies.push(enemy);
-          console.log(
-            `👹 Esbirro nivel ${randomLevel} invocado en (${Math.round(
-              pos.x
-            )}, ${Math.round(pos.y)}) - Salud: ${enemy.health}`
-          );
         }
-      }, i * 200); // Spawn escalonado cada 200ms
+      }, i * 200);
     }
-
-    console.log(
-      `👹 === SECUENCIA DE INVOCACIÓN INICIADA: ${count} esbirros de niveles ${enemyLevels.join(
-        "-"
-      )} ===`
-    );
   },
 
-  // 🔥 FUNCIÓN AUXILIAR MEJORADA PARA IMÁGENES
   getEnemyImageForLevel(level) {
     if (window.GameConfig && window.GameConfig.enemyImages) {
       const imageIndex = Math.min(
@@ -768,8 +662,6 @@ const BossPhases = {
         return image;
       }
     }
-
-    console.warn(`⚠️ Imagen no disponible para nivel ${level}`);
     return null;
   },
 
@@ -777,9 +669,8 @@ const BossPhases = {
   // UTILIDADES
   // ======================================================
 
-  // REEMPLAZAR cleanupAllSystems()
   cleanupAllSystems() {
-    console.log("🧹 Limpiando TODOS los sistemas para transición");
+    console.log("🧹 Limpiando todos los sistemas para transición");
 
     const systems = [
       { system: this.bossManager.mines, name: "minas" },
@@ -793,7 +684,7 @@ const BossPhases = {
       }
     });
 
-    // 🔥 LIMPIAR RED LINE solo si NO viene de completar 10 rondas
+    // Limpiar Red Line solo si no viene de completar 10 rondas
     if (this.bossManager.redline && this.bossManager.redline.isActive()) {
       const redLineCount = this.bossManager.redline.getCurrentCycle();
       const redLineMax = this.bossManager.redline.getMaxCycles();
@@ -801,26 +692,19 @@ const BossPhases = {
       if (redLineCount < redLineMax) {
         console.log("🧹 Limpiando Red Line incompleto");
         this.bossManager.redline.cleanup();
-      } else {
-        console.log("🔴 Red Line completado - NO limpiar");
       }
     }
 
-    // 🔥 LIMPIAR TODOS LOS POWER-UPS RESTANTES
+    // Limpiar power-ups
     if (window.PowerUpManager && window.PowerUpManager.powerUps) {
       window.PowerUpManager.powerUps = [];
-      console.log("🧹 Power-ups limpiados");
     }
 
-    // 🔥 LIMPIAR ENEMIGOS INVOCADOS
+    // Limpiar enemigos invocados
     if (window.EnemyManager && window.EnemyManager.enemies) {
-      const minionsCount = window.EnemyManager.enemies.filter(
-        (e) => e.isBossMinion
-      ).length;
       window.EnemyManager.enemies = window.EnemyManager.enemies.filter(
         (e) => !e.isBossMinion
       );
-      console.log(`🧹 ${minionsCount} esbirros eliminados`);
     }
   },
 
@@ -856,9 +740,9 @@ const BossPhases = {
     this.currentPhase = "HUNTING";
     this.phaseActive = false;
     this.phaseTimer = 0;
-    this.isRandomPhase = false;
+    this.randomPhaseActive = false;
 
-    // RESETEAR fases ejecutadas para nueva partida
+    // Resetear fases ejecutadas
     this.phasesExecuted = {
       SUMMONING: false,
       MINES: false,
@@ -867,87 +751,14 @@ const BossPhases = {
       YANKENPO: false,
     };
 
-    console.log(
-      "🔄 Sistema de fases reseteado - Todas las fases disponibles de nuevo"
-    );
-  },
-
-  getCurrentPhase() {
-    return this.currentPhase;
-  },
-  isPhaseActive() {
-    return this.phaseActive;
-  },
-  getPhaseTimer() {
-    return this.phaseTimer;
-  },
-
-  getPhaseProgress() {
-    if (!this.phaseActive) return 0;
-
-    const maxDuration = this.PHASE_DURATIONS[this.currentPhase];
-    if (!maxDuration) return 0;
-
-    return Math.min(1, this.phaseTimer / maxDuration);
-  },
-
-  getPhaseStats() {
-    return {
-      currentPhase: this.currentPhase,
-      phaseActive: this.phaseActive,
-      phaseTimer: this.phaseTimer,
-      isRandomPhase: this.isRandomPhase,
-      progress: this.getPhaseProgress(),
-    };
-  },
-
-  // ======================================================
-  // ESTILOS CSS PARA CALAVERA
-  // ======================================================
-
-  addSkullTimerStyles() {
-    // Solo agregar una vez
-    if (document.getElementById("skull-timer-styles")) return;
-
-    const style = document.createElement("style");
-    style.id = "skull-timer-styles";
-    style.textContent = `
-    @keyframes pulse {
-      0% { 
-        transform: scale(1); 
-        box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
-      }
-      50% { 
-        transform: scale(1.1); 
-        box-shadow: 0 0 25px rgba(255, 0, 0, 1.0);
-      }
-      100% { 
-        transform: scale(1); 
-        box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
-      }
+    // Resetear contadores de fases aleatorias
+    for (const phase in this.randomPhasesExecuted) {
+      this.randomPhasesExecuted[phase] = 0;
     }
-    
-    @keyframes bloodDrip {
-      0% { height: 0%; }
-      100% { height: var(--fill-height); }
-    }
-  `;
-
-    document.head.appendChild(style);
   },
-
-  // ======================================================
-  // CLEANUP MEJORADO
-  // ======================================================
 
   cleanup() {
     console.log("🧹 Limpiando sistema de fases");
-
-    // 🔥 NUEVO: RESETEAR FLAG DE RED LINE FORZADO
-    if (this.bossManager && this.bossManager.redline) {
-      this.bossManager.redline.redLineForceActive = false;
-      console.log("🔴 Flag redLineForceActive RESETEADO");
-    }
 
     // Limpiar timeouts
     if (this.summoningTimeouts) {
@@ -964,12 +775,9 @@ const BossPhases = {
     this.phaseActive = false;
     this.currentPhase = "HUNTING";
     this.phaseTimer = 0;
-
-    // 🔥 NUEVO: RESETEAR FASES ALEATORIAS
-    this.isRandomPhase = false;
     this.randomPhaseActive = false;
 
-    // RESETEAR fases ejecutadas
+    // Resetear fases ejecutadas
     this.phasesExecuted = {
       SUMMONING: false,
       MINES: false,
@@ -977,11 +785,70 @@ const BossPhases = {
       REDLINE: false,
       YANKENPO: false,
     };
+  },
 
-    console.log("🧹 Fases ejecutadas limpiadas");
+  // ======================================================
+  // ESTILOS CSS PARA CALAVERA
+  // ======================================================
+
+  addSkullTimerStyles() {
+    if (document.getElementById("skull-timer-styles")) return;
+
+    const style = document.createElement("style");
+    style.id = "skull-timer-styles";
+    style.textContent = `
+      @keyframes pulse {
+        0% { 
+          transform: scale(1); 
+          box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+        }
+        50% { 
+          transform: scale(1.1); 
+          box-shadow: 0 0 25px rgba(255, 0, 0, 1.0);
+        }
+        100% { 
+          transform: scale(1); 
+          box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+        }
+      }
+      
+      @keyframes bloodDrip {
+        0% { height: 0%; }
+        100% { height: var(--fill-height); }
+      }
+    `;
+
+    document.head.appendChild(style);
+  },
+
+  // ======================================================
+  // GETTERS
+  // ======================================================
+
+  getCurrentPhase() {
+    return this.currentPhase;
+  },
+  isPhaseActive() {
+    return this.phaseActive;
+  },
+  getPhaseTimer() {
+    return this.phaseTimer;
+  },
+  getPhaseProgress() {
+    if (!this.phaseActive) return 0;
+    const maxDuration = this.PHASE_DURATIONS[this.currentPhase];
+    if (!maxDuration) return 0;
+    return Math.min(1, this.phaseTimer / maxDuration);
+  },
+  getPhaseStats() {
+    return {
+      currentPhase: this.currentPhase,
+      phaseActive: this.phaseActive,
+      phaseTimer: this.phaseTimer,
+      randomPhaseActive: this.randomPhaseActive,
+      progress: this.getPhaseProgress(),
+    };
   },
 };
 
 window.BossPhases = BossPhases;
-
-console.log("⚔️ boss-phases.js optimizado cargado");
