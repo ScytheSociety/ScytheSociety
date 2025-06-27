@@ -299,7 +299,7 @@ const EnemyManager = {
     const canvas = window.getCanvas();
     const wallBounceFactorX = 0.85;
     const wallBounceFactorY = 1.1;
-    const enemyBounceFactorBase = 1.15;
+    const enemyBounceFactorBase = 0.85;
 
     // 🔥 TIEMPO LENTO FORZADO PARA TODOS
     let globalSlowFactor = 1.0;

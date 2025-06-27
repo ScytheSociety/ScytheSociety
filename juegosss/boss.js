@@ -496,11 +496,15 @@ const BossManager = {
     }
   },
 
+  // En boss.js
   takeDamageFromYanKenPo(amount) {
     console.log(`💥 Boss recibe ${amount} daño de Yan Ken Po`);
 
+    // Asegurar que el daño se aplica correctamente
+    const previousHealth = this.currentHealth;
     this.currentHealth = Math.max(0, this.currentHealth - amount);
 
+    // Efecto visual más dramático para Yan Ken Po
     if (this.ui) {
       this.ui.createParticleEffect(
         this.boss.x + this.boss.width / 2,
@@ -508,15 +512,22 @@ const BossManager = {
         "#00FF00",
         30
       );
+
+      // Mostrar el daño exacto
+      this.ui.showScreenMessage(`💥 ¡-${amount} HP AL BOSS!`, "#00FF00");
     }
 
     console.log(
-      `👹 Boss dañado por Yan Ken Po - Vida restante: ${this.currentHealth}`
+      `👹 Boss dañado por Yan Ken Po - Vida: ${previousHealth} → ${this.currentHealth}/${this.maxHealth}`
     );
 
+    // Verificar si el boss ha sido derrotado
     if (this.currentHealth <= 0) {
-      setTimeout(() => this.defeat(), 1000);
+      console.log("💀 El boss ha sido derrotado por Yan Ken Po");
+      return true;
     }
+
+    return false;
   },
 
   onDamageReceived(healthPercentage) {

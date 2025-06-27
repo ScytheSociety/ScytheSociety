@@ -136,49 +136,38 @@ const BossRedLine = {
     this.showingPreview = false;
     this.redLinePath = [];
     this.redLineIndex = 0;
-    this.gridLines = [];
 
-    // 🔥 RESTAURAR VELOCIDAD DEL JUGADOR
+    // LIMPIAR ESPECÍFICAMENTE LA CUADRÍCULA
+    this.gridLines = [];
+    this.lastGridTime = 0;
+
+    // NUEVO: Eliminar cualquier elemento DOM de cuadrícula
+    const gridElements = document.querySelectorAll(".redline-grid-element");
+    gridElements.forEach((el) => {
+      if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    });
+
+    // Restaurar velocidad del jugador
     if (window.Player && Player.restoreNormalSpeed) {
       Player.restoreNormalSpeed();
-      console.log("🏃 Velocidad del jugador restaurada a normal");
     } else if (window.Player && Player.setSpeedModifier) {
       Player.setSpeedModifier(this.originalPlayerSpeed);
-      console.log("🏃 Velocidad del jugador restaurada manualmente");
     }
 
-    // 🔥 NUEVO: REACTIVAR SISTEMA DE PHASES
+    // REACTIVAR SISTEMA DE PHASES
     if (this.bossManager.phases) {
       this.bossManager.phases.redLineForceActive = false;
-      console.log("🔴 Sistema de phases REACTIVADO");
     }
 
-    // 🔥 NUEVO: DESBLOQUEAR BOSS
+    // DESBLOQUEAR BOSS
     const boss = this.bossManager.boss;
     if (boss) {
       boss.isLocked = false;
-      console.log("🔓 Boss DESBLOQUEADO");
     }
 
-    // 🔥 REACTIVAR MOVIMIENTO SOLO SI COMPLETÓ 10 CICLOS
-    if (this.cycleCount >= this.maxCycles) {
-      console.log("🔴 Red Line COMPLETADO (10/10) - transición a Yan Ken Po");
-      // Mantener inmune para Yan Ken Po
-    } else {
-      console.log("🔴 Red Line incompleto - boss vulnerable y PUEDE MOVERSE");
-      if (this.bossManager) {
-        this.bossManager.isImmune = false;
-        this.bossManager.immunityTimer = 0;
-      }
-
-      // REACTIVAR MOVIMIENTO
-      if (this.bossManager.movement) {
-        this.bossManager.movement.enabled = true;
-        this.bossManager.movement.huntingEnabled = true;
-        this.bossManager.movement.canMove = true;
-        console.log("🏃 Boss PUEDE MOVERSE de nuevo");
-      }
-    }
+    console.log("🔴 Red Line completamente limpiado - cuadrícula eliminada");
   },
 
   // ======================================================

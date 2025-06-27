@@ -1023,13 +1023,19 @@ function checkCollisions() {
 function checkLifeBasedEvents() {
   if (typeof Player === "undefined" || !Player.getLives) return;
 
+  // No activar durante fases especiales del boss
+  if (level === 11 && window.BossManager) {
+    if (BossManager.redline && BossManager.redline.phaseActive) return;
+    if (BossManager.yankenpo && BossManager.yankenpo.phaseActive) return;
+    if (BossManager.phases && BossManager.phases.isInSpecialPhase()) return;
+  }
+
   const playerLives = Player.getLives();
 
   if (slowMotionActive || frenzyModeActive) {
     return;
   }
 
-  // 🔥 AUMENTADO: Probabilidades más altas para eventos
   // Lluvia de power-ups (1 vida) - era 0.01, ahora 0.015
   if (playerLives === 1 && Math.random() < 0.015) {
     triggerPowerUpRain();
@@ -1044,9 +1050,19 @@ function checkLifeBasedEvents() {
   }
 }
 
-// NUEVA FUNCIÓN - Agregar después de checkLifeBasedEvents()
+/**
+ * Verificar posible sobrecarga de rendimiento y activar efectos especiales
+ */
 function checkPerformanceOverload() {
+  // No activar si ya hay otro efecto activo
   if (slowMotionActive || frenzyModeActive) return;
+
+  // No activar durante fases especiales del boss
+  if (level === 11 && window.BossManager) {
+    if (BossManager.redline && BossManager.redline.phaseActive) return;
+    if (BossManager.yankenpo && BossManager.yankenpo.phaseActive) return;
+    if (BossManager.phases && BossManager.phases.isInSpecialPhase()) return;
+  }
 
   const canvas = window.getCanvas();
   let totalObjects = 0;
@@ -1091,9 +1107,9 @@ function checkPerformanceOverload() {
     );
   }
 
-  // Activar si se cumple cualquier condición
-  if (shouldActivate && Math.random() < 0.008) {
-    // 0.8% de probabilidad por frame
+  // Activar si se cumple cualquier condición y pasa el check aleatorio
+  if (shouldActivate && Math.random() < 0.005) {
+    // Reducido de 0.008 a 0.005 (50% menos probable)
     triggerQuicksilverMode();
   }
 }
@@ -1547,17 +1563,67 @@ function restartGame() {
 function resetGameState() {
   console.log("🔄 Reseteando estado COMPLETO...");
 
-  // 🔥 LIMPIAR BOSS ELEMENTS PRIMERO
-  cleanupBossElements();
+  // Forzar Game Ended inmediatamente para evitar actualizaciones
+  gameEnded = true;
 
+  // Limpiar intervalos primero
   if (gameInterval) {
     clearInterval(gameInterval);
     gameInterval = null;
   }
 
+  // Limpiar boss y elementos visuales
+  cleanupBossElements();
+
+  // Limpiar TODOS los sistemas
+  const systemsToClear = [
+    { object: window.BossManager, name: "BossManager" },
+    { object: window.Player, name: "Player" },
+    { object: window.BulletManager, name: "BulletManager" },
+    { object: window.EnemyManager, name: "EnemyManager" },
+    { object: window.PowerUpManager, name: "PowerUpManager" },
+    { object: window.ComboSystem, name: "ComboSystem" },
+    { object: window.UI, name: "UI" },
+  ];
+
+  systemsToClear.forEach((system) => {
+    if (system.object) {
+      // Primero intentar forceReset si existe
+      if (typeof system.object.forceReset === "function") {
+        system.object.forceReset();
+      }
+      // Luego el reset normal
+      else if (typeof system.object.reset === "function") {
+        system.object.reset();
+      }
+
+      // Limpiezas específicas para cada sistema
+      if (system.name === "BossManager") {
+        if (system.object.redline) {
+          system.object.redline.gridLines = [];
+          system.object.redline.phaseActive = false;
+          system.object.redline.redLineForceActive = false;
+        }
+        if (system.object.yankenpo) {
+          system.object.yankenpo.bossDefeats = 0;
+          system.object.yankenpo.phaseActive = false;
+        }
+        if (system.object.phases) {
+          system.object.phases.phasesExecuted = {
+            SUMMONING: false,
+            MINES: false,
+            BULLETS: false,
+            REDLINE: false,
+            YANKENPO: false,
+          };
+        }
+      }
+    }
+  });
+
+  // Resetear flags y variables
   scoreAlreadySaved = false;
   isSaving = false;
-  gameEnded = false;
   gameTime = 0;
   level = 1;
   score = 0;
@@ -1566,79 +1632,8 @@ function resetGameState() {
   slowMotionFactor = 1.0;
   frenzyModeActive = false;
 
-  // 🔥 RESETEO GARANTIZADO DE TODOS LOS MÓDULOS
-  const modules = [
-    { module: window.Player, name: "Player" },
-    { module: window.BulletManager, name: "BulletManager" },
-    { module: window.EnemyManager, name: "EnemyManager" },
-    { module: window.PowerUpManager, name: "PowerUpManager" },
-    { module: window.BossManager, name: "BossManager" },
-    { module: window.UI, name: "UI" },
-    { module: window.ComboSystem, name: "ComboSystem" },
-  ];
-
-  modules.forEach(({ module, name }) => {
-    if (module && typeof module.reset === "function") {
-      try {
-        module.reset();
-        console.log(`✅ ${name} reseteado`);
-      } catch (error) {
-        console.error(`❌ Error reseteando ${name}:`, error);
-      }
-    }
-  });
-
-  // 🔥 RESETEO ESPECÍFICO Y FORZADO DE RED LINE
-  if (window.BossManager && window.BossManager.redline) {
-    try {
-      window.BossManager.redline.phaseActive = false;
-      window.BossManager.redline.redLineMoving = false;
-      window.BossManager.redline.showingPreview = false;
-      window.BossManager.redline.redLineForceActive = false; // 🔥 CRÍTICO
-      window.BossManager.redline.cycleCount = 0;
-      window.BossManager.redline.redLinePath = [];
-      window.BossManager.redline.gridLines = [];
-      console.log("🔴 Red Line FORZADO a estado inicial");
-    } catch (error) {
-      console.error("❌ Error reseteando Red Line:", error);
-    }
-  }
-
-  // 🔥 RESETEO ESPECÍFICO DE PHASES
-  if (window.BossManager && window.BossManager.phases) {
-    try {
-      window.BossManager.phases.phaseActive = false;
-      window.BossManager.phases.currentPhase = "HUNTING";
-      window.BossManager.phases.isRandomPhase = false;
-      window.BossManager.phases.randomPhaseActive = false;
-      window.BossManager.phases.phasesExecuted = {
-        SUMMONING: false,
-        MINES: false,
-        BULLETS: false,
-        REDLINE: false,
-        YANKENPO: false,
-      };
-      console.log("⚔️ Phases FORZADO a estado inicial");
-    } catch (error) {
-      console.error("❌ Error reseteando Phases:", error);
-    }
-  }
-
-  // 🔥 RESETEO ESPECÍFICO DE BOSS MANAGER
-  if (window.BossManager) {
-    try {
-      window.BossManager.active = false;
-      window.BossManager.isImmune = false;
-      window.BossManager.immunityTimer = 0;
-      window.BossManager.boss = null;
-      console.log("👹 BossManager FORZADO a estado inicial");
-    } catch (error) {
-      console.error("❌ Error reseteando BossManager:", error);
-    }
-  }
-
-  // 🔥 LIMPIAR TODOS LOS ELEMENTOS DOM DEL BOSS
-  const allBossElements = [
+  // Limpiar todos los elementos DOM
+  const domElementsToRemove = [
     "yankenpo-container",
     "boss-speech-bubble",
     "boss-phase-timer",
@@ -1647,33 +1642,36 @@ function resetGameState() {
     "boss-comment",
     "level-transition",
     "music-ticker",
+    "combo-display",
   ];
 
-  allBossElements.forEach((elementId) => {
-    const element = document.getElementById(elementId);
+  domElementsToRemove.forEach((id) => {
+    const element = document.getElementById(id);
     if (element && element.parentNode) {
       element.parentNode.removeChild(element);
-      console.log(`🗑️ Elemento ${elementId} eliminado`);
     }
   });
 
-  // 🔥 RESETEO DE COMBO SYSTEM
-  if (window.ComboSystem) {
-    try {
-      if (window.ComboSystem.cleanup) window.ComboSystem.cleanup();
-      if (window.ComboSystem.reset) window.ComboSystem.reset();
-      setTimeout(() => {
-        if (window.ComboSystem.createComboDisplay) {
-          window.ComboSystem.createComboDisplay();
-        }
-      }, 200);
-      console.log("🔥 ComboSystem limpiado y recreado");
-    } catch (error) {
-      console.error("❌ Error reseteando ComboSystem:", error);
-    }
+  // Forzar limpieza de cualquier otro elemento DOM
+  const removeAllByClass = (className) => {
+    const elements = document.querySelectorAll(`.${className}`);
+    elements.forEach((el) => el.parentNode && el.parentNode.removeChild(el));
+  };
+
+  removeAllByClass("redline-grid");
+  removeAllByClass("boss-effect");
+  removeAllByClass("game-message");
+
+  // Restaurar velocidad del jugador como último recurso
+  if (window.Player) {
+    window.Player.moveSpeed = 1.0;
+    window.Player.speedModifier = 1.0;
   }
 
-  console.log("🔄 Estado reseteado COMPLETAMENTE - TODO limpio");
+  // Resetear gameEnded para permitir jugar de nuevo
+  gameEnded = false;
+
+  console.log("🔄 Estado del juego COMPLETAMENTE limpio y reseteado");
 }
 
 /**
