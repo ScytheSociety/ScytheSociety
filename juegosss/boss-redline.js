@@ -139,17 +139,12 @@ const BossRedLine = {
     this.redLinePath = [];
     this.redLineIndex = 0;
 
-    // LIMPIAR ESPECÍFICAMENTE LA CUADRÍCULA
+    // 🔥 LIMPIEZA FORZADA Y COMPLETA DE LA CUADRÍCULA
     this.gridLines = [];
     this.lastGridTime = 0;
 
-    // NUEVO: Eliminar cualquier elemento DOM de cuadrícula
-    const gridElements = document.querySelectorAll(".redline-grid-element");
-    gridElements.forEach((el) => {
-      if (el && el.parentNode) {
-        el.parentNode.removeChild(el);
-      }
-    });
+    // 🔥 NUEVO: Forzar limpieza completa con múltiples intentos
+    this.forceCleanupGrid();
 
     // Restaurar velocidad del jugador
     if (window.Player && Player.restoreNormalSpeed) {
@@ -169,7 +164,94 @@ const BossRedLine = {
       boss.isLocked = false;
     }
 
-    console.log("🔴 Red Line completamente limpiado - cuadrícula eliminada");
+    console.log(
+      "🔴 Red Line completamente limpiado - cuadrícula FORZADAMENTE eliminada"
+    );
+  },
+
+  // 🔥 NUEVA FUNCIÓN: Limpieza forzada de cuadrícula
+  forceCleanupGrid() {
+    console.log("🧹 FORZANDO limpieza completa de cuadrícula...");
+
+    // 1. Limpiar arrays
+    this.gridLines = [];
+
+    // 2. Eliminar TODOS los elementos DOM relacionados con red line
+    const elementsToRemove = [
+      // Por ID
+      "redline-grid-container",
+      "redline-effects",
+      "boss-redline-timer",
+      "redline-preview",
+
+      // Por clase - usando querySelectorAll
+      ".redline-grid-element",
+      ".redline-grid",
+      ".redline-effect",
+      ".boss-redline",
+      ".grid-line",
+      ".red-line-effect",
+      "[id^='redline-']", // Cualquier ID que empiece con 'redline-'
+      "[class*='redline']", // Cualquier clase que contenga 'redline'
+    ];
+
+    elementsToRemove.forEach((selector) => {
+      try {
+        if (selector.startsWith(".") || selector.startsWith("[")) {
+          // Es un selector CSS
+          const elements = document.querySelectorAll(selector);
+          elements.forEach((el) => {
+            if (el && el.parentNode) {
+              console.log(`🗑️ Eliminando elemento: ${el.id || el.className}`);
+              el.parentNode.removeChild(el);
+            }
+          });
+        } else {
+          // Es un ID
+          const element = document.getElementById(selector);
+          if (element && element.parentNode) {
+            console.log(`🗑️ Eliminando por ID: ${selector}`);
+            element.parentNode.removeChild(element);
+          }
+        }
+      } catch (error) {
+        console.warn(`⚠️ Error eliminando ${selector}:`, error);
+      }
+    });
+
+    // 3. Limpieza adicional - buscar elementos por contenido de estilo
+    const allElements = document.querySelectorAll("*");
+    allElements.forEach((el) => {
+      const style = el.style.cssText || "";
+      const className = el.className || "";
+      const id = el.id || "";
+
+      // Si contiene estilos o nombres relacionados con red line, eliminar
+      if (
+        style.includes("redline") ||
+        style.includes("grid-line") ||
+        className.includes("redline") ||
+        className.includes("grid") ||
+        id.includes("redline") ||
+        id.includes("grid")
+      ) {
+        if (el.parentNode) {
+          console.log(`🗑️ Eliminando elemento residual: ${id || className}`);
+          el.parentNode.removeChild(el);
+        }
+      }
+    });
+
+    // 4. Limpieza de variables globales relacionadas
+    if (window.redLineGridActive) {
+      window.redLineGridActive = false;
+    }
+    if (window.gridAnimationFrame) {
+      cancelAnimationFrame(window.gridAnimationFrame);
+      window.gridAnimationFrame = null;
+    }
+
+    console.log("✅ Limpieza forzada de cuadrícula COMPLETADA");
   },
 
   // ======================================================
@@ -987,39 +1069,89 @@ const BossRedLine = {
    * Limpia el sistema de hilo rojo completamente
    */
   cleanup() {
-    console.log("🧹 Limpiando sistema de hilo rojo");
+    console.log("🧹 Limpiando sistema de hilo rojo COMPLETAMENTE");
 
     this.phaseActive = false;
     this.redLineMoving = false;
     this.showingPreview = false;
     this.redLinePath = [];
     this.redLineIndex = 0;
-    this.gridLines = [];
 
-    // Asegurarse de que redLineForceActive esté apagado
-    this.redLineForceActive = false;
+    // 🔥 USAR LIMPIEZA FORZADA
+    this.forceCleanupGrid();
 
-    // 🔥 NUEVO: Eliminar elementos DOM de la cuadrícula
-    const gridElements = document.querySelectorAll(".redline-grid-element");
-    gridElements.forEach((el) => {
-      if (el && el.parentNode) {
-        el.parentNode.removeChild(el);
-      }
-    });
+    // Limpiar cualquier timeout o interval activo
+    if (this.redLineTimeout) {
+      clearTimeout(this.redLineTimeout);
+      this.redLineTimeout = null;
+    }
 
-    // 🔥 NUEVO: Eliminar cualquier otro elemento relacionado
-    const redlineElements = document.querySelectorAll('[id^="redline-"]');
-    redlineElements.forEach((el) => {
-      if (el && el.parentNode) {
-        el.parentNode.removeChild(el);
-      }
-    });
+    if (this.gridUpdateInterval) {
+      clearInterval(this.gridUpdateInterval);
+      this.gridUpdateInterval = null;
+    }
 
     // Restaurar velocidad del jugador
     if (window.Player && Player.restoreNormalSpeed) {
       Player.restoreNormalSpeed();
     } else if (window.Player && Player.setSpeedModifier) {
-      Player.setSpeedModifier(this.originalPlayerSpeed);
+      Player.setSpeedModifier(this.originalPlayerSpeed || 1.0);
+    }
+
+    console.log("✅ Sistema de hilo rojo COMPLETAMENTE limpio");
+  },
+
+  // REEMPLAZAR la función reset en boss-redline.js:
+  reset() {
+    console.log("🔄 RESET COMPLETO del sistema Red Line");
+
+    // Usar cleanup forzado
+    this.cleanup();
+
+    // Resetear TODOS los valores a su estado inicial
+    this.phaseActive = false;
+    this.redLineMoving = false;
+    this.showingPreview = false;
+    this.redLinePath = [];
+    this.redLineIndex = 0;
+    this.gridLines = [];
+    this.lastGridTime = 0;
+    this.cycleCount = 0;
+    this.maxCycles = 10;
+    this.redLineForceActive = false;
+
+    // Múltiples intentos de limpieza con delays
+    setTimeout(() => this.forceCleanupGrid(), 100);
+    setTimeout(() => this.forceCleanupGrid(), 500);
+    setTimeout(() => this.forceCleanupGrid(), 1000);
+
+    console.log("✅ Red Line COMPLETAMENTE reseteado con limpieza múltiple");
+  },
+
+  // 🔥 AGREGAR ESTA FUNCIÓN al objeto BossRedLine para verificación periódica:
+  startPeriodicCleanup() {
+    // Verificar cada 5 segundos si hay elementos residuales
+    this.cleanupInterval = setInterval(() => {
+      if (!this.phaseActive) {
+        // Solo limpiar si la fase no está activa
+        const residualElements = document.querySelectorAll(
+          '[class*="redline"], [id*="redline"], [class*="grid"]'
+        );
+        if (residualElements.length > 0) {
+          console.log(
+            `🧹 Detectados ${residualElements.length} elementos residuales - limpiando...`
+          );
+          this.forceCleanupGrid();
+        }
+      }
+    }, 5000);
+  },
+
+  // AGREGAR TAMBIÉN esta función para detener la limpieza periódica:
+  stopPeriodicCleanup() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
     }
   },
 

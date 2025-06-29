@@ -1,9 +1,9 @@
 /**
- * Hell Shooter - Boss Movement System ARREGLADO
+ * Hell Shooter - Boss Movement System COMPLETAMENTE ARREGLADO
  * CAMBIOS:
- * - Boss SOLO se mueve en fase HUNTING
- * - Verificación estricta de isStationary
- * - No movimiento en fases especiales
+ * - Boss SÍ puede tocar al jugador en paredes
+ * - Distancia de parada ELIMINADA
+ * - Movimiento más agresivo
  */
 
 const BossMovement = {
@@ -42,10 +42,10 @@ const BossMovement = {
   // ======================================================
 
   enableFluidHunting() {
-    console.log("🏃 Boss iniciando persecución fluida");
+    console.log("🏃 Boss iniciando persecución fluida AGRESIVA");
     this.movement.enabled = true;
     this.movement.pattern = "hunting";
-    this.movement.speed = 3.5;
+    this.movement.speed = 4.0; // 🔥 AUMENTADO de 3.5 a 4.0
   },
 
   stopMovementAndCenter() {
@@ -110,7 +110,7 @@ const BossMovement = {
   },
 
   // ======================================================
-  // 🔥 ACTUALIZACIÓN CORREGIDA - VERIFICACIONES ESTRICTAS
+  // 🔥 ACTUALIZACIÓN CORREGIDA - MOVIMIENTO AGRESIVO
   // ======================================================
 
   update() {
@@ -135,7 +135,7 @@ const BossMovement = {
     // Ejecutar el patrón de movimiento actual
     switch (this.movement.pattern) {
       case "hunting":
-        this.perfectHunting();
+        this.aggressiveHunting(); // 🔥 NUEVA FUNCIÓN
         break;
       case "teleporting":
         this.updateTeleporting();
@@ -144,13 +144,13 @@ const BossMovement = {
   },
 
   // ======================================================
-  // PATRONES DE MOVIMIENTO
+  // 🔥 NUEVO: MOVIMIENTO SÚPER AGRESIVO
   // ======================================================
 
   /**
-   * Movimiento de caza perfeccionado para poder alcanzar al jugador
+   * Movimiento súper agresivo - Boss SIEMPRE se acerca al jugador
    */
-  perfectHunting() {
+  aggressiveHunting() {
     const playerPos = Player.getPosition();
     const playerSize = Player.getSize();
     const boss = this.bossManager.boss;
@@ -164,9 +164,9 @@ const BossMovement = {
     const dy = playerCenterY - bossCenterY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // 🔥 DISTANCIA DE PARADA REDUCIDA: 20px en lugar de 50px
-    // Esto permite que el boss se acerque más al jugador
-    if (distance > 20) {
+    // 🔥 SIN DISTANCIA DE PARADA - SIEMPRE SE MUEVE HACIA EL JUGADOR
+    if (distance > 5) {
+      // Solo parar si está ENCIMA del jugador (5px)
       let speed = this.movement.speed;
 
       // 🔥 APLICAR SLOWMOTION AL BOSS
@@ -179,6 +179,13 @@ const BossMovement = {
 
       boss.x += dirX * speed;
       boss.y += dirY * speed;
+
+      // 🔥 DEBUG: Mostrar cuando está muy cerca pero no para
+      if (distance < 30) {
+        console.log(
+          `🎯 Boss MUY CERCA del jugador - Distancia: ${distance.toFixed(1)}px`
+        );
+      }
     }
 
     this.keepInBounds();
@@ -208,23 +215,23 @@ const BossMovement = {
       );
     }
 
-    // Posiciones cerca del jugador
+    // 🔥 POSICIONES MÁS CERCA DEL JUGADOR
     const teleportPositions = [
-      { x: playerPos.x + 120, y: playerPos.y + 80 },
-      { x: playerPos.x - 120, y: playerPos.y + 80 },
-      { x: playerPos.x + 80, y: playerPos.y - 120 },
-      { x: playerPos.x - 80, y: playerPos.y - 120 },
-      { x: playerPos.x + 150, y: playerPos.y },
-      { x: playerPos.x - 150, y: playerPos.y },
+      { x: playerPos.x + 80, y: playerPos.y + 60 }, // Más cerca
+      { x: playerPos.x - 80, y: playerPos.y + 60 }, // Más cerca
+      { x: playerPos.x + 60, y: playerPos.y - 80 }, // Más cerca
+      { x: playerPos.x - 60, y: playerPos.y - 80 }, // Más cerca
+      { x: playerPos.x + 100, y: playerPos.y }, // Más cerca
+      { x: playerPos.x - 100, y: playerPos.y }, // Más cerca
     ];
 
     // Filtrar posiciones válidas
     const validPositions = teleportPositions.filter(
       (pos) =>
-        pos.x >= 80 &&
-        pos.x <= canvas.width - 80 - boss.width &&
-        pos.y >= 80 &&
-        pos.y <= canvas.height - 80 - boss.height
+        pos.x >= 40 && // 🔥 REDUCIDO margen de 80 a 40
+        pos.x <= canvas.width - 40 - boss.width &&
+        pos.y >= 40 && // 🔥 REDUCIDO margen de 80 a 40
+        pos.y <= canvas.height - 40 - boss.height
     );
 
     if (validPositions.length > 0) {
@@ -249,9 +256,9 @@ const BossMovement = {
       }
 
       console.log(
-        `📡 Boss teletransportado a (${Math.round(newPos.x)}, ${Math.round(
-          newPos.y
-        )})`
+        `📡 Boss teletransportado MÁS CERCA a (${Math.round(
+          newPos.x
+        )}, ${Math.round(newPos.y)})`
       );
     }
   },
@@ -260,13 +267,13 @@ const BossMovement = {
     const canvas = window.getCanvas();
     const boss = this.bossManager.boss;
 
-    // MÁRGENES SEGUROS PARA EVITAR ESQUINAS
-    const safeMargin = 80;
+    // 🔥 MÁRGENES MÁS PEQUEÑOS para que pueda ir más cerca de las paredes
+    const safeMargin = 20; // Era 80, ahora 20
 
     const oldX = boss.x;
     const oldY = boss.y;
 
-    // Mantener dentro de límites seguros
+    // Mantener dentro de límites más estrechos
     boss.x = Math.max(
       safeMargin,
       Math.min(canvas.width - boss.width - safeMargin, boss.x)
@@ -300,16 +307,16 @@ const BossMovement = {
         this.stuckCounter = 0;
       }
     }
-    // EN MODO HUNTING NO HAY REBOTE - Solo seguir al jugador
+    // EN MODO HUNTING: Permitir que se quede en paredes persiguiendo
     else if (this.movement.pattern === "hunting") {
-      // No hacer nada especial, el boss sigue al jugador normalmente
-      // aunque esté en una pared
+      // El boss puede quedarse pegado a las paredes si el jugador está ahí
+      console.log("🎯 Boss en modo hunting - puede estar contra paredes");
     }
   },
 
-  // 🔥 NUEVA FUNCIÓN: Detectar si está en esquina
+  // 🔥 FUNCIÓN: Detectar si está en esquina (solo para teleporting)
   isBossStuckInCorner(boss, canvas) {
-    const cornerThreshold = 120; // Distancia para considerar "esquina"
+    const cornerThreshold = 60; // Reducido de 120 a 60
 
     // Verificar las 4 esquinas
     const isNearTopLeft = boss.x < cornerThreshold && boss.y < cornerThreshold;
@@ -328,7 +335,7 @@ const BossMovement = {
     );
   },
 
-  // 🔥 NUEVA FUNCIÓN: Reposicionar desde esquina
+  // 🔥 FUNCIÓN: Reposicionar desde esquina
   repositionFromCorner(boss, canvas) {
     const centerX = canvas.width / 2 - boss.width / 2;
     const centerY = canvas.height / 2 - boss.height / 2;
@@ -341,7 +348,7 @@ const BossMovement = {
     boss.y = centerY + offsetY;
 
     // Asegurar que sigue dentro de límites
-    const safeMargin = 80;
+    const safeMargin = 20; // Reducido de 80 a 20
     boss.x = Math.max(
       safeMargin,
       Math.min(canvas.width - boss.width - safeMargin, boss.x)
@@ -368,16 +375,16 @@ const BossMovement = {
     );
   },
 
-  // 🔥 NUEVA FUNCIÓN: Reposicionamiento de emergencia
+  // 🔥 FUNCIÓN: Reposicionamiento de emergencia
   emergencyRepositioning(boss, canvas) {
     console.log("🚨 REPOSICIONAMIENTO DE EMERGENCIA");
 
-    // Posiciones seguras predefinidas
+    // Posiciones seguras más cerca de los bordes
     const safePositions = [
-      { x: canvas.width * 0.5, y: canvas.height * 0.3 }, // Centro-arriba
-      { x: canvas.width * 0.3, y: canvas.height * 0.5 }, // Centro-izquierda
-      { x: canvas.width * 0.7, y: canvas.height * 0.5 }, // Centro-derecha
-      { x: canvas.width * 0.5, y: canvas.height * 0.7 }, // Centro-abajo
+      { x: canvas.width * 0.5, y: canvas.height * 0.2 }, // Centro-arriba
+      { x: canvas.width * 0.2, y: canvas.height * 0.5 }, // Centro-izquierda
+      { x: canvas.width * 0.8, y: canvas.height * 0.5 }, // Centro-derecha
+      { x: canvas.width * 0.5, y: canvas.height * 0.8 }, // Centro-abajo
       { x: canvas.width * 0.5, y: canvas.height * 0.5 }, // Centro exacto
     ];
 
@@ -388,8 +395,8 @@ const BossMovement = {
     boss.x = randomPos.x - boss.width / 2;
     boss.y = randomPos.y - boss.height / 2;
 
-    // Verificar límites finales
-    const safeMargin = 80;
+    // Verificar límites finales más estrechos
+    const safeMargin = 20; // Reducido de 80 a 20
     boss.x = Math.max(
       safeMargin,
       Math.min(canvas.width - boss.width - safeMargin, boss.x)
@@ -426,13 +433,13 @@ const BossMovement = {
   // ======================================================
 
   onDamageReceived(healthPercentage) {
-    const baseSpeed = 3.5;
-    this.movement.speed = baseSpeed + (1.0 - healthPercentage) * 1.5;
+    const baseSpeed = 4.0; // 🔥 AUMENTADO de 3.5 a 4.0
+    this.movement.speed = baseSpeed + (1.0 - healthPercentage) * 2.0; // 🔥 AUMENTADO multiplicador
 
-    // Teletransporte defensivo si vida muy baja
+    // Teletransporte defensivo más frecuente si vida muy baja
     if (
-      healthPercentage < 0.2 &&
-      Math.random() < 0.15 &&
+      healthPercentage < 0.3 && // 🔥 CAMBIADO de 0.2 a 0.3
+      Math.random() < 0.25 && // 🔥 AUMENTADO de 0.15 a 0.25
       this.movement.pattern === "hunting"
     ) {
       this.defensiveTeleport();
@@ -444,30 +451,20 @@ const BossMovement = {
     const boss = this.bossManager.boss;
     const playerPos = Player.getPosition();
 
-    // Posiciones alejadas del jugador
+    // 🔥 POSICIONES MÁS CERCA del jugador (no tan defensivas)
     const escapePositions = [
-      { x: canvas.width * 0.1, y: canvas.height * 0.1 },
-      { x: canvas.width * 0.9 - boss.width, y: canvas.height * 0.1 },
-      { x: canvas.width * 0.1, y: canvas.height * 0.9 - boss.height },
+      { x: canvas.width * 0.2, y: canvas.height * 0.2 }, // Más cerca
+      { x: canvas.width * 0.8 - boss.width, y: canvas.height * 0.2 },
+      { x: canvas.width * 0.2, y: canvas.height * 0.8 - boss.height },
       {
-        x: canvas.width * 0.9 - boss.width,
-        y: canvas.height * 0.9 - boss.height,
+        x: canvas.width * 0.8 - boss.width,
+        y: canvas.height * 0.8 - boss.height,
       },
     ];
 
-    // Elegir la posición más alejada del jugador
-    let bestPosition = escapePositions[0];
-    let maxDistance = 0;
-
-    escapePositions.forEach((pos) => {
-      const distance = Math.sqrt(
-        Math.pow(pos.x - playerPos.x, 2) + Math.pow(pos.y - playerPos.y, 2)
-      );
-      if (distance > maxDistance) {
-        maxDistance = distance;
-        bestPosition = pos;
-      }
-    });
+    // Elegir posición aleatoria (no necesariamente la más lejana)
+    const randomPosition =
+      escapePositions[Math.floor(Math.random() * escapePositions.length)];
 
     // Efecto y teletransporte
     if (this.bossManager.ui) {
@@ -479,8 +476,8 @@ const BossMovement = {
       );
     }
 
-    boss.x = bestPosition.x;
-    boss.y = bestPosition.y;
+    boss.x = randomPosition.x;
+    boss.y = randomPosition.y;
 
     if (this.bossManager.ui) {
       this.bossManager.ui.createParticleEffect(
@@ -490,12 +487,12 @@ const BossMovement = {
         30
       );
       this.bossManager.ui.showScreenMessage(
-        "👹 Teletransporte defensivo!",
+        "👹 Teletransporte agresivo!",
         "#FF00FF"
       );
     }
 
-    console.log("🛡️ Boss realizó teletransporte defensivo");
+    console.log("🛡️ Boss realizó teletransporte más agresivo");
   },
 
   // ======================================================
@@ -534,11 +531,11 @@ const BossMovement = {
     this.movement = {
       enabled: false,
       pattern: "hunting",
-      speed: 3.5,
+      speed: 4.0, // 🔥 AUMENTADO valor inicial
       teleportTimer: 0,
       teleportCooldown: 90,
     };
-    console.log("🔄 Sistema de movimiento reseteado");
+    console.log("🔄 Sistema de movimiento AGRESIVO reseteado");
   },
 
   // ======================================================
@@ -567,4 +564,6 @@ const BossMovement = {
 
 window.BossMovement = BossMovement;
 
-console.log("🚶 boss-movement.js ARREGLADO - Solo movimiento en HUNTING");
+console.log(
+  "🚶 boss-movement.js COMPLETAMENTE ARREGLADO - Boss SÚPER AGRESIVO que SÍ puede tocar al jugador en paredes"
+);

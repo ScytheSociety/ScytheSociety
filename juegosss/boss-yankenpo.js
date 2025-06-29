@@ -172,19 +172,19 @@ const BossYanKenPo = {
 
     this.gameState = "completed";
 
-    // 🔥 NUEVA MECÁNICA: Jugador pierde una vida
+    // 🔥 QUITAR VIDA CORRECTAMENTE
     if (window.Player && Player.takeDamage) {
-      Player.takeDamage();
+      const playerDied = Player.takeDamage();
 
       if (this.bossManager.ui) {
         this.bossManager.ui.showScreenMessage(
-          "💔 ¡PERDISTE! -1 VIDA",
+          `💔 ¡PERDISTE! Vidas: ${Player.getLives()}`,
           "#FF0000"
         );
       }
 
       // Verificar si el jugador murió
-      if (Player.getLives() <= 0) {
+      if (playerDied || Player.getLives() <= 0) {
         if (this.bossManager.ui) {
           this.bossManager.ui.showScreenMessage("💀 ¡GAME OVER!", "#FF0000");
         }
@@ -279,10 +279,44 @@ const BossYanKenPo = {
   updateSelection() {
     this.selectionTimer++;
 
-    // Timeout si no selecciona a tiempo
+    // Timeout si no selecciona a tiempo - CON VENTAJA AL JUGADOR
     if (this.selectionTimer >= this.gameConfig.selectionTimeLimit) {
-      console.log("⏰ Tiempo agotado - selección automática aleatoria");
-      this.selectChoice(Math.floor(Math.random() * 3));
+      console.log("⏰ Tiempo agotado - aplicando ventaja probabilística");
+
+      // 🔥 EN TIMEOUT: 60% de probabilidad de victoria automática
+      if (Math.random() < 0.6) {
+        // Generar una combinación ganadora para el jugador
+        const bossChoice = Math.floor(Math.random() * 3);
+        let winningPlayerChoice;
+
+        if (bossChoice === 0) winningPlayerChoice = 2; // Piedra gana a Tijeras
+        else if (bossChoice === 1)
+          winningPlayerChoice = 0; // Tijeras gana a Papel
+        else winningPlayerChoice = 1; // Papel gana a Piedra
+
+        this.playerChoice = winningPlayerChoice;
+        this.bossChoice = bossChoice;
+
+        console.log(
+          `🍀 TIMEOUT CON SUERTE: Jugador(${
+            this.choices[this.playerChoice].name
+          }) vs Boss(${this.choices[this.bossChoice].name})`
+        );
+      } else {
+        // 40% de probabilidad de selección aleatoria normal
+        this.playerChoice = Math.floor(Math.random() * 3);
+        this.bossChoice = Math.floor(Math.random() * 3);
+
+        console.log(
+          `⚡ Timeout normal: Jugador(${
+            this.choices[this.playerChoice].name
+          }) vs Boss(${this.choices[this.bossChoice].name})`
+        );
+      }
+
+      this.disableButtons();
+      this.gameState = "result";
+      this.processResult();
     }
   },
 
@@ -329,21 +363,43 @@ const BossYanKenPo = {
     );
 
     let result;
+
+    // 🔥 NUEVO SISTEMA PROBABILÍSTICO - JUGADOR TIENE VENTAJA
     if (playerChoice === bossChoice) {
-      // En empate, pierde el jugador en esta versión simplificada
-      result = "derrota";
+      // En empate, 70% de probabilidad de que el jugador gane
+      if (Math.random() < 0.7) {
+        result = "victoria";
+        console.log("🎲 EMPATE CONVERTIDO A VICTORIA (70% probabilidad)");
+      } else {
+        result = "derrota";
+        console.log("🎲 Empate mantenido como derrota (30% probabilidad)");
+      }
     } else if (
       (playerChoice === 0 && bossChoice === 1) || // Tijeras vs Papel
       (playerChoice === 1 && bossChoice === 2) || // Papel vs Piedra
       (playerChoice === 2 && bossChoice === 0) // Piedra vs Tijeras
     ) {
-      result = "victoria";
+      // Victoria normal del jugador - 85% de mantenerla
+      if (Math.random() < 0.85) {
+        result = "victoria";
+        console.log("🎲 Victoria normal mantenida (85% probabilidad)");
+      } else {
+        result = "derrota";
+        console.log("🎲 Victoria convertida a derrota (15% probabilidad)");
+      }
     } else {
-      result = "derrota";
+      // Derrota normal - 40% de convertirla a victoria
+      if (Math.random() < 0.4) {
+        result = "victoria";
+        console.log("🎲 DERROTA CONVERTIDA A VICTORIA (40% probabilidad)");
+      } else {
+        result = "derrota";
+        console.log("🎲 Derrota mantenida (60% probabilidad)");
+      }
     }
 
     this.lastResult = result;
-    console.log(`📊 Resultado: ${result}`);
+    console.log(`📊 Resultado final: ${result}`);
 
     this.showResult();
 
@@ -493,19 +549,21 @@ const BossYanKenPo = {
     switch (this.gameState) {
       case "countdown":
         content = `
-          <div>Elige una opción:</div>
-          <div style="font-size: 1.5em; color: #ffff00; margin: 5px 0;">${this.countdown}</div>
-          <div>Victorias: ${this.bossDefeats}/${this.maxDefeats}</div>
-        `;
+        <div>Elige una opción:</div>
+        <div style="font-size: 1.5em; color: #ffff00; margin: 5px 0;">${this.countdown}</div>
+        <div>Victorias: ${this.bossDefeats}/${this.maxDefeats}</div>
+        <div style="font-size: 0.7em; color: #00ff00;">🍀 Tienes ventaja probabilística</div>
+      `;
         break;
 
       case "selection":
         content = `
-          <div>Vidas: ${Player.getLives()}</div>
-          <div style="color: #00ff00; font-weight: bold;">¡ELIGE TU OPCIÓN!</div>
-          <div style="font-size: 0.9em;">Presiona Q, W o E</div>
-          <div>Victorias: ${this.bossDefeats}/${this.maxDefeats}</div>
-        `;
+        <div>Vidas: ${Player.getLives()}</div>
+        <div style="color: #00ff00; font-weight: bold;">¡ELIGE TU OPCIÓN!</div>
+        <div style="font-size: 0.9em;">Presiona Q, W o E</div>
+        <div>Victorias: ${this.bossDefeats}/${this.maxDefeats}</div>
+        <div style="font-size: 0.7em; color: #ffff00;">⏰ Si no eliges, tienes 60% de suerte</div>
+      `;
         break;
 
       case "result":
@@ -522,19 +580,19 @@ const BossYanKenPo = {
         };
 
         content = `
-          <div>Vidas: ${Player.getLives()}</div>
-          <div style="margin: 10px 0;">
-            <span>TÚ: ${choices[this.playerChoice]}</span>
-            <span style="margin: 0 10px;">VS</span>
-            <span>BOSS: ${choices[this.bossChoice]}</span>
-          </div>
-          <div style="color: ${
-            resultColors[this.lastResult]
-          }; font-weight: bold; font-size: 1.2em;">
-            ${resultTexts[this.lastResult]}
-          </div>
-          <div>Victorias: ${this.bossDefeats}/${this.maxDefeats}</div>
-        `;
+        <div>Vidas: ${Player.getLives()}</div>
+        <div style="margin: 10px 0;">
+          <span>TÚ: ${choices[this.playerChoice]}</span>
+          <span style="margin: 0 10px;">VS</span>
+          <span>BOSS: ${choices[this.bossChoice]}</span>
+        </div>
+        <div style="color: ${
+          resultColors[this.lastResult]
+        }; font-weight: bold; font-size: 1.2em;">
+          ${resultTexts[this.lastResult]}
+        </div>
+        <div>Victorias: ${this.bossDefeats}/${this.maxDefeats}</div>
+      `;
         break;
     }
 

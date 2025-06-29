@@ -23,11 +23,12 @@ const GameConfig = {
   bossImage: null,
 
   // Dimensiones dinámicas - TAMAÑOS REDUCIDOS
+  // 🔥 TAMAÑOS BASE MÁS PEQUEÑOS
   PLAYER_SIZE: 80, // Sin cambios
   BULLET_WIDTH: 20, // Sin cambios
   BULLET_HEIGHT: 40, // Sin cambios
-  ENEMY_MIN_SIZE: 20, // Era 30, ahora 20 (33% más pequeño)
-  ENEMY_MAX_SIZE: 40, // Era 60, ahora 40 (33% más pequeño)
+  ENEMY_MIN_SIZE: 18, // Era 20, ahora 18 (10% más pequeño)
+  ENEMY_MAX_SIZE: 35, // Era 40, ahora 35 (12.5% más pequeño)
 
   // ======================================================
   // CONFIGURACIÓN DE NIVELES - CONFIGURACIÓN ORIGINAL BUENA
@@ -89,9 +90,12 @@ const GameConfig = {
     // Tamaño variable aleatorio 🔥 NUEVO
     sizeVariation: {
       enabled: true,
-      minScale: 0.7, // 70% del tamaño base
-      maxScale: 1.4, // 140% del tamaño base
+      minScale: 0.6, // Era 0.7, ahora 0.6 (más pequeño)
+      maxScale: 1.2, // Era 1.4, ahora 1.2 (máximo más pequeño)
       randomChance: 0.3, // 30% de enemigos tendrán tamaño aleatorio
+
+      // 🔥 NUEVO: Factor de reducción específico para móvil
+      mobileReduction: 0.7, // En móvil, todos los enemigos 30% más pequeños
     },
 
     // Rebotes y colisiones
@@ -350,29 +354,70 @@ const GameConfig = {
    */
   updateSizes(canvas) {
     const baseSize = Math.min(canvas.width, canvas.height) / 20;
-    const mobileScale = this.isMobile ? 0.8 : 1.0;
 
-    // 🔥 TAMAÑOS RESPONSIVOS
+    // 🔥 FACTOR DE ESCALA MÁS AGRESIVO PARA MÓVIL
+    const mobileScale = this.isMobile ? 0.65 : 1.0; // Era 0.8, ahora 0.65 (35% más pequeño)
+
+    // 🔥 TAMAÑOS RESPONSIVOS MÁS CONTROLADOS
     this.PLAYER_SIZE = Math.max(
-      40,
-      Math.min(baseSize * mobileScale, this.isMobile ? 60 : 80)
+      35, // Mínimo más pequeño (era 40)
+      Math.min(baseSize * mobileScale, this.isMobile ? 50 : 80) // Máximo móvil reducido
     );
-    this.BULLET_WIDTH = Math.max(12, this.PLAYER_SIZE * 0.25);
+
+    this.BULLET_WIDTH = Math.max(10, this.PLAYER_SIZE * 0.25); // Más pequeño
     this.BULLET_HEIGHT = this.BULLET_WIDTH * 2;
 
-    // Enemigos responsivos
+    // 🔥 ENEMIGOS MUCHO MÁS PEQUEÑOS EN MÓVIL
     this.ENEMY_MIN_SIZE = Math.max(
-      20,
-      Math.min(baseSize * 0.6 * mobileScale, this.isMobile ? 35 : 50)
+      15, // Mínimo más pequeño (era 20)
+      Math.min(baseSize * 0.5 * mobileScale, this.isMobile ? 25 : 45) // Máximo móvil muy reducido
     );
+
     this.ENEMY_MAX_SIZE = Math.max(
-      35,
-      Math.min(baseSize * 1.0 * mobileScale, this.isMobile ? 55 : 80)
+      25, // Mínimo más pequeño (era 35)
+      Math.min(baseSize * 0.8 * mobileScale, this.isMobile ? 40 : 70) // Máximo móvil muy reducido
     );
 
     console.log(
-      `📐 Tamaños responsivos - Jugador: ${this.PLAYER_SIZE}px, Escala móvil: ${mobileScale}`
+      `📐 Tamaños SÚPER responsivos - Jugador: ${this.PLAYER_SIZE}px, ` +
+        `Enemigos: ${this.ENEMY_MIN_SIZE}-${this.ENEMY_MAX_SIZE}px, ` +
+        `Escala móvil: ${mobileScale} (${this.isMobile ? "MÓVIL" : "PC"})`
     );
+  },
+
+  // 🔥 NUEVA FUNCIÓN: Obtener tamaño de enemigo con reducción móvil aplicada
+  getResponsiveEnemySize(baseSize, level = 1) {
+    let finalSize = baseSize;
+
+    // Aplicar variación de tamaño si está habilitada
+    if (this.ENEMY_CONFIG.sizeVariation.enabled) {
+      if (Math.random() < this.ENEMY_CONFIG.sizeVariation.randomChance) {
+        const scale =
+          this.ENEMY_CONFIG.sizeVariation.minScale +
+          Math.random() *
+            (this.ENEMY_CONFIG.sizeVariation.maxScale -
+              this.ENEMY_CONFIG.sizeVariation.minScale);
+        finalSize *= scale;
+      }
+    }
+
+    // 🔥 APLICAR REDUCCIÓN MÓVIL OBLIGATORIA
+    if (this.isMobile) {
+      finalSize *= this.ENEMY_CONFIG.sizeVariation.mobileReduction;
+    }
+
+    // Aplicar crecimiento por nivel (más controlado)
+    const levelGrowth = 1 + (level - 1) * 0.05; // 5% por nivel (era mayor)
+    finalSize *= levelGrowth;
+
+    // 🔥 LÍMITES ESTRICTOS PARA MÓVIL
+    if (this.isMobile) {
+      finalSize = Math.max(15, Math.min(finalSize, 35)); // Entre 15-35px en móvil
+    } else {
+      finalSize = Math.max(20, Math.min(finalSize, 60)); // Entre 20-60px en PC
+    }
+
+    return Math.round(finalSize);
   },
 
   /**

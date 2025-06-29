@@ -71,38 +71,48 @@ const EnemyManager = {
     const canvas = window.getCanvas();
     const level = window.getLevel();
 
-    // 🔥 TAMAÑOS RESPONSIVOS BASADOS EN PANTALLA
-    const screenScale = Math.min(canvas.width, canvas.height) / 800; // Escala base 800px
-    const mobileScale = GameConfig.isMobile ? 0.7 : 1.0; // 30% más pequeño en móvil
+    // 🔥 NUEVO SISTEMA DE TAMAÑOS RESPONSIVOS
+    let enemySize;
 
-    // En lugar de valores fijos, usar:
-    let baseMinSize, baseMaxSize;
-
-    if (GameConfig.isMobile) {
-      baseMinSize = GameConfig.ENEMY_MIN_SIZE * 0.8;
-      baseMaxSize = GameConfig.ENEMY_MAX_SIZE * 0.8;
+    if (GameConfig.getResponsiveEnemySize) {
+      // Usar la nueva función del config si existe
+      const baseSize =
+        GameConfig.ENEMY_MIN_SIZE +
+        Math.random() * (GameConfig.ENEMY_MAX_SIZE - GameConfig.ENEMY_MIN_SIZE);
+      enemySize = GameConfig.getResponsiveEnemySize(baseSize, level);
     } else {
-      baseMinSize = GameConfig.ENEMY_MIN_SIZE;
-      baseMaxSize = GameConfig.ENEMY_MAX_SIZE;
+      // Fallback: sistema manual más agresivo
+      const screenScale = Math.min(canvas.width, canvas.height) / 800;
+
+      // 🔥 ESCALA MÓVIL MUY AGRESIVA
+      const mobileScale = GameConfig.isMobile ? 0.6 : 1.0; // Era 0.7, ahora 0.6
+
+      // Tamaños base más pequeños
+      let baseMinSize = GameConfig.isMobile ? 15 : 20; // Más pequeño en móvil
+      let baseMaxSize = GameConfig.isMobile ? 30 : 45; // Más pequeño en móvil
+
+      // Crecimiento por nivel más controlado
+      const levelBonus =
+        level * (GameConfig.isMobile ? 1.0 : 2.0) * screenScale;
+      const minSize = Math.max(15, baseMinSize + levelBonus * 0.5); // Crecimiento reducido
+      const maxSize = Math.max(25, baseMaxSize + levelBonus * 0.5); // Crecimiento reducido
+
+      enemySize = (minSize + Math.random() * (maxSize - minSize)) * mobileScale;
+
+      // 🔥 LÍMITES ESTRICTOS FINALES
+      if (GameConfig.isMobile) {
+        enemySize = Math.max(12, Math.min(enemySize, 32)); // Entre 12-32px en móvil
+      } else {
+        enemySize = Math.max(18, Math.min(enemySize, 55)); // Entre 18-55px en PC
+      }
     }
 
-    const sizeBonus = level * (GameConfig.isMobile ? 1.5 : 3) * screenScale;
-    const minSize = Math.max(
-      GameConfig.isMobile ? 25 : 35,
-      baseMinSize + sizeBonus
-    );
-    const maxSize = Math.max(
-      GameConfig.isMobile ? 40 : 60,
-      baseMaxSize + sizeBonus
-    );
-
-    const enemySize = minSize + Math.random() * (maxSize - minSize);
     const x = Math.random() * (canvas.width - enemySize);
 
-    // Velocidad responsiva
+    // Velocidad responsiva (sin cambios)
     const levelSpeedFactor = 1 + level * 0.15;
     const baseSpeed = canvas.height * 0.004 * levelSpeedFactor;
-    const speedScale = GameConfig.isMobile ? 0.8 : 1.0; // Más lento en móvil
+    const speedScale = GameConfig.isMobile ? 0.8 : 1.0;
 
     const angle = (Math.random() * Math.PI) / 2 - Math.PI / 4;
     const speed = baseSpeed * (0.7 + Math.random() * 0.6) * speedScale;
@@ -138,8 +148,18 @@ const EnemyManager = {
 
     this.enemies.push(enemy);
 
-    // Spawn extra con límites responsivos
-    const maxEnemies = GameConfig.isMobile ? 15 : 25;
+    // Debug para verificar tamaños
+    if (GameConfig.isMobile && Math.random() < 0.1) {
+      // 10% de las veces en móvil
+      console.log(
+        `👹 Enemigo móvil spawneado - Tamaño: ${enemySize.toFixed(
+          1
+        )}px, Nivel: ${level}`
+      );
+    }
+
+    // Spawn extra con límites más estrictos para móvil
+    const maxEnemies = GameConfig.isMobile ? 12 : 25; // Reducido de 15 a 12 en móvil
     if (
       level > 3 &&
       Math.random() < level * 0.04 &&
@@ -148,7 +168,8 @@ const EnemyManager = {
       const extraEnemies = Math.min(2, Math.floor(level / 4));
       for (let i = 0; i < extraEnemies; i++) {
         setTimeout(() => {
-          if (!window.isGameEnded() && this.enemies.length < maxEnemies + 5) {
+          if (!window.isGameEnded() && this.enemies.length < maxEnemies + 3) {
+            // +3 en lugar de +5
             this.spawnSimpleEnemy();
           }
         }, i * 400);
@@ -163,8 +184,15 @@ const EnemyManager = {
     const canvas = window.getCanvas();
     const level = window.getLevel();
 
-    // 🔥 TAMAÑOS PEQUEÑOS para enemigos simples también
-    const simpleEnemySize = 20 + Math.random() * 25; // Era 30-60, ahora 20-45
+    // 🔥 ENEMIGOS SIMPLES AÚN MÁS PEQUEÑOS
+    let simpleEnemySize;
+
+    if (GameConfig.isMobile) {
+      simpleEnemySize = 12 + Math.random() * 15; // 12-27px en móvil (era 20-45)
+    } else {
+      simpleEnemySize = 18 + Math.random() * 20; // 18-38px en PC (era 20-45)
+    }
+
     const simpleX = Math.random() * (canvas.width - simpleEnemySize);
     const simpleSpeed = canvas.height * 0.006 * (1 + level * 0.1);
 
@@ -183,7 +211,6 @@ const EnemyManager = {
       spawnTime: window.getGameTime(),
       type: "extra",
 
-      // Sistema de escalado dinámico
       dynamicScaling: {
         enabled: Math.random() < 0.3,
         baseSize: simpleEnemySize,
@@ -197,6 +224,13 @@ const EnemyManager = {
     };
 
     this.enemies.push(enemy);
+
+    // Debug para enemigos simples
+    if (GameConfig.isMobile && Math.random() < 0.2) {
+      console.log(
+        `👹 Enemigo simple móvil - Tamaño: ${simpleEnemySize.toFixed(1)}px`
+      );
+    }
   },
 
   /**
