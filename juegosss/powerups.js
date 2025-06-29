@@ -38,8 +38,11 @@ const PowerUpManager = {
   // SISTEMA DE CORAZONES - ÉPICO Y BALANCEADO
   // ======================================================
 
-  // Agregar esta verificación al inicio de trySpawnHeart():
+  /**
+   * Intenta crear un corazón de forma controlada
+   */
   trySpawnHeart() {
+    // Limitar cantidad máxima de corazones a 2
     if (this.hearts.length >= 2) return;
 
     // 🔥 NUEVO: Reducir probabilidad en fase Touhou
@@ -57,23 +60,21 @@ const PowerUpManager = {
     const playerLives = Player.getLives();
     let heartChance = 0;
 
-    // Sistema inteligente basado en vidas (igual que antes)
+    // 🔥 PROBABILIDADES REDUCIDAS para menos spam de corazones
     if (playerLives <= 1) {
-      heartChance = 0.004;
+      heartChance = 0.003; // Era 0.004, ahora 0.003
     } else if (playerLives <= 2) {
-      heartChance = 0.003;
+      heartChance = 0.002; // Era 0.003, ahora 0.002
     } else if (playerLives <= 3) {
-      heartChance = 0.002;
+      heartChance = 0.001; // Era 0.002, ahora 0.001
     } else if (playerLives <= 4) {
-      heartChance = 0.001;
+      heartChance = 0.0005; // Era 0.001, ahora 0.0005
     } else if (playerLives <= 5) {
-      heartChance = 0.0005;
+      heartChance = 0.0002; // Era 0.0005, ahora 0.0002
     } else if (playerLives <= 6) {
-      heartChance = 0.0003;
-    } else if (playerLives <= 7) {
-      heartChance = 0.0001;
-    } else if (playerLives >= 8) {
-      heartChance = 0;
+      heartChance = 0.0001; // Era 0.0003, ahora 0.0001
+    } else {
+      heartChance = 0; // Eliminar corazones si ya tienes 7+ vidas
     }
 
     // 🔥 APLICAR REDUCCIÓN DE FASE TOUHOU

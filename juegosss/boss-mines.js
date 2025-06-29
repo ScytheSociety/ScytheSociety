@@ -288,10 +288,15 @@ const BossMines = {
     console.log(`💣 Mina dirigida spawneada cerca del jugador`);
   },
 
+  /**
+   * Spawn de campo de minas estáticas - REDUCIDO
+   */
   spawnStaticMineField() {
     const canvas = window.getCanvas();
     const playerPos = Player.getPosition();
-    const mineCount = 2 + Math.floor(Math.random() * 2); // 2-3 minas
+
+    // 🔥 REDUCIR CANTIDAD: 1-2 minas (era 2-3)
+    const mineCount = 1 + Math.floor(Math.random() * 2);
 
     for (let i = 0; i < mineCount; i++) {
       let x, y;
@@ -331,11 +336,6 @@ const BossMines = {
           y = playerPos.y + (Math.random() - 0.5) * 150;
           console.log(`💣 Jugador CENTRO detectado - mina lateral`);
         }
-      } else if (i === 2) {
-        // Tercera mina: Completamente aleatoria para presión general
-        x = 120 + Math.random() * (canvas.width - 240);
-        y = 120 + Math.random() * (canvas.height - 240);
-        console.log(`💣 Mina aleatoria para presión general`);
       }
 
       // Mantener dentro de pantalla
@@ -371,33 +371,6 @@ const BossMines = {
       staticMine.dangerRadius = this.mineConfig.staticDangerRadius;
 
       this.mines.push(staticMine);
-    }
-
-    // 🔥 AGREGAR AL FINAL - FORZAR MINAS EN LAS 4 ESQUINAS (25% probabilidad)
-    if (Math.random() < 0.25) {
-      const corners = [
-        { x: 80, y: 80 }, // Esquina superior izquierda
-        { x: canvas.width - 120, y: 80 }, // Esquina superior derecha
-        { x: 80, y: canvas.height - 120 }, // Esquina inferior izquierda
-        { x: canvas.width - 120, y: canvas.height - 120 }, // Esquina inferior derecha
-      ];
-
-      const randomCorner = corners[Math.floor(Math.random() * corners.length)];
-
-      const cornerMine = this.createMine(randomCorner.x, randomCorner.y, null);
-      cornerMine.isStatic = true;
-      cornerMine.armed = true;
-      cornerMine.type = "corner_static";
-      cornerMine.width = this.mineConfig.size * 0.7;
-      cornerMine.height = this.mineConfig.size * 0.7;
-      cornerMine.dangerRadius = this.mineConfig.staticDangerRadius;
-
-      this.mines.push(cornerMine);
-      console.log(
-        `💣 Mina en esquina spawneada en (${Math.round(
-          randomCorner.x
-        )}, ${Math.round(randomCorner.y)})`
-      );
     }
 
     console.log(`💣 Campo de ${mineCount} minas estáticas DIRIGIDAS spawneado`);
@@ -710,6 +683,9 @@ const BossMines = {
     }
   },
 
+  /**
+   * Crea una explosión en forma de L con mayor alcance
+   */
   createLExplosion(mine) {
     const startX = mine.x + mine.width / 2;
     const startY = mine.y + mine.height / 2;
@@ -722,8 +698,9 @@ const BossMines = {
       // Disparar una línea de explosiones
       for (let i = 0; i <= path.length; i++) {
         setTimeout(() => {
-          const explosionX = startX + path.dx * i * 60; // 60px entre explosiones
-          const explosionY = startY + path.dy * i * 60;
+          // 🔥 MAYOR DISTANCIA: 80px entre explosiones (era 60px)
+          const explosionX = startX + path.dx * i * 80;
+          const explosionY = startY + path.dy * i * 80;
 
           // Crear explosión visual
           this.bossManager.ui.createParticleEffect(
@@ -733,8 +710,8 @@ const BossMines = {
             25
           );
 
-          // Crear zona de daño que dura un momento
-          this.createDamageZone(explosionX, explosionY, 50, 500); // 500ms de duración
+          // 🔥 ZONA DE DAÑO MÁS GRANDE: 80px de radio (era 50px)
+          this.createDamageZone(explosionX, explosionY, 80, 500);
         }, i * 100); // 100ms entre cada explosión de la línea
       }
     });

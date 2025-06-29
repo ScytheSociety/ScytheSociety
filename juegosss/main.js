@@ -1023,6 +1023,9 @@ function checkCollisions() {
 function checkLifeBasedEvents() {
   if (typeof Player === "undefined" || !Player.getLives) return;
 
+  // 🔥 NUEVO: No activar eventos en nivel 11 (boss)
+  if (level === 11) return;
+
   // No activar durante fases especiales del boss
   if (level === 11 && window.BossManager) {
     if (BossManager.redline && BossManager.redline.phaseActive) return;
@@ -1036,16 +1039,16 @@ function checkLifeBasedEvents() {
     return;
   }
 
-  // Lluvia de power-ups (1 vida) - era 0.01, ahora 0.015
+  // Lluvia de power-ups (1 vida)
   if (playerLives === 1 && Math.random() < 0.015) {
     triggerPowerUpRain();
   }
-  // Modo frenesí (2 vidas o menos) - era 0.005, ahora 0.012
+  // Modo frenesí (2 vidas o menos)
   else if (playerLives <= 2 && Math.random() < 0.012) {
     triggerFrenzyMode();
   }
-  // Tiempo lento (5 vidas o menos) - era 0.003, ahora 0.008
-  else if (playerLives <= 5 && Math.random() < 0.008) {
+  // Tiempo lento (5 vidas o menos) - SOLO EN NIVELES 1-10
+  else if (playerLives <= 5 && Math.random() < 0.008 && level <= 10) {
     triggerSlowMotion();
   }
 }

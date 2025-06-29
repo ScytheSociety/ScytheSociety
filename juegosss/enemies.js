@@ -293,7 +293,7 @@ const EnemyManager = {
   },
 
   /**
-   * Actualiza el movimiento de todos los enemigos - CON TIEMPO LENTO MEJORADO
+   * Actualiza el movimiento de todos los enemigos - CON TIEMPO LENTO MEJORADO Y REBOTES CONTROLADOS
    */
   updateEnemyMovement() {
     const canvas = window.getCanvas();
@@ -301,7 +301,7 @@ const EnemyManager = {
     const wallBounceFactorY = 1.1;
     const enemyBounceFactorBase = 0.85;
 
-    // 🔥 TIEMPO LENTO FORZADO PARA TODOS
+    // 🔥 APLICAR SLOWMOTION A ENEMIGOS
     let globalSlowFactor = 1.0;
     if (window.slowMotionActive) {
       globalSlowFactor = 0.05; // 5% de velocidad OBLIGATORIO
@@ -351,13 +351,14 @@ const EnemyManager = {
         enemy.bounceCount++;
       }
 
-      // 🔥 AGRESIVIDAD también lenta
+      // 🔥 AGRESIVIDAD CONTROLADA - Velocidad máxima limitada
       if (enemy.bounceCount >= enemy.maxBounces) {
-        const aggressionMultiplier = window.slowMotionActive ? 1.01 : 1.2;
+        // CAMBIO AQUÍ: Factor de agresividad reducido y velocidad máxima limitada
+        const aggressionMultiplier = window.slowMotionActive ? 1.01 : 1.1; // Reducido de 1.2 a 1.1
         enemy.speedFactor = Math.min(
           enemy.speedFactor * aggressionMultiplier,
-          2.0
-        );
+          1.5
+        ); // Máximo de 1.5 (era 2.0)
         enemy.bounceCount = 0;
       }
 
@@ -373,7 +374,7 @@ const EnemyManager = {
         enemy.velocityY = Math.abs(Math.cos(angle) * speed);
       }
 
-      // Colisiones entre enemigos (resto igual pero con globalSlowFactor aplicado)
+      // Colisiones entre enemigos con velocidad máxima limitada
       for (let j = i + 1; j < this.enemies.length; j++) {
         const otherEnemy = this.enemies[j];
         if (this.checkCollision(enemy, otherEnemy)) {
@@ -405,15 +406,16 @@ const EnemyManager = {
             otherEnemy.velocityY =
               (otherEnemy.velocityY + ny * (p1 - p2)) * otherEnemyBounceFactor;
 
-            const speedFactorIncrease = window.slowMotionActive ? 1.01 : 1.08;
+            // CAMBIO AQUÍ: Factor de incremento reducido y máximo menor
+            const speedFactorIncrease = window.slowMotionActive ? 1.01 : 1.05; // Era 1.08, ahora 1.05
             enemy.speedFactor = Math.min(
               enemy.speedFactor * speedFactorIncrease,
-              2.0
-            );
+              1.5
+            ); // Máximo de 1.5 (era 2.0)
             otherEnemy.speedFactor = Math.min(
               otherEnemy.speedFactor * speedFactorIncrease,
-              2.0
-            );
+              1.5
+            ); // Máximo de 1.5 (era 2.0)
 
             const overlap = (enemy.width + otherEnemy.width) / 2 - dist + 3;
             if (overlap > 0) {
@@ -426,9 +428,9 @@ const EnemyManager = {
         }
       }
 
-      // 🔥 LÍMITE DE VELOCIDAD también aplicado
+      // 🔥 LÍMITE DE VELOCIDAD REDUCIDO
       const baseMaxSpeed =
-        canvas.height * 0.025 * (1 + window.getLevel() * 0.15);
+        canvas.height * 0.015 * (1 + window.getLevel() * 0.1); // Reducido de 0.025 a 0.015
       const maxSpeed = baseMaxSpeed * globalSlowFactor;
 
       const currentSpeed = Math.sqrt(

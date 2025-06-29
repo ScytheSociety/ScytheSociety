@@ -64,7 +64,7 @@ const BulletManager = {
   },
 
   /**
-   * Inicia el disparo automático - VERSION MEJORADA CON VERIFICACIÓN
+   * Inicia el disparo automático con velocidad consistente y correcta
    */
   startAutoShoot() {
     // SIEMPRE detener primero para evitar múltiples intervalos
@@ -83,18 +83,17 @@ const BulletManager = {
 
     const level = window.getLevel();
 
-    // 🔥 CORREGIDO: Velocidad de auto-disparo rebalanceada
+    // 🔥 CORREGIDO: Velocidad de auto-disparo por rangos de nivel
     let baseDelay;
-
-    if (level <= 4) {
-      // Niveles 1-4: Auto-disparo progresivo
-      baseDelay = 180 - level * 20; // 160, 140, 120, 100
+    if (level <= 5) {
+      baseDelay = 160; // Niveles 1-5: Misma velocidad base
     } else {
-      // Nivel 5+: Auto-disparo más controlado
-      baseDelay = 140 - (level - 4) * 8; // 132, 124, 116...
+      baseDelay = 120; // Nivel 6+: Velocidad mayor y fija
     }
 
-    const shootDelay = Math.max(60, baseDelay);
+    console.log(
+      `🔫 Auto-disparo con velocidad base: ${baseDelay}ms (Nivel ${level})`
+    );
 
     this.autoShootInterval = setInterval(() => {
       // Verificación adicional antes de cada disparo
@@ -104,10 +103,10 @@ const BulletManager = {
         console.log("🔫 Deteniendo auto-disparo: condiciones no válidas");
         this.stopAutoShoot();
       }
-    }, shootDelay);
+    }, baseDelay); // Usamos la velocidad base aquí, shootBullet() manejará los modificadores
 
     console.log(
-      `🔫 Auto-disparo ÉPICO iniciado: ${shootDelay}ms (Intervalo: ${this.autoShootInterval})`
+      `🔫 Auto-disparo ÉPICO iniciado: ${baseDelay}ms (Intervalo: ${this.autoShootInterval})`
     );
   },
 
@@ -141,39 +140,49 @@ const BulletManager = {
   // CREACIÓN DE BALAS - MÁXIMO 3 BALAS
   // ======================================================
 
+  /**
+   * Dispara una bala con velocidad consistente y modificadores correctos
+   */
   shootBullet() {
     const currentTime = Date.now();
     const level = window.getLevel();
 
-    // === SISTEMA CORRECTO ===
+    // === SISTEMA DE VELOCIDAD BASE CONSISTENTE ===
+    // 🔥 CORREGIDO: Velocidades fijas por rango de nivel
     let baseCooldownTime;
     if (level <= 5) {
       baseCooldownTime = 160; // MISMO TIEMPO para niveles 1-5
     } else {
-      baseCooldownTime = 120; // MÁS RÁPIDO para niveles 6-10 (FIJO también)
+      baseCooldownTime = 120; // MÁS RÁPIDO para niveles 6-11
     }
 
+    // Guardar velocidad base para debug
+    const originalCooldownTime = baseCooldownTime;
     let finalCooldownTime = baseCooldownTime;
 
-    // === PODER DISPARO RÁPIDO: SUMA velocidad ===
+    // === PODER DISPARO RÁPIDO: SIEMPRE SUMA VELOCIDAD ===
+    // 🔥 CORREGIDO: Verificación independiente y aditiva
     const activePowerUps = Player.getActivePowerUps();
     const hasRapidFire = activePowerUps.some((p) => p.id === 3);
+
     if (hasRapidFire) {
-      finalCooldownTime = Math.max(25, finalCooldownTime - 50); // SUMA 50ms de velocidad
+      // Siempre resta 50ms al tiempo actual (aumenta velocidad)
+      finalCooldownTime = Math.max(25, finalCooldownTime - 50);
       console.log(
-        `⚡ Rapid Fire: ${baseCooldownTime}ms → ${finalCooldownTime}ms (-50ms)`
+        `⚡ Rapid Fire: ${originalCooldownTime}ms → ${finalCooldownTime}ms (-50ms)`
       );
     }
 
-    // === FRENESÍ: SUMA AÚN MÁS velocidad ===
+    // === FRENESÍ: TAMBIÉN SUMA VELOCIDAD INDEPENDIENTEMENTE ===
     if (window.frenzyModeActive) {
-      finalCooldownTime = Math.max(15, finalCooldownTime - 60); // SUMA 60ms adicionales
+      // Suma velocidad adicional en modo frenesí
+      finalCooldownTime = Math.max(15, finalCooldownTime - 60);
       console.log(
         `🔥 Frenesí: velocidad final ${finalCooldownTime}ms (-60ms adicionales)`
       );
     }
 
-    // Resto del código igual...
+    // === VERIFICACIÓN DE TIEMPO PARA DISPARAR ===
     if (currentTime - this.lastShootTime > finalCooldownTime) {
       const canvas = window.getCanvas();
       const bulletSpeed = canvas.height * (0.018 + level * 0.003);
@@ -191,16 +200,18 @@ const BulletManager = {
         lifeTime: 0,
       };
 
+      // Aplicar efectos de power-ups
       for (const powerUp of activePowerUps) {
         switch (powerUp.id) {
-          case 0:
+          case 0: // Escudo (no afecta balas)
             break;
-          case 1:
+          case 1: // Wide Shot
             bulletCount = Math.max(bulletCount, 5 + level);
             break;
-          case 2:
+          case 2: // Explosive
             bulletConfig.explosive = true;
             break;
+          // case 3 (Rapid Fire) ya fue manejado arriba
         }
       }
 

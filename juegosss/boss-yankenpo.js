@@ -1,10 +1,9 @@
 /**
- * Hell Shooter - Boss Yan Ken Po System Optimizado
+ * Versión simplificada del YanKenPo para la fase final
  */
-
 const BossYanKenPo = {
   // ======================================================
-  // ESTADO DEL SISTEMA YAN KEN PO
+  // ESTADO DEL SISTEMA YAN KEN PO SIMPLIFICADO
   // ======================================================
 
   bossManager: null,
@@ -16,9 +15,7 @@ const BossYanKenPo = {
     return GameConfig.YANKENPO_CONFIG;
   },
 
-  // Estado del juego
-  roundsWon: 0,
-  currentRound: 0,
+  // Estado del juego simplificado
   playerChoice: null,
   bossChoice: null,
   lastResult: null,
@@ -50,8 +47,6 @@ const BossYanKenPo = {
     this.bossManager = bossManagerRef;
     this.phaseActive = false;
     this.gameState = "inactive";
-    this.roundsWon = 0;
-    this.currentRound = 0;
     this.playerChoice = null;
     this.bossChoice = null;
     this.lastResult = null;
@@ -67,19 +62,17 @@ const BossYanKenPo = {
   },
 
   // ======================================================
-  // CONTROL DE FASE
+  // CONTROL DE FASE SIMPLIFICADO
   // ======================================================
 
   startPhase() {
-    console.log("✂️ === INICIANDO FASE YAN KEN PO ===");
+    console.log("✂️ === INICIANDO FASE YAN KEN PO SIMPLIFICADA ===");
 
     // Limpiar elementos residuales de fases previas
     this.cleanupPreviousPhases();
 
     this.phaseActive = true;
     this.gameState = "countdown";
-    this.roundsWon = 0;
-    this.currentRound = 1;
     this.countdown = this.gameConfig.countdownDuration;
     this.countdownTimer = 0;
 
@@ -108,70 +101,8 @@ const BossYanKenPo = {
     }
   },
 
-  endPhase() {
-    console.log("✂️ Terminando fase Yan Ken Po");
-
-    this.phaseActive = false;
-    this.gameState = "inactive";
-
-    this.cleanup();
-    this.restorePlayerControls();
-
-    // Boss vuelve a ser vulnerable
-    this.bossManager.isImmune = false;
-    this.bossManager.immunityTimer = 0;
-  },
-
   // ======================================================
-  // ACTUALIZACIÓN PRINCIPAL
-  // ======================================================
-
-  update() {
-    if (!this.phaseActive) return;
-
-    switch (this.gameState) {
-      case "countdown":
-        this.updateCountdown();
-        break;
-      case "selection":
-        this.updateSelection();
-        break;
-      case "result":
-        // Los resultados se manejan con timeouts
-        break;
-      case "completed":
-        // Fase completada
-        break;
-    }
-  },
-
-  updateCountdown() {
-    this.countdownTimer++;
-
-    if (this.countdownTimer >= 60) {
-      // 1 segundo
-      this.countdown--;
-      this.countdownTimer = 0;
-      this.updateInfoDisplay();
-
-      if (this.countdown <= 0) {
-        this.startSelection();
-      }
-    }
-  },
-
-  updateSelection() {
-    this.selectionTimer++;
-
-    // Timeout si no selecciona a tiempo
-    if (this.selectionTimer >= this.gameConfig.selectionTimeLimit) {
-      console.log("⏰ Tiempo agotado - selección automática aleatoria");
-      this.selectChoice(Math.floor(Math.random() * 3));
-    }
-  },
-
-  // ======================================================
-  // VICTORIA/DERROTA MEJORADAS
+  // VICTORIA/DERROTA SIMPLIFICADAS
   // ======================================================
 
   handleGameWin() {
@@ -237,26 +168,44 @@ const BossYanKenPo = {
   },
 
   handleGameLoss() {
-    console.log("💀 Jugador perdió/empató el Yan Ken Po");
+    console.log("💀 Jugador perdió el Yan Ken Po - Pierde una vida");
 
     this.gameState = "completed";
 
-    if (this.bossManager.ui) {
-      this.bossManager.ui.showScreenMessage(
-        "💀 ¡EMPATE/PERDISTE! Fase aleatoria...",
-        "#FF0000"
-      );
-    }
+    // 🔥 NUEVA MECÁNICA: Jugador pierde una vida
+    if (window.Player && Player.takeDamage) {
+      Player.takeDamage();
 
-    // 🔥 OCULTAR UI DE YAN KEN PO
-    this.removeGameUI();
-
-    setTimeout(() => {
-      // 🔥 NO TERMINAR FASE - SOLO ACTIVAR FASE ALEATORIA
-      if (this.bossManager.phases) {
-        this.bossManager.phases.handleYanKenPoLoss();
+      if (this.bossManager.ui) {
+        this.bossManager.ui.showScreenMessage(
+          "💔 ¡PERDISTE! -1 VIDA",
+          "#FF0000"
+        );
       }
-    }, 2000);
+
+      // Verificar si el jugador murió
+      if (Player.getLives() <= 0) {
+        if (this.bossManager.ui) {
+          this.bossManager.ui.showScreenMessage("💀 ¡GAME OVER!", "#FF0000");
+        }
+
+        // Ocultar UI de Yan Ken Po
+        this.removeGameUI();
+
+        // Activar game over global
+        setTimeout(() => {
+          if (window.gameOver && typeof window.gameOver === "function") {
+            window.gameOver();
+          }
+        }, 1000);
+        return;
+      }
+
+      // Si el jugador sigue vivo, nueva ronda
+      setTimeout(() => {
+        this.restartYanKenPo();
+      }, 3000);
+    }
   },
 
   restartYanKenPo() {
@@ -270,8 +219,6 @@ const BossYanKenPo = {
 
     // Resetear estado del juego pero mantener contador de derrotas
     this.gameState = "countdown";
-    this.roundsWon = 0;
-    this.currentRound = 1;
     this.countdown = this.gameConfig.countdownDuration;
     this.countdownTimer = 0;
     this.playerChoice = null;
@@ -292,7 +239,55 @@ const BossYanKenPo = {
   },
 
   // ======================================================
-  // PROCESAMIENTO DEL JUEGO
+  // ACTUALIZACIÓN PRINCIPAL SIMPLIFICADA
+  // ======================================================
+
+  update() {
+    if (!this.phaseActive) return;
+
+    switch (this.gameState) {
+      case "countdown":
+        this.updateCountdown();
+        break;
+      case "selection":
+        this.updateSelection();
+        break;
+      case "result":
+        // Los resultados se manejan con timeouts
+        break;
+      case "completed":
+        // Fase completada
+        break;
+    }
+  },
+
+  updateCountdown() {
+    this.countdownTimer++;
+
+    if (this.countdownTimer >= 60) {
+      // 1 segundo
+      this.countdown--;
+      this.countdownTimer = 0;
+      this.updateInfoDisplay();
+
+      if (this.countdown <= 0) {
+        this.startSelection();
+      }
+    }
+  },
+
+  updateSelection() {
+    this.selectionTimer++;
+
+    // Timeout si no selecciona a tiempo
+    if (this.selectionTimer >= this.gameConfig.selectionTimeLimit) {
+      console.log("⏰ Tiempo agotado - selección automática aleatoria");
+      this.selectChoice(Math.floor(Math.random() * 3));
+    }
+  },
+
+  // ======================================================
+  // PROCESAMIENTO DEL JUEGO SIMPLIFICADO
   // ======================================================
 
   startSelection() {
@@ -335,58 +330,34 @@ const BossYanKenPo = {
 
     let result;
     if (playerChoice === bossChoice) {
-      result = "empate";
+      // En empate, pierde el jugador en esta versión simplificada
+      result = "derrota";
     } else if (
       (playerChoice === 0 && bossChoice === 1) || // Tijeras vs Papel
       (playerChoice === 1 && bossChoice === 2) || // Papel vs Piedra
       (playerChoice === 2 && bossChoice === 0) // Piedra vs Tijeras
     ) {
       result = "victoria";
-      this.roundsWon++;
     } else {
       result = "derrota";
     }
 
     this.lastResult = result;
-
-    console.log(
-      `📊 Resultado: ${result} - Rondas ganadas: ${this.roundsWon}/${this.gameConfig.roundsToWin}`
-    );
+    console.log(`📊 Resultado: ${result}`);
 
     this.showResult();
 
     setTimeout(() => {
-      this.processGameResult();
+      if (result === "victoria") {
+        this.handleGameWin();
+      } else {
+        this.handleGameLoss();
+      }
     }, this.gameConfig.resultDisplayTime);
   },
 
-  processGameResult() {
-    if (this.roundsWon >= this.gameConfig.roundsToWin) {
-      this.handleGameWin();
-    } else if (this.currentRound >= 5) {
-      // Máximo 5 rondas
-      this.handleGameLoss();
-    } else {
-      this.startNextRound();
-    }
-  },
-
-  startNextRound() {
-    console.log(`🔄 Iniciando ronda ${this.currentRound + 1}`);
-
-    this.currentRound++;
-    this.countdown = this.gameConfig.countdownDuration;
-    this.countdownTimer = 0;
-    this.gameState = "countdown";
-    this.playerChoice = null;
-    this.bossChoice = null;
-    this.lastResult = null;
-
-    this.updateInfoDisplay();
-  },
-
   // ======================================================
-  // INTERFAZ DE USUARIO
+  // INTERFAZ DE USUARIO SIMPLIFICADA
   // ======================================================
 
   createGameUI() {
@@ -394,7 +365,7 @@ const BossYanKenPo = {
       this.removeGameUI();
     }
 
-    console.log("🎨 Creando UI compacta de Yan Ken Po");
+    console.log("🎨 Creando UI simplificada de Yan Ken Po");
 
     const container = document.createElement("div");
     container.id = "yankenpo-container";
@@ -416,7 +387,7 @@ const BossYanKenPo = {
     max-width: 90vw;
   `;
 
-    // Título compacto
+    // Título simplificado con vidas del jugador
     const title = document.createElement("div");
     title.style.cssText = `
     color: #ff0000;
@@ -426,7 +397,7 @@ const BossYanKenPo = {
     margin-bottom: 5px;
     text-align: center;
   `;
-    title.textContent = "✂️ YAN KEN PO ✂️";
+    title.textContent = `✂️ YAN KEN PO (Vidas: ${Player.getLives()}) ✂️`;
     container.appendChild(title);
 
     // Info y botones en UNA SOLA LÍNEA
@@ -510,7 +481,7 @@ const BossYanKenPo = {
     this.uiCreated = true;
     this.updateInfoDisplay();
 
-    console.log("✅ UI compacta de Yan Ken Po creada en UNA LÍNEA");
+    console.log("✅ UI simplificada de Yan Ken Po creada");
   },
 
   updateInfoDisplay() {
@@ -522,18 +493,18 @@ const BossYanKenPo = {
     switch (this.gameState) {
       case "countdown":
         content = `
-          <div>Ronda ${this.currentRound} - Prepárate...</div>
+          <div>Elige una opción:</div>
           <div style="font-size: 1.5em; color: #ffff00; margin: 5px 0;">${this.countdown}</div>
-          <div>Victorias: ${this.roundsWon}/${this.gameConfig.roundsToWin}</div>
+          <div>Victorias: ${this.bossDefeats}/${this.maxDefeats}</div>
         `;
         break;
 
       case "selection":
         content = `
-          <div>Ronda ${this.currentRound}</div>
+          <div>Vidas: ${Player.getLives()}</div>
           <div style="color: #00ff00; font-weight: bold;">¡ELIGE TU OPCIÓN!</div>
           <div style="font-size: 0.9em;">Presiona Q, W o E</div>
-          <div>Victorias: ${this.roundsWon}/${this.gameConfig.roundsToWin}</div>
+          <div>Victorias: ${this.bossDefeats}/${this.maxDefeats}</div>
         `;
         break;
 
@@ -551,7 +522,7 @@ const BossYanKenPo = {
         };
 
         content = `
-          <div>Ronda ${this.currentRound}</div>
+          <div>Vidas: ${Player.getLives()}</div>
           <div style="margin: 10px 0;">
             <span>TÚ: ${choices[this.playerChoice]}</span>
             <span style="margin: 0 10px;">VS</span>
@@ -562,7 +533,7 @@ const BossYanKenPo = {
           }; font-weight: bold; font-size: 1.2em;">
             ${resultTexts[this.lastResult]}
           </div>
-          <div>Victorias: ${this.roundsWon}/${this.gameConfig.roundsToWin}</div>
+          <div>Victorias: ${this.bossDefeats}/${this.maxDefeats}</div>
         `;
         break;
     }
@@ -619,7 +590,7 @@ const BossYanKenPo = {
   },
 
   // ======================================================
-  // CONTROLES
+  // CONTROLES SIMPLIFICADOS
   // ======================================================
 
   setupControls() {
@@ -689,7 +660,7 @@ const BossYanKenPo = {
   },
 
   // ======================================================
-  // RENDERIZADO
+  // RENDERIZADO SIMPLIFICADO
   // ======================================================
 
   draw(ctx) {
@@ -795,6 +766,20 @@ const BossYanKenPo = {
     console.log("✅ Limpieza previa a Yan Ken Po completada");
   },
 
+  endPhase() {
+    console.log("✂️ Terminando fase Yan Ken Po");
+
+    this.phaseActive = false;
+    this.gameState = "inactive";
+
+    this.cleanup();
+    this.restorePlayerControls();
+
+    // Boss vuelve a ser vulnerable
+    this.bossManager.isImmune = false;
+    this.bossManager.immunityTimer = 0;
+  },
+
   reset() {
     this.cleanup();
 
@@ -803,8 +788,6 @@ const BossYanKenPo = {
 
     this.phaseActive = false;
     this.gameState = "inactive";
-    this.roundsWon = 0;
-    this.currentRound = 0;
     this.playerChoice = null;
     this.bossChoice = null;
     this.lastResult = null;
@@ -820,24 +803,6 @@ const BossYanKenPo = {
     );
   },
 
-  // Método para forzar un reinicio completo incluyendo el contador
-  forceFullReset() {
-    this.cleanup();
-    this.phaseActive = false;
-    this.gameState = "inactive";
-    this.roundsWon = 0;
-    this.currentRound = 0;
-    this.playerChoice = null;
-    this.bossChoice = null;
-    this.lastResult = null;
-    this.uiCreated = false;
-    this.keyHandler = null;
-    this.originalPlayerControls = null;
-    this.bossDefeats = 0; // Resetear contador de victorias
-
-    console.log("🔄 Sistema Yan Ken Po COMPLETAMENTE reseteado");
-  },
-
   // ======================================================
   // GETTERS
   // ======================================================
@@ -845,37 +810,17 @@ const BossYanKenPo = {
   isActive() {
     return this.phaseActive;
   },
-  getCurrentRound() {
-    return this.currentRound;
+  getBossDefeats() {
+    return this.bossDefeats;
   },
-  getRoundsWon() {
-    return this.roundsWon;
-  },
-  getRoundsToWin() {
-    return this.gameConfig.roundsToWin;
+  getMaxDefeats() {
+    return this.maxDefeats;
   },
   getGameState() {
     return this.gameState;
-  },
-  getProgress() {
-    return this.roundsWon / this.gameConfig.roundsToWin;
-  },
-
-  getStats() {
-    return {
-      active: this.phaseActive,
-      state: this.gameState,
-      round: this.currentRound,
-      wins: this.roundsWon,
-      target: this.gameConfig.roundsToWin,
-      progress: this.getProgress(),
-      playerChoice: this.playerChoice,
-      bossChoice: this.bossChoice,
-      lastResult: this.lastResult,
-    };
   },
 };
 
 window.BossYanKenPo = BossYanKenPo;
 
-console.log("✂️ boss-yankenpo.js optimizado cargado");
+console.log("✂️ boss-yankenpo.js simplificado cargado");

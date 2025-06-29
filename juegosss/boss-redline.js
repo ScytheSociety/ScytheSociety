@@ -65,6 +65,9 @@ const BossRedLine = {
   // CONTROL DE FASE
   // ======================================================
 
+  /**
+   * Inicia la fase del Hilo Rojo sin ralentizar al jugador
+   */
   startPhase() {
     console.log("🔴 === INICIANDO FASE DEL HILO ROJO (10 DIBUJOS) ===");
 
@@ -76,30 +79,29 @@ const BossRedLine = {
 
     this.bossManager.makeImmune(9999);
 
-    // 🔥 RALENTIZAR AL JUGADOR INMEDIATAMENTE
-    if (window.Player && Player.setSpeedModifier) {
-      Player.setSpeedModifier(this.playerSlowFactor);
-      console.log(
-        `🐌 Jugador ralentizado a ${this.playerSlowFactor}x durante Red Line`
-      );
+    // 🔥 ELIMINADO: Ya no ralentizamos al jugador
+    // Solo guardamos la velocidad original por compatibilidad
+    if (window.Player && Player.getSpeedModifier) {
+      this.originalPlayerSpeed = Player.getSpeedModifier();
+      console.log(`🏃 Jugador mantiene velocidad normal durante Red Line`);
     }
 
     // 🔥 FORZAR BOSS COMPLETAMENTE INMÓVIL - MÚLTIPLES BLOQUEOS
     if (this.bossManager.movement) {
       this.bossManager.movement.stopMovementAndCenter();
       this.bossManager.movement.enabled = false;
-      this.bossManager.movement.huntingEnabled = false; // NUEVO
-      this.bossManager.movement.canMove = false; // NUEVO
+      this.bossManager.movement.huntingEnabled = false;
+      this.bossManager.movement.canMove = false;
       console.log("🛡️ Boss FORZADO INMÓVIL - TODOS los movimientos bloqueados");
     }
 
-    // 🔥 NUEVO: DESACTIVAR COMPLETAMENTE EL SISTEMA DE PHASES DURANTE REDLINE
+    // 🔥 DESACTIVAR COMPLETAMENTE EL SISTEMA DE PHASES DURANTE REDLINE
     if (this.bossManager.phases) {
       this.bossManager.phases.redLineForceActive = true; // Flag especial
       console.log("🔴 Sistema de phases BLOQUEADO durante Red Line");
     }
 
-    // 🔥 NUEVO: FORZAR POSICIÓN CENTRAL Y BLOQUEARLA
+    // 🔥 FORZAR POSICIÓN CENTRAL Y BLOQUEARLA
     const canvas = window.getCanvas();
     const boss = this.bossManager.boss;
     if (boss) {
@@ -981,6 +983,9 @@ const BossRedLine = {
   // CLEANUP Y UTILIDADES
   // ======================================================
 
+  /**
+   * Limpia el sistema de hilo rojo completamente
+   */
   cleanup() {
     console.log("🧹 Limpiando sistema de hilo rojo");
 
@@ -993,6 +998,22 @@ const BossRedLine = {
 
     // Asegurarse de que redLineForceActive esté apagado
     this.redLineForceActive = false;
+
+    // 🔥 NUEVO: Eliminar elementos DOM de la cuadrícula
+    const gridElements = document.querySelectorAll(".redline-grid-element");
+    gridElements.forEach((el) => {
+      if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    });
+
+    // 🔥 NUEVO: Eliminar cualquier otro elemento relacionado
+    const redlineElements = document.querySelectorAll('[id^="redline-"]');
+    redlineElements.forEach((el) => {
+      if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    });
 
     // Restaurar velocidad del jugador
     if (window.Player && Player.restoreNormalSpeed) {

@@ -147,6 +147,9 @@ const BossMovement = {
   // PATRONES DE MOVIMIENTO
   // ======================================================
 
+  /**
+   * Movimiento de caza perfeccionado para poder alcanzar al jugador
+   */
   perfectHunting() {
     const playerPos = Player.getPosition();
     const playerSize = Player.getSize();
@@ -161,7 +164,9 @@ const BossMovement = {
     const dy = playerCenterY - bossCenterY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    if (distance > 50) {
+    // 🔥 DISTANCIA DE PARADA REDUCIDA: 20px en lugar de 50px
+    // Esto permite que el boss se acerque más al jugador
+    if (distance > 20) {
       let speed = this.movement.speed;
 
       // 🔥 APLICAR SLOWMOTION AL BOSS
