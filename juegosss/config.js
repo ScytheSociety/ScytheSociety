@@ -117,7 +117,7 @@ const GameConfig = {
         id: 0,
         name: "Escudo Protector",
         color: "#00FF00",
-        duration: 480, // Era 300 (5s), ahora 480 (8s)
+        duration: 4080, // Era 300 (5s), ahora 480 (8s)
         description: "Inmunidad total al daño",
       },
       WIDE_SHOT: {
