@@ -36,7 +36,7 @@ const GameConfig = {
 
   LEVEL_CONFIG: {
     // Enemigos requeridos por nivel (configuración original)
-    enemiesPerLevel: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+    enemiesPerLevel: [80, 120, 180, 260, 360, 480, 620, 780, 960, 1220],
 
     // Velocidad de spawn de enemigos (configuración original)
     spawnDelay: [
@@ -117,7 +117,7 @@ const GameConfig = {
         id: 0,
         name: "Escudo Protector",
         color: "#00FF00",
-        duration: 9080, // Era 300 (5s), ahora 480 (8s)
+        duration: 480, // Era 300 (5s), ahora 480 (8s)
         description: "Inmunidad total al daño",
       },
       WIDE_SHOT: {
