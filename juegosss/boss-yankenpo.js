@@ -27,11 +27,13 @@ const BossYanKenPo = {
   selectionTimer: 0,
   countdown: 3,
 
-  // Opciones del juego (0=Tijeras, 1=Papel, 2=Piedra)
+  /**
+   * Modifica las opciones del juego para usar emojis de manos
+   */
   choices: [
-    { key: "q", symbol: "✂️", name: "Tijeras", emoji: "✂️" },
-    { key: "w", symbol: "📄", name: "Papel", emoji: "📄" },
-    { key: "e", symbol: "🗿", name: "Piedra", emoji: "🗿" },
+    { key: "q", symbol: "✌️", name: "Tijeras", emoji: "✌️" },
+    { key: "w", symbol: "✋", name: "Papel", emoji: "✋" },
+    { key: "e", symbol: "✊", name: "Piedra", emoji: "✊" },
   ],
 
   // Control de UI
@@ -105,6 +107,9 @@ const BossYanKenPo = {
   // VICTORIA/DERROTA SIMPLIFICADAS
   // ======================================================
 
+  /**
+   * Maneja la victoria del juego
+   */
   handleGameWin() {
     console.log("🏆 ¡Jugador ganó el Yan Ken Po!");
 
@@ -113,10 +118,26 @@ const BossYanKenPo = {
     // Incrementar contador global de victorias
     this.bossDefeats = (this.bossDefeats || 0) + 1;
 
+    // 🔥 REPRODUCIR SONIDO DE VICTORIA
+    if (window.AudioManager && AudioManager.playSound) {
+      AudioManager.playSound("powerUp");
+    }
+
     if (this.bossManager.ui) {
       this.bossManager.ui.showScreenMessage(
         `🏆 ¡GANASTE! (${this.bossDefeats}/${this.maxDefeats})`,
         "#00FF00"
+      );
+    }
+
+    // Efecto visual de victoria
+    if (window.UI && UI.createParticleEffect) {
+      const bossPos = this.bossManager.boss;
+      UI.createParticleEffect(
+        bossPos.x + bossPos.width / 2,
+        bossPos.y + bossPos.height / 2,
+        "#00FF00",
+        40
       );
     }
 
@@ -139,6 +160,11 @@ const BossYanKenPo = {
           "👑 ¡BOSS DERROTADO DEFINITIVAMENTE!",
           "#FFD700"
         );
+      }
+
+      // 🔥 SONIDO DE VICTORIA FINAL
+      if (window.AudioManager && AudioManager.playSound) {
+        AudioManager.playSound("victory");
       }
 
       // Ocultar UI de Yan Ken Po
@@ -167,50 +193,60 @@ const BossYanKenPo = {
     }, 3000);
   },
 
+  /**
+   * Maneja la pérdida del juego
+   */
   handleGameLoss() {
-    console.log("💀 Jugador perdió el Yan Ken Po - DEBE perder una vida");
+    console.log("💀 Jugador perdió el Yan Ken Po - Pierde una vida");
 
     this.gameState = "completed";
 
-    // 🔥 MÉTODO ULTRA AGRESIVO para garantizar pérdida de vida
+    // 🔥 MÉTODO AGRESIVO para garantizar pérdida de vida
     if (window.Player) {
       const currentLives = Player.getLives();
-      console.log(`💔 Vidas actuales: ${currentLives}`);
 
-      // MÉTODO 1: Reducción directa del atributo lives
-      const originalLives = Player.lives;
+      // Método 1: Reducción directa del atributo lives
       Player.lives = Math.max(0, Player.lives - 1);
 
-      // MÉTODO 2: Si el método 1 no funciona, usar takeDamage sin invulnerabilidad
-      if (Player.lives === originalLives) {
-        console.log("⚠️ Método 1 falló, intentando método 2");
-
-        // Desactivar invulnerabilidad temporalmente
+      // Verificar si funcionó
+      if (Player.getLives() >= currentLives) {
+        // Método 2: Usar takeDamage sin invulnerabilidad
         const originalInvulnerability = Player.invulnerabilityTime;
         Player.invulnerabilityTime = 0;
-
-        // Llamar a takeDamage
         Player.takeDamage();
 
-        // Verificar si funcionó
-        if (Player.getLives() === currentLives) {
-          console.log("⚠️ Método 2 falló, intentando método 3");
-
-          // MÉTODO 3: Modificación forzada directa
-          window.Player.lives = currentLives - 1;
-          console.log("🔨 Método 3: Modificación forzada directa aplicada");
-        }
+        // Restaurar invulnerabilidad original
+        setTimeout(() => {
+          Player.invulnerabilityTime = originalInvulnerability;
+        }, 100);
       }
 
       // Comprobar resultado final
       const newLives = Player.getLives();
-      console.log(`💔 RESULTADO: Vidas ${currentLives} → ${newLives}`);
+      console.log(`💔 Vidas: ${currentLives} → ${newLives}`);
+
+      // 🔥 REPRODUCIR SONIDO DE DERROTA
+      if (window.AudioManager && AudioManager.playSound) {
+        AudioManager.playSound("damaged");
+      }
 
       // Mostrar mensaje UI
       if (this.bossManager.ui) {
         this.bossManager.ui.showScreenMessage(
           `💔 ¡PERDISTE! Vidas: ${newLives}`,
           "#FF0000"
+        );
+      }
+
+      // Efecto visual de daño
+      if (window.UI && UI.createParticleEffect) {
+        const playerPos = Player.getPosition();
+        const playerSize = Player.getSize();
+        UI.createParticleEffect(
+          playerPos.x + playerSize.width / 2,
+          playerPos.y + playerSize.height / 2,
+          "#FF0000",
+          30
         );
       }
 
@@ -305,22 +341,24 @@ const BossYanKenPo = {
     }
   },
 
+  /**
+   * Cuando se agota el tiempo de selección (modificado para favorecer al jugador)
+   */
   updateSelection() {
     this.selectionTimer++;
 
-    // Timeout si no selecciona a tiempo - SIEMPRE PIERDE EL JUGADOR
+    // Timeout si no selecciona a tiempo
     if (this.selectionTimer >= this.gameConfig.selectionTimeLimit) {
-      console.log("⏰ Tiempo agotado - el jugador PIERDE UNA VIDA");
+      console.log("⏰ Tiempo agotado - el jugador PIERDE");
 
-      // 🔥 MODIFICADO: Ya no hay ventaja probabilística, siempre pierde
-      // El jugador pierde si no responde a tiempo
-      this.playerChoice = Math.floor(Math.random() * 3); // Elección aleatoria para el jugador
+      // 🔥 MODIFICADO: Sin mensajes sobre probabilidades
+      this.playerChoice = Math.floor(Math.random() * 3);
       this.bossChoice = this.getWinningChoice(this.playerChoice); // Boss elige opción ganadora
 
       console.log(
         `⚡ TIMEOUT: Jugador(${this.choices[this.playerChoice].name}) vs Boss(${
           this.choices[this.bossChoice].name
-        }) - JUGADOR PIERDE`
+        })`
       );
 
       this.disableButtons();
@@ -328,13 +366,20 @@ const BossYanKenPo = {
       this.lastResult = "derrota"; // Forzar derrota
       this.showResult();
 
+      // 🔥 NUEVO: Reproducir sonido de derrota
+      if (window.AudioManager && AudioManager.playSound) {
+        AudioManager.playSound("damaged");
+      }
+
       setTimeout(() => {
         this.handleGameLoss();
       }, this.gameConfig.resultDisplayTime);
     }
   },
 
-  // Nueva función auxiliar para obtener la opción ganadora contra la elección dada
+  /**
+   * Obtiene la opción ganadora contra la elección dada
+   */
   getWinningChoice(playerChoice) {
     // 0=Tijeras, 1=Papel, 2=Piedra
     if (playerChoice === 0) return 2; // Piedra gana a Tijeras
@@ -376,6 +421,9 @@ const BossYanKenPo = {
     this.processResult();
   },
 
+  /**
+   * Procesa el resultado (modificado para favorecer al jugador)
+   */
   processResult() {
     const playerChoice = this.playerChoice;
     const bossChoice = this.bossChoice;
@@ -386,30 +434,54 @@ const BossYanKenPo = {
 
     let result;
 
-    // 🔥 MODIFICADO: EMPATE SIEMPRE ES DERROTA
+    // 🔥 MODIFICADO: Favorecer al jugador con probabilidades ocultas
     if (playerChoice === bossChoice) {
-      result = "derrota";
-      console.log("🎲 Empate = Derrota para el jugador");
+      // En empate, 40% de probabilidad de que el jugador gane
+      if (Math.random() < 0.4) {
+        result = "victoria";
+        console.log("🎲 Resultado: Victoria para el jugador");
+      } else {
+        result = "derrota";
+        console.log("🎲 Resultado: Derrota para el jugador");
+      }
     }
-    // Victoria normal del jugador - SIN MANIPULACIÓN
+    // Victoria normal del jugador - 90% de probabilidad de mantenerla
     else if (
       (playerChoice === 0 && bossChoice === 1) || // Tijeras vs Papel
       (playerChoice === 1 && bossChoice === 2) || // Papel vs Piedra
       (playerChoice === 2 && bossChoice === 0) // Piedra vs Tijeras
     ) {
-      result = "victoria";
-      console.log("🎲 Victoria normal del jugador");
+      if (Math.random() < 0.9) {
+        result = "victoria";
+        console.log("🎲 Resultado: Victoria para el jugador");
+      } else {
+        result = "derrota";
+        console.log("🎲 Resultado: Derrota para el jugador");
+      }
     }
-    // Derrota normal - SIN MANIPULACIÓN
+    // Derrota normal - 30% de probabilidad de convertirla a victoria
     else {
-      result = "derrota";
-      console.log("🎲 Derrota normal del jugador");
+      if (Math.random() < 0.3) {
+        result = "victoria";
+        console.log("🎲 Resultado: Victoria para el jugador");
+      } else {
+        result = "derrota";
+        console.log("🎲 Resultado: Derrota para el jugador");
+      }
     }
 
     this.lastResult = result;
-    console.log(`📊 Resultado final: ${result}`);
 
     this.showResult();
+
+    // 🔥 NUEVO: Reproducir sonido según resultado
+    if (window.AudioManager && AudioManager.playSound) {
+      if (result === "victoria") {
+        AudioManager.playSound("powerUp");
+      } else {
+        AudioManager.playSound("damaged");
+      }
+    }
 
     setTimeout(() => {
       if (result === "victoria") {
@@ -424,12 +496,15 @@ const BossYanKenPo = {
   // INTERFAZ DE USUARIO SIMPLIFICADA
   // ======================================================
 
+  /**
+   * Crea la UI del juego con estilo elegante y profesional
+   */
   createGameUI() {
     if (this.uiCreated) {
       this.removeGameUI();
     }
 
-    console.log("🎨 Creando UI simplificada de Yan Ken Po");
+    console.log("🎨 Creando UI elegante de Yan Ken Po");
 
     const container = document.createElement("div");
     container.id = "yankenpo-container";
@@ -442,26 +517,29 @@ const BossYanKenPo = {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    background: rgba(0, 0, 0, 0.95);
-    padding: 12px 16px;
-    border-radius: 10px;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 15px 20px;
+    border-radius: 15px;
     border: 2px solid #ff0000;
-    box-shadow: 0 0 20px #ff0000;
-    max-width: 90vw;
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    max-width: 85vw;
   `;
 
-    // Título simplificado con vidas del jugador
+    // Título elegante con vidas del jugador
     const title = document.createElement("div");
     title.style.cssText = `
     color: #ff0000;
     font-family: 'Creepster', cursive;
-    font-size: clamp(0.9rem, 3vw, 1.2rem);
-    text-shadow: 0 0 8px #ff0000;
-    margin-bottom: 5px;
+    font-size: clamp(1.1rem, 3vw, 1.4rem);
+    text-shadow: 0 0 10px #ff0000;
+    margin-bottom: 8px;
     text-align: center;
+    font-weight: bold;
+    letter-spacing: 1px;
   `;
-    title.textContent = `✂️ YAN KEN PO (Vidas: ${Player.getLives()}) ✂️`;
+    title.textContent = `✌️ YAN KEN PO (Vidas: ${Player.getLives()}) ✊`;
     container.appendChild(title);
 
     // Info y botones en UNA SOLA LÍNEA
@@ -469,7 +547,7 @@ const BossYanKenPo = {
     gameRow.style.cssText = `
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 15px;
     justify-content: center;
     flex-wrap: nowrap;
   `;
@@ -480,10 +558,13 @@ const BossYanKenPo = {
     info.style.cssText = `
     color: #ffffff;
     font-family: Arial, sans-serif;
-    font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
     text-align: center;
     min-width: 120px;
-    line-height: 1.2;
+    line-height: 1.3;
+    padding: 6px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
   `;
     gameRow.appendChild(info);
 
@@ -492,22 +573,22 @@ const BossYanKenPo = {
     buttonsContainer.id = "yankenpo-buttons";
     buttonsContainer.style.cssText = `
     display: flex;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
   `;
 
-    // Crear botones más pequeños
+    // Crear botones elegantes y compactos
     this.choices.forEach((choice, index) => {
       const button = document.createElement("button");
       button.id = `yankenpo-${choice.key}`;
       button.className = "yankenpo-button";
       button.style.cssText = `
-      width: clamp(45px, 12vw, 60px);
-      height: clamp(45px, 12vw, 60px);
-      font-size: clamp(1rem, 4vw, 1.4rem);
-      background: linear-gradient(135deg, #8b0000, #aa0000);
+      width: clamp(45px, 10vw, 55px);
+      height: clamp(45px, 10vw, 55px);
+      font-size: clamp(1.2rem, 4vw, 1.6rem);
+      background: linear-gradient(135deg, #500000, #800000);
       border: 2px solid #ff0000;
-      border-radius: 8px;
+      border-radius: 12px;
       color: #ffffff;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -517,21 +598,22 @@ const BossYanKenPo = {
       justify-content: center;
       font-family: Arial, sans-serif;
       line-height: 1;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
     `;
 
       button.innerHTML = `
-      <div style="font-size: 0.9em;">${choice.symbol}</div>
-      <div style="font-size: 0.4em; opacity: 0.8;">${choice.key.toUpperCase()}</div>
+      <div style="font-size: 1.2em;">${choice.emoji}</div>
+      <div style="font-size: 0.4em; opacity: 0.9; margin-top: 2px; font-weight: bold;">${choice.key.toUpperCase()}</div>
     `;
 
       button.addEventListener("mouseenter", () => {
-        button.style.transform = "scale(1.05)";
-        button.style.boxShadow = "0 0 10px rgba(255, 0, 0, 0.6)";
+        button.style.transform = "scale(1.08)";
+        button.style.boxShadow = "0 0 15px rgba(255, 0, 0, 0.7)";
       });
 
       button.addEventListener("mouseleave", () => {
         button.style.transform = "scale(1)";
-        button.style.boxShadow = "none";
+        button.style.boxShadow = "0 3px 10px rgba(0, 0, 0, 0.5)";
       });
 
       button.addEventListener("click", () => this.selectChoice(index));
@@ -545,9 +627,12 @@ const BossYanKenPo = {
     this.uiCreated = true;
     this.updateInfoDisplay();
 
-    console.log("✅ UI simplificada de Yan Ken Po creada");
+    console.log("✅ UI elegante de Yan Ken Po creada");
   },
 
+  /**
+   * Actualiza la visualización de la información
+   */
   updateInfoDisplay() {
     const info = document.getElementById("yankenpo-info");
     if (!info) return;
@@ -557,25 +642,23 @@ const BossYanKenPo = {
     switch (this.gameState) {
       case "countdown":
         content = `
-        <div>Elige una opción:</div>
-        <div style="font-size: 1.5em; color: #ffff00; margin: 5px 0;">${this.countdown}</div>
+        <div style="font-weight: bold;">Elige tu jugada:</div>
+        <div style="font-size: 1.8em; color: #ffff00; margin: 5px 0;">${this.countdown}</div>
         <div>Victorias: ${this.bossDefeats}/${this.maxDefeats}</div>
-        <div style="font-size: 0.7em; color: #00ff00;">🍀 Tienes ventaja probabilística</div>
       `;
         break;
 
       case "selection":
         content = `
         <div>Vidas: ${Player.getLives()}</div>
-        <div style="color: #00ff00; font-weight: bold;">¡ELIGE TU OPCIÓN!</div>
+        <div style="color: #00ff00; font-weight: bold; margin: 5px 0;">¡ELIGE AHORA!</div>
         <div style="font-size: 0.9em;">Presiona Q, W o E</div>
         <div>Victorias: ${this.bossDefeats}/${this.maxDefeats}</div>
-        <div style="font-size: 0.7em; color: #ffff00;">⏰ Si no eliges, tienes 60% de suerte</div>
       `;
         break;
 
       case "result":
-        const choices = ["✂️", "📄", "🗿"];
+        const choices = ["✌️", "✋", "✊"];
         const resultColors = {
           victoria: "#00ff00",
           derrota: "#ff0000",
@@ -589,14 +672,16 @@ const BossYanKenPo = {
 
         content = `
         <div>Vidas: ${Player.getLives()}</div>
-        <div style="margin: 10px 0;">
-          <span>TÚ: ${choices[this.playerChoice]}</span>
-          <span style="margin: 0 10px;">VS</span>
-          <span>BOSS: ${choices[this.bossChoice]}</span>
+        <div style="margin: 10px 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <span style="font-size: 1.4em;">${choices[this.playerChoice]}</span>
+          <span style="margin: 0 5px; font-weight: bold;">VS</span>
+          <span style="font-size: 1.4em;">${choices[this.bossChoice]}</span>
         </div>
         <div style="color: ${
           resultColors[this.lastResult]
-        }; font-weight: bold; font-size: 1.2em;">
+        }; font-weight: bold; font-size: 1.2em; text-shadow: 0 0 5px ${
+          resultColors[this.lastResult]
+        };">
           ${resultTexts[this.lastResult]}
         </div>
         <div>Victorias: ${this.bossDefeats}/${this.maxDefeats}</div>
