@@ -168,31 +168,41 @@ const BossYanKenPo = {
   },
 
   handleGameLoss() {
-    console.log("💀 Jugador perdió el Yan Ken Po - Pierde una vida");
+    console.log("💀 Jugador perdió el Yan Ken Po - DEBE perder una vida");
 
     this.gameState = "completed";
 
-    // 🔥 QUITAR VIDA CORRECTAMENTE
-    if (window.Player && Player.takeDamage) {
-      const playerDied = Player.takeDamage();
+    // 🔥 FORZAR PÉRDIDA DE VIDA DIRECTAMENTE
+    if (window.Player) {
+      const currentLives = Player.getLives();
+
+      // Método 1: Reducir vidas directamente
+      Player.lives = Math.max(0, Player.lives - 1);
+
+      // Método 2: Si no funciona, usar takeDamage sin invulnerabilidad
+      if (Player.getLives() === currentLives) {
+        Player.invulnerabilityTime = 0; // Quitar invulnerabilidad
+        Player.takeDamage();
+      }
+
+      const newLives = Player.getLives();
+      console.log(`💔 FORZADO: Vidas ${currentLives} → ${newLives}`);
 
       if (this.bossManager.ui) {
         this.bossManager.ui.showScreenMessage(
-          `💔 ¡PERDISTE! Vidas: ${Player.getLives()}`,
+          `💔 ¡PERDISTE! Vidas: ${newLives}`,
           "#FF0000"
         );
       }
 
-      // Verificar si el jugador murió
-      if (playerDied || Player.getLives() <= 0) {
+      // Verificar muerte
+      if (newLives <= 0) {
         if (this.bossManager.ui) {
           this.bossManager.ui.showScreenMessage("💀 ¡GAME OVER!", "#FF0000");
         }
 
-        // Ocultar UI de Yan Ken Po
         this.removeGameUI();
 
-        // Activar game over global
         setTimeout(() => {
           if (window.gameOver && typeof window.gameOver === "function") {
             window.gameOver();
@@ -201,7 +211,7 @@ const BossYanKenPo = {
         return;
       }
 
-      // Si el jugador sigue vivo, nueva ronda
+      // Nueva ronda
       setTimeout(() => {
         this.restartYanKenPo();
       }, 3000);

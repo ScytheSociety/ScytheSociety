@@ -298,15 +298,29 @@ const BossBullets = {
         return;
       }
 
-      // 🔥 DIRECCIONES FIJAS: arriba, abajo, derecha, izquierda
-      const directions = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
+      // Direcciones: arriba, abajo, derecha, izquierda
+      const directions = [
+        -Math.PI / 2, // Arriba
+        Math.PI / 2, // Abajo
+        0, // Derecha
+        Math.PI, // Izquierda
+      ];
 
-      directions.forEach((direction) => {
-        // 🔥 GRUPO DE BALAS UNA TRAS OTRA
+      directions.forEach((direction, index) => {
         for (let i = 0; i < config.groupSize; i++) {
           setTimeout(() => {
             if (this.patternActive) {
-              this.createTouhouBullet(direction, config.speed, config.color);
+              // 🔥 SEPARAR MÁS las balas verticales (arriba/abajo)
+              let angle = direction;
+              if (index === 0 || index === 1) {
+                // Arriba o abajo
+                angle += (i - 1) * 0.3; // 🔥 CAMBIAR: Era 0.1, ahora 0.3 (más separación)
+              } else {
+                // Derecha o izquierda
+                angle += (i - 1) * 0.1; // Mantener separación normal
+              }
+
+              this.createTouhouBullet(angle, config.speed, config.color);
             }
           }, i * config.groupDelay);
         }
@@ -314,7 +328,7 @@ const BossBullets = {
     }, config.bulletInterval);
 
     this.activeIntervals.push(crossInterval);
-    console.log("✚ CRUZ: Solo 3 balas MUY ESPACIADAS por dirección");
+    console.log("✚ CRUZ: Verticales MÁS SEPARADAS");
   },
 
   createRainPattern() {

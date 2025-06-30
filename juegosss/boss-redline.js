@@ -138,19 +138,20 @@ const BossRedLine = {
     this.showingPreview = false;
     this.redLinePath = [];
     this.redLineIndex = 0;
-
-    // 🔥 LIMPIEZA FORZADA Y COMPLETA DE LA CUADRÍCULA
-    this.gridLines = [];
+    this.gridLines = []; // 🔥 LIMPIAR AQUÍ
     this.lastGridTime = 0;
 
-    // 🔥 NUEVO: Forzar limpieza completa con múltiples intentos
-    this.forceCleanupGrid();
+    // 🔥 NUEVO: Eliminar elementos DOM inmediatamente
+    const elementsToRemove = document.querySelectorAll(
+      '[id*="redline"], [class*="redline"], [class*="grid"]'
+    );
+    elementsToRemove.forEach((el) => {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
 
     // Restaurar velocidad del jugador
     if (window.Player && Player.restoreNormalSpeed) {
       Player.restoreNormalSpeed();
-    } else if (window.Player && Player.setSpeedModifier) {
-      Player.setSpeedModifier(this.originalPlayerSpeed);
     }
 
     // REACTIVAR SISTEMA DE PHASES
@@ -164,9 +165,7 @@ const BossRedLine = {
       boss.isLocked = false;
     }
 
-    console.log(
-      "🔴 Red Line completamente limpiado - cuadrícula FORZADAMENTE eliminada"
-    );
+    console.log("🔴 Red Line terminado - cuadrícula eliminada INMEDIATAMENTE");
   },
 
   // 🔥 NUEVA FUNCIÓN: Limpieza forzada de cuadrícula
@@ -302,58 +301,77 @@ const BossRedLine = {
 
   generateAnimatedGrid() {
     const canvas = window.getCanvas();
-
-    // 🔥 ESPACIADO AUMENTADO PARA MÁS ESPACIO ENTRE LÍNEAS
     let spacing;
 
     if (GameConfig.isMobile) {
-      // MÓVIL: Espaciado mayor para facilitar el juego
       const screenScale = Math.min(canvas.width, canvas.height) / 600;
-      spacing = Math.max(160, 200 * screenScale); // Era 140/180, ahora 160/200 (más espacio)
+      spacing = Math.max(160, 200 * screenScale);
     } else {
-      // PC: Espaciado normal pero aumentado
       const screenScale = Math.min(canvas.width, canvas.height) / 800;
-      spacing = Math.max(120, 140 * screenScale); // Era 100/120, ahora 120/140 (más espacio)
+      spacing = Math.max(120, 140 * screenScale);
     }
 
-    // 🔥 VELOCIDAD LIGERAMENTE REDUCIDA PARA SER MENOS AGRESIVO
-    const gridSpeed = GameConfig.isMobile ? 1.0 : 1.5; // Era 1.2/2.0, ahora 1.0/1.5
+    const gridSpeed = GameConfig.isMobile ? 1.0 : 1.5;
+
+    // 🔥 ALTERNAR DIRECCIÓN DE LA CUADRÍCULA
+    const shouldReverse = Math.floor(Date.now() / 8000) % 2 === 1;
+
+    if (shouldReverse) {
+      // De abajo hacia arriba y derecha hacia izquierda
+      for (let x = spacing; x < canvas.width; x += spacing) {
+        this.gridLines.push({
+          type: "vertical",
+          x: x,
+          y: canvas.height, // 🔥 EMPEZAR DESDE ABAJO
+          targetY: 0, // 🔥 IR HACIA ARRIBA
+          speed: -gridSpeed, // 🔥 VELOCIDAD NEGATIVA
+          active: true,
+        });
+      }
+
+      for (let y = spacing; y < canvas.height; y += spacing) {
+        this.gridLines.push({
+          type: "horizontal",
+          x: canvas.width, // 🔥 EMPEZAR DESDE DERECHA
+          y: y,
+          targetX: 0, // 🔥 IR HACIA IZQUIERDA
+          speed: -gridSpeed, // 🔥 VELOCIDAD NEGATIVA
+          active: true,
+        });
+      }
+    } else {
+      // Dirección normal (arriba hacia abajo, izquierda hacia derecha)
+      for (let x = spacing; x < canvas.width; x += spacing) {
+        this.gridLines.push({
+          type: "vertical",
+          x: x,
+          y: 0,
+          targetY: canvas.height,
+          speed: gridSpeed,
+          active: true,
+        });
+      }
+
+      for (let y = spacing; y < canvas.height; y += spacing) {
+        this.gridLines.push({
+          type: "horizontal",
+          x: 0,
+          y: y,
+          targetX: canvas.width,
+          speed: gridSpeed,
+          active: true,
+        });
+      }
+    }
 
     console.log(
-      `🔴 Cuadrícula MENOS AGRESIVA - Espaciado: ${spacing.toFixed(
-        1
-      )}px, Velocidad: ${gridSpeed} (${GameConfig.isMobile ? "MÓVIL" : "PC"})`
+      `🔴 Cuadrícula ${shouldReverse ? "INVERTIDA" : "NORMAL"} generada`
     );
-
-    // Líneas verticales (de arriba hacia abajo)
-    for (let x = spacing; x < canvas.width; x += spacing) {
-      this.gridLines.push({
-        type: "vertical",
-        x: x,
-        y: 0,
-        targetY: canvas.height,
-        speed: gridSpeed,
-        active: true,
-      });
-    }
-
-    // Líneas horizontales (de izquierda a derecha)
-    for (let y = spacing; y < canvas.height; y += spacing) {
-      this.gridLines.push({
-        type: "horizontal",
-        x: 0,
-        y: y,
-        targetX: canvas.width,
-        speed: gridSpeed,
-        active: true,
-      });
-    }
   },
 
   updateGridLines() {
     if (!window.Player) return;
 
-    // Verificar colisión ANTES de mover líneas
     if (
       Player.checkGridLineCollision &&
       Player.checkGridLineCollision(this.gridLines)
@@ -362,18 +380,25 @@ const BossRedLine = {
       Player.takeDamage();
     }
 
-    // Actualizar posición de líneas
     for (let i = this.gridLines.length - 1; i >= 0; i--) {
       const line = this.gridLines[i];
 
       if (line.type === "vertical") {
         line.y += line.speed;
-        if (line.y >= line.targetY) {
+        // 🔥 VERIFICAR AMBAS DIRECCIONES
+        if (
+          (line.speed > 0 && line.y >= line.targetY) ||
+          (line.speed < 0 && line.y <= line.targetY)
+        ) {
           this.gridLines.splice(i, 1);
         }
       } else if (line.type === "horizontal") {
         line.x += line.speed;
-        if (line.x >= line.targetX) {
+        // 🔥 VERIFICAR AMBAS DIRECCIONES
+        if (
+          (line.speed > 0 && line.x >= line.targetX) ||
+          (line.speed < 0 && line.x <= line.targetX)
+        ) {
           this.gridLines.splice(i, 1);
         }
       }

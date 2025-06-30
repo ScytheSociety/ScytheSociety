@@ -424,13 +424,13 @@ const BossMines = {
     const lMine = {
       x: corner.x,
       y: corner.y,
-      width: 40, // Tamaño fijo cuadrado pequeño
-      height: 40, // Tamaño fijo cuadrado pequeño
-      timer: 300, // 5 segundos
+      width: 40,
+      height: 40,
+      timer: 180, // 🔥 CAMBIAR: Era 300, ahora 180 (3 segundos exactos)
       armed: true,
       blinkTimer: 0,
       blinkSpeed: 5,
-      dangerRadius: 0, // Sin radio circular
+      dangerRadius: 0,
       showDangerZone: false,
       warningPhase: false,
       isStatic: false,
@@ -491,9 +491,9 @@ const BossMines = {
     return {
       x: x,
       y: y,
-      width: baseSize, // Tamaño normal por defecto
+      width: baseSize,
       height: baseSize,
-      timer: customTimer || this.mineConfig.explosionTime,
+      timer: customTimer || 180, // 🔥 CAMBIAR: Era 300, ahora 180 (3 segundos exactos)
       armed: false,
       blinkTimer: 0,
       blinkSpeed: this.mineConfig.blinkSpeed,
@@ -773,12 +773,14 @@ const BossMines = {
   drawSingleMine(ctx, mine) {
     ctx.save();
 
-    if (mine.showDangerZone) {
+    // SOLO dibujar zona de peligro si es necesario
+    if (mine.showDangerZone && !mine.isSquare) {
       this.drawDangerZone(ctx, mine);
     }
 
     this.drawMineBody(ctx, mine);
 
+    // SOLO contador de tiempo, SIN efectos
     if (!mine.isStatic && mine.timer < 180) {
       this.drawTimeCounter(ctx, mine);
     }
@@ -787,33 +789,25 @@ const BossMines = {
       this.drawStaticIndicator(ctx, mine);
     }
 
-    // Dibujo especial para minas cuadradas
+    // Dibujo simple para minas cuadradas
     if (mine.isSquare) {
-      ctx.save();
-
-      // Dibujar cuadrado en lugar de círculo
       ctx.fillStyle = mine.color || "#FF00FF";
       ctx.fillRect(mine.x, mine.y, mine.width, mine.height);
 
-      // Borde blanco
       ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 2;
       ctx.strokeRect(mine.x, mine.y, mine.width, mine.height);
 
-      // Símbolo de advertencia
       ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 20px Arial";
+      ctx.font = "bold 16px Arial";
       ctx.textAlign = "center";
-      ctx.fillText("L", mine.x + mine.width / 2, mine.y + mine.height / 2 + 7);
+      ctx.fillText("L", mine.x + mine.width / 2, mine.y + mine.height / 2 + 5);
 
-      // Indicador de tiempo
+      // SOLO tiempo, sin efectos
       const timeLeft = Math.ceil(mine.timer / 60);
       ctx.fillStyle = "#FFFF00";
-      ctx.font = "bold 14px Arial";
+      ctx.font = "bold 12px Arial";
       ctx.fillText(timeLeft, mine.x + mine.width / 2, mine.y - 5);
-
-      ctx.restore();
-      return; // No dibujar el resto
     }
 
     ctx.restore();
