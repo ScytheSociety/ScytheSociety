@@ -87,14 +87,14 @@ const GameConfig = {
     baseSpeed: 0.003,
     speedIncrease: 0.0002, // Por nivel
 
-    // Tamaño variable aleatorio 🔥 NUEVO
+    // 🔥 MODIFICADO: Tamaño variable aleatorio
     sizeVariation: {
       enabled: true,
       minScale: 0.6, // Era 0.7, ahora 0.6 (más pequeño)
-      maxScale: 1.2, // Era 1.4, ahora 1.2 (máximo más pequeño)
-      randomChance: 0.3, // 30% de enemigos tendrán tamaño aleatorio
+      maxScale: 1.3, // 🔥 AUMENTADO: Era 1.2, ahora 1.3 (máximo más grande)
+      randomChance: 0.5, // 🔥 AUMENTADO: Era 0.3, ahora 0.5 (50% de enemigos tendrán tamaño aleatorio)
 
-      // 🔥 NUEVO: Factor de reducción específico para móvil
+      // Factor de reducción específico para móvil
       mobileReduction: 0.7, // En móvil, todos los enemigos 30% más pequeños
     },
 
@@ -117,7 +117,7 @@ const GameConfig = {
         id: 0,
         name: "Escudo Protector",
         color: "#00FF00",
-        duration: 99480, // Era 300 (5s), ahora 480 (8s)
+        duration: 480, // Era 300 (5s), ahora 480 (8s)
         description: "Inmunidad total al daño",
       },
       WIDE_SHOT: {
@@ -140,7 +140,8 @@ const GameConfig = {
         name: "Disparo Súper Rápido",
         color: "#FF00FF",
         duration: 600, // Era 360 (6s), ahora 600 (10s)
-        shootDelay: 25,
+        shootDelay: 25, // 🔥 NUEVO: Valor de referencia (no usado directamente)
+        speedReduction: 0.25, // 🔥 NUEVO: Reduce el tiempo de espera al 25% (4x más rápido)
         description: "Disparo ultra-rápido",
       },
     },
@@ -355,33 +356,33 @@ const GameConfig = {
   updateSizes(canvas) {
     const baseSize = Math.min(canvas.width, canvas.height) / 20;
 
-    // 🔥 FACTOR DE ESCALA MÁS AGRESIVO PARA MÓVIL
-    const mobileScale = this.isMobile ? 0.65 : 1.0; // Era 0.8, ahora 0.65 (35% más pequeño)
+    // 🔥 FACTOR DE ESCALA MÁS DIFERENCIADO
+    const mobileScale = this.isMobile ? 0.65 : 1.1; // 🔥 Era 0.65/1.0, ahora 0.65/1.1 (PC 10% más grande)
 
     // 🔥 TAMAÑOS RESPONSIVOS MÁS CONTROLADOS
     this.PLAYER_SIZE = Math.max(
       35, // Mínimo más pequeño (era 40)
-      Math.min(baseSize * mobileScale, this.isMobile ? 50 : 80) // Máximo móvil reducido
+      Math.min(baseSize * mobileScale, this.isMobile ? 50 : 85) // 🔥 Máximo PC aumentado a 85 (era 80)
     );
 
-    this.BULLET_WIDTH = Math.max(10, this.PLAYER_SIZE * 0.25); // Más pequeño
+    this.BULLET_WIDTH = Math.max(10, this.PLAYER_SIZE * 0.25);
     this.BULLET_HEIGHT = this.BULLET_WIDTH * 2;
 
-    // 🔥 ENEMIGOS MUCHO MÁS PEQUEÑOS EN MÓVIL
+    // 🔥 ENEMIGOS EN PC MÁS GRANDES
     this.ENEMY_MIN_SIZE = Math.max(
-      15, // Mínimo más pequeño (era 20)
-      Math.min(baseSize * 0.5 * mobileScale, this.isMobile ? 25 : 45) // Máximo móvil muy reducido
+      this.isMobile ? 15 : 20, // 🔥 Mínimo en PC aumentado a 20 (era 15)
+      Math.min(baseSize * 0.5 * mobileScale, this.isMobile ? 25 : 50) // 🔥 Máximo PC aumentado a 50 (era 45)
     );
 
     this.ENEMY_MAX_SIZE = Math.max(
-      25, // Mínimo más pequeño (era 35)
-      Math.min(baseSize * 0.8 * mobileScale, this.isMobile ? 40 : 70) // Máximo móvil muy reducido
+      this.isMobile ? 25 : 35, // 🔥 Mínimo en PC aumentado a 35 (era 25)
+      Math.min(baseSize * 0.8 * mobileScale, this.isMobile ? 40 : 75) // 🔥 Máximo PC aumentado a 75 (era 70)
     );
 
     console.log(
       `📐 Tamaños SÚPER responsivos - Jugador: ${this.PLAYER_SIZE}px, ` +
         `Enemigos: ${this.ENEMY_MIN_SIZE}-${this.ENEMY_MAX_SIZE}px, ` +
-        `Escala móvil: ${mobileScale} (${this.isMobile ? "MÓVIL" : "PC"})`
+        `Escala: ${mobileScale} (${this.isMobile ? "MÓVIL" : "PC"})`
     );
   },
 
@@ -401,20 +402,24 @@ const GameConfig = {
       }
     }
 
-    // 🔥 APLICAR REDUCCIÓN MÓVIL OBLIGATORIA
+    // 🔥 MODIFICADO: Reducción móvil vs aumento PC
     if (this.isMobile) {
+      // En móvil, reducción como antes
       finalSize *= this.ENEMY_CONFIG.sizeVariation.mobileReduction;
+    } else {
+      // 🔥 NUEVO: En PC, aumentar un 20% para enemigos más grandes
+      finalSize *= 1.2; // 20% más grandes en PC
     }
 
     // Aplicar crecimiento por nivel (más controlado)
-    const levelGrowth = 1 + (level - 1) * 0.05; // 5% por nivel (era mayor)
+    const levelGrowth = 1 + (level - 1) * 0.05; // 5% por nivel
     finalSize *= levelGrowth;
 
-    // 🔥 LÍMITES ESTRICTOS PARA MÓVIL
+    // 🔥 MODIFICADO: Límites más grandes para PC
     if (this.isMobile) {
       finalSize = Math.max(15, Math.min(finalSize, 35)); // Entre 15-35px en móvil
     } else {
-      finalSize = Math.max(20, Math.min(finalSize, 60)); // Entre 20-60px en PC
+      finalSize = Math.max(25, Math.min(finalSize, 70)); // 🔥 Entre 25-70px en PC (antes 20-60px)
     }
 
     return Math.round(finalSize);

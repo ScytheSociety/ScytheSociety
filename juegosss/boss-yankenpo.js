@@ -172,22 +172,41 @@ const BossYanKenPo = {
 
     this.gameState = "completed";
 
-    // 🔥 FORZAR PÉRDIDA DE VIDA DIRECTAMENTE
+    // 🔥 MÉTODO ULTRA AGRESIVO para garantizar pérdida de vida
     if (window.Player) {
       const currentLives = Player.getLives();
+      console.log(`💔 Vidas actuales: ${currentLives}`);
 
-      // Método 1: Reducir vidas directamente
+      // MÉTODO 1: Reducción directa del atributo lives
+      const originalLives = Player.lives;
       Player.lives = Math.max(0, Player.lives - 1);
 
-      // Método 2: Si no funciona, usar takeDamage sin invulnerabilidad
-      if (Player.getLives() === currentLives) {
-        Player.invulnerabilityTime = 0; // Quitar invulnerabilidad
+      // MÉTODO 2: Si el método 1 no funciona, usar takeDamage sin invulnerabilidad
+      if (Player.lives === originalLives) {
+        console.log("⚠️ Método 1 falló, intentando método 2");
+
+        // Desactivar invulnerabilidad temporalmente
+        const originalInvulnerability = Player.invulnerabilityTime;
+        Player.invulnerabilityTime = 0;
+
+        // Llamar a takeDamage
         Player.takeDamage();
+
+        // Verificar si funcionó
+        if (Player.getLives() === currentLives) {
+          console.log("⚠️ Método 2 falló, intentando método 3");
+
+          // MÉTODO 3: Modificación forzada directa
+          window.Player.lives = currentLives - 1;
+          console.log("🔨 Método 3: Modificación forzada directa aplicada");
+        }
       }
 
+      // Comprobar resultado final
       const newLives = Player.getLives();
-      console.log(`💔 FORZADO: Vidas ${currentLives} → ${newLives}`);
+      console.log(`💔 RESULTADO: Vidas ${currentLives} → ${newLives}`);
 
+      // Mostrar mensaje UI
       if (this.bossManager.ui) {
         this.bossManager.ui.showScreenMessage(
           `💔 ¡PERDISTE! Vidas: ${newLives}`,
@@ -195,7 +214,7 @@ const BossYanKenPo = {
         );
       }
 
-      // Verificar muerte
+      // Verificar game over
       if (newLives <= 0) {
         if (this.bossManager.ui) {
           this.bossManager.ui.showScreenMessage("💀 ¡GAME OVER!", "#FF0000");
@@ -289,45 +308,38 @@ const BossYanKenPo = {
   updateSelection() {
     this.selectionTimer++;
 
-    // Timeout si no selecciona a tiempo - CON VENTAJA AL JUGADOR
+    // Timeout si no selecciona a tiempo - SIEMPRE PIERDE EL JUGADOR
     if (this.selectionTimer >= this.gameConfig.selectionTimeLimit) {
-      console.log("⏰ Tiempo agotado - aplicando ventaja probabilística");
+      console.log("⏰ Tiempo agotado - el jugador PIERDE UNA VIDA");
 
-      // 🔥 EN TIMEOUT: 60% de probabilidad de victoria automática
-      if (Math.random() < 0.6) {
-        // Generar una combinación ganadora para el jugador
-        const bossChoice = Math.floor(Math.random() * 3);
-        let winningPlayerChoice;
+      // 🔥 MODIFICADO: Ya no hay ventaja probabilística, siempre pierde
+      // El jugador pierde si no responde a tiempo
+      this.playerChoice = Math.floor(Math.random() * 3); // Elección aleatoria para el jugador
+      this.bossChoice = this.getWinningChoice(this.playerChoice); // Boss elige opción ganadora
 
-        if (bossChoice === 0) winningPlayerChoice = 2; // Piedra gana a Tijeras
-        else if (bossChoice === 1)
-          winningPlayerChoice = 0; // Tijeras gana a Papel
-        else winningPlayerChoice = 1; // Papel gana a Piedra
-
-        this.playerChoice = winningPlayerChoice;
-        this.bossChoice = bossChoice;
-
-        console.log(
-          `🍀 TIMEOUT CON SUERTE: Jugador(${
-            this.choices[this.playerChoice].name
-          }) vs Boss(${this.choices[this.bossChoice].name})`
-        );
-      } else {
-        // 40% de probabilidad de selección aleatoria normal
-        this.playerChoice = Math.floor(Math.random() * 3);
-        this.bossChoice = Math.floor(Math.random() * 3);
-
-        console.log(
-          `⚡ Timeout normal: Jugador(${
-            this.choices[this.playerChoice].name
-          }) vs Boss(${this.choices[this.bossChoice].name})`
-        );
-      }
+      console.log(
+        `⚡ TIMEOUT: Jugador(${this.choices[this.playerChoice].name}) vs Boss(${
+          this.choices[this.bossChoice].name
+        }) - JUGADOR PIERDE`
+      );
 
       this.disableButtons();
       this.gameState = "result";
-      this.processResult();
+      this.lastResult = "derrota"; // Forzar derrota
+      this.showResult();
+
+      setTimeout(() => {
+        this.handleGameLoss();
+      }, this.gameConfig.resultDisplayTime);
     }
+  },
+
+  // Nueva función auxiliar para obtener la opción ganadora contra la elección dada
+  getWinningChoice(playerChoice) {
+    // 0=Tijeras, 1=Papel, 2=Piedra
+    if (playerChoice === 0) return 2; // Piedra gana a Tijeras
+    else if (playerChoice === 1) return 0; // Tijeras gana a Papel
+    else return 1; // Papel gana a Piedra
   },
 
   // ======================================================
@@ -374,38 +386,24 @@ const BossYanKenPo = {
 
     let result;
 
-    // 🔥 NUEVO SISTEMA PROBABILÍSTICO - JUGADOR TIENE VENTAJA
+    // 🔥 MODIFICADO: EMPATE SIEMPRE ES DERROTA
     if (playerChoice === bossChoice) {
-      // En empate, 70% de probabilidad de que el jugador gane
-      if (Math.random() < 0.7) {
-        result = "victoria";
-        console.log("🎲 EMPATE CONVERTIDO A VICTORIA (70% probabilidad)");
-      } else {
-        result = "derrota";
-        console.log("🎲 Empate mantenido como derrota (30% probabilidad)");
-      }
-    } else if (
+      result = "derrota";
+      console.log("🎲 Empate = Derrota para el jugador");
+    }
+    // Victoria normal del jugador - SIN MANIPULACIÓN
+    else if (
       (playerChoice === 0 && bossChoice === 1) || // Tijeras vs Papel
       (playerChoice === 1 && bossChoice === 2) || // Papel vs Piedra
       (playerChoice === 2 && bossChoice === 0) // Piedra vs Tijeras
     ) {
-      // Victoria normal del jugador - 85% de mantenerla
-      if (Math.random() < 0.85) {
-        result = "victoria";
-        console.log("🎲 Victoria normal mantenida (85% probabilidad)");
-      } else {
-        result = "derrota";
-        console.log("🎲 Victoria convertida a derrota (15% probabilidad)");
-      }
-    } else {
-      // Derrota normal - 40% de convertirla a victoria
-      if (Math.random() < 0.4) {
-        result = "victoria";
-        console.log("🎲 DERROTA CONVERTIDA A VICTORIA (40% probabilidad)");
-      } else {
-        result = "derrota";
-        console.log("🎲 Derrota mantenida (60% probabilidad)");
-      }
+      result = "victoria";
+      console.log("🎲 Victoria normal del jugador");
+    }
+    // Derrota normal - SIN MANIPULACIÓN
+    else {
+      result = "derrota";
+      console.log("🎲 Derrota normal del jugador");
     }
 
     this.lastResult = result;

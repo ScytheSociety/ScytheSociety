@@ -138,16 +138,14 @@ const BossRedLine = {
     this.showingPreview = false;
     this.redLinePath = [];
     this.redLineIndex = 0;
-    this.gridLines = []; // 🔥 LIMPIAR AQUÍ
-    this.lastGridTime = 0;
+    this.gridLines = []; // Limpiar array de cuadrículas
 
-    // 🔥 NUEVO: Eliminar elementos DOM inmediatamente
-    const elementsToRemove = document.querySelectorAll(
-      '[id*="redline"], [class*="redline"], [class*="grid"]'
-    );
-    elementsToRemove.forEach((el) => {
-      if (el.parentNode) el.parentNode.removeChild(el);
-    });
+    // 🔥 FORZAR limpieza inmediata
+    this.forceCleanupGrid(); // Llamada explícita para eliminar elementos visuales
+
+    // 🔥 NUEVO: Ejecutar múltiples intentos de limpieza (por seguridad)
+    setTimeout(() => this.forceCleanupGrid(), 100);
+    setTimeout(() => this.forceCleanupGrid(), 500);
 
     // Restaurar velocidad del jugador
     if (window.Player && Player.restoreNormalSpeed) {
@@ -602,6 +600,10 @@ const BossRedLine = {
     // Si completó los 10 dibujos - terminar y volver a HUNTING
     if (this.cycleCount >= this.maxCycles) {
       console.log("🔄 *** 10 DIBUJOS DE RED LINE COMPLETADOS ***");
+
+      // 🔥 NUEVA LÍNEA: Forzar limpieza inmediata de cuadrículas
+      this.gridLines = [];
+      this.forceCleanupGrid(); // Llamar a limpieza forzada
 
       // Primero terminar Red Line completamente
       this.phaseActive = false;

@@ -64,7 +64,8 @@ const BulletManager = {
   },
 
   /**
-   * Inicia el disparo automático con velocidad consistente y correcta
+   * Reemplaza la función startAutoShoot() en bullets.js
+   * Mejora la implementación para que considere los power-ups activos
    */
   startAutoShoot() {
     // SIEMPRE detener primero para evitar múltiples intervalos
@@ -83,7 +84,7 @@ const BulletManager = {
 
     const level = window.getLevel();
 
-    // 🔥 CORREGIDO: Velocidad de auto-disparo por rangos de nivel
+    // 🔥 CORREGIDO: Velocidad de auto-disparo considerando power-ups
     let baseDelay;
     if (level <= 5) {
       baseDelay = 160; // Niveles 1-5: Misma velocidad base
@@ -91,19 +92,48 @@ const BulletManager = {
       baseDelay = 120; // Nivel 6+: Velocidad mayor y fija
     }
 
-    console.log(
-      `🔫 Auto-disparo con velocidad base: ${baseDelay}ms (Nivel ${level})`
-    );
+    // 🔥 NUEVO: Verificar power-up Rapid Fire
+    const activePowerUps = Player.getActivePowerUps();
+    const hasRapidFire = activePowerUps.some((p) => p.id === 3);
+
+    if (hasRapidFire) {
+      // Reducción del 75% si está activo el disparo rápido
+      baseDelay = Math.max(25, Math.floor(baseDelay * 0.25));
+      console.log(
+        `⚡ Auto-disparo con RAPID FIRE: ${baseDelay}ms (Nivel ${level})`
+      );
+    } else {
+      console.log(
+        `🔫 Auto-disparo velocidad base: ${baseDelay}ms (Nivel ${level})`
+      );
+    }
+
+    // Modo frenesí: reducción adicional
+    if (window.frenzyModeActive) {
+      baseDelay = Math.max(15, baseDelay - 60);
+      console.log(`🔥 Auto-disparo con FRENESÍ: ${baseDelay}ms`);
+    }
 
     this.autoShootInterval = setInterval(() => {
       // Verificación adicional antes de cada disparo
       if (!window.isGameEnded() && window.isCurrentlyPlaying()) {
         this.shootBullet();
+
+        // 🔥 NUEVO: Verificar si cambió el estado de Rapid Fire y actualizar si es necesario
+        const currentPowerUps = Player.getActivePowerUps();
+        const rapidFireActive = currentPowerUps.some((p) => p.id === 3);
+
+        if (hasRapidFire !== rapidFireActive) {
+          console.log(
+            "⚡ Cambio en estado de Rapid Fire detectado - reiniciando auto-disparo"
+          );
+          this.forceRestartAutoShoot();
+        }
       } else {
         console.log("🔫 Deteniendo auto-disparo: condiciones no válidas");
         this.stopAutoShoot();
       }
-    }, baseDelay); // Usamos la velocidad base aquí, shootBullet() manejará los modificadores
+    }, baseDelay);
 
     console.log(
       `🔫 Auto-disparo ÉPICO iniciado: ${baseDelay}ms (Intervalo: ${this.autoShootInterval})`
@@ -141,7 +171,8 @@ const BulletManager = {
   // ======================================================
 
   /**
-   * Dispara una bala con velocidad consistente y modificadores correctos
+   * Reemplaza la función shootBullet() en bullets.js
+   * Ajusta la implementación del power-up Rapid Fire para que funcione correctamente
    */
   shootBullet() {
     const currentTime = Date.now();
@@ -160,16 +191,16 @@ const BulletManager = {
     const originalCooldownTime = baseCooldownTime;
     let finalCooldownTime = baseCooldownTime;
 
-    // === PODER DISPARO RÁPIDO: SIEMPRE SUMA VELOCIDAD ===
-    // 🔥 CORREGIDO: Verificación independiente y aditiva
+    // === PODER DISPARO RÁPIDO: APLICACIÓN CORRECTA ===
+    // 🔥 CORREGIDO: Verificación y aplicación adecuada
     const activePowerUps = Player.getActivePowerUps();
     const hasRapidFire = activePowerUps.some((p) => p.id === 3);
 
     if (hasRapidFire) {
-      // Siempre resta 50ms al tiempo actual (aumenta velocidad)
-      finalCooldownTime = Math.max(25, finalCooldownTime - 50);
+      // 🔥 CORREGIDO: Reducción más agresiva (75% menos tiempo de espera)
+      finalCooldownTime = Math.max(25, Math.floor(finalCooldownTime * 0.25));
       console.log(
-        `⚡ Rapid Fire: ${originalCooldownTime}ms → ${finalCooldownTime}ms (-50ms)`
+        `⚡ Rapid Fire CORREGIDO: ${originalCooldownTime}ms → ${finalCooldownTime}ms (reducción 75%)`
       );
     }
 

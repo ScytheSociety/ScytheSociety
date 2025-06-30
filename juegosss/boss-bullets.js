@@ -444,20 +444,53 @@ const BossBullets = {
   // ======================================================
 
   endBulletPhase() {
-    console.log("🌟 Terminando fase Touhou");
+    console.log("🌟 TERMINANDO FASE TOUHOU COMPLETAMENTE");
 
+    // 1. Desactivar banderas inmediatamente
     this.patternActive = false;
-    this.cleanup();
 
-    // Liberar boss
+    // 2. Detener TODOS los intervalos y temporizadores
+    this.clearActiveIntervals();
+
+    // 3. Limpiar TODAS las balas existentes
+    const bulletCount = this.bulletPatterns.length;
+    this.bulletPatterns = [];
+    console.log(`🧹 Eliminadas ${bulletCount} balas`);
+
+    // 4. Ejecutar limpieza múltiple con retrasos
+    setTimeout(() => {
+      // Verificación adicional
+      if (this.bulletPatterns.length > 0) {
+        console.log(
+          `⚠️ Aún quedan ${this.bulletPatterns.length} balas - limpiando...`
+        );
+        this.bulletPatterns = [];
+      }
+      this.clearActiveIntervals(); // Verificar intervalos de nuevo
+    }, 100);
+
+    setTimeout(() => {
+      // Verificación final
+      if (this.bulletPatterns.length > 0) {
+        console.log(
+          `🚨 LIMPIEZA FINAL: ${this.bulletPatterns.length} balas persistentes`
+        );
+        this.bulletPatterns = [];
+      }
+      this.clearActiveIntervals(); // Última verificación de intervalos
+    }, 500);
+
+    // 5. Liberar boss para que pueda moverse
     if (this.bossManager.boss) {
       this.bossManager.boss.isStationary = false;
     }
 
-    // Volver a HUNTING a través del sistema de fases
+    // 6. Volver a HUNTING a través del sistema de fases
     if (this.bossManager.phases) {
       this.bossManager.phases.endCurrentPhase();
     }
+
+    console.log("✅ Fase Touhou COMPLETAMENTE terminada y limpia");
   },
 
   // ======================================================
@@ -582,17 +615,51 @@ const BossBullets = {
   // ======================================================
 
   clearActiveIntervals() {
-    this.activeIntervals.forEach((interval) => clearInterval(interval));
+    const intervalCount = this.activeIntervals.length;
+
+    // Detener cada intervalo específicamente
+    this.activeIntervals.forEach((interval, index) => {
+      clearInterval(interval);
+      console.log(`🛑 Intervalo #${index + 1} detenido`);
+    });
+
+    // Limpiar array
     this.activeIntervals = [];
+
+    console.log(
+      `🧹 ${intervalCount} intervalos de generación de balas eliminados`
+    );
+
+    // Verificar si hay otros intervalos globales que puedan estar generando balas
+    if (window._touhouIntervals) {
+      window._touhouIntervals.forEach((interval) => clearInterval(interval));
+      window._touhouIntervals = [];
+      console.log("🧹 Intervalos globales Touhou eliminados");
+    }
   },
 
   cleanup() {
-    console.log("🧹 Limpiando sistema de balas");
+    console.log("🧹 Limpiando sistema de balas AGRESIVAMENTE");
 
+    // Detener todos los intervalos
     this.clearActiveIntervals();
+
+    // Eliminar todas las balas existentes
     this.bulletPatterns = [];
+
+    // Desactivar fase
     this.patternActive = false;
     this.currentPatternIndex = 0;
+
+    // 🔥 NUEVO: Verificación final para asegurarse de que todo está limpio
+    if (this.bulletPatterns.length > 0) {
+      console.warn(
+        `⚠️ Todavía quedan ${this.bulletPatterns.length} balas - forzando limpieza`
+      );
+      this.bulletPatterns = [];
+    }
+
+    console.log("✅ Sistema de balas completamente limpio");
   },
 
   reset() {
